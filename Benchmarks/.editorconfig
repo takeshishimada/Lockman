@@ -1,0 +1,37 @@
+# EditorConfig for Lockman Project
+# https://editorconfig.org
+root = true
+
+# 全ファイル共通設定
+[*]
+charset = utf-8
+end_of_line = lf
+insert_final_newline = true
+trim_trailing_whitespace = true
+
+# Swift/Objective-C ファイル
+[*.{swift,h,m,mm}]
+indent_style = space
+indent_size = 2
+tab_width = 2
+max_line_length = 120
+
+# 設定ファイル
+[*.{yml,yaml,json}]
+indent_style = space
+indent_size = 2
+
+# Ruby系ファイル (CocoaPods, Fastlane等)
+[{Podfile,Fastfile,Matchfile,*.rb}]
+indent_style = space
+indent_size = 2
+
+# Markdown (trailing whitespace保持)
+[*.md]
+trim_trailing_whitespace = false
+max_line_length = off
+
+# シェルスクリプト
+[*.{sh,bash}]
+indent_style = space
+indent_size = 2
