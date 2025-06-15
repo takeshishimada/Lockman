@@ -1,6 +1,6 @@
 
 import Foundation
-import Testing
+import XCTest
 @testable import LockmanCore
 
 // MARK: - Test Helpers
@@ -90,12 +90,10 @@ private final class MockLockmanStrategy: LockmanStrategy, @unchecked Sendable {
 
 // MARK: - LockmanUnlock Tests
 
-@Suite("LockmanUnlock Tests")
-struct LockmanUnlockTests {
+final class LockmanUnlockTests: XCTestCase {
   // MARK: - Initialization Tests
 
-  @Test("Initialize with boundary id, info, and strategy")
-  func testInitializeWithBoundaryIdInfoAndStrategy() async {
+  func testInitializeWithBoundaryIdInfoAndStrategy() async throws {
     let container = LockmanStrategyContainer()
     let boundaryId = TestBoundaryId("test")
     let info = TestLockmanInfo(actionId: "action")
@@ -107,16 +105,15 @@ struct LockmanUnlockTests {
       let anyStrategy = AnyLockmanStrategy(strategy)
       let unlock = LockmanUnlock(id: boundaryId, info: info, strategy: anyStrategy, unlockOption: .immediate)
 
-      #expect(strategy.unlockCallCount == 0)
+      XCTAssertEqual(strategy.unlockCallCount, 0)
 
       unlock()
 
-      #expect(strategy.unlockCallCount == 1)
+      XCTAssertEqual(strategy.unlockCallCount, 1)
     }
   }
 
-  @Test("Initialize with different boundary id types")
-  func testInitializeWithDifferentBoundaryIdTypes() async {
+  func testInitializeWithDifferentBoundaryIdTypes() async throws {
     struct AnotherBoundaryId: LockmanBoundaryId {
       let name: String
     }
@@ -131,16 +128,15 @@ struct LockmanUnlockTests {
       let anyStrategy = AnyLockmanStrategy(strategy)
       let unlock = LockmanUnlock(id: boundaryId, info: info, strategy: anyStrategy, unlockOption: .immediate)
 
-      #expect(strategy.unlockCallCount == 0)
+      XCTAssertEqual(strategy.unlockCallCount, 0)
 
       unlock()
 
-      #expect(strategy.unlockCallCount == 1)
+      XCTAssertEqual(strategy.unlockCallCount, 1)
     }
   }
 
-  @Test("Initialize with different info types")
-  func testInitializeWithDifferentInfoTypes() async {
+  func testInitializeWithDifferentInfoTypes() async throws {
     let container = LockmanStrategyContainer()
 
     // Register all strategies using the new protocol-based approach
@@ -179,7 +175,7 @@ struct LockmanUnlockTests {
       customUnlock() // Should work
 
       // Verify custom strategy received the call
-      #expect(customStrategy.unlockCallCount == 1)
+      XCTAssertEqual(customStrategy.unlockCallCount, 1)
     }
   }
 
@@ -187,8 +183,7 @@ struct LockmanUnlockTests {
 
   // MARK: - CallAsFunction Tests
 
-  @Test("CallAsFunction invokes strategy unlock")
-  func testCallAsFunctionInvokesStrategyUnlock() async {
+  func testCallAsFunctionInvokesStrategyUnlock() async throws {
     let container = LockmanStrategyContainer()
     let boundaryId = TestBoundaryId("test")
     let info = TestLockmanInfo(actionId: "action")
@@ -199,22 +194,21 @@ struct LockmanUnlockTests {
       let anyStrategy = AnyLockmanStrategy(strategy)
       let unlock = LockmanUnlock(id: boundaryId, info: info, strategy: anyStrategy, unlockOption: .immediate)
 
-      #expect(strategy.unlockCallCount == 0)
+      XCTAssertEqual(strategy.unlockCallCount, 0)
 
       // Call the unlock function
       unlock()
 
-      #expect(strategy.unlockCallCount == 1)
+      XCTAssertEqual(strategy.unlockCallCount, 1)
 
       let calls = strategy.getUnlockCalls()
-      #expect(calls.count == 1)
-      #expect((calls[0].boundaryId as? TestBoundaryId)?.value == "test")
-      #expect(calls[0].info.actionId == "action")
+      XCTAssertEqual(calls.count, 1)
+      XCTAssertEqual((calls[0].boundaryId as? TestBoundaryId)?.value, "test")
+      XCTAssertEqual(calls[0].info.actionId, "action")
     }
   }
 
-  @Test("CallAsFunction can be called multiple times")
-  func testCallAsFunctionCanBeCalledMultipleTimes() async {
+  func testCallAsFunctionCanBeCalledMultipleTimes() async throws {
     let container = LockmanStrategyContainer()
     let boundaryId = TestBoundaryId("test")
     let info = TestLockmanInfo(actionId: "action")
@@ -230,21 +224,20 @@ struct LockmanUnlockTests {
       unlock()
       unlock()
 
-      #expect(strategy.unlockCallCount == 3)
+      XCTAssertEqual(strategy.unlockCallCount, 3)
 
       let calls = strategy.getUnlockCalls()
-      #expect(calls.count == 3)
+      XCTAssertEqual(calls.count, 3)
 
       // All calls should have same parameters
       for call in calls {
-        #expect((call.boundaryId as? TestBoundaryId)?.value == "test")
-        #expect(call.info.actionId == "action")
+        XCTAssertEqual((call.boundaryId as? TestBoundaryId)?.value, "test")
+        XCTAssertEqual(call.info.actionId, "action")
       }
     }
   }
 
-  @Test("CallAsFunction with different boundary ids")
-  func testCallAsFunctionWithDifferentBoundaryIds() async {
+  func testCallAsFunctionWithDifferentBoundaryIds() async throws {
     let container = LockmanStrategyContainer()
     let boundaryId1 = TestBoundaryId("test1")
     let boundaryId2 = TestBoundaryId("test2")
@@ -260,17 +253,16 @@ struct LockmanUnlockTests {
       unlock1()
       unlock2()
 
-      #expect(strategy.unlockCallCount == 2)
+      XCTAssertEqual(strategy.unlockCallCount, 2)
 
       let calls = strategy.getUnlockCalls()
-      #expect(calls.count == 2)
-      #expect((calls[0].boundaryId as? TestBoundaryId)?.value == "test1")
-      #expect((calls[1].boundaryId as? TestBoundaryId)?.value == "test2")
+      XCTAssertEqual(calls.count, 2)
+      XCTAssertEqual((calls[0].boundaryId as? TestBoundaryId)?.value, "test1")
+      XCTAssertEqual((calls[1].boundaryId as? TestBoundaryId)?.value, "test2")
     }
   }
 
-  @Test("CallAsFunction with different info")
-  func testCallAsFunctionWithDifferentInfo() async {
+  func testCallAsFunctionWithDifferentInfo() async throws {
     let container = LockmanStrategyContainer()
     let boundaryId = TestBoundaryId("test")
     let info1 = TestLockmanInfo(actionId: "action1")
@@ -286,17 +278,16 @@ struct LockmanUnlockTests {
       unlock1()
       unlock2()
 
-      #expect(strategy.unlockCallCount == 2)
+      XCTAssertEqual(strategy.unlockCallCount, 2)
 
       let calls = strategy.getUnlockCalls()
-      #expect(calls.count == 2)
-      #expect(calls[0].info.actionId == "action1")
-      #expect(calls[1].info.actionId == "action2")
+      XCTAssertEqual(calls.count, 2)
+      XCTAssertEqual(calls[0].info.actionId, "action1")
+      XCTAssertEqual(calls[1].info.actionId, "action2")
     }
   }
 
-  @Test("CallAsFunction with different strategies")
-  func testCallAsFunctionWithDifferentStrategies() async {
+  func testCallAsFunctionWithDifferentStrategies() async throws {
     let container = LockmanStrategyContainer()
     let boundaryId = TestBoundaryId("test")
     let info = TestLockmanInfo(actionId: "action")
@@ -317,23 +308,22 @@ struct LockmanUnlockTests {
       unlock1()
       unlock2()
 
-      #expect(strategy1.unlockCallCount == 1)
-      #expect(strategy2.unlockCallCount == 1)
+      XCTAssertEqual(strategy1.unlockCallCount, 1)
+      XCTAssertEqual(strategy2.unlockCallCount, 1)
 
       let calls1 = strategy1.getUnlockCalls()
       let calls2 = strategy2.getUnlockCalls()
 
-      #expect(calls1.count == 1)
-      #expect(calls2.count == 1)
-      #expect(calls1[0].info.actionId == "action")
-      #expect(calls2[0].info.actionId == "action")
+      XCTAssertEqual(calls1.count, 1)
+      XCTAssertEqual(calls2.count, 1)
+      XCTAssertEqual(calls1[0].info.actionId, "action")
+      XCTAssertEqual(calls2[0].info.actionId, "action")
     }
   }
 
   // MARK: - Integration Tests with Real Strategies
 
-  @Test("Integration with LockmanSingleExecutionStrategy")
-  func testIntegrationWithLockmanSingleExecutionStrategy() async {
+  func testIntegrationWithLockmanSingleExecutionStrategy() async throws {
     let container = LockmanStrategyContainer()
     let strategy = LockmanSingleExecutionStrategy.shared
     try? container.register(strategy)
@@ -354,8 +344,7 @@ struct LockmanUnlockTests {
     }
   }
 
-  @Test("Integration with LockmanPriorityBasedStrategy")
-  func testIntegrationWithLockmanPriorityBasedStrategy() async {
+  func testIntegrationWithLockmanPriorityBasedStrategy() async throws {
     let container = LockmanStrategyContainer()
     let strategy = LockmanPriorityBasedStrategy.shared
     try? container.register(strategy)
@@ -378,8 +367,7 @@ struct LockmanUnlockTests {
 
   // MARK: - LockmanAutoUnlock Tests
 
-  @Test("LockmanAutoUnlock automatic cleanup on deinit")
-  func testLockmanAutoUnlockAutomaticCleanup() async {
+  func testLockmanAutoUnlockAutomaticCleanup() async throws {
     let container = LockmanStrategyContainer()
     let boundaryId = TestBoundaryId("auto-deinit")
     let info = TestLockmanInfo(actionId: "action")
@@ -392,8 +380,9 @@ struct LockmanUnlockTests {
         let unlockToken = LockmanUnlock(id: boundaryId, info: info, strategy: anyStrategy, unlockOption: .immediate)
         let autoUnlock = LockmanAutoUnlock(unlockToken: unlockToken)
 
-        #expect(strategy.unlockCallCount == 0)
-        #expect(await autoUnlock.isLocked == true)
+        XCTAssertEqual(strategy.unlockCallCount, 0)
+        let isLocked = await autoUnlock.isLocked
+        XCTAssertEqual(isLocked, true)
 
         // autoUnlock will be deallocated here, triggering deinit
       }
@@ -401,14 +390,13 @@ struct LockmanUnlockTests {
       // Give some time for deinit to be called
       try? await Task.sleep(for: .milliseconds(10))
 
-      #expect(strategy.unlockCallCount == 1)
+      XCTAssertEqual(strategy.unlockCallCount, 1)
     }
   }
 
   // MARK: - Sendable Conformance Tests
 
-  @Test("Sendable across concurrent contexts")
-  func testSendableAcrossConcurrentContexts() async {
+  func testSendableAcrossConcurrentContexts() async throws {
     let container = LockmanStrategyContainer()
     let boundaryId = TestBoundaryId("concurrent")
     let info = TestLockmanInfo(actionId: "action")
@@ -428,12 +416,11 @@ struct LockmanUnlockTests {
         }
       }
 
-      #expect(strategy.unlockCallCount == 5)
+      XCTAssertEqual(strategy.unlockCallCount, 5)
     }
   }
 
-  @Test("Concurrent unlock calls are thread-safe")
-  func testConcurrentUnlockCallsAreThreadSafe() async {
+  func testConcurrentUnlockCallsAreThreadSafe() async throws {
     let container = LockmanStrategyContainer()
     let boundaryId = TestBoundaryId("thread-safe")
     let info = TestLockmanInfo(actionId: "action")
@@ -454,23 +441,22 @@ struct LockmanUnlockTests {
       }
 
       // All calls should be recorded
-      #expect(strategy.unlockCallCount == 100)
+      XCTAssertEqual(strategy.unlockCallCount, 100)
 
       let calls = strategy.getUnlockCalls()
-      #expect(calls.count == 100)
+      XCTAssertEqual(calls.count, 100)
 
       // All calls should have correct parameters
       for call in calls {
-        #expect((call.boundaryId as? TestBoundaryId)?.value == "thread-safe")
-        #expect(call.info.actionId == "action")
+        XCTAssertEqual((call.boundaryId as? TestBoundaryId)?.value, "thread-safe")
+        XCTAssertEqual(call.info.actionId, "action")
       }
     }
   }
 
   // MARK: - Memory Management Tests
 
-  @Test("Unlock instance lifecycle")
-  func testUnlockInstanceLifecycle() async {
+  func testUnlockInstanceLifecycle() async throws {
     let container = LockmanStrategyContainer()
     let boundaryId = TestBoundaryId("lifecycle")
     let info = TestLockmanInfo(actionId: "action")
@@ -483,18 +469,17 @@ struct LockmanUnlockTests {
 
       // Use the unlock
       unlock?()
-      #expect(strategy.unlockCallCount == 1)
+      XCTAssertEqual(strategy.unlockCallCount, 1)
 
       // Release the unlock instance
       unlock = nil
 
       // Strategy should still have the call recorded
-      #expect(strategy.unlockCallCount == 1)
+      XCTAssertEqual(strategy.unlockCallCount, 1)
     }
   }
 
-  @Test("Multiple unlock instances with same parameters")
-  func testMultipleUnlockInstancesWithSameParameters() async {
+  func testMultipleUnlockInstancesWithSameParameters() async throws {
     let container = LockmanStrategyContainer()
     let boundaryId = TestBoundaryId("multiple")
     let info = TestLockmanInfo(actionId: "action")
@@ -511,15 +496,15 @@ struct LockmanUnlockTests {
       unlock2()
       unlock3()
 
-      #expect(strategy.unlockCallCount == 3)
+      XCTAssertEqual(strategy.unlockCallCount, 3)
 
       let calls = strategy.getUnlockCalls()
-      #expect(calls.count == 3)
+      XCTAssertEqual(calls.count, 3)
 
       // All should have the same parameters
       for call in calls {
-        #expect((call.boundaryId as? TestBoundaryId)?.value == "multiple")
-        #expect(call.info.actionId == "action")
+        XCTAssertEqual((call.boundaryId as? TestBoundaryId)?.value, "multiple")
+        XCTAssertEqual(call.info.actionId, "action")
       }
     }
   }

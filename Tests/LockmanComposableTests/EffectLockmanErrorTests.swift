@@ -1,13 +1,12 @@
 import ComposableArchitecture
 import ConcurrencyExtras
 import Foundation
-import Testing
+import XCTest
 @testable import LockmanComposable
 @testable @_spi(Logging) import LockmanCore
 
 /// Tests for Effect+Lockman error handling scenarios
-@Suite("Effect+Lockman Error Tests")
-struct EffectLockmanErrorTests {
+final class EffectLockmanErrorTests: XCTestCase {
   // MARK: - Mock Types for Testing
 
   /// Mock action for testing error scenarios
@@ -63,8 +62,7 @@ struct EffectLockmanErrorTests {
 
   // MARK: - Strategy Resolution Error Tests
 
-  @Test("withLock handles unregistered strategy gracefully")
-  func withLockHandlesUnregisteredStrategyGracefully() async {
+  func testWithLockHandlesUnregisteredStrategyGracefully() async {
     let testContainer = LockmanStrategyContainer()
 
     await Lockman.withTestContainer(testContainer) {
@@ -85,18 +83,17 @@ struct EffectLockmanErrorTests {
         )
 
         // Effect should be created (error handling is internal)
-        #expect(effect != nil)
+        XCTAssertNotNil(effect)
         errorReported.setValue(true)
       }
 
       // Verify expectations
-      #expect(operationExecuted.value == false, "Operation should not execute with unregistered strategy")
-      #expect(errorReported.value == true, "Error should have been reported")
+      XCTAssertEqual(operationExecuted.value, false, "Operation should not execute with unregistered strategy")
+      XCTAssertEqual(errorReported.value, true, "Error should have been reported")
     }
   }
 
-  @Test("withLock works correctly with registered strategy")
-  func withLockWorksCorrectlyWithRegisteredStrategy() async {
+  func testWithLockWorksCorrectlyWithRegisteredStrategy() async {
     let testContainer = LockmanStrategyContainer()
     try? testContainer.register(LockmanSingleExecutionStrategy.shared)
 
@@ -114,12 +111,11 @@ struct EffectLockmanErrorTests {
       )
 
       // Effect should be created successfully
-      #expect(effect != nil)
+      XCTAssertNotNil(effect)
     }
   }
 
-  @Test("withLock manual unlock handles unregistered strategy", .disabled("Issues with test framework error reporting"))
-  func withLockManualUnlockHandlesUnregisteredStrategy() async {
+  func testWithLockManualUnlockHandlesUnregisteredStrategy() async {
     let testContainer = LockmanStrategyContainer()
 
     await Lockman.withTestContainer(testContainer) {
@@ -132,20 +128,19 @@ struct EffectLockmanErrorTests {
         operation: { _, _ in
           operationExecuted.setValue(true)
           unlockProvided.setValue(true)
-          #expect(Bool(false), "Operation should not execute with unregistered strategy")
+          XCTAssertTrue(Bool(false), "Operation should not execute with unregistered strategy")
         },
         action: action,
         cancelID: cancelID
       )
 
-      #expect(effect != nil)
-      #expect(operationExecuted.value == false)
-      #expect(unlockProvided.value == false)
+      XCTAssertNotNil(effect)
+      XCTAssertEqual(operationExecuted.value, false)
+      XCTAssertEqual(unlockProvided.value, false)
     }
   }
 
-  @Test("concatenateWithLock handles unregistered strategy", .disabled("Issues with test framework error reporting"))
-  func concatenateWithLockHandlesUnregisteredStrategy() async {
+  func testConcatenateWithLockHandlesUnregisteredStrategy() async {
     let testContainer = LockmanStrategyContainer()
 
     await Lockman.withTestContainer(testContainer) {
@@ -154,7 +149,7 @@ struct EffectLockmanErrorTests {
 
       let operations = [
         Effect<Never>.run { _ in
-          #expect(Bool(false), "Operations should not execute with unregistered strategy")
+          XCTAssertTrue(Bool(false), "Operations should not execute with unregistered strategy")
         },
       ]
 
@@ -165,14 +160,13 @@ struct EffectLockmanErrorTests {
       )
 
       // Effect should handle the error gracefully
-      #expect(effect != nil)
+      XCTAssertNotNil(effect)
     }
   }
 
   // MARK: - Error Handler Function Tests
 
-  @Test("handleError processes strategyNotRegistered correctly", .disabled("Issues with test framework error reporting"))
-  func handleErrorProcessesStrategyNotRegisteredCorrectly() {
+  func testHandleErrorProcessesStrategyNotRegisteredCorrectly() {
     let action = MockErrorAction.unregisteredStrategy
     let error = LockmanError.strategyNotRegistered("MockUnregisteredStrategy")
 
@@ -188,11 +182,10 @@ struct EffectLockmanErrorTests {
     )
 
     // If no crash occurs, the error was handled correctly
-    #expect(Bool(true))
+    XCTAssertTrue(Bool(true))
   }
 
-  @Test("handleError processes strategyAlreadyRegistered correctly", .disabled("Issues with test framework error reporting"))
-  func handleErrorProcessesStrategyAlreadyRegisteredCorrectly() {
+  func testHandleErrorProcessesStrategyAlreadyRegisteredCorrectly() {
     let action = MockValidAction.testAction
     let error = LockmanError.strategyAlreadyRegistered("LockmanSingleExecutionStrategy")
 
@@ -206,11 +199,10 @@ struct EffectLockmanErrorTests {
     )
 
     // If no crash occurs, the error was handled correctly
-    #expect(Bool(true))
+    XCTAssertTrue(Bool(true))
   }
 
-  @Test("handleError ignores non-LockmanError types", .disabled("Issues with test framework error reporting"))
-  func handleErrorIgnoresNonLockmanErrorTypes() {
+  func testHandleErrorIgnoresNonLockmanErrorTypes() {
     let action = MockValidAction.testAction
     let error = NSError(domain: "TestDomain", code: 123, userInfo: nil)
 
@@ -224,13 +216,12 @@ struct EffectLockmanErrorTests {
       column: #column
     )
 
-    #expect(Bool(true))
+    XCTAssertTrue(Bool(true))
   }
 
   // MARK: - Integration Error Tests
 
-  @Test("Strategy resolution failure in realistic scenario", .disabled("Issues with test framework error reporting"))
-  func strategyResolutionFailureInRealisticScenario() async {
+  func testStrategyResolutionFailureInRealisticScenario() async {
     // Start with empty container (realistic startup scenario)
     let testContainer = LockmanStrategyContainer()
 
@@ -243,7 +234,7 @@ struct EffectLockmanErrorTests {
 
       let effect = Effect<Never>.withLock(
         operation: { _ in
-          #expect(Bool(false), "Should not execute due to missing strategy")
+          XCTAssertTrue(Bool(false), "Should not execute due to missing strategy")
         },
         catch: { _, _ in
           // Error handling would occur here in real usage
@@ -252,12 +243,11 @@ struct EffectLockmanErrorTests {
         cancelID: cancelID
       )
 
-      #expect(effect != nil)
+      XCTAssertNotNil(effect)
     }
   }
 
-  @Test("Multiple strategy types resolution errors", .disabled("Issues with test framework error reporting"))
-  func multipleStrategyTypesResolutionErrors() async {
+  func testMultipleStrategyTypesResolutionErrors() async {
     let testContainer = LockmanStrategyContainer()
 
     await Lockman.withTestContainer(testContainer) {
@@ -269,21 +259,20 @@ struct EffectLockmanErrorTests {
       for action in actions {
         let effect = Effect<Never>.withLock(
           operation: { _ in
-            #expect(Bool(false), "No operations should execute")
+            XCTAssertTrue(Bool(false), "No operations should execute")
           },
           action: action,
           cancelID: "multi-error-test"
         )
 
-        #expect(effect != nil)
+        XCTAssertNotNil(effect)
       }
     }
   }
 
   // MARK: - Error Recovery Integration Tests
 
-  @Test("Error recovery through strategy registration", .disabled("Issues with test framework error reporting"))
-  func errorRecoveryThroughStrategyRegistration() async {
+  func testErrorRecoveryThroughStrategyRegistration() async {
     let testContainer = LockmanStrategyContainer()
 
     // First attempt without registration
@@ -293,13 +282,13 @@ struct EffectLockmanErrorTests {
 
       let effect1 = Effect<Never>.withLock(
         operation: { _ in
-          #expect(Bool(false), "Should fail without registration")
+          XCTAssertTrue(Bool(false), "Should fail without registration")
         },
         action: action,
         cancelID: cancelID
       )
 
-      #expect(effect1 != nil)
+      XCTAssertNotNil(effect1)
     }
 
     // Register the required strategy
@@ -318,14 +307,13 @@ struct EffectLockmanErrorTests {
         cancelID: cancelID
       )
 
-      #expect(effect2 != nil)
+      XCTAssertNotNil(effect2)
     }
   }
 
   // MARK: - Error Propagation Tests
 
-  @Test("Error information preservation", .disabled("Issues with test framework error reporting"))
-  func errorInformationPreservation() {
+  func testErrorInformationPreservation() {
     let action = MockErrorAction.unregisteredStrategy
     let originalError = LockmanError.strategyNotRegistered("DetailedStrategyName")
 
@@ -342,14 +330,13 @@ struct EffectLockmanErrorTests {
     // Test that error details are accessible
     switch originalError {
     case let .strategyNotRegistered(strategyType):
-      #expect(strategyType == "DetailedStrategyName")
+      XCTAssertEqual(strategyType, "DetailedStrategyName")
     default:
-      #expect(Bool(false), "Expected strategyNotRegistered error")
+      XCTAssertTrue(Bool(false), "Expected strategyNotRegistered error")
     }
   }
 
-  @Test("Source location information in error handling", .disabled("Issues with test framework error reporting"))
-  func sourceLocationInformationInErrorHandling() {
+  func testSourceLocationInformationInErrorHandling() {
     let action = MockValidAction.testAction
     let error = LockmanError.strategyAlreadyRegistered("TestStrategy")
 
@@ -368,13 +355,12 @@ struct EffectLockmanErrorTests {
       column: testColumn
     )
 
-    #expect(Bool(true)) // Success if no crash
+    XCTAssertTrue(Bool(true)) // Success if no crash
   }
 
   // MARK: - Edge Cases
 
-  @Test("Error handling with empty action name", .disabled("Issues with test framework error reporting"))
-  func errorHandlingWithEmptyActionName() {
+  func testErrorHandlingWithEmptyActionName() {
     // Test edge case where action name might be empty
     enum EmptyNameAction: LockmanAction {
       case empty
@@ -397,11 +383,10 @@ struct EffectLockmanErrorTests {
       column: #column
     )
 
-    #expect(Bool(true))
+    XCTAssertTrue(Bool(true))
   }
 
-  @Test("Error handling with unicode action names", .disabled("Issues with test framework error reporting"))
-  func errorHandlingWithUnicodeActionNames() {
+  func testErrorHandlingWithUnicodeActionNames() {
     enum UnicodeAction: LockmanAction {
       case unicode
       var actionName: String { "🔒アクション测试🚀" }
@@ -423,6 +408,6 @@ struct EffectLockmanErrorTests {
       column: #column
     )
 
-    #expect(Bool(true))
+    XCTAssertTrue(Bool(true))
   }
 }

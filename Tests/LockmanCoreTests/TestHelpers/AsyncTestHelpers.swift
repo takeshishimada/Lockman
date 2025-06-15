@@ -1,5 +1,6 @@
 import Foundation
 import Testing
+import XCTest
 @testable import LockmanCore
 
 // MARK: - Async Test Helpers
@@ -182,6 +183,30 @@ enum LockTestHelpers {
       #expect(result == .success, "Resource should be unlocked")
     }
   }
+}
+
+// MARK: - XCTest Assertion Helpers
+
+/// Custom assertion to check if a block throws a specific error type
+func XCTAssertTrue<E: Error>(throws errorType: E.Type, _ block: () throws -> Void, file: StaticString = #file, line: UInt = #line) {
+    do {
+        try block()
+        XCTFail("Expected to throw \(errorType) but no error was thrown", file: file, line: line)
+    } catch is E {
+        // Expected error type was thrown
+    } catch {
+        XCTFail("Expected to throw \(errorType) but threw \(type(of: error)): \(error)", file: file, line: line)
+    }
+}
+
+/// Custom assertion for blocks that should not throw
+func XCTAssertTrue(throws errorType: Never.Type, _ block: () throws -> Void, file: StaticString = #file, line: UInt = #line) {
+    do {
+        try block()
+        // Success - no error thrown
+    } catch {
+        XCTFail("Expected no error but threw \(type(of: error)): \(error)", file: file, line: line)
+    }
 }
 
 // MARK: - Performance Test Helpers

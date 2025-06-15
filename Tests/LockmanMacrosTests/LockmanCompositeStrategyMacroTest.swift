@@ -1,7 +1,7 @@
 #if canImport(LockmanMacros)
   import LockmanMacros
   import MacroTesting
-  import Testing
+  import XCTest
 
   /// Test suite for `LockmanCompositeStrategy2Macro` which combines both `ExtensionMacro` and `MemberMacro` functionality.
   ///
@@ -12,11 +12,9 @@
   /// - `lockmanInfo` property that returns composite info for 2 strategies
   ///
   /// The macro should only be applied to enum declarations and will emit diagnostics for other types.
-  @Suite(.macros([LockmanCompositeStrategy2Macro.self]))
-  struct LockmanCompositeStrategy2MacroTest {
+  final class LockmanCompositeStrategy2MacroTest: XCTestCase {
     /// Tests that the macro generates the correct protocol conformance extension and members.
-    @Test
-    func extensionMacroGeneratesConformance() {
+    func testExtensionMacroGeneratesConformance() {
       withMacroTesting(macros: [
         "LockmanCompositeStrategy": LockmanCompositeStrategy2Macro.self,
       ]) {
@@ -71,8 +69,7 @@
     }
 
     /// Tests public enum handling
-    @Test
-    func publicEnumHandling() {
+    func testPublicEnumHandling() {
       withMacroTesting(macros: [
         "LockmanCompositeStrategy": LockmanCompositeStrategy2Macro.self,
       ]) {
@@ -124,10 +121,8 @@
   }
 
   /// Test suite for `LockmanCompositeStrategy3Macro`
-  @Suite(.macros([LockmanCompositeStrategy3Macro.self]))
-  struct LockmanCompositeStrategy3MacroTest {
-    @Test
-    func extensionMacroGeneratesConformance() {
+  final class LockmanCompositeStrategy3MacroTest: XCTestCase {
+    func testExtensionMacroGeneratesConformance() {
       withMacroTesting(macros: [
         "LockmanCompositeStrategy": LockmanCompositeStrategy3Macro.self,
       ]) {
@@ -188,10 +183,8 @@
   }
 
   /// Test suite for `LockmanCompositeStrategy4Macro`
-  @Suite(.macros([LockmanCompositeStrategy4Macro.self]))
-  struct LockmanCompositeStrategy4MacroTest {
-    @Test
-    func extensionMacroGeneratesConformance() {
+  final class LockmanCompositeStrategy4MacroTest: XCTestCase {
+    func testExtensionMacroGeneratesConformance() {
       withMacroTesting(macros: [
         "LockmanCompositeStrategy": LockmanCompositeStrategy4Macro.self,
       ]) {
@@ -253,10 +246,8 @@
   }
 
   /// Test suite for `LockmanCompositeStrategy5Macro`
-  @Suite(.macros([LockmanCompositeStrategy5Macro.self]))
-  struct LockmanCompositeStrategy5MacroTest {
-    @Test
-    func extensionMacroGeneratesConformance() {
+  final class LockmanCompositeStrategy5MacroTest: XCTestCase {
+    func testExtensionMacroGeneratesConformance() {
       withMacroTesting(macros: [
         "LockmanCompositeStrategy": LockmanCompositeStrategy5Macro.self,
       ]) {
@@ -323,10 +314,8 @@
   }
 
   /// Test suite for error handling across all macro variants
-  @Suite
-  struct LockmanCompositeStrategyErrorTests {
-    @Test
-    func invalidDeclarationTypeError() {
+  final class LockmanCompositeStrategyErrorTests: XCTestCase {
+    func testInvalidDeclarationTypeError() {
       withMacroTesting(macros: [
         "LockmanCompositeStrategy": LockmanCompositeStrategy2Macro.self,
       ]) {
@@ -351,8 +340,7 @@
       }
     }
 
-    @Test
-    func invalidArgumentCountError() {
+    func testInvalidArgumentCountError() {
       withMacroTesting(macros: [
         "LockmanCompositeStrategy": LockmanCompositeStrategy2Macro.self,
       ]) {

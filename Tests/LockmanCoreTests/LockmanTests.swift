@@ -1,6 +1,6 @@
 
 import Foundation
-import Testing
+import XCTest
 @testable import LockmanCore
 
 // MARK: - Helper Extensions
@@ -107,12 +107,10 @@ private final class MockLockmanStrategy: LockmanStrategy, @unchecked Sendable {
 
 // MARK: - Lockman Facade Tests
 
-@Suite("Lockman Facade Tests")
-struct LockmanFacadeTests {
+final class LockmanFacadeTests: XCTestCase {
   // MARK: - Container Access Tests
 
-  @Test("Default container access")
-  func testDefaultContainerAccess() throws {
+  func testDefaultContainerAccess() async throws {
     let container = Lockman.container
 
     // The default container should already have strategies registered
@@ -121,22 +119,20 @@ struct LockmanFacadeTests {
     let priorityStrategy = try container.resolve(LockmanPriorityBasedStrategy.self)
 
     // With type erasure, we verify types instead of identity
-    #expect(type(of: singleStrategy) == AnyLockmanStrategy<LockmanSingleExecutionInfo>.self)
-    #expect(type(of: priorityStrategy) == AnyLockmanStrategy<LockmanPriorityBasedInfo>.self)
+    XCTAssertTrue(type(of: singleStrategy) == AnyLockmanStrategy<LockmanSingleExecutionInfo>.self)
+    XCTAssertTrue(type(of: priorityStrategy) == AnyLockmanStrategy<LockmanPriorityBasedInfo>.self)
   }
 
-  @Test("Default container is singleton")
-  func testDefaultContainerIsSingleton() {
+  func testDefaultContainerIsSingleton() async throws {
     let container1 = Lockman.container
     let container2 = Lockman.container
 
-    #expect(container1 === container2)
+    XCTAssertTrue(container1 === container2)
   }
 
   // MARK: - Cleanup Tests
 
-  @Test("Global cleanup delegates to container")
-  func testGlobalCleanupDelegatesToContainer() async {
+  func testGlobalCleanupDelegatesToContainer() async throws {
     let testContainer = LockmanStrategyContainer()
     let mockStrategy = MockLockmanStrategy()
     try? testContainer.register(mockStrategy)
@@ -144,13 +140,12 @@ struct LockmanFacadeTests {
     await Lockman.withTestContainer(testContainer) {
       Lockman.cleanup.all()
 
-      #expect(mockStrategy.getCleanUpCallCount() == 1)
-      #expect(mockStrategy.getCleanUpWithIdCallCount() == 0)
+      XCTAssertEqual(mockStrategy.getCleanUpCallCount(), 1)
+      XCTAssertEqual(mockStrategy.getCleanUpWithIdCallCount(), 0)
     }
   }
 
-  @Test("Targeted cleanup delegates to container")
-  func testTargetedCleanupDelegatesToContainer() async {
+  func testTargetedCleanupDelegatesToContainer() async throws {
     let testContainer = LockmanStrategyContainer()
     let mockStrategy = MockLockmanStrategy()
     let boundaryId = MockBoundaryId(value: "test")
@@ -159,14 +154,13 @@ struct LockmanFacadeTests {
     await Lockman.withTestContainer(testContainer) {
       Lockman.cleanup.boundary(boundaryId)
 
-      #expect(mockStrategy.getCleanUpCallCount() == 0)
-      #expect(mockStrategy.getCleanUpWithIdCallCount() == 1)
-      #expect((mockStrategy.getLastCleanUpId() as? MockBoundaryId)?.value == "test")
+      XCTAssertEqual(mockStrategy.getCleanUpCallCount(), 0)
+      XCTAssertEqual(mockStrategy.getCleanUpWithIdCallCount(), 1)
+      XCTAssertEqual((mockStrategy.getLastCleanUpId() as? MockBoundaryId)?.value, "test")
     }
   }
 
-  @Test("Multiple cleanup calls")
-  func testMultipleCleanupCalls() async {
+  func testMultipleCleanupCalls() async throws {
     let testContainer = LockmanStrategyContainer()
     let mockStrategy = MockLockmanStrategy()
     let boundaryId1 = MockBoundaryId(value: "test1")
@@ -179,15 +173,14 @@ struct LockmanFacadeTests {
       Lockman.cleanup.all()
       Lockman.cleanup.boundary(boundaryId2)
 
-      #expect(mockStrategy.getCleanUpCallCount() == 2)
-      #expect(mockStrategy.getCleanUpWithIdCallCount() == 2)
-      #expect((mockStrategy.getLastCleanUpId() as? MockBoundaryId)?.value == "test2")
+      XCTAssertEqual(mockStrategy.getCleanUpCallCount(), 2)
+      XCTAssertEqual(mockStrategy.getCleanUpWithIdCallCount(), 2)
+      XCTAssertEqual((mockStrategy.getLastCleanUpId() as? MockBoundaryId)?.value, "test2")
     }
   }
 
   // MARK: - Test Container Tests
 
-  @Test("Test container isolation")
   func testTestContainerIsolation() async throws {
     let testContainer = LockmanStrategyContainer()
     let mockStrategy = MockLockmanStrategy()
@@ -196,28 +189,27 @@ struct LockmanFacadeTests {
     // Outside test container scope - should use default container
     let defaultContainer = Lockman.container
     let defaultStrategy = try defaultContainer.resolve(LockmanSingleExecutionStrategy.self)
-    #expect(type(of: defaultStrategy) == AnyLockmanStrategy<LockmanSingleExecutionInfo>.self)
+    XCTAssertTrue(type(of: defaultStrategy) == AnyLockmanStrategy<LockmanSingleExecutionInfo>.self)
 
     // Inside test container scope - should use test container
     await Lockman.withTestContainer(testContainer) {
       let containerInScope = Lockman.container
-      #expect(containerInScope === testContainer)
+      XCTAssertTrue(containerInScope === testContainer)
 
       do {
         let resolvedMock = try containerInScope.resolve(MockLockmanStrategy.self)
-        #expect(type(of: resolvedMock) == AnyLockmanStrategy<MockLockmanInfo>.self)
+        XCTAssertTrue(type(of: resolvedMock) == AnyLockmanStrategy<MockLockmanInfo>.self)
       } catch {
-        #expect(Bool(false), "Should be able to resolve mock strategy")
+        XCTAssertTrue(Bool(false), "Should be able to resolve mock strategy")
       }
     }
 
     // Back outside - should use default container again
     let containerAfter = Lockman.container
-    #expect(containerAfter === defaultContainer)
+    XCTAssertTrue(containerAfter === defaultContainer)
   }
 
-  @Test("Nested test containers")
-  func testNestedTestContainers() async {
+  func testNestedTestContainers() async throws {
     let outerContainer = LockmanStrategyContainer()
     let innerContainer = LockmanStrategyContainer()
     let outerStrategy = MockLockmanStrategy()
@@ -228,29 +220,28 @@ struct LockmanFacadeTests {
 
     await Lockman.withTestContainer(outerContainer) {
       let container1 = Lockman.container
-      #expect(container1 === outerContainer)
+      XCTAssertTrue(container1 === outerContainer)
 
       await Lockman.withTestContainer(innerContainer) {
         let container2 = Lockman.container
-        #expect(container2 === innerContainer)
+        XCTAssertTrue(container2 === innerContainer)
 
         Lockman.cleanup.all()
-        #expect(innerStrategy.getCleanUpCallCount() == 1)
-        #expect(outerStrategy.getCleanUpCallCount() == 0)
+        XCTAssertEqual(innerStrategy.getCleanUpCallCount(), 1)
+        XCTAssertEqual(outerStrategy.getCleanUpCallCount(), 0)
       }
 
       // Back to outer container
       let container3 = Lockman.container
-      #expect(container3 === outerContainer)
+      XCTAssertTrue(container3 === outerContainer)
 
       Lockman.cleanup.all()
-      #expect(outerStrategy.getCleanUpCallCount() == 1)
-      #expect(innerStrategy.getCleanUpCallCount() == 1) // Should not increase
+      XCTAssertEqual(outerStrategy.getCleanUpCallCount(), 1)
+      XCTAssertEqual(innerStrategy.getCleanUpCallCount(), 1) // Should not increase
     }
   }
 
-  @Test("Test container with throwing operation")
-  func testTestContainerWithThrowingOperation() async {
+  func testTestContainerWithThrowingOperation() async throws {
     struct TestError: Error {}
 
     let testContainer = LockmanStrategyContainer()
@@ -260,37 +251,35 @@ struct LockmanFacadeTests {
     do {
       try await Lockman.withTestContainer(testContainer) {
         let container = Lockman.container
-        #expect(container === testContainer)
+        XCTAssertTrue(container === testContainer)
 
         throw TestError()
       }
-      #expect(Bool(false), "Should have thrown TestError")
+      XCTAssertTrue(Bool(false), "Should have thrown TestError")
     } catch is TestError {
       // Expected
     } catch {
-      #expect(Bool(false), "Should have thrown TestError, got \(error)")
+      XCTAssertTrue(Bool(false), "Should have thrown TestError, got \(error)")
     }
 
     // Should be back to default container
     let defaultContainer = Lockman.container
-    #expect(defaultContainer !== testContainer)
+    XCTAssertFalse(defaultContainer === testContainer)
   }
 
-  @Test("Test container with return value")
-  func testTestContainerWithReturnValue() async {
+  func testTestContainerWithReturnValue() async throws {
     let testContainer = LockmanStrategyContainer()
 
     let result = await Lockman.withTestContainer(testContainer) {
       "test result"
     }
 
-    #expect(result == "test result")
+    XCTAssertEqual(result, "test result")
   }
 
   // MARK: - Concurrent Access Tests
 
-  @Test("Concurrent access to default container")
-  func testConcurrentAccessToDefaultContainer() async {
+  func testConcurrentAccessToDefaultContainer() async throws {
     let containers = await withTaskGroup(of: LockmanStrategyContainer.self) { group in
       for _ in 0 ..< 100 {
         group.addTask {
@@ -307,14 +296,13 @@ struct LockmanFacadeTests {
 
     // All should be the same instance
     guard let firstContainer = containers.first else {
-      Issue.record("Expected at least one container")
+      XCTFail("Expected at least one container")
       return
     }
-    #expect(containers.allSatisfy { $0 === firstContainer })
+    XCTAssertTrue(containers.allSatisfy { $0 === firstContainer })
   }
 
-  @Test("Concurrent cleanup operations")
-  func testConcurrentCleanupOperations() async {
+  func testConcurrentCleanupOperations() async throws {
     let testContainer = LockmanStrategyContainer()
     let mockStrategy = MockLockmanStrategy()
     try? testContainer.register(mockStrategy)
@@ -337,13 +325,12 @@ struct LockmanFacadeTests {
       }
 
       // Should have received all cleanup calls
-      #expect(mockStrategy.getCleanUpCallCount() >= 50)
-      #expect(mockStrategy.getCleanUpWithIdCallCount() >= 50)
+      XCTAssertGreaterThanOrEqual(mockStrategy.getCleanUpCallCount(), 50)
+      XCTAssertGreaterThanOrEqual(mockStrategy.getCleanUpWithIdCallCount(), 50)
     }
   }
 
-  @Test("Concurrent test container operations")
-  func testConcurrentTestContainerOperations() async {
+  func testConcurrentTestContainerOperations() async throws {
     // Test that multiple concurrent test containers don't interfere
     await withTaskGroup(of: Bool.self) { group in
       for _ in 0 ..< 10 {
@@ -370,14 +357,13 @@ struct LockmanFacadeTests {
       }
 
       // All operations should have succeeded
-      #expect(results.allSatisfy { $0 })
+      XCTAssertTrue(results.allSatisfy { $0 })
     }
   }
 
   // MARK: - Default Container Strategy Tests
 
-  @Test("Default container has required strategies")
-  func testDefaultContainerHasRequiredStrategies() throws {
+  func testDefaultContainerHasRequiredStrategies() async throws {
     let container = Lockman.container
 
     // Should be able to resolve both default strategies
@@ -385,11 +371,10 @@ struct LockmanFacadeTests {
     let priorityStrategy = try container.resolve(LockmanPriorityBasedStrategy.self)
 
     // With type erasure, we verify types instead of identity
-    #expect(type(of: singleStrategy) == AnyLockmanStrategy<LockmanSingleExecutionInfo>.self)
-    #expect(type(of: priorityStrategy) == AnyLockmanStrategy<LockmanPriorityBasedInfo>.self)
+    XCTAssertTrue(type(of: singleStrategy) == AnyLockmanStrategy<LockmanSingleExecutionInfo>.self)
+    XCTAssertTrue(type(of: priorityStrategy) == AnyLockmanStrategy<LockmanPriorityBasedInfo>.self)
   }
 
-  @Test("Default strategies are functional")
   func testDefaultStrategiesAreFunctional() async throws {
     // Test that default strategies can be used for cleanup without errors
     Lockman.cleanup.all()
@@ -400,7 +385,6 @@ struct LockmanFacadeTests {
 
   // MARK: - Type Erasure Tests
 
-  @Test("Type erasure functionality")
   func testTypeErasureFunctionality() async throws {
     let testContainer = LockmanStrategyContainer()
     let mockStrategy = MockLockmanStrategy()
@@ -411,7 +395,7 @@ struct LockmanFacadeTests {
       do {
         resolvedStrategy = try testContainer.resolve(MockLockmanStrategy.self)
       } catch {
-        #expect(Bool(false), "Unexpected error: \(error)")
+        XCTAssertTrue(Bool(false), "Unexpected error: \(error)")
         return
       }
 
@@ -420,11 +404,11 @@ struct LockmanFacadeTests {
       let info = MockLockmanInfo(actionId: "action")
 
       let result = resolvedStrategy.checkAndLock(id: boundaryId, info: info)
-      #expect(result == .success)
+      XCTAssertEqual(result, .success)
 
       // Test individual operations
       let canLockResult = resolvedStrategy.canLock(id: boundaryId, info: info)
-      #expect(canLockResult == .success)
+      XCTAssertEqual(canLockResult, .success)
 
       resolvedStrategy.lock(id: boundaryId, info: info)
       resolvedStrategy.unlock(id: boundaryId, info: info)
@@ -432,17 +416,15 @@ struct LockmanFacadeTests {
       resolvedStrategy.cleanUp(id: boundaryId)
 
       // Verify calls were made
-      #expect(mockStrategy.getCleanUpCallCount() == 1)
-      #expect(mockStrategy.getCleanUpWithIdCallCount() == 1)
+      XCTAssertEqual(mockStrategy.getCleanUpCallCount(), 1)
+      XCTAssertEqual(mockStrategy.getCleanUpWithIdCallCount(), 1)
     }
   }
 }
 
 // MARK: - Integration Tests
 
-@Suite("Lockman Integration Tests")
-struct LockmanIntegrationTests {
-  @Test("Integration with Effect.withLock would work")
+final class LockmanIntegrationTests: XCTestCase {
   func testIntegrationPotential() async throws {
     // This test verifies that the container setup would work with Effect.withLock
     let testContainer = LockmanStrategyContainer()
@@ -456,13 +438,12 @@ struct LockmanIntegrationTests {
       let singleStrategy = try container.resolve(LockmanSingleExecutionStrategy.self)
       let priorityStrategy = try container.resolve(LockmanPriorityBasedStrategy.self)
 
-      #expect(type(of: singleStrategy) == AnyLockmanStrategy<LockmanSingleExecutionInfo>.self)
-      #expect(type(of: priorityStrategy) == AnyLockmanStrategy<LockmanPriorityBasedInfo>.self)
+      XCTAssertTrue(type(of: singleStrategy) == AnyLockmanStrategy<LockmanSingleExecutionInfo>.self)
+      XCTAssertTrue(type(of: priorityStrategy) == AnyLockmanStrategy<LockmanPriorityBasedInfo>.self)
     }
   }
 
-  @Test("Multiple test scenarios in parallel")
-  func testMultipleTestScenariosInParallel() async {
+  func testMultipleTestScenariosInParallel() async throws {
     await withTaskGroup(of: Bool.self) { group in
       // Scenario 1: Basic cleanup test
       group.addTask {
@@ -521,8 +502,8 @@ struct LockmanIntegrationTests {
         results.append(result)
       }
 
-      #expect(results.count == 4)
-      #expect(results.allSatisfy { $0 })
+      XCTAssertEqual(results.count, 4)
+      XCTAssertTrue(results.allSatisfy { $0 })
     }
   }
 }

@@ -1,6 +1,6 @@
 import ComposableArchitecture
 import Foundation
-import Testing
+import XCTest
 @testable import LockmanComposable
 @testable import LockmanCore
 
@@ -8,13 +8,11 @@ import Testing
 ///
 /// These tests verify that the NSLock-based boundary locking mechanism
 /// prevents race conditions and ensures thread safety within the framework.
-@Suite("Deadlock Prevention Tests")
-struct DeadlockPreventionTests {
+final class DeadlockPreventionTests: XCTestCase {
   // MARK: - Basic NSLock Management Tests
 
   /// Tests basic NSLock creation and operation functionality.
   /// Verifies that boundary locks can be created and used successfully.
-  @Test("NSLock creation and basic operation")
   func testNSLockCreationAndBasicOperation() async {
     let id = TestBoundaryId("test")
     var executed = false
@@ -23,12 +21,11 @@ struct DeadlockPreventionTests {
       executed = true
     }
 
-    #expect(executed)
+    XCTAssertTrue(executed)
   }
 
   /// Tests that multiple boundary IDs work independently without interference.
   /// Verifies that nested locks with different boundary IDs execute in the expected order.
-  @Test("Multiple boundary IDs work independently")
   func testMultipleBoundaryIdsWorkIndependently() async {
     let id1 = TestBoundaryId("test1")
     let id2 = TestBoundaryId("test2")
@@ -46,7 +43,7 @@ struct DeadlockPreventionTests {
       }
     }
 
-    #expect(executions == ["id1", "id2", "id3"])
+    XCTAssertEqual(executions, ["id1", "id2", "id3"])
   }
 
   // MARK: - Concurrent Access Tests
@@ -54,7 +51,6 @@ struct DeadlockPreventionTests {
   /// Tests that concurrent access to the same boundary ID is properly serialized.
   /// This test verifies that the NSLock prevents race conditions by ensuring
   /// that operations on the same boundary are executed sequentially.
-  @Test("Concurrent access to same boundary is serialized")
   func testConcurrentAccessToSameBoundaryIsSerialized() async {
     let id = TestBoundaryId("concurrent")
     let iterations = 100
@@ -76,11 +72,10 @@ struct DeadlockPreventionTests {
     }
 
     let finalCount = counter.withCriticalRegion { $0 }
-    #expect(finalCount == iterations)
+    XCTAssertEqual(finalCount, iterations)
   }
 
   /// Alternative test using atomic operations to verify serialization
-  @Test("Concurrent access serialization with atomic counter")
   func testConcurrentAccessSerializationWithAtomicCounter() async {
     let id = TestBoundaryId("atomic_test")
     let iterations = 50
@@ -107,11 +102,11 @@ struct DeadlockPreventionTests {
     }
 
     let finalResults = results.withCriticalRegion { $0 }
-    #expect(finalResults.count == iterations)
+    XCTAssertEqual(finalResults.count, iterations)
 
     // Verify that operations were serialized (sequential numbering)
     for (index, value) in finalResults.enumerated() {
-      #expect(value == index + 1)
+      XCTAssertEqual(value, index + 1)
     }
   }
 
@@ -119,7 +114,6 @@ struct DeadlockPreventionTests {
 
   /// Tests that lock operations properly handle exceptions without leaving locks in invalid states.
   /// Verifies that even when exceptions are thrown, subsequent lock operations continue to work.
-  @Test("Lock operation with throwing closure")
   func testLockOperationWithThrowingClosure() async {
     struct TestError: Error {}
     let id = TestBoundaryId("throwing")
@@ -128,11 +122,11 @@ struct DeadlockPreventionTests {
       try Lockman.withBoundaryLock(for: id) {
         throw TestError()
       }
-      #expect(Bool(false), "Should have thrown")
+      XCTAssertTrue(Bool(false), "Should have thrown")
     } catch is TestError {
       // Expected behavior
     } catch {
-      #expect(Bool(false), "Unexpected error: \(error)")
+      XCTAssertTrue(Bool(false), "Unexpected error: \(error)")
     }
 
     // Lock operations should continue to work normally after exception handling
@@ -140,14 +134,13 @@ struct DeadlockPreventionTests {
     Lockman.withBoundaryLock(for: id) {
       executed = true
     }
-    #expect(executed)
+    XCTAssertTrue(executed)
   }
 
   // MARK: - Integration Tests
 
   /// Tests integration with Effect.withLock to ensure deadlock prevention works
   /// in real-world usage scenarios with the Composable Architecture.
-  @Test("Integration with Effect.withLock")
   func testIntegrationWithEffectWithLock() async throws {
     let container = LockmanStrategyContainer()
     let strategy = LockmanSingleExecutionStrategy()
@@ -169,7 +162,6 @@ struct DeadlockPreventionTests {
 
   /// Tests integration with LockmanUnlock to ensure proper coordination
   /// between lock acquisition and release operations.
-  @Test("Integration with LockmanUnlock")
   func testIntegrationWithLockmanUnlock() async throws {
     let container = LockmanStrategyContainer()
     let strategy = LockmanSingleExecutionStrategy()
@@ -181,7 +173,7 @@ struct DeadlockPreventionTests {
 
       // Check if we can acquire lock
       let canLockResult = strategy.canLock(id: id, info: info)
-      #expect(canLockResult == .success)
+      XCTAssertEqual(canLockResult, .success)
 
       // Acquire lock through strategy
       strategy.lock(id: id, info: info)
@@ -193,7 +185,7 @@ struct DeadlockPreventionTests {
 
       // Verify that lock can be acquired again after unlock
       let secondCanLockResult = strategy.canLock(id: id, info: info)
-      #expect(secondCanLockResult == .success)
+      XCTAssertEqual(secondCanLockResult, .success)
 
       // Acquire and cleanup
       strategy.lock(id: id, info: info)
@@ -203,7 +195,6 @@ struct DeadlockPreventionTests {
 
   /// Tests that nested boundary locks with different IDs work correctly.
   /// Verifies the proper execution order when locks are nested.
-  @Test("Nested boundary locks work correctly")
   func testNestedBoundaryLocksWorkCorrectly() async {
     let outerID = TestBoundaryId("outer")
     let innerID = TestBoundaryId("inner")
@@ -220,12 +211,11 @@ struct DeadlockPreventionTests {
       executionOrder.append("outer_end")
     }
 
-    #expect(executionOrder == ["outer_start", "inner", "outer_end"])
+    XCTAssertEqual(executionOrder, ["outer_start", "inner", "outer_end"])
   }
 
   /// Performance test with many concurrent operations across multiple boundaries.
   /// Verifies that the locking mechanism performs well under high concurrency.
-  @Test("Performance with many concurrent operations")
   func testPerformanceWithManyConcurrentOperations() async {
     let iterations = 50 // Adjusted for reasonable test execution time
     let boundaries = (0 ..< 10).map { TestBoundaryId("perf_\($0)") }
@@ -250,14 +240,13 @@ struct DeadlockPreventionTests {
     let count = completionCount.withCriticalRegion { $0 }
 
     let parallesism = 3.0
-    #expect(count == iterations)
-    #expect(totalTime < 5.0 * parallesism) // Should complete within reasonable time
+    XCTAssertEqual(count, iterations)
+    XCTAssertLessThan(totalTime, 5.0 * parallesism) // Should complete within reasonable time
   }
 
   // MARK: - Additional Boundary Lock Tests
 
   /// Tests that the same boundary ID always returns the same lock instance
-  @Test("Same boundary ID returns consistent lock")
   func testSameBoundaryIdReturnsConsistentLock() async {
     let id = TestBoundaryId("consistent")
     var firstExecution = false
@@ -273,12 +262,11 @@ struct DeadlockPreventionTests {
       secondExecution = true
     }
 
-    #expect(firstExecution)
-    #expect(secondExecution)
+    XCTAssertTrue(firstExecution)
+    XCTAssertTrue(secondExecution)
   }
 
   /// Tests that boundary locks work correctly with complex ID types
-  @Test("Complex boundary ID types work correctly")
   func testComplexBoundaryIdTypesWorkCorrectly() async {
     let complexId = ComplexBoundaryId(prefix: "complex", suffix: "test", number: 42)
     var executed = false
@@ -287,11 +275,10 @@ struct DeadlockPreventionTests {
       executed = true
     }
 
-    #expect(executed)
+    XCTAssertTrue(executed)
   }
 
   /// Tests memory management of boundary locks
-  @Test("Boundary lock memory management")
   func testBoundaryLockMemoryManagement() async {
     let iterations = 100
 
@@ -303,13 +290,12 @@ struct DeadlockPreventionTests {
     }
 
     // Test should complete without memory issues
-    #expect(Bool(true))
+    XCTAssertTrue(Bool(true))
   }
 
   // MARK: - Stress Tests
 
   /// Tests high-frequency lock operations
-  @Test("High frequency lock operations")
   func testHighFrequencyLockOperations() async {
     let id = TestBoundaryId("high_freq")
     let iterations = 1000
@@ -321,11 +307,10 @@ struct DeadlockPreventionTests {
       }
     }
 
-    #expect(counter == iterations)
+    XCTAssertEqual(counter, iterations)
   }
 
   /// Tests concurrent operations with many different boundaries
-  @Test("Many different boundaries concurrently")
   func testManyDifferentBoundariesConcurrently() async {
     let boundaryCount = 100
     let results = ManagedCriticalState<[String: Bool]>([:])
@@ -344,11 +329,11 @@ struct DeadlockPreventionTests {
     }
 
     let finalResults = results.withCriticalRegion { $0 }
-    #expect(finalResults.count == boundaryCount)
+    XCTAssertEqual(finalResults.count, boundaryCount)
 
     // Verify all boundaries were processed
     for i in 0 ..< boundaryCount {
-      #expect(finalResults["boundary_\(i)"] == true)
+      XCTAssertEqual(finalResults["boundary_\(i)"], true)
     }
   }
 }
@@ -444,9 +429,7 @@ private struct TestFeature {
 
 // MARK: - Additional Test Suites
 
-@Suite("Boundary Lock Edge Cases")
-struct BoundaryLockEdgeCaseTests {
-  @Test("Empty string boundary ID")
+final class BoundaryLockEdgeCaseTests: XCTestCase {
   func testEmptyStringBoundaryId() async {
     let id = TestBoundaryId("")
     var executed = false
@@ -455,10 +438,9 @@ struct BoundaryLockEdgeCaseTests {
       executed = true
     }
 
-    #expect(executed)
+    XCTAssertTrue(executed)
   }
 
-  @Test("Unicode boundary ID")
   func testUnicodeBoundaryId() async {
     let id = TestBoundaryId("🔒🧵💾")
     var executed = false
@@ -467,10 +449,9 @@ struct BoundaryLockEdgeCaseTests {
       executed = true
     }
 
-    #expect(executed)
+    XCTAssertTrue(executed)
   }
 
-  @Test("Very long boundary ID")
   func testVeryLongBoundaryId() async {
     let longString = String(repeating: "a", count: 1000)
     let id = TestBoundaryId(longString)
@@ -480,10 +461,9 @@ struct BoundaryLockEdgeCaseTests {
       executed = true
     }
 
-    #expect(executed)
+    XCTAssertTrue(executed)
   }
 
-  @Test("Boundary ID with special characters")
   func testBoundaryIdWithSpecialCharacters() async {
     let id = TestBoundaryId("test-boundary_id.with@special#chars!")
     var executed = false
@@ -492,13 +472,11 @@ struct BoundaryLockEdgeCaseTests {
       executed = true
     }
 
-    #expect(executed)
+    XCTAssertTrue(executed)
   }
 }
 
-@Suite("Boundary Lock Error Resilience")
-struct BoundaryLockErrorResilienceTests {
-  @Test("Multiple consecutive errors don't break locking")
+final class BoundaryLockErrorResilienceTests: XCTestCase {
   func testMultipleConsecutiveErrorsDontBreakLocking() async {
     struct TestError: Error {}
     let id = TestBoundaryId("error_resilience")
@@ -512,7 +490,7 @@ struct BoundaryLockErrorResilienceTests {
       } catch is TestError {
         // Expected
       } catch {
-        #expect(Bool(false), "Unexpected error: \(error)")
+        XCTAssertTrue(Bool(false), "Unexpected error: \(error)")
       }
     }
 
@@ -521,10 +499,9 @@ struct BoundaryLockErrorResilienceTests {
     Lockman.withBoundaryLock(for: id) {
       executed = true
     }
-    #expect(executed)
+    XCTAssertTrue(executed)
   }
 
-  @Test("Nested error handling")
   func testNestedErrorHandling() async {
     struct OuterError: Error {}
     struct InnerError: Error {}
@@ -551,11 +528,11 @@ struct BoundaryLockErrorResilienceTests {
     } catch is OuterError {
       // Expected
     } catch {
-      #expect(Bool(false), "Unexpected error: \(error)")
+      XCTAssertTrue(Bool(false), "Unexpected error: \(error)")
     }
 
-    #expect(outerExecuted)
-    #expect(innerExecuted)
+    XCTAssertTrue(outerExecuted)
+    XCTAssertTrue(innerExecuted)
 
     // Both locks should work normally afterwards
     var normalOuterExecuted = false
@@ -568,11 +545,11 @@ struct BoundaryLockErrorResilienceTests {
       }
     }
 
-    #expect(normalOuterExecuted)
-    #expect(normalInnerExecuted)
+    XCTAssertTrue(normalOuterExecuted)
+    XCTAssertTrue(normalInnerExecuted)
   }
 
-//  @Test("Error handling with deeply nested locks")
+//  func testError handling with deeply nested locks() async throws {
 //  func testErrorHandlingWithDeeplyNestedLocks() async {
 //    struct DeepError: Error {}
 //
@@ -600,7 +577,7 @@ struct BoundaryLockErrorResilienceTests {
 //      // Expected
 //    }
 //
-//    #expect(executionLevels == [0, 1, 2, 3, 4])
+//    XCTAssertEqual(executionLevels, [0, 1, 2, 3, 4])
 //
 //    // All locks should work normally after the error
 //    var allExecuted = true
@@ -611,6 +588,6 @@ struct BoundaryLockErrorResilienceTests {
 //      }
 //      allExecuted = allExecuted && executed
 //    }
-//    #expect(allExecuted)
+//    XCTAssertTrue(allExecuted)
 //  }
 }

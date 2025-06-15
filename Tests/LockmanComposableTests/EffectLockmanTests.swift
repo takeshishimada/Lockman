@@ -1,16 +1,14 @@
 import ComposableArchitecture
 import Foundation
-import Testing
+import XCTest
 @testable import LockmanComposable
 @testable import LockmanCore
 
 // MARK: - Effect+withLock Tests
 
-@Suite("Effect+withLock SingleExecutionStrategy Tests")
-struct EffectWithLockSingleExecutionStrategyTests {
+final class EffectWithLockSingleExecutionStrategyTests: XCTestCase {
   // MARK: - Basic Functionality Tests
 
-  @Test("Normal action execution without lock interference")
   func testNormalActionExecution() async {
     let container = LockmanStrategyContainer()
     let strategy = LockmanSingleExecutionStrategy()
@@ -32,7 +30,6 @@ struct EffectWithLockSingleExecutionStrategyTests {
     }
   }
 
-  @Test("Action blocked by existing lock")
   func testActionBlockedByExistingLock() async {
     let container = LockmanStrategyContainer()
     let strategy = LockmanSingleExecutionStrategy()
@@ -54,7 +51,7 @@ struct EffectWithLockSingleExecutionStrategyTests {
 
       // Use correct API for locking
       let result = strategy.canLock(id: id, info: info)
-      #expect(result == .success)
+      XCTAssertEqual(result, .success)
       strategy.lock(id: id, info: info)
 
       // When: Attempting to execute the same action
@@ -69,7 +66,6 @@ struct EffectWithLockSingleExecutionStrategyTests {
     }
   }
 
-  @Test("Action execution after lock release")
   func testActionExecutionAfterLockRelease() async {
     let container = LockmanStrategyContainer()
     let strategy = LockmanSingleExecutionStrategy()
@@ -90,7 +86,7 @@ struct EffectWithLockSingleExecutionStrategyTests {
 
       // Given: Pre-existing lock
       let lockResult = strategy.canLock(id: id, info: info)
-      #expect(lockResult == .success)
+      XCTAssertEqual(lockResult, .success)
       strategy.lock(id: id, info: info)
 
       // When: First attempt is blocked
@@ -112,7 +108,6 @@ struct EffectWithLockSingleExecutionStrategyTests {
 
   // MARK: - Different Action Tests
 
-  @Test("Different actions with same cancel ID can execute")
   func testDifferentActionsWithSameCancelId() async {
     let container = LockmanStrategyContainer()
     let strategy = LockmanSingleExecutionStrategy()
@@ -132,7 +127,7 @@ struct EffectWithLockSingleExecutionStrategyTests {
         mode: .boundary
       )
       let lockResult = strategy.canLock(id: id, info: incrementInfo)
-      #expect(lockResult == .success)
+      XCTAssertEqual(lockResult, .success)
       strategy.lock(id: id, info: incrementInfo)
 
       // When: tapIncrement is blocked
@@ -154,7 +149,6 @@ struct EffectWithLockSingleExecutionStrategyTests {
 
   // MARK: - Lock Failure Tests
 
-  @Test("Lock failure returns none effect")
   func testLockFailureReturnsNoneEffect() async {
     let container = LockmanStrategyContainer()
     let strategy = LockmanSingleExecutionStrategy()
@@ -171,7 +165,7 @@ struct EffectWithLockSingleExecutionStrategyTests {
       let id = TestSingleExecutionFeature.CancelID.userAction
       let info = LockmanSingleExecutionInfo(actionId: "tapIncrement", mode: .boundary)
       let lockResult = strategy.canLock(id: id, info: info)
-      #expect(lockResult == .success)
+      XCTAssertEqual(lockResult, .success)
       strategy.lock(id: id, info: info)
 
       // When: Attempting action that will fail to acquire lock
@@ -188,7 +182,6 @@ struct EffectWithLockSingleExecutionStrategyTests {
 
   // MARK: - Concurrent Execution Tests
 
-  @Test("Concurrent actions with different IDs execute independently")
   func testConcurrentActionsWithDifferentIds() async {
     let container = LockmanStrategyContainer()
     let strategy = LockmanSingleExecutionStrategy()
@@ -215,7 +208,7 @@ struct EffectWithLockSingleExecutionStrategyTests {
 
 //  // MARK: - Error Handling Tests
 //
-//  @Test("withLock handles strategy not registered error")
+//  func testwithLock handles strategy not registered error() async throws {
 //  func testWithLockHandlesStrategyNotRegisteredError() async {
 //    let emptyContainer = LockmanStrategyContainer()
 //
@@ -235,7 +228,6 @@ struct EffectWithLockSingleExecutionStrategyTests {
 //    }
 //  }
 
-  @Test("withLock automatic unlock on operation completion")
   func testWithLockAutomaticUnlockOnCompletion() async {
     let container = LockmanStrategyContainer()
     let strategy = LockmanSingleExecutionStrategy()
@@ -265,11 +257,9 @@ struct EffectWithLockSingleExecutionStrategyTests {
   }
 }
 
-@Suite("Effect+concatenateWithLock Tests")
-struct EffectConcatenateWithLockTests {
+final class EffectConcatenateWithLockTests: XCTestCase {
   // MARK: - Basic Functionality Tests
 
-  @Test("Normal concatenateWithLock execution with automatic unlock")
   func testNormalConcatenateWithLockExecution() async {
     let container = LockmanStrategyContainer()
     let strategy = LockmanSingleExecutionStrategy()
@@ -304,7 +294,6 @@ struct EffectConcatenateWithLockTests {
     }
   }
 
-  @Test("concatenateWithLock handles operation cancellation with automatic unlock")
   func testConcatenateWithLockHandlesCancellationWithAutoUnlock() async {
     let container = LockmanStrategyContainer()
     let strategy = LockmanSingleExecutionStrategy()
@@ -336,7 +325,6 @@ struct EffectConcatenateWithLockTests {
     }
   }
 
-  @Test("concatenateWithLock prevents concurrent execution")
   func testConcatenateWithLockPreventsCurrentExecution() async {
     let container = LockmanStrategyContainer()
     let strategy = LockmanSingleExecutionStrategy()
@@ -356,7 +344,7 @@ struct EffectConcatenateWithLockTests {
         mode: .boundary
       )
       let result = strategy.canLock(id: id, info: info)
-      #expect(result == .success)
+      XCTAssertEqual(result, .success)
       strategy.lock(id: id, info: info)
 
       // When: Attempting to execute the same action
@@ -381,7 +369,6 @@ struct EffectConcatenateWithLockTests {
     }
   }
 
-  @Test("concatenateWithLock with empty operations")
   func testConcatenateWithLockWithEmptyOperations() async {
     let container = LockmanStrategyContainer()
     let strategy = LockmanSingleExecutionStrategy()
@@ -415,9 +402,7 @@ struct EffectConcatenateWithLockTests {
 
 // MARK: - withLock with Manual Unlock Tests
 
-@Suite("Effect+withLock Manual Unlock Tests")
-struct EffectWithLockManualUnlockTests {
-  @Test("Manual unlock in operation")
+final class EffectWithLockManualUnlockTests: XCTestCase {
   func testManualUnlockInOperation() async {
     let container = LockmanStrategyContainer()
     let strategy = LockmanSingleExecutionStrategy()

@@ -1,56 +1,51 @@
 import Foundation
-import Testing
+import XCTest
 @testable import LockmanCore
 
-@Suite("Lockman Configuration Tests", .serialized)
-struct LockmanConfigurationTests {
+final class LockmanConfigurationTests: XCTestCase {
   // MARK: - Test Setup
 
-  init() async {
+  override func setUp() async throws {
     // Reset configuration to default before each test
     Lockman.config.reset()
   }
 
   // MARK: - Configuration Tests
 
-  @Test("Default configuration has transition unlock option")
-  func testDefaultConfigurationHasTransitionUnlockOption() {
+  func testDefaultConfigurationHasTransitionUnlockOption() async throws {
     // Default configuration should use .transition
-    #expect(Lockman.config.defaultUnlockOption == .transition)
+    XCTAssertEqual(Lockman.config.defaultUnlockOption, .transition)
   }
 
-  @Test("Configuration can be modified")
-  func testConfigurationCanBeModified() {
+  func testConfigurationCanBeModified() async throws {
     // Change to immediate
     Lockman.config.defaultUnlockOption = .immediate
-    #expect(Lockman.config.defaultUnlockOption == .immediate)
+    XCTAssertEqual(Lockman.config.defaultUnlockOption, .immediate)
 
     // Change to mainRunLoop
     Lockman.config.defaultUnlockOption = .mainRunLoop
-    #expect(Lockman.config.defaultUnlockOption == .mainRunLoop)
+    XCTAssertEqual(Lockman.config.defaultUnlockOption, .mainRunLoop)
 
     // Change to delayed
     Lockman.config.defaultUnlockOption = .delayed(0.5)
     if case let .delayed(interval) = Lockman.config.defaultUnlockOption {
-      #expect(interval == 0.5)
+      XCTAssertEqual(interval, 0.5)
     } else {
-      Issue.record("Expected delayed unlock option")
+      XCTFail("Expected delayed unlock option")
     }
   }
 
-  @Test("Configuration can be reset")
-  func testConfigurationCanBeReset() {
+  func testConfigurationCanBeReset() async throws {
     // Modify configuration
     Lockman.config.defaultUnlockOption = .immediate
-    #expect(Lockman.config.defaultUnlockOption == .immediate)
+    XCTAssertEqual(Lockman.config.defaultUnlockOption, .immediate)
 
     // Reset to default
     Lockman.config.reset()
-    #expect(Lockman.config.defaultUnlockOption == .transition)
+    XCTAssertEqual(Lockman.config.defaultUnlockOption, .transition)
   }
 
-  @Test("Configuration is thread-safe")
-  func testConfigurationIsThreadSafe() async {
+  func testConfigurationIsThreadSafe() async throws {
     let iterations = 100
 
     await withTaskGroup(of: Void.self) { group in
@@ -74,7 +69,7 @@ struct LockmanConfigurationTests {
 
     // Should not crash and configuration should be valid
     let finalOption = Lockman.config.defaultUnlockOption
-    #expect(finalOption == .immediate || finalOption == .mainRunLoop || finalOption == .transition || {
+    XCTAssertTrue(finalOption == .immediate || finalOption == .mainRunLoop || finalOption == .transition || {
       if case .delayed = finalOption {
         return true
       }
@@ -82,44 +77,40 @@ struct LockmanConfigurationTests {
     }())
   }
 
-  @Test("defaultUnlockOption property works correctly")
-  func testDefaultUnlockOptionPropertyWorksCorrectly() {
+  func testDefaultUnlockOptionPropertyWorksCorrectly() async throws {
     // Set and verify immediate
     Lockman.config.defaultUnlockOption = .immediate
-    #expect(Lockman.config.defaultUnlockOption == .immediate)
+    XCTAssertEqual(Lockman.config.defaultUnlockOption, .immediate)
 
     // Change to mainRunLoop
     Lockman.config.defaultUnlockOption = .mainRunLoop
-    #expect(Lockman.config.defaultUnlockOption == .mainRunLoop)
+    XCTAssertEqual(Lockman.config.defaultUnlockOption, .mainRunLoop)
   }
 
-  @Test("Configuration changes persist across multiple accesses")
-  func testConfigurationChangesPersistAcrossMultipleAccesses() {
+  func testConfigurationChangesPersistAcrossMultipleAccesses() async throws {
     // Set configuration
     Lockman.config.defaultUnlockOption = .delayed(1.0)
 
     // Access multiple times
     for _ in 0 ..< 10 {
       if case let .delayed(interval) = Lockman.config.defaultUnlockOption {
-        #expect(interval == 1.0)
+        XCTAssertEqual(interval, 1.0)
       } else {
-        Issue.record("Expected delayed unlock option with 1.0 second interval")
+        XCTFail("Expected delayed unlock option with 1.0 second interval")
       }
     }
   }
 }
 
-@Suite("Lockman Configuration Integration Tests", .serialized)
-struct LockmanConfigurationIntegrationTests {
+final class LockmanConfigurationIntegrationTests: XCTestCase {
   // MARK: - Test Setup
 
-  init() async {
+  override func setUp() async throws {
     // Reset configuration to default before each test
     Lockman.config.reset()
   }
 
-  @Test("Configuration affects LockmanUnlock behavior")
-  func testConfigurationAffectsLockmanUnlockBehavior() async {
+  func testConfigurationAffectsLockmanUnlockBehavior() async throws {
     // Reset to ensure clean state
     Lockman.config.reset()
 
@@ -127,7 +118,7 @@ struct LockmanConfigurationIntegrationTests {
     Lockman.config.defaultUnlockOption = .immediate
 
     // Verify configuration is set correctly
-    #expect(Lockman.config.defaultUnlockOption == .immediate)
+    XCTAssertEqual(Lockman.config.defaultUnlockOption, .immediate)
 
     let strategy = LockmanSingleExecutionStrategy()
     let boundaryId = TestBoundaryId("test")
@@ -138,7 +129,7 @@ struct LockmanConfigurationIntegrationTests {
 
     // Verify it's locked - another instance with same actionId should fail
     let anotherInfo = LockmanSingleExecutionInfo(actionId: "test-immediate", mode: .boundary)
-    #expect(strategy.canLock(id: boundaryId, info: anotherInfo) == .failure)
+    XCTAssertEqual(strategy.canLock(id: boundaryId, info: anotherInfo), .failure)
 
     // Create unlock token with immediate option
     let unlockToken = LockmanUnlock(
@@ -154,13 +145,12 @@ struct LockmanConfigurationIntegrationTests {
     // For immediate unlock, no wait is needed
     // Should be able to lock again with a new info instance (same actionId)
     let newInfo = LockmanSingleExecutionInfo(actionId: "test-immediate", mode: .boundary)
-    #expect(strategy.canLock(id: boundaryId, info: newInfo) == .success)
+    XCTAssertEqual(strategy.canLock(id: boundaryId, info: newInfo), .success)
 
     // Clean up
     strategy.cleanUp()
   }
 
-  @Test("Configuration with transition option delays unlock")
   @MainActor
   func testConfigurationWithTransitionOptionDelaysUnlock() async throws {
     // Use a unique boundary ID to avoid interference from other tests
@@ -184,25 +174,25 @@ struct LockmanConfigurationIntegrationTests {
 
     // Lock
     strategy.lock(id: boundaryId, info: info)
-    #expect(strategy.canLock(id: boundaryId, info: info) == .failure)
+    XCTAssertEqual(strategy.canLock(id: boundaryId, info: info), .failure)
 
     // Call unlock (should be delayed)
     unlockToken()
 
     // Verify still locked immediately after
-    #expect(strategy.canLock(id: boundaryId, info: info) == .failure, "Lock should not be released immediately")
+    XCTAssertEqual(strategy.canLock(id: boundaryId, info: info), .failure, "Lock should not be released immediately")
 
     // Wait a small amount to ensure we're testing the delay
     try await Task.sleep(nanoseconds: 100_000_000) // 100ms
 
     // For transition delay, we should still be locked at this point on all platforms
-    #expect(strategy.canLock(id: boundaryId, info: info) == .failure, "Lock should still be held during transition delay")
+    XCTAssertEqual(strategy.canLock(id: boundaryId, info: info), .failure, "Lock should still be held during transition delay")
 
     // Wait for the maximum possible transition delay across all platforms
     try await Task.sleep(nanoseconds: 1_000_000_000) // 1 second (well beyond any platform's transition delay)
 
     // Now it should definitely be unlocked
-    #expect(strategy.canLock(id: boundaryId, info: info) == .success, "Lock should be released after transition delay")
+    XCTAssertEqual(strategy.canLock(id: boundaryId, info: info), .success, "Lock should be released after transition delay")
   }
 }
 
