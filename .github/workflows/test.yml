@@ -29,10 +29,10 @@ jobs:
           # Swift 5.9
           - os: macos-13
             swift: '5.9'
-            xcode: '15.0.1'
+            xcode: '15.2'
           - os: macos-14
             swift: '5.9'
-            xcode: '15.0.1'
+            xcode: '15.2'
           
           # Swift 6.0
           - os: macos-14
@@ -43,9 +43,6 @@ jobs:
             xcode: '16.0'
           
           # Swift 6.1
-          - os: macos-14
-            swift: '6.1'
-            xcode: '16.1'
           - os: macos-15
             swift: '6.1'
             xcode: '16.1'
