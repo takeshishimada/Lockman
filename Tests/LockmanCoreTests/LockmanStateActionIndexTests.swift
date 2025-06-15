@@ -1,10 +1,9 @@
 import Foundation
-import Testing
+import XCTest
 @testable import LockmanCore
 
 /// Tests for the new actionId-based index functionality in LockmanState
-@Suite("LockmanState ActionId Index Tests")
-struct LockmanStateActionIndexTests {
+final class LockmanStateActionIndexTests: XCTestCase {
   // MARK: - Test Helpers
 
   private struct TestBoundaryId: LockmanBoundaryId {
@@ -27,52 +26,47 @@ struct LockmanStateActionIndexTests {
 
   // MARK: - Basic Functionality Tests
 
-  @Test("Contains returns false for non-existent action")
-  func containsReturnsFalseForNonExistentAction() {
+  func testContainsReturnsFalseForNonExistentAction() async throws {
     let state = LockmanState<TestInfo>()
     let boundary = TestBoundaryId(value: "test")
 
-    #expect(!state.contains(id: boundary, actionId: "nonexistent"))
+    XCTAssertFalse(state.contains(id: boundary, actionId: "nonexistent"))
   }
 
-  @Test("Contains returns true after adding action")
-  func containsReturnsTrueAfterAddingAction() {
+  func testContainsReturnsTrueAfterAddingAction() async throws {
     let state = LockmanState<TestInfo>()
     let boundary = TestBoundaryId(value: "test")
     let info = TestInfo(actionId: "action1")
 
     state.add(id: boundary, info: info)
 
-    #expect(state.contains(id: boundary, actionId: "action1"))
-    #expect(!state.contains(id: boundary, actionId: "action2"))
+    XCTAssertTrue(state.contains(id: boundary, actionId: "action1"))
+    XCTAssertFalse(state.contains(id: boundary, actionId: "action2"))
   }
 
-  @Test("Contains returns false after removing action")
-  func containsReturnsFalseAfterRemovingAction() {
+  func testContainsReturnsFalseAfterRemovingAction() async throws {
     let state = LockmanState<TestInfo>()
     let boundary = TestBoundaryId(value: "test")
     let info = TestInfo(actionId: "action1")
 
     state.add(id: boundary, info: info)
-    #expect(state.contains(id: boundary, actionId: "action1"))
+    XCTAssertTrue(state.contains(id: boundary, actionId: "action1"))
 
     state.remove(id: boundary, info: info)
-    #expect(!state.contains(id: boundary, actionId: "action1"))
+    XCTAssertFalse(state.contains(id: boundary, actionId: "action1"))
   }
 
   // MARK: - currents(id:actionId:) Tests
 
-  @Test("Currents by actionId returns empty for non-existent action")
-  func currentsByActionIdReturnsEmptyForNonExistent() {
+  func testCurrentsByActionIdReturnsEmptyForNonExistent() async throws {
     let state = LockmanState<TestInfo>()
     let boundary = TestBoundaryId(value: "test")
 
     let results = state.currents(id: boundary, actionId: "nonexistent")
-    #expect(results.isEmpty)
+    XCTAssertTrue(results.isEmpty)
   }
 
-  @Test("Currents by actionId returns matching locks")
-  func currentsByActionIdReturnsMatchingLocks() {
+  func testCurrentsByActionIdReturnsMatchingLocks() async throws {
     let state = LockmanState<TestInfo>()
     let boundary = TestBoundaryId(value: "test")
 
@@ -87,16 +81,15 @@ struct LockmanStateActionIndexTests {
     let action1Results = state.currents(id: boundary, actionId: "action1")
     let action2Results = state.currents(id: boundary, actionId: "action2")
 
-    #expect(action1Results.count == 2)
-    #expect(action2Results.count == 1)
+    XCTAssertEqual(action1Results.count, 2)
+    XCTAssertEqual(action2Results.count, 1)
 
-    #expect(action1Results.map(\.uniqueId).contains(info1.uniqueId))
-    #expect(action1Results.map(\.uniqueId).contains(info3.uniqueId))
-    #expect(action2Results.map(\.uniqueId).contains(info2.uniqueId))
+    XCTAssertTrue(action1Results.map(\.uniqueId).contains(info1.uniqueId))
+    XCTAssertTrue(action1Results.map(\.uniqueId).contains(info3.uniqueId))
+    XCTAssertTrue(action2Results.map(\.uniqueId).contains(info2.uniqueId))
   }
 
-  @Test("Currents by actionId preserves insertion order")
-  func currentsByActionIdPreservesInsertionOrder() {
+  func testCurrentsByActionIdPreservesInsertionOrder() async throws {
     let state = LockmanState<TestInfo>()
     let boundary = TestBoundaryId(value: "test")
 
@@ -110,24 +103,22 @@ struct LockmanStateActionIndexTests {
 
     let results = state.currents(id: boundary, actionId: "action1")
 
-    #expect(results.count == 3)
-    #expect(results[0].uniqueId == info1.uniqueId)
-    #expect(results[1].uniqueId == info2.uniqueId)
-    #expect(results[2].uniqueId == info3.uniqueId)
+    XCTAssertEqual(results.count, 3)
+    XCTAssertEqual(results[0].uniqueId, info1.uniqueId)
+    XCTAssertEqual(results[1].uniqueId, info2.uniqueId)
+    XCTAssertEqual(results[2].uniqueId, info3.uniqueId)
   }
 
   // MARK: - Count Tests
 
-  @Test("Count returns zero for non-existent action")
-  func countReturnsZeroForNonExistent() {
+  func testCountReturnsZeroForNonExistent() async throws {
     let state = LockmanState<TestInfo>()
     let boundary = TestBoundaryId(value: "test")
 
-    #expect(state.count(id: boundary, actionId: "nonexistent") == 0)
+    XCTAssertEqual(state.count(id: boundary, actionId: "nonexistent"), 0)
   }
 
-  @Test("Count returns correct number of locks")
-  func countReturnsCorrectNumber() {
+  func testCountReturnsCorrectNumber() async throws {
     let state = LockmanState<TestInfo>()
     let boundary = TestBoundaryId(value: "test")
 
@@ -139,24 +130,22 @@ struct LockmanStateActionIndexTests {
     state.add(id: boundary, info: info2)
     state.add(id: boundary, info: info3)
 
-    #expect(state.count(id: boundary, actionId: "action1") == 2)
-    #expect(state.count(id: boundary, actionId: "action2") == 1)
-    #expect(state.count(id: boundary, actionId: "action3") == 0)
+    XCTAssertEqual(state.count(id: boundary, actionId: "action1"), 2)
+    XCTAssertEqual(state.count(id: boundary, actionId: "action2"), 1)
+    XCTAssertEqual(state.count(id: boundary, actionId: "action3"), 0)
   }
 
   // MARK: - ActionIds Tests
 
-  @Test("ActionIds returns empty set for empty boundary")
-  func actionIdsReturnsEmptyForEmptyBoundary() {
+  func testActionIdsReturnsEmptyForEmptyBoundary() async throws {
     let state = LockmanState<TestInfo>()
     let boundary = TestBoundaryId(value: "test")
 
     let actionIds = state.actionIds(id: boundary)
-    #expect(actionIds.isEmpty)
+    XCTAssertTrue(actionIds.isEmpty)
   }
 
-  @Test("ActionIds returns all unique action IDs")
-  func actionIdsReturnsAllUnique() {
+  func testActionIdsReturnsAllUnique() async throws {
     let state = LockmanState<TestInfo>()
     let boundary = TestBoundaryId(value: "test")
 
@@ -167,16 +156,15 @@ struct LockmanStateActionIndexTests {
 
     let actionIds = state.actionIds(id: boundary)
 
-    #expect(actionIds.count == 3)
-    #expect(actionIds.contains("action1"))
-    #expect(actionIds.contains("action2"))
-    #expect(actionIds.contains("action3"))
+    XCTAssertEqual(actionIds.count, 3)
+    XCTAssertTrue(actionIds.contains("action1"))
+    XCTAssertTrue(actionIds.contains("action2"))
+    XCTAssertTrue(actionIds.contains("action3"))
   }
 
   // MARK: - Boundary Isolation Tests
 
-  @Test("Actions are isolated between boundaries")
-  func actionsAreIsolatedBetweenBoundaries() {
+  func testActionsAreIsolatedBetweenBoundaries() async throws {
     let state = LockmanState<TestInfo>()
     let boundary1 = TestBoundaryId(value: "boundary1")
     let boundary2 = TestBoundaryId(value: "boundary2")
@@ -184,19 +172,18 @@ struct LockmanStateActionIndexTests {
     state.add(id: boundary1, info: TestInfo(actionId: "action1"))
     state.add(id: boundary2, info: TestInfo(actionId: "action1"))
 
-    #expect(state.contains(id: boundary1, actionId: "action1"))
-    #expect(state.contains(id: boundary2, actionId: "action1"))
+    XCTAssertTrue(state.contains(id: boundary1, actionId: "action1"))
+    XCTAssertTrue(state.contains(id: boundary2, actionId: "action1"))
 
     state.removeAll(id: boundary1)
 
-    #expect(!state.contains(id: boundary1, actionId: "action1"))
-    #expect(state.contains(id: boundary2, actionId: "action1"))
+    XCTAssertFalse(state.contains(id: boundary1, actionId: "action1"))
+    XCTAssertTrue(state.contains(id: boundary2, actionId: "action1"))
   }
 
   // MARK: - Performance Tests
 
-  @Test("Contains performs in O(1) time")
-  func containsPerformanceTest() {
+  func testContainsPerformanceTest() {
     let state = LockmanState<TestInfo>()
     let boundary = TestBoundaryId(value: "test")
 
@@ -216,25 +203,23 @@ struct LockmanStateActionIndexTests {
     let executionTime = endTime - startTime
 
     // Should complete very quickly for O(1) operations
-    #expect(executionTime < 0.01) // Less than 10ms for 1000 lookups
+    XCTAssertLessThan(executionTime, 0.01) // Less than 10ms for 1000 lookups
   }
 
   // MARK: - Edge Cases
 
-  @Test("Handles empty action IDs")
-  func handlesEmptyActionIds() {
+  func testHandlesEmptyActionIds() async throws {
     let state = LockmanState<TestInfo>()
     let boundary = TestBoundaryId(value: "test")
 
     let info = TestInfo(actionId: "")
     state.add(id: boundary, info: info)
 
-    #expect(state.contains(id: boundary, actionId: ""))
-    #expect(state.count(id: boundary, actionId: "") == 1)
+    XCTAssertTrue(state.contains(id: boundary, actionId: ""))
+    XCTAssertEqual(state.count(id: boundary, actionId: ""), 1)
   }
 
-  @Test("Handles unicode action IDs")
-  func handlesUnicodeActionIds() {
+  func testHandlesUnicodeActionIds() async throws {
     let state = LockmanState<TestInfo>()
     let boundary = TestBoundaryId(value: "test")
 
@@ -242,14 +227,13 @@ struct LockmanStateActionIndexTests {
     let info = TestInfo(actionId: actionId)
     state.add(id: boundary, info: info)
 
-    #expect(state.contains(id: boundary, actionId: actionId))
-    #expect(state.currents(id: boundary, actionId: actionId).count == 1)
+    XCTAssertTrue(state.contains(id: boundary, actionId: actionId))
+    XCTAssertEqual(state.currents(id: boundary, actionId: actionId).count, 1)
   }
 
   // MARK: - Cleanup Tests
 
-  @Test("RemoveAll clears action index")
-  func removeAllClearsActionIndex() {
+  func testRemoveAllClearsActionIndex() async throws {
     let state = LockmanState<TestInfo>()
     let boundary = TestBoundaryId(value: "test")
 
@@ -258,13 +242,12 @@ struct LockmanStateActionIndexTests {
 
     state.removeAll()
 
-    #expect(!state.contains(id: boundary, actionId: "action1"))
-    #expect(!state.contains(id: boundary, actionId: "action2"))
-    #expect(state.actionIds(id: boundary).isEmpty)
+    XCTAssertFalse(state.contains(id: boundary, actionId: "action1"))
+    XCTAssertFalse(state.contains(id: boundary, actionId: "action2"))
+    XCTAssertTrue(state.actionIds(id: boundary).isEmpty)
   }
 
-  @Test("RemoveAll with boundary clears boundary action index")
-  func removeAllWithBoundaryClearsBoundaryActionIndex() {
+  func testRemoveAllWithBoundaryClearsBoundaryActionIndex() async throws {
     let state = LockmanState<TestInfo>()
     let boundary1 = TestBoundaryId(value: "boundary1")
     let boundary2 = TestBoundaryId(value: "boundary2")
@@ -274,7 +257,7 @@ struct LockmanStateActionIndexTests {
 
     state.removeAll(id: boundary1)
 
-    #expect(!state.contains(id: boundary1, actionId: "action1"))
-    #expect(state.contains(id: boundary2, actionId: "action1"))
+    XCTAssertFalse(state.contains(id: boundary1, actionId: "action1"))
+    XCTAssertTrue(state.contains(id: boundary2, actionId: "action1"))
   }
 }

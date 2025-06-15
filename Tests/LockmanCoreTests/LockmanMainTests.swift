@@ -1,4 +1,4 @@
-import Testing
+import XCTest
 @testable import LockmanCore
 
 // MARK: - Test Helpers
@@ -20,32 +20,28 @@ private struct TestBoundaryId: LockmanBoundaryId {
 /// - Strategy resolution
 /// - Test container functionality
 /// - Global state management
-@Suite("Lockman Framework Tests")
-struct LockmanMainTests {
+final class LockmanMainTests: XCTestCase {
   // MARK: - Container Management Tests
 
-  @Suite("Container Management")
-  struct ContainerManagementTests {
-    @Test("Default container is available")
-    func testDefaultContainerAvailable() {
+  // MARK: - Container Management Tests
+  func testDefaultContainerAvailable() async throws {
       // The container should always be available
       let container = Lockman.container
-      #expect(container != nil)
+      XCTAssertNotNil(container)
     }
 
-    @Test("Can register strategies in container")
-    func testCanRegisterStrategies() throws {
+  func testCanRegisterStrategiesInContainer() async throws {
       let testContainer = LockmanStrategyContainer()
       let strategy = LockmanSingleExecutionStrategy()
 
       try testContainer.register(strategy)
 
       let resolved = try testContainer.resolve(LockmanSingleExecutionStrategy.self)
-      #expect(resolved != nil)
+      // Type erasure returns non-optional, so just verify the type
+      XCTAssertTrue(type(of: resolved) == AnyLockmanStrategy<LockmanSingleExecutionInfo>.self)
     }
 
-    @Test("Container isolation in tests")
-    func testContainerIsolationInTests() async throws {
+  func testContainerIsolationInTests() async throws {
       let testContainer1 = LockmanStrategyContainer()
       let testContainer2 = LockmanStrategyContainer()
 
@@ -61,25 +57,19 @@ struct LockmanMainTests {
           _ = try Lockman.container.resolve(LockmanSingleExecutionStrategy.self)
           // Should succeed
         } catch {
-          Issue.record("Should resolve strategy in container 1")
+          XCTFail("Should resolve strategy in container 1")
         }
 
         do {
           _ = try Lockman.container.resolve(LockmanPriorityBasedStrategy.self)
-          Issue.record("Should not resolve strategy from container 2")
+          XCTFail("Should not resolve strategy from container 2")
         } catch {
           // Expected to fail
         }
       }
     }
-  }
-
   // MARK: - Strategy Resolution Tests
-
-  @Suite("Strategy Resolution")
-  struct StrategyResolutionTests {
-    @Test("Resolve registered strategy")
-    func testResolveRegisteredStrategy() async throws {
+  func testResolveRegisteredStrategy() async throws {
       let testContainer = LockmanStrategyContainer()
       let strategy = LockmanSingleExecutionStrategy()
       try testContainer.register(strategy)
@@ -87,31 +77,29 @@ struct LockmanMainTests {
       await Lockman.withTestContainer(testContainer) {
         do {
           let resolved = try Lockman.container.resolve(LockmanSingleExecutionStrategy.self)
-          #expect(resolved != nil)
+          XCTAssertTrue(type(of: resolved) == AnyLockmanStrategy<LockmanSingleExecutionInfo>.self)
         } catch {
-          Issue.record("Failed to resolve registered strategy: \(error)")
+          XCTFail("Failed to resolve registered strategy: \(error)")
         }
       }
     }
 
-    @Test("Resolve fails for unregistered strategy")
-    func testResolveFailsForUnregisteredStrategy() async throws {
+  func testResolveFailsForUnregisteredStrategy() async throws {
       let testContainer = LockmanStrategyContainer()
 
       await Lockman.withTestContainer(testContainer) {
         do {
           _ = try Lockman.container.resolve(LockmanSingleExecutionStrategy.self)
-          Issue.record("Should have thrown error for unregistered strategy")
+          XCTFail("Should have thrown error for unregistered strategy")
         } catch let LockmanError.strategyNotRegistered(type) {
-          #expect(type.contains("LockmanSingleExecutionStrategy"))
+          XCTAssertTrue(type.contains("LockmanSingleExecutionStrategy"))
         } catch {
-          Issue.record("Unexpected error type: \(error)")
+          XCTFail("Unexpected error type: \(error)")
         }
       }
     }
 
-    @Test("Resolve with type parameter")
-    func testResolveWithTypeParameter() async throws {
+  func testResolveWithTypeParameter() async throws {
       let testContainer = LockmanStrategyContainer()
       let strategy = LockmanPriorityBasedStrategy()
       try testContainer.register(strategy)
@@ -123,20 +111,14 @@ struct LockmanMainTests {
 
         do {
           let resolved = try genericResolve(LockmanPriorityBasedStrategy.self)
-          #expect(resolved != nil)
+          XCTAssertTrue(type(of: resolved) == AnyLockmanStrategy<LockmanPriorityBasedInfo>.self)
         } catch {
-          Issue.record("Failed to resolve with generic parameter: \(error)")
+          XCTFail("Failed to resolve with generic parameter: \(error)")
         }
       }
     }
-  }
-
   // MARK: - Test Container Tests
-
-  @Suite("Test Container")
-  struct TestContainerTests {
-    @Test("Test container isolation")
-    func testTestContainerIsolation() async throws {
+  func testTestContainerIsolation() async throws {
       let originalContainer = Lockman.container
       let testContainer = LockmanStrategyContainer()
 
@@ -153,12 +135,11 @@ struct LockmanMainTests {
       // After test container
       outsideTestContainer = outsideTestContainer && (Lockman.container === originalContainer)
 
-      #expect(insideTestContainer)
-      #expect(outsideTestContainer)
+      XCTAssertTrue(insideTestContainer)
+      XCTAssertTrue(outsideTestContainer)
     }
 
-    @Test("Nested test containers")
-    func testNestedTestContainers() async throws {
+  func testNestedTestContainers() async throws {
       let container1 = LockmanStrategyContainer()
       let container2 = LockmanStrategyContainer()
 
@@ -170,7 +151,7 @@ struct LockmanMainTests {
         do {
           _ = try Lockman.container.resolve(LockmanSingleExecutionStrategy.self)
         } catch {
-          Issue.record("Should resolve from container 1")
+          XCTFail("Should resolve from container 1")
         }
 
         // Nested container
@@ -179,13 +160,13 @@ struct LockmanMainTests {
           do {
             _ = try Lockman.container.resolve(LockmanPriorityBasedStrategy.self)
           } catch {
-            Issue.record("Should resolve from container 2")
+            XCTFail("Should resolve from container 2")
           }
 
           // Should NOT be able to resolve from container1
           do {
             _ = try Lockman.container.resolve(LockmanSingleExecutionStrategy.self)
-            Issue.record("Should not resolve from container 1 in nested context")
+            XCTFail("Should not resolve from container 1 in nested context")
           } catch {
             // Expected
           }
@@ -195,13 +176,12 @@ struct LockmanMainTests {
         do {
           _ = try Lockman.container.resolve(LockmanSingleExecutionStrategy.self)
         } catch {
-          Issue.record("Should resolve from container 1 after nested context")
+          XCTFail("Should resolve from container 1 after nested context")
         }
       }
     }
 
-    @Test("Test container with async operations")
-    func testTestContainerWithAsyncOperations() async throws {
+  func testTestContainerWithAsyncOperations() async throws {
       let testContainer = LockmanStrategyContainer()
       try testContainer.register(LockmanSingleExecutionStrategy())
 
@@ -223,18 +203,12 @@ struct LockmanMainTests {
             allResolved = allResolved && result
           }
 
-          #expect(allResolved)
+          XCTAssertTrue(allResolved)
         }
       }
     }
-  }
-
   // MARK: - TaskLocal Storage Tests
-
-  @Suite("TaskLocal Storage")
-  struct TaskLocalStorageTests {
-    @Test("TaskLocal container inheritance")
-    func testTaskLocalContainerInheritance() async throws {
+  func testTaskLocalContainerInheritance() async throws {
       let parentContainer = LockmanStrategyContainer()
       let childContainer = LockmanStrategyContainer()
 
@@ -246,7 +220,7 @@ struct LockmanMainTests {
         do {
           _ = try Lockman.container.resolve(LockmanSingleExecutionStrategy.self)
         } catch {
-          Issue.record("Parent should resolve its strategy")
+          XCTFail("Parent should resolve its strategy")
         }
 
         // Child task inherits parent's container by default
@@ -254,7 +228,7 @@ struct LockmanMainTests {
           do {
             _ = try Lockman.container.resolve(LockmanSingleExecutionStrategy.self)
           } catch {
-            Issue.record("Child task should inherit parent's container")
+            XCTFail("Child task should inherit parent's container")
           }
         }.value
 
@@ -266,41 +240,34 @@ struct LockmanMainTests {
             _ = try Lockman.container.resolve(LockmanSingleExecutionStrategy.self)
             // This is expected behavior - detached tasks fall back to default container
           } catch {
-            Issue.record("Detached task should be able to use default container")
+            XCTFail("Detached task should be able to use default container")
           }
         }.value
       }
     }
-  }
-
   // MARK: - Error Handling Tests
-
-  @Suite("Error Handling")
-  struct ErrorHandlingTests {
-    @Test("Proper error types for resolution failures")
-    func testProperErrorTypesForResolutionFailures() async throws {
+  func testProperErrorTypesForResolutionFailures() async throws {
       let testContainer = LockmanStrategyContainer()
 
       await Lockman.withTestContainer(testContainer) {
         // Test unregistered strategy error
         do {
           _ = try Lockman.container.resolve(LockmanSingleExecutionStrategy.self)
-          Issue.record("Should throw for unregistered strategy")
+          XCTFail("Should throw for unregistered strategy")
         } catch let error as LockmanError {
           switch error {
           case let .strategyNotRegistered(type):
-            #expect(type.contains("LockmanSingleExecutionStrategy"))
+            XCTAssertTrue(type.contains("LockmanSingleExecutionStrategy"))
           default:
-            Issue.record("Wrong error type")
+            XCTFail("Wrong error type")
           }
         } catch {
-          Issue.record("Should throw LockmanError")
+          XCTFail("Should throw LockmanError")
         }
       }
     }
 
-    @Test("Container registration errors")
-    func testContainerRegistrationErrors() throws {
+  func testContainerRegistrationErrors() async throws {
       let container = LockmanStrategyContainer()
       let strategy = LockmanSingleExecutionStrategy()
 
@@ -310,26 +277,20 @@ struct LockmanMainTests {
       // Duplicate registration should fail
       do {
         try container.register(strategy)
-        Issue.record("Should throw for duplicate registration")
+        XCTFail("Should throw for duplicate registration")
       } catch let error as LockmanError {
         switch error {
         case let .strategyAlreadyRegistered(type):
-          #expect(type.contains("LockmanSingleExecutionStrategy"))
+          XCTAssertTrue(type.contains("LockmanSingleExecutionStrategy"))
         default:
-          Issue.record("Wrong error type")
+          XCTFail("Wrong error type")
         }
       } catch {
-        Issue.record("Should throw LockmanError")
+        XCTFail("Should throw LockmanError")
       }
     }
-  }
-
   // MARK: - Integration Tests
-
-  @Suite("Integration")
-  struct IntegrationTests {
-    @Test("Complete workflow with strategies")
-    func testCompleteWorkflowWithStrategies() async throws {
+  func testCompleteWorkflowWithStrategies() async throws {
       let container = LockmanStrategyContainer()
 
       // Register multiple strategies
@@ -348,11 +309,11 @@ struct LockmanMainTests {
           let singleInfo = LockmanSingleExecutionInfo(actionId: "test-action", mode: .boundary)
 
           let canLockSingle = singleStrategy.canLock(id: singleBoundary, info: singleInfo)
-          #expect(canLockSingle == .success)
+          XCTAssertEqual(canLockSingle, .success)
 
           singleStrategy.lock(id: singleBoundary, info: singleInfo)
           let canLockAgain = singleStrategy.canLock(id: singleBoundary, info: singleInfo)
-          #expect(canLockAgain == .failure)
+          XCTAssertEqual(canLockAgain, .failure)
 
           singleStrategy.unlock(id: singleBoundary, info: singleInfo)
 
@@ -363,14 +324,13 @@ struct LockmanMainTests {
 
           priorityStrategy.lock(id: priorityBoundary, info: lowPriorityInfo)
           let canLockHigh = priorityStrategy.canLock(id: priorityBoundary, info: highPriorityInfo)
-          #expect(canLockHigh == .successWithPrecedingCancellation)
+          XCTAssertEqual(canLockHigh, .successWithPrecedingCancellation)
 
           // 4. Clean up
           Lockman.cleanup.all()
         } catch {
-          #expect(Bool(false), "Strategy resolution failed: \(error)")
+          XCTAssertTrue(Bool(false), "Strategy resolution failed: \(error)")
         }
       }
     }
-  }
 }
