@@ -1,0 +1,178 @@
+name: Test
+
+on:
+  push:
+    branches:
+      - main
+      - develop
+      - 'feature/**'
+  pull_request:
+    types: [ready_for_review]
+    branches:
+      - main
+      - develop
+      - 'feature/**'
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.head_ref || github.run_id }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    name: Test Swift ${{ matrix.swift }} on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 30
+    strategy:
+      fail-fast: true
+      matrix:
+        include:
+          # Swift 5.9
+          - os: macos-13
+            swift: '5.9'
+            xcode: '15.0.1'
+          - os: macos-14
+            swift: '5.9'
+            xcode: '15.0.1'
+          
+          # Swift 6.0
+          - os: macos-14
+            swift: '6.0'
+            xcode: '16.0'
+          - os: macos-15
+            swift: '6.0'
+            xcode: '16.0'
+          
+          # Swift 6.1
+          - os: macos-14
+            swift: '6.1'
+            xcode: '16.1'
+          - os: macos-15
+            swift: '6.1'
+            xcode: '16.1'
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Select Xcode
+        run: sudo xcode-select -s /Applications/Xcode_${{ matrix.xcode }}.app
+
+      - name: Swift version
+        run: swift --version
+
+      - name: Cache Swift PM
+        uses: actions/cache@v4
+        with:
+          path: |
+            .build
+            ~/Library/Developer/Xcode/DerivedData
+          key: ${{ runner.os }}-spm-${{ matrix.swift }}-${{ hashFiles('**/Package.resolved') }}
+          restore-keys: |
+            ${{ runner.os }}-spm-${{ matrix.swift }}-
+            ${{ runner.os }}-spm-
+
+      # iOS Tests
+      - name: Test iOS (minimum)
+        run: |
+          xcodebuild test \
+            -scheme Lockman \
+            -destination "platform=iOS Simulator,OS=13.0,name=iPhone 8" \
+            -enableCodeCoverage YES \
+            -resultBundlePath .build/ios-min.xcresult \
+            CODE_SIGN_IDENTITY="" \
+            CODE_SIGNING_REQUIRED=NO \
+            ONLY_ACTIVE_ARCH=NO
+
+      - name: Test iOS (latest)
+        run: |
+          xcodebuild test \
+            -scheme Lockman \
+            -destination "platform=iOS Simulator,OS=latest,name=iPhone 15" \
+            -enableCodeCoverage YES \
+            -resultBundlePath .build/ios-latest.xcresult \
+            CODE_SIGN_IDENTITY="" \
+            CODE_SIGNING_REQUIRED=NO \
+            ONLY_ACTIVE_ARCH=NO
+
+      # macOS Tests
+      - name: Test macOS
+        run: |
+          swift test --enable-code-coverage
+
+      # tvOS Tests
+      - name: Test tvOS (minimum)
+        run: |
+          xcodebuild test \
+            -scheme Lockman \
+            -destination "platform=tvOS Simulator,OS=13.0,name=Apple TV" \
+            -enableCodeCoverage YES \
+            -resultBundlePath .build/tvos-min.xcresult \
+            CODE_SIGN_IDENTITY="" \
+            CODE_SIGNING_REQUIRED=NO \
+            ONLY_ACTIVE_ARCH=NO
+
+      - name: Test tvOS (latest)
+        run: |
+          xcodebuild test \
+            -scheme Lockman \
+            -destination "platform=tvOS Simulator,OS=latest,name=Apple TV 4K (3rd generation)" \
+            -enableCodeCoverage YES \
+            -resultBundlePath .build/tvos-latest.xcresult \
+            CODE_SIGN_IDENTITY="" \
+            CODE_SIGNING_REQUIRED=NO \
+            ONLY_ACTIVE_ARCH=NO
+
+      # watchOS Tests (Build only)
+      - name: Build watchOS (minimum)
+        run: |
+          xcodebuild build \
+            -scheme Lockman \
+            -destination "platform=watchOS Simulator,OS=6.0,name=Apple Watch Series 5 - 40mm" \
+            CODE_SIGN_IDENTITY="" \
+            CODE_SIGNING_REQUIRED=NO \
+            ONLY_ACTIVE_ARCH=NO
+
+      - name: Build watchOS (latest)
+        run: |
+          xcodebuild build \
+            -scheme Lockman \
+            -destination "platform=watchOS Simulator,OS=latest,name=Apple Watch Series 9 - 41mm" \
+            CODE_SIGN_IDENTITY="" \
+            CODE_SIGNING_REQUIRED=NO \
+            ONLY_ACTIVE_ARCH=NO
+
+      # Coverage
+      - name: Prepare coverage reports
+        run: |
+          xcrun xcresulttool get-coverage-summary --json .build/ios-latest.xcresult > ios-coverage.json
+          xcrun xcresulttool get-coverage-summary --json .build/tvos-latest.xcresult > tvos-coverage.json
+          swift test --enable-code-coverage
+          xcrun llvm-cov export \
+            .build/debug/LockmanPackageTests.xctest/Contents/MacOS/LockmanPackageTests \
+            -instr-profile .build/debug/codecov/default.profdata \
+            -format="lcov" > macos-coverage.lcov
+
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v4
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          files: ./macos-coverage.lcov,./ios-coverage.json,./tvos-coverage.json
+          flags: unittests,swift${{ matrix.swift }}
+          name: swift-${{ matrix.swift }}-${{ matrix.os }}
+          fail_ci_if_error: true
+          verbose: true
+
+  coverage-check:
+    name: Coverage Check
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Check coverage
+        uses: codecov/codecov-action@v4
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          fail_ci_if_error: true
+          threshold: 80%
