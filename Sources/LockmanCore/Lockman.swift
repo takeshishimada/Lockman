@@ -1,0 +1,164 @@
+import Foundation
+
+// MARK: - Lockman Facade
+
+/// A facade providing static access to the shared `LockmanStrategyContainer` and core framework functionality.
+///
+/// Provides centralized access to lock management with pre-configured strategies and test isolation support.
+///
+public enum Lockman {
+  // MARK: - Configuration
+
+  /// Configuration settings for Lockman behavior.
+  struct Configuration: Sendable {
+    /// The default unlock option to use when not explicitly specified.
+    ///
+    /// This value is used by all `withLock` and `concatenateWithLock` methods
+    /// when the `unlockOption` parameter is not provided.
+    ///
+    /// Default value is `.transition` to ensure safe coordination with UI transitions.
+    var defaultUnlockOption: UnlockOption = .transition
+
+    /// Creates a new configuration with default values.
+    init() {}
+  }
+
+  /// Thread-safe storage for the global configuration.
+  private static let _configuration = ManagedCriticalState(Configuration())
+
+  // MARK: - Config Namespace
+
+  /// Configuration namespace for Lockman settings.
+  public enum config {
+    /// The default unlock option to use when not explicitly specified.
+    ///
+    /// This value is used by all `withLock` and `concatenateWithLock` methods
+    /// when the `unlockOption` parameter is not provided.
+    ///
+    /// Default value is `.transition` to ensure safe coordination with UI transitions.
+    ///
+    /// ```swift
+    /// // In AppDelegate or App initialization
+    /// // Change to immediate unlock if UI transitions are not a concern
+    /// Lockman.config.defaultUnlockOption = .immediate
+    /// ```
+    public static var defaultUnlockOption: UnlockOption {
+      get { _configuration.withCriticalRegion { $0.defaultUnlockOption } }
+      set {
+        _configuration.withCriticalRegion { $0.defaultUnlockOption = newValue }
+      }
+    }
+
+    /// Resets configuration to default values.
+    /// Used primarily for testing to ensure clean state between tests.
+    internal static func reset() {
+      _configuration.withCriticalRegion { $0 = Configuration() }
+    }
+  }
+
+  // MARK: - Core Implementation
+
+  /// The shared container instance for registering and resolving lock strategies.
+  ///
+  /// Returns the default container in production or the task-local test container when available.
+  public static var container: LockmanStrategyContainer {
+    if let testContainerStorage {
+      return testContainerStorage
+    } else {
+      return _defaultContainer
+    }
+  }
+
+  /// The default container instance, lazily initialized with pre-registered strategies.
+  private static let _defaultContainer: LockmanStrategyContainer = {
+    let container = LockmanStrategyContainer()
+
+    // Register essential strategies using the protocol-based approach
+    do {
+      try container.register(LockmanSingleExecutionStrategy.shared)
+      try container.register(LockmanPriorityBasedStrategy.shared)
+      try container.register(LockmanGroupCoordinationStrategy.shared)
+    } catch {
+      // Registration failure is silently ignored as it's handled gracefully
+    }
+
+    return container
+  }()
+
+  // MARK: - Cleanup Namespace
+
+  /// Cleanup operations namespace.
+  public enum cleanup {
+    /// Invokes global cleanup on all registered strategies.
+    ///
+    /// Clears all lock states across all strategies and boundaries.
+    /// Useful for application shutdown, test cleanup, and development resets.
+    ///
+    /// ```swift
+    /// // Clean up all locks
+    /// Lockman.cleanup.all()
+    /// ```
+    public static func all() {
+      container.cleanUp()
+    }
+
+    /// Invokes targeted cleanup for a specific boundary.
+    ///
+    /// Clears lock states only for the specified boundary across all strategies.
+    ///
+    /// ```swift
+    /// // Clean up locks for a specific boundary
+    /// Lockman.cleanup.boundary(CancelID.userAction)
+    /// ```
+    public static func boundary<B: LockmanBoundaryId>(_ id: B) {
+      Lockman.withBoundaryLock(for: id) {
+        container.cleanUp(id: id)
+      }
+    }
+  }
+
+  /// Task-local storage for test container injection.
+  @TaskLocal private static var testContainerStorage: LockmanStrategyContainer?
+
+  /// Executes the given operation with a custom container for testing purposes.
+  public static func withTestContainer<T>(
+    _ testContainer: LockmanStrategyContainer,
+    operation: () async throws -> T
+  ) async rethrows -> T {
+    try await $testContainerStorage.withValue(testContainer) {
+      try await operation()
+    }
+  }
+}
+
+// MARK: - Boundary Lock Management
+
+extension Lockman {
+  /// Thread-safe storage for boundary-specific locks.
+  private static let boundaryLocks: ManagedCriticalState<[AnyLockmanBoundaryId: NSLock]> = ManagedCriticalState([:])
+
+  /// Retrieves or creates an NSLock for the specified boundary ID.
+  private static func getLock<B: LockmanBoundaryId>(for id: B) -> NSLock {
+    let anyId = AnyLockmanBoundaryId(id)
+    return boundaryLocks.withCriticalRegion { locks in
+      if let existingLock = locks[anyId] {
+        return existingLock
+      } else {
+        let newLock = NSLock()
+        locks[anyId] = newLock
+        return newLock
+      }
+    }
+  }
+
+  /// Executes the given operation while holding the boundary-specific lock.
+  public static func withBoundaryLock<B: LockmanBoundaryId, T>(
+    for id: B,
+    operation: () throws -> T
+  ) rethrows -> T {
+    let nsLock = getLock(for: id)
+    nsLock.lock()
+    defer { nsLock.unlock() }
+    return try operation()
+  }
+}
