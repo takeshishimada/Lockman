@@ -1,0 +1,279 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - main
+      - develop
+      - 'feature/**'
+  pull_request:
+    branches:
+      - main
+      - develop
+    types: [opened, reopened, synchronize, ready_for_review]
+  workflow_dispatch:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    name: Test
+    runs-on: ${{ matrix.os }}
+    if: github.event.pull_request.draft != true
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          # Swift 6.0 - Full test suite
+          - xcode: '16.0'
+            os: macos-15
+            swift: '6.0'
+            platform: 'macOS'
+            command: 'test'
+          - xcode: '16.0'
+            os: macos-15
+            swift: '6.0'
+            platform: 'iOS'
+            destination: 'platform=iOS Simulator,name=iPhone 15,OS=18.0'
+            command: 'test'
+          - xcode: '16.0'
+            os: macos-15
+            swift: '6.0'
+            platform: 'tvOS'
+            destination: 'platform=tvOS Simulator,name=Apple TV,OS=18.0'
+            command: 'test'
+          - xcode: '16.0'
+            os: macos-15
+            swift: '6.0'
+            platform: 'watchOS'
+            destination: 'platform=watchOS Simulator,name=Apple Watch Series 9 (45mm),OS=11.0'
+            command: 'build'  # watchOS tests are not supported in CI
+
+          # Swift 5.9 - Build only
+          - xcode: '15.2'
+            os: macos-14
+            swift: '5.9'
+            platform: 'macOS'
+            command: 'build'
+          - xcode: '15.2'
+            os: macos-14
+            swift: '5.9'
+            platform: 'iOS'
+            destination: 'platform=iOS Simulator,name=iPhone 15,OS=17.2'
+            command: 'build'
+          - xcode: '15.2'
+            os: macos-14
+            swift: '5.9'
+            platform: 'tvOS'
+            destination: 'platform=tvOS Simulator,name=Apple TV,OS=17.2'
+            command: 'build'
+          - xcode: '15.2'
+            os: macos-14
+            swift: '5.9'
+            platform: 'watchOS'
+            destination: 'platform=watchOS Simulator,name=Apple Watch Series 9 (45mm),OS=10.2'
+            command: 'build'
+
+    timeout-minutes: 30
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Select Xcode ${{ matrix.xcode }}
+        run: |
+          sudo xcode-select -s /Applications/Xcode_${{ matrix.xcode }}.app/Contents/Developer
+          xcodebuild -version
+          swift --version
+
+      - name: Cache derived data
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/Library/Developer/Xcode/DerivedData
+            .build
+          key: ${{ runner.os }}-xcode-${{ matrix.xcode }}-${{ matrix.platform }}-${{ hashFiles('**/Package.swift', '**/Package.resolved') }}
+          restore-keys: |
+            ${{ runner.os }}-xcode-${{ matrix.xcode }}-${{ matrix.platform }}-
+            ${{ runner.os }}-xcode-${{ matrix.xcode }}-
+
+      - name: Prepare environment
+        run: |
+          echo "Removing Package.resolved if it exists..."
+          rm -f Package.resolved
+          echo "defaults write com.apple.dt.XCBuild IgnoreFileSystemDeviceInodeChanges -bool YES" | sudo sh
+
+      - name: Resolve packages
+        run: |
+          swift package resolve --verbose || {
+            echo "Failed to resolve packages. Trying with clean build..."
+            swift package clean
+            swift package resolve --verbose
+          }
+
+      - name: Build/Test - ${{ matrix.platform }} (Swift ${{ matrix.swift }})
+        run: |
+          if [ "${{ matrix.platform }}" = "macOS" ]; then
+            swift ${{ matrix.command }} --parallel
+          else
+            set -o pipefail
+            xcodebuild \
+              -scheme Lockman \
+              -destination '${{ matrix.destination }}' \
+              -derivedDataPath .build \
+              ${{ matrix.command }} | xcbeautify
+          fi
+
+  # Examples job commented out until example projects are added
+  # examples:
+  #   name: Build Examples
+  #   runs-on: macos-15
+  #   if: github.event.pull_request.draft != true
+  #   strategy:
+  #     fail-fast: false
+  #     matrix:
+  #       scheme:
+  #         - BasicExample
+  #         - AdvancedExample
+  #       platform:
+  #         - iOS
+  #         - macOS
+  #   timeout-minutes: 20
+  #   steps:
+  #     - name: Checkout
+  #       uses: actions/checkout@v4
+  #
+  #     - name: Select Xcode 16.0
+  #       run: |
+  #         sudo xcode-select -s /Applications/Xcode_16.0.app/Contents/Developer
+  #         xcodebuild -version
+  #
+  #     - name: Build Example - ${{ matrix.scheme }} (${{ matrix.platform }})
+  #       run: |
+  #         cd Examples
+  #         if [ "${{ matrix.platform }}" = "iOS" ]; then
+  #           xcodebuild \
+  #             -scheme ${{ matrix.scheme }} \
+  #             -destination 'platform=iOS Simulator,name=iPhone 15,OS=18.0' \
+  #             build
+  #         else
+  #           xcodebuild \
+  #             -scheme ${{ matrix.scheme }} \
+  #             -destination 'platform=macOS' \
+  #             build
+  #         fi
+
+  library-evolution:
+    name: Library Evolution
+    runs-on: macos-15
+    if: github.event.pull_request.draft != true
+    timeout-minutes: 15
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Select Xcode 16.0
+        run: |
+          sudo xcode-select -s /Applications/Xcode_16.0.app/Contents/Developer
+          xcodebuild -version
+
+      - name: Build for Library Evolution
+        run: |
+          swift build \
+            -c release \
+            --target LockmanCore \
+            -Xswiftc -emit-module-interface \
+            -Xswiftc -enable-library-evolution
+
+  swift-6-language-mode:
+    name: Swift 6 Language Mode
+    runs-on: macos-15
+    if: github.event.pull_request.draft != true
+    timeout-minutes: 15
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Select Xcode 16.0
+        run: |
+          sudo xcode-select -s /Applications/Xcode_16.0.app/Contents/Developer
+          xcodebuild -version
+
+      - name: Build with Swift 6 Language Mode
+        run: |
+          swift build \
+            -Xswiftc -swift-version -Xswiftc 6 \
+            -Xswiftc -strict-concurrency=complete
+
+  codecov:
+    name: Code Coverage
+    runs-on: macos-15
+    if: github.event.pull_request.draft != true
+    timeout-minutes: 20
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Select Xcode 16.0
+        run: |
+          sudo xcode-select -s /Applications/Xcode_16.0.app/Contents/Developer
+          xcodebuild -version
+
+      - name: Run tests with coverage
+        run: |
+          swift test --enable-code-coverage --parallel
+
+      - name: Generate coverage report
+        run: |
+          # Find the test binary path
+          TEST_BINARY=$(find .build/debug -name "*.xctest" -type d | head -1)/Contents/MacOS/*
+          PROFDATA=$(find .build/debug -name "*.profdata" | head -1)
+          
+          xcrun llvm-cov export \
+            $TEST_BINARY \
+            -instr-profile $PROFDATA \
+            -format="lcov" > coverage.lcov
+
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v4
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          file: ./coverage.lcov
+          flags: unittests
+          name: lockman-coverage
+          fail_ci_if_error: true
+          verbose: true
+
+  lint:
+    name: SwiftLint & SwiftFormat
+    runs-on: macos-latest
+    if: github.event.pull_request.draft != true
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install SwiftLint
+        run: brew install swiftlint swiftformat
+
+      - name: Run SwiftLint
+        run: swiftlint lint --strict
+
+      - name: Run SwiftFormat (check mode)
+        run: swiftformat --lint .
+
+  all-checks:
+    name: All Checks Pass
+    runs-on: ubuntu-latest
+    needs: [test, library-evolution, swift-6-language-mode, codecov, lint]
+    if: always()
+    steps:
+      - name: Check all jobs
+        run: |
+          if [[ "${{ contains(needs.*.result, 'failure') }}" == "true" ]]; then
+            echo "One or more jobs failed"
+            exit 1
+          else
+            echo "All jobs passed successfully"
+          fi

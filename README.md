@@ -1,6 +1,6 @@
 <img src="Lockman.png" alt="Lockman Logo" width="400">
 
-[![CI](https://github.com/takeshishimada/Lockman/workflows/CI/badge.svg)](https://github.com/takeshishimada/Lockman/actions?query=workflow%3ACI)
+[![CI](https://github.com/takeshishimada/Lockman/actions/workflows/ci.yml/badge.svg)](https://github.com/takeshishimada/Lockman/actions/workflows/ci.yml)
 [![Swift 5.9](https://img.shields.io/badge/swift-5.9-ED523F.svg?style=flat)](https://swift.org/download/)
 [![@takeshishimada](https://img.shields.io/badge/contact-@takeshishimada-1DA1F2.svg?style=flat&logo=twitter)](https://twitter.com/takeshishimada)
 
