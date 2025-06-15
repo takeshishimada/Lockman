@@ -44,8 +44,14 @@ jobs:
 
       - name: Fix Package.resolved
         run: |
+          echo "Removing Package.resolved if it exists..."
           rm -f Package.resolved
-          swift package resolve
+          echo "Running swift package resolve..."
+          swift package resolve --verbose || {
+            echo "Failed to resolve packages. Trying with clean build..."
+            swift package clean
+            swift package resolve --verbose
+          }
 
       - name: Cache DerivedData
         uses: actions/cache@v4
