@@ -12,78 +12,150 @@ on:
       - main
       - develop
       - 'feature/**'
+  workflow_dispatch:
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.head_ref || github.run_id }}
   cancel-in-progress: true
 
 jobs:
-  test:
-    name: Test Swift ${{ matrix.swift }} on ${{ matrix.os }}
-    runs-on: ${{ matrix.os }}
-    timeout-minutes: 30
+  xcodebuild:
+    name: xcodebuild / Xcode ${{ matrix.xcode }}, ${{ matrix.platform }}
+    runs-on: macos-14
     strategy:
       fail-fast: false
       matrix:
-        include:
-          # Swift 5.9
-          - os: macos-14
-            swift: '5.9'
-            xcode: '15.2'
-          
-          # Swift 6.0
-          - os: macos-15
-            swift: '6.0'
-            xcode: '16.0'
-          
-          # Latest (Swift 6.1)
-          - os: macos-latest
-            swift: 'latest'
-            xcode: 'latest-stable'
+        xcode: ['15.2', '15.4']
+        platform: ['iOS', 'macOS', 'tvOS', 'watchOS']
+        config: ['Debug', 'Release']
+        exclude:
+          # Skip older Xcode versions for newer platforms
+          - { xcode: '15.2', platform: 'watchOS', config: 'Release' }
+          - { xcode: '15.2', platform: 'tvOS', config: 'Release' }
 
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Select Xcode
-        if: matrix.xcode != 'latest-stable'
+      - uses: actions/checkout@v4
+      
+      - name: Select Xcode ${{ matrix.xcode }}
         run: sudo xcode-select -s /Applications/Xcode_${{ matrix.xcode }}.app
 
-      - name: Swift version
-        run: swift --version
+      - name: Skip macro validation
+        run: defaults write com.apple.dt.Xcode IDESkipMacroFingerprintValidation -bool YES
 
-      - name: Cache Swift PM
+      - name: Cache DerivedData
         uses: actions/cache@v4
         with:
-          path: |
-            .build
-            ~/Library/Developer/Xcode/DerivedData
-          key: ${{ runner.os }}-spm-${{ matrix.swift }}-${{ hashFiles('**/Package.swift') }}
+          key: xcodebuild-${{ matrix.xcode }}-${{ matrix.platform }}-${{ matrix.config }}-${{ hashFiles('**/Package.swift') }}
+          path: ~/Library/Developer/Xcode/DerivedData
           restore-keys: |
-            ${{ runner.os }}-spm-${{ matrix.swift }}-
-            ${{ runner.os }}-spm-
+            xcodebuild-${{ matrix.xcode }}-${{ matrix.platform }}-${{ matrix.config }}-
+            xcodebuild-${{ matrix.xcode }}-${{ matrix.platform }}-
+            xcodebuild-${{ matrix.xcode }}-
 
-      # Test on macOS
-      - name: Test macOS
+      - name: Set platform variables
+        id: platform
         run: |
-          set -e
-          swift build --build-tests
-          swift test --enable-code-coverage --parallel
+          case "${{ matrix.platform }}" in
+            "iOS")
+              echo "sdk=iphonesimulator" >> $GITHUB_OUTPUT
+              echo "destination=platform=iOS Simulator,name=iPhone 15,OS=17.2" >> $GITHUB_OUTPUT
+              ;;
+            "macOS")
+              echo "sdk=macosx" >> $GITHUB_OUTPUT
+              echo "destination=platform=macOS" >> $GITHUB_OUTPUT
+              ;;
+            "tvOS")
+              echo "sdk=appletvsimulator" >> $GITHUB_OUTPUT
+              echo "destination=platform=tvOS Simulator,name=Apple TV,OS=17.2" >> $GITHUB_OUTPUT
+              ;;
+            "watchOS")
+              echo "sdk=watchsimulator" >> $GITHUB_OUTPUT
+              echo "destination=platform=watchOS Simulator,name=Apple Watch Series 9 (45mm),OS=10.2" >> $GITHUB_OUTPUT
+              ;;
+          esac
 
-      # Extract and convert coverage
+      - name: Build and test
+        run: |
+          if [[ "${{ matrix.platform }}" == "watchOS" ]]; then
+            xcodebuild build \
+              -scheme Lockman-Package \
+              -configuration ${{ matrix.config }} \
+              -sdk "${{ steps.platform.outputs.sdk }}" \
+              -destination "${{ steps.platform.outputs.destination }}" \
+              -skipMacroValidation
+          else
+            xcodebuild test \
+              -scheme Lockman-Package \
+              -configuration ${{ matrix.config }} \
+              -sdk "${{ steps.platform.outputs.sdk }}" \
+              -destination "${{ steps.platform.outputs.destination }}" \
+              -enableCodeCoverage YES \
+              -skipMacroValidation
+          fi
+
+  xcodebuild-latest:
+    name: xcodebuild / Xcode 16.0, ${{ matrix.platform }}
+    runs-on: macos-15
+    strategy:
+      fail-fast: false
+      matrix:
+        platform: ['iOS', 'macOS']
+
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Select Xcode 16.0
+        run: sudo xcode-select -s /Applications/Xcode_16.0.app
+
+      - name: Skip macro validation
+        run: defaults write com.apple.dt.Xcode IDESkipMacroFingerprintValidation -bool YES
+
+      - name: Cache DerivedData
+        uses: actions/cache@v4
+        with:
+          key: xcodebuild-16.0-${{ matrix.platform }}-${{ hashFiles('**/Package.swift') }}
+          path: ~/Library/Developer/Xcode/DerivedData
+          restore-keys: |
+            xcodebuild-16.0-${{ matrix.platform }}-
+            xcodebuild-16.0-
+
+      - name: Set platform variables
+        id: platform
+        run: |
+          case "${{ matrix.platform }}" in
+            "iOS")
+              echo "sdk=iphonesimulator" >> $GITHUB_OUTPUT
+              echo "destination=platform=iOS Simulator,name=iPhone 16,OS=18.0" >> $GITHUB_OUTPUT
+              ;;
+            "macOS")
+              echo "sdk=macosx" >> $GITHUB_OUTPUT
+              echo "destination=platform=macOS" >> $GITHUB_OUTPUT
+              ;;
+          esac
+
+      - name: Build and test
+        run: |
+          xcodebuild test \
+            -scheme Lockman-Package \
+            -configuration Debug \
+            -sdk "${{ steps.platform.outputs.sdk }}" \
+            -destination "${{ steps.platform.outputs.destination }}" \
+            -enableCodeCoverage YES \
+            -skipMacroValidation
+
       - name: Generate coverage report
-        if: matrix.swift != '5.9'  # Code coverage may have issues with older Swift
+        if: matrix.platform == 'macOS'
         run: |
           set -e
           # Find the correct path for coverage data
-          COV_BIN=$(find .build -name 'LockmanPackageTests' -type f -perm +111 | grep -E '\.xctest/Contents/MacOS/LockmanPackageTests$' | head -n 1)
+          COV_BIN=$(find ~/Library/Developer/Xcode/DerivedData -name 'LockmanPackageTests' -type f -path '*/Build/Products/Debug*/LockmanPackageTests.xctest/Contents/MacOS/LockmanPackageTests' | head -n 1)
           if [ -z "$COV_BIN" ]; then
             echo "Could not find test binary"
             exit 1
           fi
           
           # Find profdata
-          PROF_DATA=$(find .build -name 'default.profdata' -type f | head -n 1)
+          PROF_DATA=$(find ~/Library/Developer/Xcode/DerivedData -name 'Coverage.profdata' -type f | head -n 1)
           if [ -z "$PROF_DATA" ]; then
             echo "Could not find profdata"
             exit 1
@@ -96,82 +168,47 @@ jobs:
             -format="lcov" > coverage.lcov
 
       - name: Upload coverage to Codecov
-        if: matrix.swift != '5.9'
+        if: matrix.platform == 'macOS'
         uses: codecov/codecov-action@v4
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           files: ./coverage.lcov
-          flags: unittests,swift${{ matrix.swift }}
-          name: swift-${{ matrix.swift }}-${{ matrix.os }}
-          fail_ci_if_error: false  # Don't fail if coverage upload fails
-
-  test-platforms:
-    name: Test Platforms
-    runs-on: macos-latest
-    timeout-minutes: 30
-    
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Select Xcode
-        run: sudo xcode-select -s /Applications/Xcode.app
-
-      - name: Cache Swift PM
-        uses: actions/cache@v4
-        with:
-          path: |
-            .build
-            ~/Library/Developer/Xcode/DerivedData
-          key: ${{ runner.os }}-platforms-${{ hashFiles('**/Package.swift') }}
-          restore-keys: |
-            ${{ runner.os }}-platforms-
-
-      # Test iOS
-      - name: Test iOS
-        run: |
-          xcodebuild test \
-            -scheme Lockman-Package \
-            -destination "platform=iOS Simulator,name=iPhone 15,OS=latest" \
-            -skipMacroValidation \
-            CODE_SIGN_IDENTITY="" \
-            CODE_SIGNING_REQUIRED=NO
-
-      # Test tvOS
-      - name: Test tvOS
-        run: |
-          xcodebuild test \
-            -scheme Lockman-Package \
-            -destination "platform=tvOS Simulator,name=Apple TV,OS=latest" \
-            -skipMacroValidation \
-            CODE_SIGN_IDENTITY="" \
-            CODE_SIGNING_REQUIRED=NO
-
-      # Build watchOS (can't test on simulator)
-      - name: Build watchOS
-        run: |
-          xcodebuild build \
-            -scheme Lockman-Package \
-            -destination "platform=watchOS Simulator,name=Apple Watch Series 9 (45mm),OS=latest" \
-            -skipMacroValidation \
-            CODE_SIGN_IDENTITY="" \
-            CODE_SIGNING_REQUIRED=NO
-
-  coverage-check:
-    name: Coverage Check
-    needs: [test]
-    runs-on: ubuntu-latest
-    if: always()
-    
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Wait for coverage processing
-        run: sleep 30
-
-      - name: Check coverage threshold
-        uses: codecov/codecov-action@v4
-        with:
-          token: ${{ secrets.CODECOV_TOKEN }}
+          flags: unittests
+          name: xcode-16.0-macOS
           fail_ci_if_error: false
+
+  swift-test:
+    name: swift test / Swift ${{ matrix.swift }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { os: macos-14, swift: '5.9', xcode: '15.2' }
+          - { os: macos-15, swift: '6.0', xcode: '16.0' }
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Select Xcode ${{ matrix.xcode }}
+        run: sudo xcode-select -s /Applications/Xcode_${{ matrix.xcode }}.app
+
+      - name: Swift version
+        run: swift --version
+
+      - name: Run tests
+        run: swift test --parallel
+
+  check-macro-compatibility:
+    name: Check Macro Compatibility
+    runs-on: macos-latest
+    
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Select latest Xcode
+        run: sudo xcode-select -s /Applications/Xcode.app
+      
+      - name: Check macro compatibility
+        run: |
+          swift package diagnose-api-breaking-changes 1.17.1 || true
