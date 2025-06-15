@@ -63,33 +63,60 @@ endif
 
 xcodebuild:
 	@echo "🔨 Running xcodebuild $(XCODEBUILD_ARGUMENT) for $(PLATFORM)..."
-	@set -o pipefail && \
-	xcodebuild $(XCODEBUILD_ARGUMENT) \
-		-workspace $(WORKSPACE) \
-		-scheme $(SCHEME) \
-		-configuration $(CONFIG) \
-		-destination "$(DESTINATION)" \
-		-derivedDataPath $(DERIVED_DATA_PATH) \
-		| xcbeautify
+	@if command -v xcbeautify >/dev/null 2>&1; then \
+		set -o pipefail && \
+		xcodebuild $(XCODEBUILD_ARGUMENT) \
+			-workspace $(WORKSPACE) \
+			-scheme $(SCHEME) \
+			-configuration $(CONFIG) \
+			-destination "$(DESTINATION)" \
+			-derivedDataPath $(DERIVED_DATA_PATH) \
+			| xcbeautify; \
+	else \
+		xcodebuild $(XCODEBUILD_ARGUMENT) \
+			-workspace $(WORKSPACE) \
+			-scheme $(SCHEME) \
+			-configuration $(CONFIG) \
+			-destination "$(DESTINATION)" \
+			-derivedDataPath $(DERIVED_DATA_PATH); \
+	fi
 
 xcodebuild-raw:
 	@echo "🔨 Running xcodebuild for $(SCHEME)..."
-	@set -o pipefail && \
-	xcodebuild \
-		-workspace $(WORKSPACE) \
-		-scheme $(SCHEME) \
-		-configuration $(CONFIG) \
-		-destination "$(DESTINATION_MACOS)" \
-		-derivedDataPath $(DERIVED_DATA_PATH) \
-		| xcbeautify
+	@if command -v xcbeautify >/dev/null 2>&1; then \
+		set -o pipefail && \
+		xcodebuild \
+			-workspace $(WORKSPACE) \
+			-scheme $(SCHEME) \
+			-configuration $(CONFIG) \
+			-destination "$(DESTINATION_MACOS)" \
+			-derivedDataPath $(DERIVED_DATA_PATH) \
+			| xcbeautify; \
+	else \
+		xcodebuild \
+			-workspace $(WORKSPACE) \
+			-scheme $(SCHEME) \
+			-configuration $(CONFIG) \
+			-destination "$(DESTINATION_MACOS)" \
+			-derivedDataPath $(DERIVED_DATA_PATH); \
+	fi
 
 build-for-library-evolution:
 	@echo "📚 Building for library evolution..."
-	@set -o pipefail && \
-	xcodebuild build \
-		-workspace $(WORKSPACE) \
-		-scheme $(SCHEME) \
-		-configuration Release \
-		-destination "$(DESTINATION_MACOS)" \
-		BUILD_LIBRARY_FOR_DISTRIBUTION=YES \
-		| xcbeautify
+	@if command -v xcbeautify >/dev/null 2>&1; then \
+		set -o pipefail && \
+		xcodebuild build \
+			-workspace $(WORKSPACE) \
+			-scheme $(SCHEME) \
+			-configuration Release \
+			-destination "$(DESTINATION_MACOS)" \
+			BUILD_LIBRARY_FOR_DISTRIBUTION=YES \
+			| xcbeautify; \
+	else \
+		xcodebuild build \
+			-workspace $(WORKSPACE) \
+			-scheme $(SCHEME) \
+			-configuration Release \
+			-destination "$(DESTINATION_MACOS)" \
+			BUILD_LIBRARY_FOR_DISTRIBUTION=YES; \
+	fi

@@ -27,8 +27,8 @@ jobs:
       - uses: actions/checkout@v4
       - name: Select Xcode ${{ matrix.xcode }}
         run: sudo xcode-select -s /Applications/Xcode_${{ matrix.xcode }}.app
-      - name: Update xcbeautify
-        run: brew update && brew upgrade xcbeautify
+      - name: Install xcbeautify
+        run: brew install xcbeautify || brew upgrade xcbeautify
       - name: List available devices
         run: xcrun simctl list devices available
       - name: Cache derived data
