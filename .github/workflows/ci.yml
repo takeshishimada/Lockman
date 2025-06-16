@@ -15,55 +15,91 @@ concurrency:
 
 jobs:
 
-  swift-test:
-    name: Test (Swift ${{ matrix.swift }})
-    runs-on: ${{ matrix.os }}
+  xcodebuild-latest:
+    name: xcodebuild (Latest)
+    runs-on: macos-15
     strategy:
       fail-fast: false
       matrix:
-        include:
-          - os: macos-15
-            swift: '6.0'
-            xcode: '16.2'
+        platform:
+          - IOS
+          - MACOS
+        xcode: ['16.2']
     steps:
       - uses: actions/checkout@v4
-      - name: Cache Swift dependencies
+      - name: Select Xcode ${{ matrix.xcode }}
+        run: sudo xcode-select -s /Applications/Xcode_${{ matrix.xcode }}.app
+      - name: Update xcbeautify
+        run: brew update && brew upgrade xcbeautify
+      - name: List available devices
+        run: xcrun simctl list devices available
+      - name: Cache derived data
         uses: actions/cache@v3
         with:
-          path: |
-            .build
-            ~/Library/Developer/Xcode/DerivedData
-          key: ${{ runner.os }}-swift-${{ matrix.swift }}-${{ hashFiles('**/Package.resolved') }}
-          restore-keys: |
-            ${{ runner.os }}-swift-${{ matrix.swift }}-
-            ${{ runner.os }}-swift-
+          path: ~/.derivedData
+          key: deriveddata-xcodebuild-${{ matrix.platform }}-${{ matrix.xcode }}-${{ hashFiles('**/Sources/**/*.swift', '**/Tests/**/*.swift') }}
+      - name: Set IgnoreFileSystemDeviceInodeChanges flag
+        run: defaults write com.apple.dt.XCBuild IgnoreFileSystemDeviceInodeChanges -bool YES
+      - name: Update mtime for incremental builds
+        uses: chetan/git-restore-mtime-action@v1
+      - name: Debug
+        run: make xcodebuild-raw PLATFORM="${{ matrix.platform }}"
+      - name: Test platform
+        run: make xcodebuild PLATFORM="${{ matrix.platform }}"
+
+  xcodebuild:
+    name: xcodebuild (Older)
+    runs-on: macos-14
+    strategy:
+      fail-fast: false
+      matrix:
+        command:
+          - build
+          - test
+        platform:
+          - IOS
+          - MAC_CATALYST
+          - MACOS
+          - TVOS
+          - WATCHOS
+        xcode: [15.2, 15.4]
+        exclude:
+          - {xcode: 15.2, command: build}
+          - {xcode: 15.4, command: test}
+          - {xcode: 15.2, platform: MAC_CATALYST}
+          - {xcode: 15.2, platform: TVOS}
+          - {xcode: 15.2, platform: WATCHOS}
+    steps:
+      - uses: actions/checkout@v4
       - name: Select Xcode ${{ matrix.xcode }}
-        run: |
-          sudo xcode-select -s /Applications/Xcode_${{ matrix.xcode }}.app
-      - name: Get swift version
-        run: swift --version
-      - name: Build
-        run: swift build
-      - name: Test
-        run: swift test
+        run: sudo xcode-select -s /Applications/Xcode_${{ matrix.xcode }}.app
+      - name: Update xcbeautify
+        run: brew update && brew upgrade xcbeautify
+      - name: List available devices
+        run: xcrun simctl list devices available
+      - name: Cache derived data
+        uses: actions/cache@v3
+        with:
+          path: ~/.derivedData
+          key: deriveddata-xcodebuild-${{ matrix.platform }}-${{ matrix.xcode }}-${{ matrix.command }}-${{ hashFiles('**/Sources/**/*.swift', '**/Tests/**/*.swift') }}
+      - name: Set IgnoreFileSystemDeviceInodeChanges flag
+        run: defaults write com.apple.dt.XCBuild IgnoreFileSystemDeviceInodeChanges -bool YES
+      - name: Update mtime for incremental builds
+        uses: chetan/git-restore-mtime-action@v1
+      - name: Debug
+        run: make xcodebuild-raw XCODEBUILD_ARGUMENT="${{ matrix.command }}" PLATFORM="${{ matrix.platform }}"
+      - name: Test platform
+        run: make xcodebuild XCODEBUILD_ARGUMENT="${{ matrix.command }}" PLATFORM="${{ matrix.platform }}"
 
   library-evolution:
     name: Library evolution
     runs-on: macos-14
     steps:
       - uses: actions/checkout@v4
-      - name: Cache Swift dependencies
-        uses: actions/cache@v3
-        with:
-          path: |
-            .build
-            ~/Library/Developer/Xcode/DerivedData
-          key: ${{ runner.os }}-lib-evolution-${{ hashFiles('**/Package.resolved') }}
-          restore-keys: |
-            ${{ runner.os }}-lib-evolution-
       - name: Select Xcode 15.4
-        run: |
-          sudo xcode-select -s /Applications/Xcode_15.4.app
+        run: sudo xcode-select -s /Applications/Xcode_15.4.app
+      - name: Update xcbeautify
+        run: brew update && brew upgrade xcbeautify
       - name: Build for library evolution
         run: make build-for-library-evolution
 
@@ -94,7 +130,7 @@ jobs:
     runs-on: macos-15
     steps:
       - uses: actions/checkout@v4
-      - name: Cache DerivedData
+      - name: Cache derived data
         uses: actions/cache@v3
         with:
           path: |
@@ -107,6 +143,10 @@ jobs:
       - name: Select Xcode 16.2
         run: |
           sudo xcode-select -s /Applications/Xcode_16.2.app
+      - name: Set IgnoreFileSystemDeviceInodeChanges flag
+        run: defaults write com.apple.dt.XCBuild IgnoreFileSystemDeviceInodeChanges -bool YES
+      - name: Update mtime for incremental builds
+        uses: chetan/git-restore-mtime-action@v1
       - name: Build examples for iOS
         run: |
           xcodebuild build \
