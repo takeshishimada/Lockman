@@ -4,18 +4,48 @@
 [![Swift 5.9](https://img.shields.io/badge/swift-5.9-ED523F.svg?style=flat)](https://swift.org/download/)
 [![@takeshishimada](https://img.shields.io/badge/contact-@takeshishimada-1DA1F2.svg?style=flat&logo=twitter)](https://twitter.com/takeshishimada)
 
-The Composable Architectureアプリケーション向けのアクション排他制御ライブラリ
+フィードバックファーストなアプローチで、応答性、透明性、宣言的設計を重視したアクション排他制御ライブラリ
 
+* [設計思想](#設計思想)
 * [概要](#概要)
 * [基本例](#基本例)
 * [インストール](#インストール)
 * [コミュニティ](#コミュニティ)
 
+## 設計思想
+
+### Designing Fluid Interfacesの原則
+
+WWDC18「Designing Fluid Interfaces」では、優れたインターフェースの原則が示されました：
+
+* **即座の応答と継続的なリダイレクション** - 10msの遅延も感じさせない応答性
+* **タッチとコンテンツの1対1の動き** - ドラッグ時にコンテンツが指に追従
+* **継続的なフィードバック** - すべてのインタラクションに対する即座の反応
+* **複数ジェスチャーの並列検出** - 同時に複数のジェスチャーを認識
+* **空間的な一貫性の維持** - アニメーション中の位置の一貫性
+* **軽量なインタラクション、増幅された出力** - 小さな入力から大きな効果
+
+### 従来の課題
+
+従来のUI開発では、ボタンの同時押しや重複実行を単純に禁止することで問題を解決してきました。これらのアプローチは現代の流動的なインターフェース設計において、ユーザー体験を阻害する要因となっています。
+
+ユーザーは押下可能なボタンに対して、同時押しの場合でも何らかのフィードバックを期待します。UI層での即座の応答と、ビジネスロジック層での適切な排他制御を明確に分離することが重要です。
+
+### このライブラリについて
+
+本ライブラリは、上記の原則を実現するためのアクション排他制御ライブラリです。
+
+**特徴：**
+* **即座のフィードバック** - すべてのユーザーアクションに対して瞬時に反応
+* **優雅な排他制御** - 優先度とコンテキストに基づいた適切なアクション制御
+* **宣言的な状態管理** - 複雑な排他ロジックをシンプルな状態宣言で実現
+* **透明性のあるキャンセレーション** - ユーザーが理解できる形でのアクション調停
+
 ## 概要
 
-LockmanはThe Composable Architecture（TCA）アプリケーションにおける並行アクションの制御問題を解決するSwiftライブラリです。ユーザーがボタンを連続してタップした際の重複API呼び出しの防止、優先度に基づくタスクのキャンセル、グループ内での協調制御など、実際のアプリ開発で頻繁に発生する問題に対処します。
+LockmanはThe Composable Architecture（TCA）アプリケーションにおける並行アクションの制御問題を解決するSwiftライブラリです。
 
-Lockmanは以下の制御戦略を提供します：
+Lockmanは以下の制御戦略を提供し、実際のアプリ開発で頻繁に発生する問題に対処します：
 
 * **Single Execution**: 同じアクションの重複実行を防止
 * **Priority Based**: 優先度に基づくアクションの制御とキャンセル
@@ -25,53 +55,92 @@ Lockmanは以下の制御戦略を提供します：
 
 ## 基本例
 
-ボタンの連続タップによるAPI重複呼び出しを防ぐ例：
+プロフィール写真選択における優先度ベースのアクション制御の例：
 
 ```swift
 import ComposableArchitecture
 import LockmanComposable
 
 @Reducer
-struct UserFeature {
+struct ProfilePhotoFeature {
   @ObservableState
   struct State {
-    var user: User?
+    var photos: [Photo] = []
+    var selectedPhotoId: Photo.ID?
   }
   
-  @LockmanSingleExecution
   enum Action {
-    case fetchUserTapped
-    case userResponse(Result<User, Error>)
+    case view(ViewAction)
+    case `internal`(InternalAction)
+    
+    @LockmanPriorityBased
+    enum ViewAction {
+      case thumbnailTapped(Photo.ID)
+      case updateProfilePhoto(Photo.ID)
+      
+      var lockmanInfo: LockmanPriorityBasedInfo {
+        switch self {
+        case .thumbnailTapped:
+          .init(actionId: actionName, priority: .low(.replaceable))
+        case .updateProfilePhoto:
+          .init(actionId: actionName, priority: .high(.exclusive))
+        }
+      }
+    }
+    
+    enum InternalAction {
+      case photoPreviewLoaded(Photo.ID, UIImage)
+      case profilePhotoUpdated(Result<Photo, Error>)
+    }
   }
   
   enum CancelID {
-    case userFetch
+    case userAction
   }
   
   var body: some ReducerOf<Self> {
     Reduce { state, action in
       switch action {
-      case .fetchUserTapped:
-        return .withLock(
-          operation: { send in
-            let user = try await userAPIClient.fetchUser()
-            await send(.userResponse(.success(user)))
-          },
-          catch: { error, send in
-            await send(.userResponse(.failure(error)))
-          },
-          action: action,
-          cancelID: CancelID.userFetch
-        )
-        
-      case let .userResponse(result):
-        switch result {
-        case let .success(user):
-          state.user = user
-        case .failure:
-          break
+      case let .view(viewAction):
+        switch viewAction {
+        case let .thumbnailTapped(photoId):
+          // 低優先度：選択を即座に表示し、プレビューを読み込み
+          state.selectedPhotoId = photoId
+          return .withLock(
+            operation: { send in
+              let image = try await photoClient.loadPreview(photoId)
+              await send(.internal(.photoPreviewLoaded(photoId, image)))
+            },
+            action: viewAction,
+            cancelID: CancelID.userAction
+          )
+          
+        case let .updateProfilePhoto(photoId):
+          // 高優先度（排他的）：他の全ての操作をブロック
+          return .withLock(
+            operation: { send in
+              let updatedPhoto = try await profileAPI.updatePhoto(photoId)
+              await send(.internal(.profilePhotoUpdated(.success(updatedPhoto))))
+            },
+            action: viewAction,
+            cancelID: CancelID.userAction
+          )
         }
-        return .none
+        
+      case let .internal(internalAction):
+        switch internalAction {
+        case let .photoPreviewLoaded(photoId, image):
+          // プレビューでUIを更新
+          return .none
+          
+        case let .profilePhotoUpdated(.success(photo)):
+          // 更新成功
+          return .none
+          
+        case .profilePhotoUpdated(.failure):
+          // エラー処理
+          return .none
+        }
       }
     }
   }

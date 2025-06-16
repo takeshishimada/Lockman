@@ -4,18 +4,48 @@
 [![Swift 5.9](https://img.shields.io/badge/swift-5.9-ED523F.svg?style=flat)](https://swift.org/download/)
 [![@takeshishimada](https://img.shields.io/badge/contact-@takeshishimada-1DA1F2.svg?style=flat&logo=twitter)](https://twitter.com/takeshishimada)
 
-A Swift library for action mutual exclusion control in The Composable Architecture applications
+A library for building action exclusive control with feedback-first approach, with responsiveness, transparency, and declarative design in mind.
 
+* [Design Philosophy](#design-philosophy)
 * [Overview](#overview)
 * [Basic Example](#basic-example)
 * [Installation](#installation)
 * [Community](#community)
 
+## Design Philosophy
+
+### Principles from Designing Fluid Interfaces
+
+WWDC18's "Designing Fluid Interfaces" presented principles for exceptional interfaces:
+
+* **Immediate Response and Continuous Redirection** - Responsiveness that doesn't allow even 10ms of delay
+* **One-to-One Touch and Content Movement** - Content follows the finger during drag operations
+* **Continuous Feedback** - Immediate reaction to all interactions
+* **Parallel Gesture Detection** - Recognizing multiple gestures simultaneously
+* **Spatial Consistency** - Maintaining position consistency during animations
+* **Lightweight Interactions, Amplified Output** - Large effects from small inputs
+
+### Traditional Challenges
+
+Traditional UI development has solved problems by simply prohibiting simultaneous button presses and duplicate executions. These approaches have become factors that hinder user experience in modern fluid interface design.
+
+Users expect some form of feedback even when pressing buttons simultaneously. It's crucial to clearly separate immediate response at the UI layer from appropriate mutual exclusion control at the business logic layer.
+
+### About This Library
+
+This library is an action mutual exclusion control library designed to realize the above principles.
+
+**Features:**
+* **Immediate Feedback** - Instant reaction to all user actions
+* **Graceful Mutual Exclusion** - Appropriate action control based on priority and context
+* **Declarative State Management** - Realize complex exclusion logic with simple state declarations
+* **Transparent Cancellation** - Action arbitration in a form users can understand
+
 ## Overview
 
-Lockman is a Swift library that solves concurrent action control issues in The Composable Architecture (TCA) applications. It addresses common problems in app development such as preventing duplicate API calls when users tap buttons repeatedly, task cancellation based on priority, and coordinated control within groups.
+Lockman is a Swift library that solves concurrent action control issues in The Composable Architecture (TCA) applications.
 
-Lockman provides the following control strategies:
+Lockman provides the following control strategies to address common problems in app development:
 
 * **Single Execution**: Prevents duplicate execution of the same action
 * **Priority Based**: Action control and cancellation based on priority
@@ -25,53 +55,92 @@ Lockman provides the following control strategies:
 
 ## Basic Example
 
-Example of preventing duplicate API calls from repeated button taps:
+Example of priority-based action control for profile photo selection:
 
 ```swift
 import ComposableArchitecture
 import LockmanComposable
 
 @Reducer
-struct UserFeature {
+struct ProfilePhotoFeature {
   @ObservableState
   struct State {
-    var user: User?
+    var photos: [Photo] = []
+    var selectedPhotoId: Photo.ID?
   }
   
-  @LockmanSingleExecution
   enum Action {
-    case fetchUserTapped
-    case userResponse(Result<User, Error>)
+    case view(ViewAction)
+    case `internal`(InternalAction)
+    
+    @LockmanPriorityBased
+    enum ViewAction {
+      case thumbnailTapped(Photo.ID)
+      case updateProfilePhoto(Photo.ID)
+      
+      var lockmanInfo: LockmanPriorityBasedInfo {
+        switch self {
+        case .thumbnailTapped:
+          .init(actionId: actionName, priority: .low(.replaceable))
+        case .updateProfilePhoto:
+          .init(actionId: actionName, priority: .high(.exclusive))
+        }
+      }
+    }
+    
+    enum InternalAction {
+      case photoPreviewLoaded(Photo.ID, UIImage)
+      case profilePhotoUpdated(Result<Photo, Error>)
+    }
   }
   
   enum CancelID {
-    case userFetch
+    case userAction
   }
   
   var body: some ReducerOf<Self> {
     Reduce { state, action in
       switch action {
-      case .fetchUserTapped:
-        return .withLock(
-          operation: { send in
-            let user = try await userAPIClient.fetchUser()
-            await send(.userResponse(.success(user)))
-          },
-          catch: { error, send in
-            await send(.userResponse(.failure(error)))
-          },
-          action: action,
-          cancelID: CancelID.userFetch
-        )
-        
-      case let .userResponse(result):
-        switch result {
-        case let .success(user):
-          state.user = user
-        case .failure:
-          break
+      case let .view(viewAction):
+        switch viewAction {
+        case let .thumbnailTapped(photoId):
+          // Low priority: Show selection immediately and load preview
+          state.selectedPhotoId = photoId
+          return .withLock(
+            operation: { send in
+              let image = try await photoClient.loadPreview(photoId)
+              await send(.internal(.photoPreviewLoaded(photoId, image)))
+            },
+            action: viewAction,
+            cancelID: CancelID.userAction
+          )
+          
+        case let .updateProfilePhoto(photoId):
+          // High priority (exclusive): Block all other operations
+          return .withLock(
+            operation: { send in
+              let updatedPhoto = try await profileAPI.updatePhoto(photoId)
+              await send(.internal(.profilePhotoUpdated(.success(updatedPhoto))))
+            },
+            action: viewAction,
+            cancelID: CancelID.userAction
+          )
         }
-        return .none
+        
+      case let .internal(internalAction):
+        switch internalAction {
+        case let .photoPreviewLoaded(photoId, image):
+          // Update UI with preview
+          return .none
+          
+        case let .profilePhotoUpdated(.success(photo)):
+          // Update successful
+          return .none
+          
+        case .profilePhotoUpdated(.failure):
+          // Handle error
+          return .none
+        }
       }
     }
   }
