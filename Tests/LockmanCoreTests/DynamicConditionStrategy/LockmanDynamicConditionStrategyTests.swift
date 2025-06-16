@@ -1,9 +1,8 @@
 import Foundation
-import Testing
+import XCTest
 @testable import LockmanCore
 
-@Suite("LockmanDynamicConditionStrategy Tests")
-struct LockmanDynamicConditionStrategyTests {
+final class LockmanDynamicConditionStrategyTests: XCTestCase {
   // MARK: - Test Helpers
 
   private struct TestBoundaryId: LockmanBoundaryId {
@@ -12,19 +11,16 @@ struct LockmanDynamicConditionStrategyTests {
 
   // MARK: - Basic Tests
 
-  @Test("Strategy has correct ID")
-  func strategyHasCorrectId() {
+  func teststrategyHasCorrectId() {
     let strategy = LockmanDynamicConditionStrategy()
-    #expect(strategy.strategyId == .dynamicCondition)
+    XCTAssertEqual(strategy.strategyId , .dynamicCondition)
   }
 
-  @Test("Shared instance is singleton")
-  func sharedInstanceIsSingleton() {
-    #expect(LockmanDynamicConditionStrategy.shared === LockmanDynamicConditionStrategy.shared)
+  func testsharedInstanceIsSingleton() {
+    XCTAssertTrue(LockmanDynamicConditionStrategy.shared === LockmanDynamicConditionStrategy.shared)
   }
 
-  @Test("Default condition always allows lock")
-  func defaultConditionAlwaysAllows() {
+  func testdefaultConditionAlwaysAllows() {
     let strategy = LockmanDynamicConditionStrategy()
     let boundary = TestBoundaryId(value: "test")
 
@@ -33,16 +29,15 @@ struct LockmanDynamicConditionStrategyTests {
       actionId: "test"
     )
 
-    #expect(strategy.canLock(id: boundary, info: info) == .success)
+    XCTAssertTrue(strategy.canLock(id: boundary, info: info) == .success)
 
     // Add multiple locks - should still succeed
     strategy.lock(id: boundary, info: info)
     let info2 = LockmanDynamicConditionInfo(actionId: "test2")
-    #expect(strategy.canLock(id: boundary, info: info2) == .success)
+    XCTAssertTrue(strategy.canLock(id: boundary, info: info2) == .success)
   }
 
-  @Test("Custom condition is evaluated")
-  func customConditionIsEvaluated() {
+  func testcustomConditionIsEvaluated() {
     let strategy = LockmanDynamicConditionStrategy()
     let boundary = TestBoundaryId(value: "test")
 
@@ -57,7 +52,7 @@ struct LockmanDynamicConditionStrategyTests {
     )
 
     // First lock succeeds
-    #expect(strategy.canLock(id: boundary, info: info1) == .success)
+    XCTAssertTrue(strategy.canLock(id: boundary, info: info1) == .success)
     strategy.lock(id: boundary, info: info1)
     currentCount += 1
 
@@ -68,7 +63,7 @@ struct LockmanDynamicConditionStrategyTests {
         currentCount < 2
       }
     )
-    #expect(strategy.canLock(id: boundary, info: info2) == .success)
+    XCTAssertTrue(strategy.canLock(id: boundary, info: info2) == .success)
     strategy.lock(id: boundary, info: info2)
     currentCount += 1
 
@@ -79,13 +74,12 @@ struct LockmanDynamicConditionStrategyTests {
         currentCount < 2
       }
     )
-    #expect(strategy.canLock(id: boundary, info: info3) == .failure)
+    XCTAssertTrue(strategy.canLock(id: boundary, info: info3) == .failure)
   }
 
   // MARK: - Business Logic Tests
 
-  @Test("Priority-based condition")
-  func priorityBasedCondition() {
+  func testpriorityBasedCondition() {
     let strategy = LockmanDynamicConditionStrategy()
     let boundary = TestBoundaryId(value: "test")
 
@@ -98,7 +92,7 @@ struct LockmanDynamicConditionStrategyTests {
       }
     )
 
-    #expect(strategy.canLock(id: boundary, info: highPriorityInfo) == .success)
+    XCTAssertTrue(strategy.canLock(id: boundary, info: highPriorityInfo) == .success)
 
     // Low priority action
     let lowPriority = 3
@@ -109,11 +103,10 @@ struct LockmanDynamicConditionStrategyTests {
       }
     )
 
-    #expect(strategy.canLock(id: boundary, info: lowPriorityInfo) == .failure)
+    XCTAssertTrue(strategy.canLock(id: boundary, info: lowPriorityInfo) == .failure)
   }
 
-  @Test("Time-based condition")
-  func timeBasedCondition() {
+  func testtimeBasedCondition() {
     let strategy = LockmanDynamicConditionStrategy()
     let boundary = TestBoundaryId(value: "test")
 
@@ -127,7 +120,7 @@ struct LockmanDynamicConditionStrategyTests {
       }
     )
 
-    #expect(strategy.canLock(id: boundary, info: info) == .success)
+    XCTAssertTrue(strategy.canLock(id: boundary, info: info) == .success)
 
     // After hours
     let afterHour = 20 // 8 PM
@@ -138,13 +131,12 @@ struct LockmanDynamicConditionStrategyTests {
       }
     )
 
-    #expect(strategy.canLock(id: boundary, info: afterHoursInfo) == .failure)
+    XCTAssertTrue(strategy.canLock(id: boundary, info: afterHoursInfo) == .failure)
   }
 
   // MARK: - Lock/Unlock Tests
 
-  @Test("Lock and unlock operations")
-  func lockAndUnlockOperations() {
+  func testlockAndUnlockOperations() {
     let strategy = LockmanDynamicConditionStrategy()
     let boundary = TestBoundaryId(value: "test")
 
@@ -158,7 +150,7 @@ struct LockmanDynamicConditionStrategyTests {
     )
 
     // First lock should succeed
-    #expect(strategy.canLock(id: boundary, info: info) == .success)
+    XCTAssertTrue(strategy.canLock(id: boundary, info: info) == .success)
     strategy.lock(id: boundary, info: info)
     isLocked = true
 
@@ -169,7 +161,7 @@ struct LockmanDynamicConditionStrategyTests {
         !isLocked
       }
     )
-    #expect(strategy.canLock(id: boundary, info: info2) == .failure)
+    XCTAssertTrue(strategy.canLock(id: boundary, info: info2) == .failure)
 
     // Unlock
     strategy.unlock(id: boundary, info: info)
@@ -182,13 +174,12 @@ struct LockmanDynamicConditionStrategyTests {
         !isLocked
       }
     )
-    #expect(strategy.canLock(id: boundary, info: info3) == .success)
+    XCTAssertTrue(strategy.canLock(id: boundary, info: info3) == .success)
   }
 
   // MARK: - Cleanup Tests
 
-  @Test("Cleanup removes all locks")
-  func cleanupRemovesAllLocks() {
+  func testcleanupRemovesAllLocks() {
     let strategy = LockmanDynamicConditionStrategy()
     let boundary1 = TestBoundaryId(value: "test1")
     let boundary2 = TestBoundaryId(value: "test2")
@@ -213,12 +204,11 @@ struct LockmanDynamicConditionStrategyTests {
       }
     )
 
-    #expect(strategy.canLock(id: boundary1, info: checkInfo) == .success)
-    #expect(strategy.canLock(id: boundary2, info: checkInfo) == .success)
+    XCTAssertTrue(strategy.canLock(id: boundary1, info: checkInfo) == .success)
+    XCTAssertTrue(strategy.canLock(id: boundary2, info: checkInfo) == .success)
   }
 
-  @Test("Cleanup for specific boundary")
-  func cleanupForSpecificBoundary() {
+  func testcleanupForSpecificBoundary() {
     let strategy = LockmanDynamicConditionStrategy()
     let boundary1 = TestBoundaryId(value: "test1")
     let boundary2 = TestBoundaryId(value: "test2")
@@ -235,14 +225,13 @@ struct LockmanDynamicConditionStrategyTests {
 
     // Verify cleanup worked (we can't directly check state, so just ensure no crash)
     let checkInfo = LockmanDynamicConditionInfo(actionId: "check")
-    #expect(strategy.canLock(id: boundary1, info: checkInfo) == .success)
-    #expect(strategy.canLock(id: boundary2, info: checkInfo) == .success)
+    XCTAssertTrue(strategy.canLock(id: boundary1, info: checkInfo) == .success)
+    XCTAssertTrue(strategy.canLock(id: boundary2, info: checkInfo) == .success)
   }
 
   // MARK: - Complex Condition Tests
 
-  @Test("Complex business logic condition")
-  func complexBusinessLogicCondition() {
+  func testcomplexBusinessLogicCondition() {
     let strategy = LockmanDynamicConditionStrategy()
     let boundary = TestBoundaryId(value: "test")
 
@@ -268,18 +257,17 @@ struct LockmanDynamicConditionStrategyTests {
     // First few requests succeed
     for _ in 0 ..< quota {
       let info = makeInfo()
-      #expect(strategy.canLock(id: boundary, info: info) == .success)
+      XCTAssertTrue(strategy.canLock(id: boundary, info: info) == .success)
       strategy.lock(id: boundary, info: info)
       requestCount += 1
     }
 
     // Next request fails
     let failInfo = makeInfo()
-    #expect(strategy.canLock(id: boundary, info: failInfo) == .failure)
+    XCTAssertTrue(strategy.canLock(id: boundary, info: failInfo) == .failure)
   }
 
-  @Test("Failure with custom reason")
-  func failureWithCustomReason() {
+  func testfailureWithCustomReason() {
     let strategy = LockmanDynamicConditionStrategy()
     let boundary = TestBoundaryId(value: "test")
 
@@ -291,13 +279,12 @@ struct LockmanDynamicConditionStrategyTests {
     )
 
     let result = strategy.canLock(id: boundary, info: info)
-    #expect(result == .failure)
+    XCTAssertEqual(result , .failure)
   }
 
   // MARK: - Boundary Isolation Tests
 
-  @Test("Different boundaries are isolated")
-  func differentBoundariesAreIsolated() {
+  func testdifferentBoundariesAreIsolated() {
     let strategy = LockmanDynamicConditionStrategy()
     let boundary1 = TestBoundaryId(value: "user1")
     let boundary2 = TestBoundaryId(value: "user2")
@@ -314,7 +301,7 @@ struct LockmanDynamicConditionStrategyTests {
     )
 
     // User1 makes a request
-    #expect(strategy.canLock(id: boundary1, info: user1Info) == .success)
+    XCTAssertTrue(strategy.canLock(id: boundary1, info: user1Info) == .success)
     strategy.lock(id: boundary1, info: user1Info)
     user1Count += 1
 
@@ -325,7 +312,7 @@ struct LockmanDynamicConditionStrategyTests {
         user2Count < 1
       }
     )
-    #expect(strategy.canLock(id: boundary2, info: user2Info) == .success)
+    XCTAssertTrue(strategy.canLock(id: boundary2, info: user2Info) == .success)
     strategy.lock(id: boundary2, info: user2Info)
     user2Count += 1
 
@@ -336,13 +323,12 @@ struct LockmanDynamicConditionStrategyTests {
         user1Count < 1
       }
     )
-    #expect(strategy.canLock(id: boundary1, info: user1Info2) == .failure)
+    XCTAssertTrue(strategy.canLock(id: boundary1, info: user1Info2) == .failure)
   }
 
   // MARK: - Thread Safety Tests
 
-  @Test("Concurrent operations are thread-safe")
-  func concurrentOperationsAreThreadSafe() async {
+  func testconcurrentOperationsAreThreadSafe() async throws {
     let strategy = LockmanDynamicConditionStrategy()
     let boundary = TestBoundaryId(value: "test")
 
@@ -368,25 +354,23 @@ struct LockmanDynamicConditionStrategyTests {
 
     // Verify strategy is still functional
     let info = LockmanDynamicConditionInfo(actionId: "final")
-    #expect(strategy.canLock(id: boundary, info: info) == .success)
+    XCTAssertTrue(strategy.canLock(id: boundary, info: info) == .success)
   }
 
   // MARK: - Unique ID Tests
 
-  @Test("Each info has unique ID")
-  func eachInfoHasUniqueId() {
+  func testeachInfoHasUniqueId() {
     let info1 = LockmanDynamicConditionInfo(actionId: "test")
     let info2 = LockmanDynamicConditionInfo(actionId: "test")
 
-    #expect(info1.uniqueId != info2.uniqueId)
-    #expect(!(info1 == info2))
+    XCTAssertNotEqual(info1.uniqueId , info2.uniqueId)
+    XCTAssertNotEqual(info1 .uniqueId, info2.uniqueId)
   }
 
-  @Test("Info equality based on unique ID")
-  func infoEqualityBasedOnUniqueId() {
+  func testinfoEqualityBasedOnUniqueId() {
     let info = LockmanDynamicConditionInfo(actionId: "test")
 
-    #expect(info == info)
-    #expect(info.uniqueId == info.uniqueId)
+    XCTAssertEqual(info.uniqueId, info.uniqueId)
+    XCTAssertEqual(info.uniqueId , info.uniqueId)
   }
 }

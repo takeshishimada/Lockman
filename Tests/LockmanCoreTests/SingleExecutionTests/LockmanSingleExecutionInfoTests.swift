@@ -1,5 +1,5 @@
 import Foundation
-import Testing
+import XCTest
 @testable import LockmanCore
 
 // MARK: - Test Helpers
@@ -19,88 +19,79 @@ private struct StringBoundaryId: LockmanBoundaryId {
 
 // MARK: - LockmanSingleExecutionInfo Tests
 
-@Suite("LockmanSingleExecutionInfo Tests")
-struct LockmanSingleExecutionInfoTests {
+final class LockmanSingleExecutionInfoTests: XCTestCase {
   // MARK: - Initialization Tests
 
-  @Test("Initialize with action id")
-  func testInitializeWithActionId() {
+  func testtestInitializeWithActionId() {
     let actionId = "testAction"
     let info = LockmanSingleExecutionInfo(actionId: actionId, mode: .boundary)
 
-    #expect(info.actionId == "testAction")
+    XCTAssertEqual(info.actionId , "testAction")
   }
 
-  @Test("Initialize with string action id")
-  func testInitializeWithStringActionId() {
+  func testtestInitializeWithStringActionId() {
     let actionId = "stringAction"
     let info = LockmanSingleExecutionInfo(actionId: actionId, mode: .boundary)
 
-    #expect(info.actionId == "stringAction")
+    XCTAssertEqual(info.actionId , "stringAction")
   }
 
-  @Test("Initialize with different action id types")
-  func testInitializeWithDifferentActionIdTypes() {
+  func testtestInitializeWithDifferentActionIdTypes() {
     let stringId = "string"
 
     let stringInfo = LockmanSingleExecutionInfo(actionId: stringId, mode: .boundary)
 
-    #expect(stringInfo.actionId == "string")
+    XCTAssertEqual(stringInfo.actionId , "string")
   }
 
   // MARK: - Equality Tests
 
-  @Test("Equality with same action id")
-  func testEqualityWithSameActionId() {
+  func testtestEqualityWithSameActionId() {
     let actionId1 = "same"
     let actionId2 = "same"
 
     let info1 = LockmanSingleExecutionInfo(actionId: actionId1, mode: .boundary)
     let info2 = LockmanSingleExecutionInfo(actionId: actionId2, mode: .boundary)
 
-    #expect(info1.actionId == info2.actionId)
+    XCTAssertEqual(info1.actionId , info2.actionId)
   }
 
-  @Test("Inequality with different action ids")
-  func testInequalityWithDifferentActionIds() {
+  func testtestInequalityWithDifferentActionIds() {
     let actionId1 = "first"
     let actionId2 = "second"
 
     let info1 = LockmanSingleExecutionInfo(actionId: actionId1, mode: .boundary)
     let info2 = LockmanSingleExecutionInfo(actionId: actionId2, mode: .boundary)
 
-    #expect(info1 != info2)
+    XCTAssertNotEqual(info1 , info2)
   }
 
-  @Test("Equality with string action ids")
-  func testEqualityWithStringActionIds() {
+  func testtestEqualityWithStringActionIds() {
     let info1 = LockmanSingleExecutionInfo(actionId: "action1", mode: .boundary)
     let info2 = LockmanSingleExecutionInfo(actionId: "action1", mode: .boundary)
     let info3 = LockmanSingleExecutionInfo(actionId: "action2", mode: .boundary)
 
-    #expect(info1.actionId == info2.actionId) // Same string
-    #expect(info1.actionId != info3.actionId) // Different string
-    #expect(info2.actionId != info3.actionId) // Different string
+    XCTAssertEqual(info1.actionId , info2.actionId) // Same string
+    XCTAssertNotEqual(info1.actionId , info3.actionId) // Different string
+    XCTAssertNotEqual(info2.actionId , info3.actionId) // Different string
   }
 
   // MARK: - Description Tests (Removed since description functionality was removed)
 
-//  @Test("Description format is consistent")
-//  func testDescriptionFormatIsConsistent() {
+//  //  func testDescriptionFormatIsConsistent() {
 //    let stringActionId = "stringAction"
 //    let customActionId = CustomActionId(id: "custom", metadata: "meta")
 //
 //    let stringInfo = LockmanSingleExecutionInfo(actionId: stringActionId, mode: .boundary)
 //    let customInfo = LockmanSingleExecutionInfo(actionId: customActionId, mode: .boundary)
 //
-//    #expect(stringInfo.description.hasPrefix("ActionId:"))
-//    #expect(customInfo.description.hasPrefix("ActionId:"))
+//    XCTAssertTrue(stringInfo.description.hasPrefix("ActionId:"))
+//    XCTAssertTrue(customInfo.description.hasPrefix("ActionId:"))
 //  }
 
   // MARK: - Sendable Conformance Tests
 
-  @Test("Sendable across concurrent contexts")
-  func testSendableAcrossConcurrentContexts() async {
+  func testtestSendableAcrossConcurrentContexts() async throws {
     let actionId = "concurrent"
     let info = LockmanSingleExecutionInfo(actionId: actionId, mode: .boundary)
 
@@ -108,13 +99,12 @@ struct LockmanSingleExecutionInfoTests {
       group.addTask { info }
 
       for await result in group {
-        #expect(result == info)
+        XCTAssertEqual(result , info)
       }
     }
   }
 
-  @Test("Multiple concurrent operations with different info")
-  func testMultipleConcurrentOperationsWithDifferentInfo() async {
+  func testtestMultipleConcurrentOperationsWithDifferentInfo() async throws {
     let results = await withTaskGroup(of: LockmanSingleExecutionInfo.self, returning: [LockmanSingleExecutionInfo].self) { group in
       for i in 0 ..< 5 {
         group.addTask {
@@ -130,84 +120,77 @@ struct LockmanSingleExecutionInfoTests {
       return results
     }
 
-    #expect(results.count == 5)
+    XCTAssertEqual(results.count , 5)
 
     // All should be different
     for i in 0 ..< results.count {
       for j in (i + 1) ..< results.count {
-        #expect(results[i] != results[j])
+        XCTAssertNotEqual(results[i] , results[j])
       }
     }
   }
 
   // MARK: - Edge Case Tests
 
-  @Test("Empty string action id")
-  func testEmptyStringActionId() {
+  func testtestEmptyStringActionId() {
     let info = LockmanSingleExecutionInfo(actionId: "", mode: .boundary)
-    #expect(info.actionId == "")
+    XCTAssertEqual(info.actionId , "")
   }
 
-  @Test("Unicode string action id")
-  func testUnicodeStringActionId() {
+  func testtestUnicodeStringActionId() {
     let unicodeString = "🚀💻🔒"
     let info = LockmanSingleExecutionInfo(actionId: unicodeString, mode: .boundary)
-    #expect(info.actionId == unicodeString)
+    XCTAssertEqual(info.actionId , unicodeString)
   }
 
-  @Test("Very long action id")
-  func testVeryLongActionId() {
+  func testtestVeryLongActionId() {
     let longString = String(repeating: "a", count: 1000)
     let info = LockmanSingleExecutionInfo(actionId: longString, mode: .boundary)
-    #expect(info.actionId == longString)
+    XCTAssertEqual(info.actionId , longString)
   }
 
   // MARK: - Value Type Semantics Tests
 
-  @Test("Value type semantics")
-  func testValueTypeSemantics() {
+  func testtestValueTypeSemantics() {
     let actionId = "original"
     let info1 = LockmanSingleExecutionInfo(actionId: actionId, mode: .boundary)
     var info2 = info1
 
     // Both should be equal initially
-    #expect(info1 == info2)
+    XCTAssertEqual(info1 , info2)
 
     // Modifying one shouldn't affect the other (value semantics)
     info2 = LockmanSingleExecutionInfo(actionId: "modified", mode: .boundary)
-    #expect(info1 != info2)
-    #expect(info1.actionId == "original")
-    #expect(info2.actionId == "modified")
+    XCTAssertNotEqual(info1 , info2)
+    XCTAssertEqual(info1.actionId , "original")
+    XCTAssertEqual(info2.actionId , "modified")
   }
 
   // MARK: - Protocol Conformance Tests
 
-  @Test("LockmanInfo protocol conformance")
-  func testLockmanInfoProtocolConformance() {
+  func testtestLockmanInfoProtocolConformance() {
     let info = LockmanSingleExecutionInfo(actionId: "test", mode: .boundary)
 
     // Should conform to LockmanInfo
     let _: any LockmanInfo = info
-    // #expect(lockmanInfo.description.contains("test")) // Removed - description functionality removed
+    // XCTAssertTrue(lockmanInfo.description.contains("test")) // Removed - description functionality removed
   }
 
-//  @Test("Equatable protocol conformance")
-//  func testEquatableProtocolConformance() {
+//  //  func testEquatableProtocolConformance() {
 //    let info1 = LockmanSingleExecutionInfo(actionId: "same", mode: .boundary)
 //    let info2 = LockmanSingleExecutionInfo(actionId: "same", mode: .boundary)
 //    let info3 = LockmanSingleExecutionInfo(actionId: "different", mode: .boundary)
 //
 //    // Test array contains
 //    let infoArray = [info1, info3]
-//    #expect(infoArray.contains(info2)) // Should find info1 (same actionId)
-//    #expect(infoArray.contains(info1))
-//    #expect(infoArray.contains(info3))
+//    XCTAssertTrue(infoArray.contains(info2)) // Should find info1 (same actionId)
+//    XCTAssertTrue(infoArray.contains(info1))
+//    XCTAssertTrue(infoArray.contains(info3))
 //  }
 
   // MARK: - Memory and Performance Tests
 
-  @Test("Memory efficiency with many instances")
-  func testMemoryEfficiencyWithManyInstances() {
+  func testtestMemoryEfficiencyWithManyInstances() {
     var infos: [LockmanSingleExecutionInfo] = []
 
     for i in 0 ..< 100 {
@@ -215,18 +198,17 @@ struct LockmanSingleExecutionInfoTests {
       infos.append(info)
     }
 
-    #expect(infos.count == 100)
+    XCTAssertEqual(infos.count , 100)
 
     // Verify they're all different
     for i in 0 ..< infos.count {
       for j in (i + 1) ..< infos.count {
-        #expect(infos[i] != infos[j])
+        XCTAssertNotEqual(infos[i] , infos[j])
       }
     }
   }
 
-  @Test("Equality comparison performance")
-  func testEqualityComparisonPerformance() {
+  func testtestEqualityComparisonPerformance() {
     let startTime = Date()
 
     let info1 = LockmanSingleExecutionInfo(actionId: "performance_test", mode: .boundary)
@@ -238,16 +220,14 @@ struct LockmanSingleExecutionInfoTests {
     }
 
     let duration = Date().timeIntervalSince(startTime)
-    #expect(duration < 0.1) // Should be very fast
+    XCTAssertTrue(duration < 0.1) // Should be very fast
   }
 }
 
 // MARK: - Integration Tests
 
-@Suite("LockmanSingleExecutionInfo Integration Tests")
-struct LockmanSingleExecutionInfoIntegrationTests {
-  @Test("Works with LockmanState")
-  func testWorksWithLockmanState() {
+final class LockmanSingleExecutionInfoIntegrationTests: XCTestCase {
+  func testtestWorksWithLockmanState() {
     let state = LockmanState<LockmanSingleExecutionInfo>()
     let boundaryId = StringBoundaryId(value: "boundary")
 
@@ -258,23 +238,22 @@ struct LockmanSingleExecutionInfoIntegrationTests {
     state.add(id: boundaryId, info: info2)
 
     let currents = state.currents(id: boundaryId)
-    #expect(currents.count == 2)
-    #expect(currents.contains(info1))
-    #expect(currents.contains(info2))
+    XCTAssertEqual(currents.count , 2)
+    XCTAssertTrue(currents.contains(info1))
+    XCTAssertTrue(currents.contains(info2))
 
     // Test ordering
-    #expect(currents[0] == info1)
-    #expect(currents[1] == info2)
+    XCTAssertEqual(currents[0] , info1)
+    XCTAssertEqual(currents[1] , info2)
 
     // Test removal
     state.remove(id: boundaryId, info: info2)
     let afterRemoval = state.currents(id: boundaryId)
-    #expect(afterRemoval.count == 1)
-    #expect(afterRemoval[0] == info1)
+    XCTAssertEqual(afterRemoval.count , 1)
+    XCTAssertEqual(afterRemoval[0] , info1)
   }
 
-  @Test("Works with LockmanSingleExecutionStrategy")
-  func testWorksWithLockmanSingleExecutionStrategy() {
+  func testtestWorksWithLockmanSingleExecutionStrategy() {
     let strategy = LockmanSingleExecutionStrategy()
     let boundaryId = StringBoundaryId(value: "strategy_test")
 
@@ -282,25 +261,24 @@ struct LockmanSingleExecutionInfoIntegrationTests {
     let info2 = LockmanSingleExecutionInfo(actionId: "action2", mode: .boundary)
 
     // First lock should succeed
-    #expect(strategy.canLock(id: boundaryId, info: info1) == .success)
+    XCTAssertTrue(strategy.canLock(id: boundaryId, info: info1) == .success)
     strategy.lock(id: boundaryId, info: info1)
 
     // Different action should fail (boundary is locked)
-    #expect(strategy.canLock(id: boundaryId, info: info2) == .failure)
+    XCTAssertTrue(strategy.canLock(id: boundaryId, info: info2) == .failure)
 
     // Unlock first
     strategy.unlock(id: boundaryId, info: info1)
 
     // Now second action should succeed
-    #expect(strategy.canLock(id: boundaryId, info: info2) == .success)
+    XCTAssertTrue(strategy.canLock(id: boundaryId, info: info2) == .success)
     strategy.lock(id: boundaryId, info: info2)
 
     // Cleanup
     strategy.unlock(id: boundaryId, info: info2)
   }
 
-  @Test("Complex integration scenario")
-  func testComplexIntegrationScenario() {
+  func testtestComplexIntegrationScenario() {
     let strategy = LockmanSingleExecutionStrategy()
     let boundaryId1 = StringBoundaryId(value: "boundary1")
     let boundaryId2 = StringBoundaryId(value: "boundary2")
@@ -312,23 +290,22 @@ struct LockmanSingleExecutionInfoIntegrationTests {
     strategy.lock(id: boundaryId1, info: stringInfo)
 
     // Same actions on different boundaries should be allowed
-    #expect(strategy.canLock(id: boundaryId2, info: stringInfo) == .success)
+    XCTAssertTrue(strategy.canLock(id: boundaryId2, info: stringInfo) == .success)
 
     // Any action on same boundary should fail
-    #expect(strategy.canLock(id: boundaryId1, info: stringInfo) == .failure)
+    XCTAssertTrue(strategy.canLock(id: boundaryId1, info: stringInfo) == .failure)
 
     // Cleanup one boundary
     strategy.cleanUp(id: boundaryId1)
 
     // Now should be able to lock on boundary1 again
-    #expect(strategy.canLock(id: boundaryId1, info: stringInfo) == .success)
+    XCTAssertTrue(strategy.canLock(id: boundaryId1, info: stringInfo) == .success)
 
     // Full cleanup
     strategy.cleanUp()
   }
 
-  @Test("Thread safety with concurrent access")
-  func testThreadSafetyWithConcurrentAccess() async {
+  func testtestThreadSafetyWithConcurrentAccess() async throws {
     // Use a new instance instead of shared to avoid interference with other tests
     let strategy = LockmanSingleExecutionStrategy()
     // Use a unique boundary ID to avoid conflicts with parallel tests
@@ -354,13 +331,13 @@ struct LockmanSingleExecutionInfoIntegrationTests {
       return results
     }
 
-    #expect(results.count == 10)
+    XCTAssertEqual(results.count , 10)
 
     // In a highly concurrent scenario, due to the race condition between canLock and lock,
     // multiple tasks might succeed before the lock state is properly synchronized.
     // The important thing is that not all tasks succeed (showing some exclusion works).
     let successCount = results.filter(\.1).count
-    #expect(successCount >= 1 && successCount < 10, "Expected some but not all tasks to succeed due to race conditions, got \(successCount) out of 10")
+    XCTAssertTrue(successCount >= 1 && successCount < 10, "Expected some but not all tasks to succeed due to race conditions, got \(successCount) out of 10")
 
     // Cleanup - both specific boundary and general cleanup
     strategy.cleanUp(id: boundaryId)
@@ -370,8 +347,7 @@ struct LockmanSingleExecutionInfoIntegrationTests {
   // Note: Dictionary key test is commented out because LockmanSingleExecutionInfo
   // does not conform to Hashable in the current implementation.
   // If Hashable conformance is added later, this test can be uncommented:
-  // @Test("Use as dictionary key")
-  // func testUseAsDictionaryKey() {
+  // // func testUseAsDictionaryKey() {
   //  var infoDict: [LockmanSingleExecutionInfo: String] = [:]
   //
   //  let info1 = LockmanSingleExecutionInfo(actionId: "key1", mode: .boundary))
@@ -382,8 +358,8 @@ struct LockmanSingleExecutionInfoIntegrationTests {
   //  infoDict[info2] = "value2"
   //  infoDict[info1Copy] = "updated_value1" // Should overwrite
   //
-  //  #expect(infoDict.count == 2)
-  //  #expect(infoDict[info1] == "updated_value1")
-  //  #expect(infoDict[info2] == "value2")
+  //  XCTAssertEqual(infoDict.count , 2)
+  //  XCTAssertEqual(infoDict[info1] , "updated_value1")
+  //  XCTAssertEqual(infoDict[info2] , "value2")
   // }
 }

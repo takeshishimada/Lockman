@@ -1,11 +1,10 @@
 
 import Foundation
-import Testing
+import XCTest
 @testable import LockmanCore
 
 /// Tests for LockmanCompositeAction protocols and their implementations
-@Suite("Composite Action Tests")
-struct LockmanCompositeActionTests {
+final class LockmanCompositeActionTests: XCTestCase {
   // MARK: - Mock Composite Actions
 
   struct MockCompositeAction2: LockmanCompositeAction2 {
@@ -112,31 +111,29 @@ struct LockmanCompositeActionTests {
 
   // MARK: - CompositeAction2 Tests
 
-  @Test("CompositeAction2 protocol conformance")
-  func compositeAction2ProtocolConformance() {
+  func testcompositeAction2ProtocolConformance() {
     let action = MockCompositeAction2()
 
     // Test actionName
-    #expect(action.actionName == "mockComposite2")
+    XCTAssertEqual(action.actionName , "mockComposite2")
 
     // Test strategy ID
-    #expect(action.strategyId.value == "MockComposite2")
+    XCTAssertEqual(action.strategyId.value , "MockComposite2")
 
     // Test lockmanInfo
     let lockmanInfo = action.lockmanInfo
-    #expect(lockmanInfo.actionId == "mockComposite2")
-    #expect(lockmanInfo.lockmanInfoForStrategy1.actionId == "mockComposite2")
-    #expect(lockmanInfo.lockmanInfoForStrategy2.actionId == "mockComposite2")
-    #expect(lockmanInfo.lockmanInfoForStrategy2.priority == .high(.exclusive))
+    XCTAssertEqual(lockmanInfo.actionId , "mockComposite2")
+    XCTAssertEqual(lockmanInfo.lockmanInfoForStrategy1.actionId , "mockComposite2")
+    XCTAssertEqual(lockmanInfo.lockmanInfoForStrategy2.actionId , "mockComposite2")
+    XCTAssertEqual(lockmanInfo.lockmanInfoForStrategy2.priority , .high(.exclusive))
 
     // Test strategy info via lockmanInfo
-    #expect(lockmanInfo.lockmanInfoForStrategy1.actionId == "mockComposite2")
-    #expect(lockmanInfo.lockmanInfoForStrategy2.actionId == "mockComposite2")
-    #expect(lockmanInfo.lockmanInfoForStrategy2.priority == .high(.exclusive))
+    XCTAssertEqual(lockmanInfo.lockmanInfoForStrategy1.actionId , "mockComposite2")
+    XCTAssertEqual(lockmanInfo.lockmanInfoForStrategy2.actionId , "mockComposite2")
+    XCTAssertEqual(lockmanInfo.lockmanInfoForStrategy2.priority , .high(.exclusive))
   }
 
-  @Test("CompositeAction2 makeCompositeStrategy")
-  func compositeAction2MakeCompositeStrategy() {
+  func testcompositeAction2MakeCompositeStrategy() {
     let action = MockCompositeAction2()
     let strategy1 = LockmanSingleExecutionStrategy()
     let strategy2 = LockmanPriorityBasedStrategy()
@@ -148,44 +145,42 @@ struct LockmanCompositeActionTests {
     )
 
     // Verify it returns an AnyLockmanStrategy
-    #expect(type(of: compositeStrategy) == AnyLockmanStrategy<LockmanCompositeInfo2<LockmanSingleExecutionInfo, LockmanPriorityBasedInfo>>.self)
+    XCTAssertTrue(type(of: compositeStrategy) == AnyLockmanStrategy<LockmanCompositeInfo2<LockmanSingleExecutionInfo, LockmanPriorityBasedInfo>>.self)
 
     // Test that the composite strategy works
     let boundaryId = "test-boundary"
     let info = action.lockmanInfo
 
-    #expect(compositeStrategy.canLock(id: boundaryId, info: info) == .success)
+    XCTAssertTrue(compositeStrategy.canLock(id: boundaryId, info: info) == .success)
     compositeStrategy.lock(id: boundaryId, info: info)
-    #expect(compositeStrategy.canLock(id: boundaryId, info: info) == .failure)
+    XCTAssertTrue(compositeStrategy.canLock(id: boundaryId, info: info) == .failure)
     compositeStrategy.unlock(id: boundaryId, info: info)
-    #expect(compositeStrategy.canLock(id: boundaryId, info: info) == .success)
+    XCTAssertTrue(compositeStrategy.canLock(id: boundaryId, info: info) == .success)
   }
 
   // MARK: - CompositeAction3 Tests
 
-  @Test("CompositeAction3 protocol conformance")
-  func compositeAction3ProtocolConformance() {
+  func testcompositeAction3ProtocolConformance() {
     let action = MockCompositeAction3()
 
     // Test actionName
-    #expect(action.actionName == "mockComposite3")
+    XCTAssertEqual(action.actionName , "mockComposite3")
 
     // Test lockmanInfo
     let lockmanInfo = action.lockmanInfo
-    #expect(lockmanInfo.actionId == "mockComposite3")
-    #expect(lockmanInfo.lockmanInfoForStrategy1.actionId == "mockComposite3-1")
-    #expect(lockmanInfo.lockmanInfoForStrategy2.actionId == "mockComposite3-2")
-    #expect(lockmanInfo.lockmanInfoForStrategy2.priority == .low(.replaceable))
-    #expect(lockmanInfo.lockmanInfoForStrategy3.actionId == "mockComposite3-3")
+    XCTAssertEqual(lockmanInfo.actionId , "mockComposite3")
+    XCTAssertEqual(lockmanInfo.lockmanInfoForStrategy1.actionId , "mockComposite3-1")
+    XCTAssertEqual(lockmanInfo.lockmanInfoForStrategy2.actionId , "mockComposite3-2")
+    XCTAssertEqual(lockmanInfo.lockmanInfoForStrategy2.priority , .low(.replaceable))
+    XCTAssertEqual(lockmanInfo.lockmanInfoForStrategy3.actionId , "mockComposite3-3")
 
     // Test strategy info via lockmanInfo
-    #expect(lockmanInfo.lockmanInfoForStrategy1.actionId == "mockComposite3-1")
-    #expect(lockmanInfo.lockmanInfoForStrategy2.actionId == "mockComposite3-2")
-    #expect(lockmanInfo.lockmanInfoForStrategy3.actionId == "mockComposite3-3")
+    XCTAssertEqual(lockmanInfo.lockmanInfoForStrategy1.actionId , "mockComposite3-1")
+    XCTAssertEqual(lockmanInfo.lockmanInfoForStrategy2.actionId , "mockComposite3-2")
+    XCTAssertEqual(lockmanInfo.lockmanInfoForStrategy3.actionId , "mockComposite3-3")
   }
 
-  @Test("CompositeAction3 makeCompositeStrategy")
-  func compositeAction3MakeCompositeStrategy() {
+  func testcompositeAction3MakeCompositeStrategy() {
     let action = MockCompositeAction3()
     let strategy1 = LockmanSingleExecutionStrategy()
     let strategy2 = LockmanPriorityBasedStrategy()
@@ -202,33 +197,31 @@ struct LockmanCompositeActionTests {
     let boundaryId = "test-boundary"
     let info = action.lockmanInfo
 
-    #expect(compositeStrategy.canLock(id: boundaryId, info: info) == .success)
+    XCTAssertTrue(compositeStrategy.canLock(id: boundaryId, info: info) == .success)
     compositeStrategy.lock(id: boundaryId, info: info)
     compositeStrategy.cleanUp()
   }
 
   // MARK: - CompositeAction4 Tests
 
-  @Test("CompositeAction4 protocol conformance")
-  func compositeAction4ProtocolConformance() {
+  func testcompositeAction4ProtocolConformance() {
     let action = MockCompositeAction4()
 
     // Test actionName
-    #expect(action.actionName == "mockComposite4")
+    XCTAssertEqual(action.actionName , "mockComposite4")
 
     // Test lockmanInfo
     let lockmanInfo = action.lockmanInfo
-    #expect(lockmanInfo.actionId == "mockComposite4")
-    #expect(lockmanInfo.lockmanInfoForStrategy1.actionId == "mockComposite4-1")
-    #expect(lockmanInfo.lockmanInfoForStrategy2.actionId == "mockComposite4-2")
-    #expect(lockmanInfo.lockmanInfoForStrategy2.priority == .none)
-    #expect(lockmanInfo.lockmanInfoForStrategy3.actionId == "mockComposite4-3")
-    #expect(lockmanInfo.lockmanInfoForStrategy4.actionId == "mockComposite4-4")
-    #expect(lockmanInfo.lockmanInfoForStrategy4.priority == .high(.replaceable))
+    XCTAssertEqual(lockmanInfo.actionId , "mockComposite4")
+    XCTAssertEqual(lockmanInfo.lockmanInfoForStrategy1.actionId , "mockComposite4-1")
+    XCTAssertEqual(lockmanInfo.lockmanInfoForStrategy2.actionId , "mockComposite4-2")
+    XCTAssertEqual(lockmanInfo.lockmanInfoForStrategy2.priority , .none)
+    XCTAssertEqual(lockmanInfo.lockmanInfoForStrategy3.actionId , "mockComposite4-3")
+    XCTAssertEqual(lockmanInfo.lockmanInfoForStrategy4.actionId , "mockComposite4-4")
+    XCTAssertEqual(lockmanInfo.lockmanInfoForStrategy4.priority , .high(.replaceable))
   }
 
-  @Test("CompositeAction4 makeCompositeStrategy")
-  func compositeAction4MakeCompositeStrategy() {
+  func testcompositeAction4MakeCompositeStrategy() {
     let action = MockCompositeAction4()
     let strategy1 = LockmanSingleExecutionStrategy()
     let strategy2 = LockmanPriorityBasedStrategy()
@@ -247,32 +240,30 @@ struct LockmanCompositeActionTests {
     let boundaryId = "test-boundary"
     let info = action.lockmanInfo
 
-    #expect(compositeStrategy.canLock(id: boundaryId, info: info) == .success)
+    XCTAssertTrue(compositeStrategy.canLock(id: boundaryId, info: info) == .success)
   }
 
   // MARK: - CompositeAction5 Tests
 
-  @Test("CompositeAction5 protocol conformance")
-  func compositeAction5ProtocolConformance() {
+  func testcompositeAction5ProtocolConformance() {
     let action = MockCompositeAction5()
 
     // Test actionName
-    #expect(action.actionName == "mockComposite5")
+    XCTAssertEqual(action.actionName , "mockComposite5")
 
     // Test lockmanInfo
     let lockmanInfo = action.lockmanInfo
-    #expect(lockmanInfo.actionId == "mockComposite5")
-    #expect(lockmanInfo.lockmanInfoForStrategy1.actionId == "mockComposite5-1")
-    #expect(lockmanInfo.lockmanInfoForStrategy2.actionId == "mockComposite5-2")
-    #expect(lockmanInfo.lockmanInfoForStrategy2.priority == .low(.exclusive))
-    #expect(lockmanInfo.lockmanInfoForStrategy3.actionId == "mockComposite5-3")
-    #expect(lockmanInfo.lockmanInfoForStrategy4.actionId == "mockComposite5-4")
-    #expect(lockmanInfo.lockmanInfoForStrategy4.priority == .high(.exclusive))
-    #expect(lockmanInfo.lockmanInfoForStrategy5.actionId == "mockComposite5-5")
+    XCTAssertEqual(lockmanInfo.actionId , "mockComposite5")
+    XCTAssertEqual(lockmanInfo.lockmanInfoForStrategy1.actionId , "mockComposite5-1")
+    XCTAssertEqual(lockmanInfo.lockmanInfoForStrategy2.actionId , "mockComposite5-2")
+    XCTAssertEqual(lockmanInfo.lockmanInfoForStrategy2.priority , .low(.exclusive))
+    XCTAssertEqual(lockmanInfo.lockmanInfoForStrategy3.actionId , "mockComposite5-3")
+    XCTAssertEqual(lockmanInfo.lockmanInfoForStrategy4.actionId , "mockComposite5-4")
+    XCTAssertEqual(lockmanInfo.lockmanInfoForStrategy4.priority , .high(.exclusive))
+    XCTAssertEqual(lockmanInfo.lockmanInfoForStrategy5.actionId , "mockComposite5-5")
   }
 
-  @Test("CompositeAction5 makeCompositeStrategy")
-  func compositeAction5MakeCompositeStrategy() {
+  func testcompositeAction5MakeCompositeStrategy() {
     let action = MockCompositeAction5()
     let strategy1 = LockmanSingleExecutionStrategy()
     let strategy2 = LockmanPriorityBasedStrategy()
@@ -294,7 +285,7 @@ struct LockmanCompositeActionTests {
     let info = action.lockmanInfo
 
     let result = compositeStrategy.canLock(id: boundaryId, info: info)
-    #expect(result == .success)
+    XCTAssertEqual(result , .success)
 
     // Cleanup
     compositeStrategy.cleanUp(id: boundaryId)
@@ -302,8 +293,7 @@ struct LockmanCompositeActionTests {
 
   // MARK: - LockmanAction Protocol Tests
 
-  @Test("CompositeActions conform to LockmanAction")
-  func compositeActionsConformToLockmanAction() {
+  func testcompositeActionsConformToLockmanAction() {
     // Test that all composite actions are LockmanAction
     let action2: any LockmanAction = MockCompositeAction2()
     let action3: any LockmanAction = MockCompositeAction3()
@@ -312,12 +302,12 @@ struct LockmanCompositeActionTests {
 
     // Verify they can be stored as LockmanAction protocol type
     let actions: [any LockmanAction] = [action2, action3, action4, action5]
-    #expect(actions.count == 4)
+    XCTAssertEqual(actions.count , 4)
 
     // Verify we can access protocol requirements
-    #expect(action2.lockmanInfo as? LockmanCompositeInfo2<LockmanSingleExecutionInfo, LockmanPriorityBasedInfo> != nil)
-    #expect(action3.lockmanInfo as? LockmanCompositeInfo3<LockmanSingleExecutionInfo, LockmanPriorityBasedInfo, LockmanSingleExecutionInfo> != nil)
-    #expect(action4.lockmanInfo as? LockmanCompositeInfo4<LockmanSingleExecutionInfo, LockmanPriorityBasedInfo, LockmanSingleExecutionInfo, LockmanPriorityBasedInfo> != nil)
-    #expect(action5.lockmanInfo as? LockmanCompositeInfo5<LockmanSingleExecutionInfo, LockmanPriorityBasedInfo, LockmanSingleExecutionInfo, LockmanPriorityBasedInfo, LockmanSingleExecutionInfo> != nil)
+    XCTAssertNotNil(action2.lockmanInfo as? LockmanCompositeInfo2<LockmanSingleExecutionInfo, LockmanPriorityBasedInfo>)
+    XCTAssertNotNil(action3.lockmanInfo as? LockmanCompositeInfo3<LockmanSingleExecutionInfo, LockmanPriorityBasedInfo, LockmanSingleExecutionInfo>)
+    XCTAssertNotNil(action4.lockmanInfo as? LockmanCompositeInfo4<LockmanSingleExecutionInfo, LockmanPriorityBasedInfo, LockmanSingleExecutionInfo, LockmanPriorityBasedInfo>)
+    XCTAssertNotNil(action5.lockmanInfo as? LockmanCompositeInfo5<LockmanSingleExecutionInfo, LockmanPriorityBasedInfo, LockmanSingleExecutionInfo, LockmanPriorityBasedInfo, LockmanSingleExecutionInfo>)
   }
 }

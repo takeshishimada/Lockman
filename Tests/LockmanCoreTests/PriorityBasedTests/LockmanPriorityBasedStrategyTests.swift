@@ -1,6 +1,6 @@
 
 import Foundation
-import Testing
+import XCTest
 @testable import LockmanCore
 
 // MARK: - Test Helpers
@@ -54,74 +54,67 @@ private enum TestInfoFactory {
 
 // MARK: - LockmanPriorityBasedStrategy Tests
 
-@Suite("LockmanPriorityBasedStrategy Tests", .serialized)
-struct LockmanPriorityBasedStrategyTests {
+final class LockmanPriorityBasedStrategyTests: XCTestCase {
   // MARK: - Instance Management
 
-  @Test("Shared instance maintains singleton pattern")
-  func testSharedInstanceSingleton() {
+  func testtestSharedInstanceSingleton() {
     let instance1 = LockmanPriorityBasedStrategy.shared
     let instance2 = LockmanPriorityBasedStrategy.shared
 
-    #expect(instance1 === instance2)
+    XCTAssertTrue(instance1  === instance2)
   }
 
-  @Test("Independent instances maintain separate state")
-  func testIndependentInstances() {
+  func testtestIndependentInstances() {
     let strategy1 = LockmanPriorityBasedStrategy()
     let strategy2 = LockmanPriorityBasedStrategy()
 
-    #expect(strategy1 !== strategy2)
+    XCTAssertTrue(strategy1 !== strategy2)
 
     // Verify state isolation
     let info = TestInfoFactory.highExclusive("test")
     strategy1.lock(id: TestBoundaryId.default, info: info)
 
-    #expect(strategy2.canLock(id: TestBoundaryId.default, info: info) == .success)
+    XCTAssertTrue(strategy2.canLock(id: TestBoundaryId.default, info: info) == .success)
 
     strategy1.cleanUp()
   }
 
-  @Test("makeStrategyId returns consistent identifier")
-  func testMakeStrategyIdReturnsConsistentIdentifier() {
+  func testtestMakeStrategyIdReturnsConsistentIdentifier() {
     let id1 = LockmanPriorityBasedStrategy.makeStrategyId()
     let id2 = LockmanPriorityBasedStrategy.makeStrategyId()
 
-    #expect(id1 == id2)
-    #expect(id1 == .priorityBased)
+    XCTAssertEqual(id1 , id2)
+    XCTAssertEqual(id1 , .priorityBased)
   }
 
-  @Test("Instance strategyId matches makeStrategyId")
-  func testInstanceStrategyIdMatchesMakeStrategyId() {
+  func testtestInstanceStrategyIdMatchesMakeStrategyId() {
     let strategy = LockmanPriorityBasedStrategy()
     let staticId = LockmanPriorityBasedStrategy.makeStrategyId()
 
-    #expect(strategy.strategyId == staticId)
+    XCTAssertEqual(strategy.strategyId , staticId)
   }
 
   // MARK: - Basic Locking Behavior
 
-  @Test("None priority bypasses all restrictions")
-  func testNonePriorityBypassesRestrictions() {
+  func testtestNonePriorityBypassesRestrictions() {
     let strategy = LockmanPriorityBasedStrategy()
     let id = TestBoundaryId.default
     let noneInfo = TestInfoFactory.none()
     let highInfo = TestInfoFactory.highExclusive("blocker")
 
     // None priority succeeds on empty state
-    #expect(strategy.canLock(id: id, info: noneInfo) == .success)
+    XCTAssertTrue(strategy.canLock(id: id, info: noneInfo) == .success)
 
     // Lock with high priority to create contention
     strategy.lock(id: id, info: highInfo)
 
     // None priority should still succeed
-    #expect(strategy.canLock(id: id, info: noneInfo) == .success)
+    XCTAssertTrue(strategy.canLock(id: id, info: noneInfo) == .success)
 
     strategy.cleanUp()
   }
 
-  @Test("First priority lock always succeeds")
-  func testFirstPriorityLockSucceeds() {
+  func testtestFirstPriorityLockSucceeds() {
     let strategy = LockmanPriorityBasedStrategy()
     let id = TestBoundaryId.default
 
@@ -131,29 +124,27 @@ struct LockmanPriorityBasedStrategyTests {
     ]
 
     for info in testCases {
-      #expect(strategy.canLock(id: id, info: info) == .success)
+      XCTAssertTrue(strategy.canLock(id: id, info: info) == .success)
       strategy.lock(id: id, info: info)
       strategy.unlock(id: id, info: info)
     }
   }
 
-  @Test("Duplicate action ID always fails")
-  func testDuplicateActionIdFails() {
+  func testtestDuplicateActionIdFails() {
     let strategy = LockmanPriorityBasedStrategy()
     let id = TestBoundaryId.default
     let info1 = TestInfoFactory.highExclusive("duplicate")
     let info2 = TestInfoFactory.highExclusive("duplicate") // Same action ID
 
     strategy.lock(id: id, info: info1)
-    #expect(strategy.canLock(id: id, info: info2) == .failure)
+    XCTAssertTrue(strategy.canLock(id: id, info: info2) == .failure)
 
     strategy.unlock(id: id, info: info1)
   }
 
   // MARK: - Priority Hierarchy
 
-  @Test("Higher priority preempts lower priority")
-  func testHigherPriorityPreemptsLowerPriority() {
+  func testtestHigherPriorityPreemptsLowerPriority() {
     let strategy = LockmanPriorityBasedStrategy()
     let id = TestBoundaryId.default
 
@@ -164,13 +155,12 @@ struct LockmanPriorityBasedStrategyTests {
 
     for (lowerInfo, higherInfo) in testCases {
       strategy.lock(id: id, info: lowerInfo)
-      #expect(strategy.canLock(id: id, info: higherInfo) == .successWithPrecedingCancellation)
+      XCTAssertTrue(strategy.canLock(id: id, info: higherInfo) == .successWithPrecedingCancellation)
       strategy.cleanUp()
     }
   }
 
-  @Test("Lower priority fails against higher priority")
-  func testLowerPriorityFailsAgainstHigherPriority() {
+  func testtestLowerPriorityFailsAgainstHigherPriority() {
     let strategy = LockmanPriorityBasedStrategy()
     let id = TestBoundaryId.default
 
@@ -181,15 +171,14 @@ struct LockmanPriorityBasedStrategyTests {
 
     for (higherInfo, lowerInfo) in testCases {
       strategy.lock(id: id, info: higherInfo)
-      #expect(strategy.canLock(id: id, info: lowerInfo) == .failure)
+      XCTAssertTrue(strategy.canLock(id: id, info: lowerInfo) == .failure)
       strategy.cleanUp()
     }
   }
 
   // MARK: - Same Priority Behavior (Fixed based on actual implementation)
 
-  @Test("Same priority exclusive behavior blocks new actions")
-  func testSamePriorityExclusiveBehaviorBlocks() {
+  func testtestSamePriorityExclusiveBehaviorBlocks() {
     let strategy = LockmanPriorityBasedStrategy()
     let id = TestBoundaryId.default
 
@@ -201,13 +190,12 @@ struct LockmanPriorityBasedStrategyTests {
     for (firstInfo, secondInfo) in testCases {
       strategy.lock(id: id, info: firstInfo)
       // Second action follows first action's exclusive behavior
-      #expect(strategy.canLock(id: id, info: secondInfo) == .failure)
+      XCTAssertTrue(strategy.canLock(id: id, info: secondInfo) == .failure)
       strategy.cleanUp()
     }
   }
 
-  @Test("Same priority replaceable behavior allows replacement")
-  func testSamePriorityReplaceableBehaviorAllowsReplacement() {
+  func testtestSamePriorityReplaceableBehaviorAllowsReplacement() {
     let strategy = LockmanPriorityBasedStrategy()
     let id = TestBoundaryId.default
 
@@ -219,29 +207,27 @@ struct LockmanPriorityBasedStrategyTests {
     for (firstInfo, secondInfo) in testCases {
       strategy.lock(id: id, info: firstInfo)
       // Second action follows first action's replaceable behavior
-      #expect(strategy.canLock(id: id, info: secondInfo) == .successWithPrecedingCancellation)
+      XCTAssertTrue(strategy.canLock(id: id, info: secondInfo) == .successWithPrecedingCancellation)
       strategy.cleanUp()
     }
   }
 
   // MARK: - State Management
 
-  @Test("Lock unlock cycle restores availability")
-  func testLockUnlockCycleRestoresAvailability() {
+  func testtestLockUnlockCycleRestoresAvailability() {
     let strategy = LockmanPriorityBasedStrategy()
     let id = TestBoundaryId.default
     let info = TestInfoFactory.highExclusive("test")
 
-    #expect(strategy.canLock(id: id, info: info) == .success)
+    XCTAssertTrue(strategy.canLock(id: id, info: info) == .success)
     strategy.lock(id: id, info: info)
-    #expect(strategy.canLock(id: id, info: info) == .failure)
+    XCTAssertTrue(strategy.canLock(id: id, info: info) == .failure)
 
     strategy.unlock(id: id, info: info)
-    #expect(strategy.canLock(id: id, info: info) == .success)
+    XCTAssertTrue(strategy.canLock(id: id, info: info) == .success)
   }
 
-  @Test("Unlock with none priority is safe noop")
-  func testUnlockWithNonePriorityIsSafeNoop() {
+  func testtestUnlockWithNonePriorityIsSafeNoop() {
     let strategy = LockmanPriorityBasedStrategy()
     let id = TestBoundaryId.default
     let noneInfo = TestInfoFactory.none()
@@ -250,15 +236,14 @@ struct LockmanPriorityBasedStrategyTests {
     strategy.lock(id: id, info: highInfo)
     strategy.unlock(id: id, info: noneInfo) // Should not affect state
 
-    #expect(strategy.canLock(id: id, info: highInfo) == .failure)
+    XCTAssertTrue(strategy.canLock(id: id, info: highInfo) == .failure)
 
     strategy.unlock(id: id, info: highInfo)
   }
 
   // MARK: - Boundary Isolation
 
-  @Test("Different boundaries maintain complete isolation")
-  func testDifferentBoundariesMaintainCompleteIsolation() {
+  func testtestDifferentBoundariesMaintainCompleteIsolation() {
     let strategy = LockmanPriorityBasedStrategy()
     let id1 = TestBoundaryId.boundary1
     let id2 = TestBoundaryId.boundary2
@@ -266,21 +251,20 @@ struct LockmanPriorityBasedStrategyTests {
 
     // Same info can be locked on different boundaries
     strategy.lock(id: id1, info: info)
-    #expect(strategy.canLock(id: id2, info: info) == .success)
+    XCTAssertTrue(strategy.canLock(id: id2, info: info) == .success)
     strategy.lock(id: id2, info: info)
 
     // Unlock only affects specific boundary
     strategy.unlock(id: id1, info: info)
-    #expect(strategy.canLock(id: id1, info: info) == .success)
-    #expect(strategy.canLock(id: id2, info: info) == .failure)
+    XCTAssertTrue(strategy.canLock(id: id1, info: info) == .success)
+    XCTAssertTrue(strategy.canLock(id: id2, info: info) == .failure)
 
     strategy.cleanUp()
   }
 
   // MARK: - Cleanup Operations
 
-  @Test("Global cleanup removes all state")
-  func testGlobalCleanupRemovesAllState() {
+  func testtestGlobalCleanupRemovesAllState() {
     let strategy = LockmanPriorityBasedStrategy()
     let id1 = TestBoundaryId.boundary1
     let id2 = TestBoundaryId.boundary2
@@ -291,12 +275,11 @@ struct LockmanPriorityBasedStrategyTests {
 
     strategy.cleanUp()
 
-    #expect(strategy.canLock(id: id1, info: info) == .success)
-    #expect(strategy.canLock(id: id2, info: info) == .success)
+    XCTAssertTrue(strategy.canLock(id: id1, info: info) == .success)
+    XCTAssertTrue(strategy.canLock(id: id2, info: info) == .success)
   }
 
-  @Test("Boundary specific cleanup preserves other boundaries")
-  func testBoundarySpecificCleanupPreservesOtherBoundaries() {
+  func testtestBoundarySpecificCleanupPreservesOtherBoundaries() {
     let strategy = LockmanPriorityBasedStrategy()
     let id1 = TestBoundaryId.boundary1
     let id2 = TestBoundaryId.boundary2
@@ -307,16 +290,15 @@ struct LockmanPriorityBasedStrategyTests {
 
     strategy.cleanUp(id: id1)
 
-    #expect(strategy.canLock(id: id1, info: info) == .success)
-    #expect(strategy.canLock(id: id2, info: info) == .failure)
+    XCTAssertTrue(strategy.canLock(id: id1, info: info) == .success)
+    XCTAssertTrue(strategy.canLock(id: id2, info: info) == .failure)
 
     strategy.cleanUp()
   }
 
   // MARK: - Complex Scenarios
 
-  @Test("Multiple priority levels interaction")
-  func testMultiplePriorityLevelsInteraction() {
+  func testtestMultiplePriorityLevelsInteraction() {
     let strategy = LockmanPriorityBasedStrategy()
     let id = TestBoundaryId.default
     let noneInfo = TestInfoFactory.none()
@@ -327,20 +309,19 @@ struct LockmanPriorityBasedStrategyTests {
     strategy.lock(id: id, info: lowInfo)
 
     // None priority always succeeds
-    #expect(strategy.canLock(id: id, info: noneInfo) == .success)
+    XCTAssertTrue(strategy.canLock(id: id, info: noneInfo) == .success)
 
     // High priority preempts low priority
-    #expect(strategy.canLock(id: id, info: highInfo) == .successWithPrecedingCancellation)
+    XCTAssertTrue(strategy.canLock(id: id, info: highInfo) == .successWithPrecedingCancellation)
     strategy.lock(id: id, info: highInfo)
 
     // Low priority now fails against high priority
-    #expect(strategy.canLock(id: id, info: lowInfo) == .failure)
+    XCTAssertTrue(strategy.canLock(id: id, info: lowInfo) == .failure)
 
     strategy.cleanUp()
   }
 
-  @Test("Complex priority behavior sequence")
-  func testComplexPriorityBehaviorSequence() {
+  func testtestComplexPriorityBehaviorSequence() {
     let strategy = LockmanPriorityBasedStrategy()
     let id = TestBoundaryId.default
 
@@ -353,23 +334,22 @@ struct LockmanPriorityBasedStrategyTests {
     strategy.lock(id: id, info: lowReplaceable)
 
     // Low exclusive can replace low replaceable
-    #expect(strategy.canLock(id: id, info: lowExclusive) == .successWithPrecedingCancellation)
+    XCTAssertTrue(strategy.canLock(id: id, info: lowExclusive) == .successWithPrecedingCancellation)
     strategy.lock(id: id, info: lowExclusive)
 
     // High replaceable preempts low exclusive
-    #expect(strategy.canLock(id: id, info: highReplaceable) == .successWithPrecedingCancellation)
+    XCTAssertTrue(strategy.canLock(id: id, info: highReplaceable) == .successWithPrecedingCancellation)
     strategy.lock(id: id, info: highReplaceable)
 
     // High exclusive can replace high replaceable
-    #expect(strategy.canLock(id: id, info: highExclusive) == .successWithPrecedingCancellation)
+    XCTAssertTrue(strategy.canLock(id: id, info: highExclusive) == .successWithPrecedingCancellation)
 
     strategy.cleanUp()
   }
 
   // MARK: - Concurrency Tests
 
-  @Test("Concurrent lock operations maintain consistency")
-  func testConcurrentLockOperationsMaintainConsistency() async {
+  func testtestConcurrentLockOperationsMaintainConsistency() async throws {
     let strategy = LockmanPriorityBasedStrategy()
     let id = TestBoundaryId.concurrent
 
@@ -391,13 +371,12 @@ struct LockmanPriorityBasedStrategyTests {
 
     // At least one should succeed
     let successCount = results.filter { $0 == .success }.count
-    #expect(successCount >= 1)
+    XCTAssertTrue(successCount >= 1)
 
     strategy.cleanUp()
   }
 
-  @Test("Concurrent operations with mixed priorities")
-  func testConcurrentOperationsWithMixedPriorities() async {
+  func testtestConcurrentOperationsWithMixedPriorities() async throws {
     let strategy = LockmanPriorityBasedStrategy()
     let id = TestBoundaryId.concurrent
 
@@ -426,20 +405,19 @@ struct LockmanPriorityBasedStrategyTests {
 
     // None priority should always succeed
     let noneResults = results.filter { $0.0 == "none" }
-    #expect(noneResults.allSatisfy { $0.1 == .success })
+    XCTAssertTrue(noneResults.allSatisfy { $0.1 == .success })
 
     // At least one priority-based operation should succeed
     let priorityResults = results.filter { $0.0 != "none" }
     let prioritySuccessCount = priorityResults.filter { $0.1 == .success || $0.1 == .successWithPrecedingCancellation }.count
-    #expect(prioritySuccessCount >= 1)
+    XCTAssertTrue(prioritySuccessCount >= 1)
 
     strategy.cleanUp()
   }
 
   // MARK: - Edge Cases
 
-  @Test("State consistency across complex behavior transitions")
-  func testStateConsistencyAcrossBehaviorTransitions() {
+  func testtestStateConsistencyAcrossBehaviorTransitions() {
     let strategy = LockmanPriorityBasedStrategy()
     let id = TestBoundaryId.default
 
@@ -450,45 +428,43 @@ struct LockmanPriorityBasedStrategyTests {
     strategy.lock(id: id, info: lowReplaceable)
 
     // Exclusive can replace replaceable
-    #expect(strategy.canLock(id: id, info: lowExclusive) == .successWithPrecedingCancellation)
+    XCTAssertTrue(strategy.canLock(id: id, info: lowExclusive) == .successWithPrecedingCancellation)
     strategy.lock(id: id, info: lowExclusive)
 
     // Now replaceable cannot replace exclusive
-    #expect(strategy.canLock(id: id, info: lowReplaceable) == .failure)
+    XCTAssertTrue(strategy.canLock(id: id, info: lowReplaceable) == .failure)
 
     strategy.cleanUp()
   }
 
   // MARK: - blocksSameAction Tests
 
-  @Test("blocksSameAction prevents same actionId")
-  func testBlocksSameActionPreventsSameActionId() {
+  func testtestBlocksSameActionPreventsSameActionId() {
     let strategy = LockmanPriorityBasedStrategy()
     let id = TestBoundaryId.default
     let actionId = "payment"
 
     // First action with blocksSameAction = true
     let info1 = TestInfoFactory.highExclusive(actionId, blocksSameAction: true)
-    #expect(strategy.canLock(id: id, info: info1) == .success)
+    XCTAssertTrue(strategy.canLock(id: id, info: info1) == .success)
     strategy.lock(id: id, info: info1)
 
     // Second action with same actionId should fail regardless of priority
     let info2 = TestInfoFactory.highReplaceable(actionId)
-    #expect(strategy.canLock(id: id, info: info2) == .failure)
+    XCTAssertTrue(strategy.canLock(id: id, info: info2) == .failure)
 
     // Even with lower priority, should fail
     let info3 = TestInfoFactory.lowExclusive(actionId)
-    #expect(strategy.canLock(id: id, info: info3) == .failure)
+    XCTAssertTrue(strategy.canLock(id: id, info: info3) == .failure)
 
     // Different actionId should work normally
     let info4 = TestInfoFactory.highExclusive("different")
-    #expect(strategy.canLock(id: id, info: info4) == .failure) // Normal priority rule applies
+    XCTAssertTrue(strategy.canLock(id: id, info: info4) == .failure) // Normal priority rule applies
 
     strategy.cleanUp()
   }
 
-  @Test("blocksSameAction is bidirectional")
-  func testBlocksSameActionIsBidirectional() {
+  func testtestBlocksSameActionIsBidirectional() {
     let strategy = LockmanPriorityBasedStrategy()
     let id = TestBoundaryId.default
     let actionId = "save"
@@ -499,31 +475,29 @@ struct LockmanPriorityBasedStrategyTests {
 
     // Second action with blocksSameAction = true and same actionId should fail
     let info2 = TestInfoFactory.highExclusive(actionId, blocksSameAction: true)
-    #expect(strategy.canLock(id: id, info: info2) == .failure)
+    XCTAssertTrue(strategy.canLock(id: id, info: info2) == .failure)
 
     strategy.cleanUp()
   }
 
-  @Test("blocksSameAction with none priority")
-  func testBlocksSameActionWithNonePriority() {
+  func testtestBlocksSameActionWithNonePriority() {
     let strategy = LockmanPriorityBasedStrategy()
     let id = TestBoundaryId.default
     let actionId = "notification"
 
     // None priority with blocksSameAction = true
     let info1 = TestInfoFactory.none(actionId, blocksSameAction: true)
-    #expect(strategy.canLock(id: id, info: info1) == .success)
+    XCTAssertTrue(strategy.canLock(id: id, info: info1) == .success)
     strategy.lock(id: id, info: info1)
 
     // Another none priority with same actionId should still succeed (none bypasses priority system)
     let info2 = TestInfoFactory.none(actionId)
-    #expect(strategy.canLock(id: id, info: info2) == .success)
+    XCTAssertTrue(strategy.canLock(id: id, info: info2) == .success)
 
     strategy.cleanUp()
   }
 
-  @Test("blocksSameAction across boundaries")
-  func testBlocksSameActionAcrossBoundaries() {
+  func testtestBlocksSameActionAcrossBoundaries() {
     let strategy = LockmanPriorityBasedStrategy()
     let id1 = TestBoundaryId.boundary1
     let id2 = TestBoundaryId.boundary2
@@ -535,18 +509,17 @@ struct LockmanPriorityBasedStrategyTests {
 
     // Same actionId on boundary2 should succeed (boundaries are isolated)
     let info2 = TestInfoFactory.highExclusive(actionId, blocksSameAction: true)
-    #expect(strategy.canLock(id: id2, info: info2) == .success)
+    XCTAssertTrue(strategy.canLock(id: id2, info: info2) == .success)
     strategy.lock(id: id2, info: info2)
 
     // But same actionId on same boundary should fail
-    #expect(strategy.canLock(id: id1, info: info2) == .failure)
-    #expect(strategy.canLock(id: id2, info: info1) == .failure)
+    XCTAssertTrue(strategy.canLock(id: id1, info: info2) == .failure)
+    XCTAssertTrue(strategy.canLock(id: id2, info: info1) == .failure)
 
     strategy.cleanUp()
   }
 
-  @Test("blocksSameAction with priority transitions")
-  func testBlocksSameActionWithPriorityTransitions() {
+  func testtestBlocksSameActionWithPriorityTransitions() {
     let strategy = LockmanPriorityBasedStrategy()
     let id = TestBoundaryId.default
     let actionId = "process"
@@ -557,23 +530,22 @@ struct LockmanPriorityBasedStrategyTests {
 
     // High priority with same actionId should fail despite higher priority
     let highNormal = TestInfoFactory.highReplaceable(actionId)
-    #expect(strategy.canLock(id: id, info: highNormal) == .failure)
+    XCTAssertTrue(strategy.canLock(id: id, info: highNormal) == .failure)
 
     // Unlock the blocking action
     strategy.unlock(id: id, info: lowBlocking)
 
     // Now high priority should succeed
-    #expect(strategy.canLock(id: id, info: highNormal) == .success)
+    XCTAssertTrue(strategy.canLock(id: id, info: highNormal) == .success)
     strategy.lock(id: id, info: highNormal)
 
     // Low priority blocking should now fail (normal priority rules)
-    #expect(strategy.canLock(id: id, info: lowBlocking) == .failure)
+    XCTAssertTrue(strategy.canLock(id: id, info: lowBlocking) == .failure)
 
     strategy.cleanUp()
   }
 
-  @Test("blocksSameAction complex scenario")
-  func testBlocksSameActionComplexScenario() {
+  func testtestBlocksSameActionComplexScenario() {
     let strategy = LockmanPriorityBasedStrategy()
     let id = TestBoundaryId.default
 
@@ -588,13 +560,13 @@ struct LockmanPriorityBasedStrategyTests {
     strategy.lock(id: id, info: payment1)
 
     // Payment2 should fail
-    #expect(strategy.canLock(id: id, info: payment2) == .failure)
+    XCTAssertTrue(strategy.canLock(id: id, info: payment2) == .failure)
 
     // Search1 should succeed (different actionId)
-    #expect(strategy.canLock(id: id, info: search1) == .failure) // Normal priority rule (same high priority, exclusive behavior)
+    XCTAssertTrue(strategy.canLock(id: id, info: search1) == .failure) // Normal priority rule (same high priority, exclusive behavior)
 
     // Update1 should succeed (different actionId, despite blocksSameAction)
-    #expect(strategy.canLock(id: id, info: update1) == .failure) // Normal priority rule (lower priority)
+    XCTAssertTrue(strategy.canLock(id: id, info: update1) == .failure) // Normal priority rule (lower priority)
 
     strategy.unlock(id: id, info: payment1)
 
@@ -602,7 +574,7 @@ struct LockmanPriorityBasedStrategyTests {
     strategy.lock(id: id, info: search1)
 
     // Search2 with blocksSameAction should fail
-    #expect(strategy.canLock(id: id, info: search2) == .failure)
+    XCTAssertTrue(strategy.canLock(id: id, info: search2) == .failure)
 
     strategy.cleanUp()
   }
