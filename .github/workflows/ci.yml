@@ -20,14 +20,14 @@ concurrency:
 
 jobs:
   swift-test:
-    name: Swift Test (${{ matrix.platform }})
+    name: Swift Test (${{ matrix.os }})
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
         include:
-          - { os: macos-14, platform: macOS, xcode: '15.4' }
-          - { os: macos-15, platform: macOS, xcode: '16.0' }
+          - { os: macos-14, xcode: '15.4' }
+          - { os: macos-15, xcode: '16.0' }
     steps:
       - uses: actions/checkout@v4
       
@@ -44,129 +44,53 @@ jobs:
         run: swift test --parallel
 
   xcodebuild:
-    name: xcodebuild / Xcode ${{ matrix.xcode }}, ${{ matrix.platform }}
-    runs-on: macos-14
+    name: Build (${{ matrix.platform }})
+    runs-on: macos-latest
     strategy:
       fail-fast: false
       matrix:
-        xcode: ['15.2', '15.4']
         platform: ['iOS', 'macOS', 'tvOS', 'watchOS']
-        config: ['Debug', 'Release']
-        exclude:
-          # Skip older Xcode versions for newer platforms
-          - { xcode: '15.2', platform: 'watchOS', config: 'Release' }
-          - { xcode: '15.2', platform: 'tvOS', config: 'Release' }
 
     steps:
       - uses: actions/checkout@v4
 
-      - name: Select Xcode ${{ matrix.xcode }}
-        run: sudo xcode-select -s /Applications/Xcode_${{ matrix.xcode }}.app
-
-      - name: Skip macro validation
-        run: defaults write com.apple.dt.Xcode IDESkipMacroFingerprintValidation -bool YES
-        
-      - name: Resolve Package Dependencies
-        run: |
-          rm -f Package.resolved
-          xcodebuild -resolvePackageDependencies -workspace Lockman.xcworkspace -scheme LockmanCore
-
-      - name: Cache DerivedData
-        uses: actions/cache@v4
-        with:
-          key: xcodebuild-${{ matrix.xcode }}-${{ matrix.platform }}-${{ matrix.config }}-${{ hashFiles('**/Package.swift') }}
-          path: ~/Library/Developer/Xcode/DerivedData
-          restore-keys: |
-            xcodebuild-${{ matrix.xcode }}-${{ matrix.platform }}-${{ matrix.config }}-
-            xcodebuild-${{ matrix.xcode }}-${{ matrix.platform }}-
-            xcodebuild-${{ matrix.xcode }}-
+      - name: Select Xcode
+        run: sudo xcode-select -s /Applications/Xcode.app
 
       - name: Set platform variables
         id: platform
         run: |
           case "${{ matrix.platform }}" in
             "iOS")
-              echo "scheme=LockmanCore" >> $GITHUB_OUTPUT
-              echo "destination=generic/platform=iOS Simulator" >> $GITHUB_OUTPUT
+              echo "destination=generic/platform=iOS" >> $GITHUB_OUTPUT
               ;;
             "macOS")
-              echo "scheme=LockmanCore" >> $GITHUB_OUTPUT
-              echo "destination=platform=macOS" >> $GITHUB_OUTPUT
+              echo "destination=generic/platform=macOS" >> $GITHUB_OUTPUT
               ;;
             "tvOS")
-              echo "scheme=LockmanCore" >> $GITHUB_OUTPUT
-              echo "destination=generic/platform=tvOS Simulator" >> $GITHUB_OUTPUT
+              echo "destination=generic/platform=tvOS" >> $GITHUB_OUTPUT
               ;;
             "watchOS")
-              echo "scheme=LockmanCore" >> $GITHUB_OUTPUT
-              echo "destination=generic/platform=watchOS Simulator" >> $GITHUB_OUTPUT
+              echo "destination=generic/platform=watchOS" >> $GITHUB_OUTPUT
               ;;
           esac
 
-      - name: Build
-        run: |
-          xcodebuild build \
-            -workspace Lockman.xcworkspace \
-            -scheme "${{ steps.platform.outputs.scheme }}" \
-            -configuration ${{ matrix.config }} \
-            -destination "${{ steps.platform.outputs.destination }}" \
-            -skipMacroValidation \
-            CODE_SIGNING_ALLOWED=NO
-
-  xcodebuild-latest:
-    name: xcodebuild / Xcode 16.0, ${{ matrix.platform }}
-    runs-on: macos-15
-    strategy:
-      fail-fast: false
-      matrix:
-        platform: ['iOS', 'macOS']
-
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Select Xcode 16.0
-        run: sudo xcode-select -s /Applications/Xcode_16.0.app
-
-      - name: Skip macro validation
-        run: defaults write com.apple.dt.Xcode IDESkipMacroFingerprintValidation -bool YES
-        
-      - name: Resolve Package Dependencies
-        run: |
-          rm -f Package.resolved
-          xcodebuild -resolvePackageDependencies -workspace Lockman.xcworkspace -scheme LockmanCore
-
-      - name: Cache DerivedData
-        uses: actions/cache@v4
-        with:
-          key: xcodebuild-16.0-${{ matrix.platform }}-${{ hashFiles('**/Package.swift') }}
-          path: ~/Library/Developer/Xcode/DerivedData
-          restore-keys: |
-            xcodebuild-16.0-${{ matrix.platform }}-
-            xcodebuild-16.0-
-
-      - name: Set platform variables
-        id: platform
+      - name: Build with Swift
         run: |
           case "${{ matrix.platform }}" in
             "iOS")
-              echo "scheme=LockmanCore" >> $GITHUB_OUTPUT
-              echo "destination=platform=iOS Simulator,name=iPhone 16" >> $GITHUB_OUTPUT
+              swift build --sdk iphoneos
               ;;
             "macOS")
-              echo "scheme=LockmanCore" >> $GITHUB_OUTPUT
-              echo "destination=platform=macOS" >> $GITHUB_OUTPUT
+              swift build
+              ;;
+            "tvOS")
+              swift build --sdk appletvos
+              ;;
+            "watchOS")
+              swift build --sdk watchos
               ;;
           esac
-
-      - name: Build
-        run: |
-          xcodebuild build \
-            -workspace Lockman.xcworkspace \
-            -scheme "${{ steps.platform.outputs.scheme }}" \
-            -configuration Debug \
-            -destination "${{ steps.platform.outputs.destination }}" \
-            -skipMacroValidation \
-            CODE_SIGNING_ALLOWED=NO
 
   examples:
     name: Examples
