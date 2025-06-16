@@ -1,10 +1,9 @@
 import Foundation
-import Testing
+import XCTest
 @testable @_spi(Debugging) import LockmanCore
 
 struct LockmanDebugFormattersTests {
-  @Test("Dynamic column width formatting")
-  func testDynamicColumnWidth() throws {
+  func testtestDynamicColumnWidth() throws {
     // Clean up first
     Lockman.cleanup.all()
 
@@ -55,30 +54,29 @@ struct LockmanDebugFormattersTests {
     print(output)
 
     // Verify no truncation
-    #expect(output.contains("DynamicCondition")) // Not truncated to "DynamicConditio"
-    #expect(output.contains("condition: <closure>")) // Not truncated to "condition: <clo"
-    #expect(output.contains("SingleExecution"))
-    #expect(output.contains("veryLongActionIdForTestingDynamicColumnWidth"))
-    #expect(output.contains("VeryLongBoundaryIdForTestingColumnWidth"))
+    XCTAssertTrue(output.contains("DynamicCondition")) // Not truncated to "DynamicConditio"
+    XCTAssertTrue(output.contains("condition: <closure>")) // Not truncated to "condition: <clo"
+    XCTAssertTrue(output.contains("SingleExecution"))
+    XCTAssertTrue(output.contains("veryLongActionIdForTestingDynamicColumnWidth"))
+    XCTAssertTrue(output.contains("VeryLongBoundaryIdForTestingColumnWidth"))
 
     // Clean up
     Lockman.cleanup.all()
   }
 
-  @Test("Format options work correctly")
-  func testFormatOptions() {
+  func testtestFormatOptions() {
     // Test compact options
     let compact = Lockman.debug.FormatOptions.compact
-    #expect(compact.maxStrategyWidth == 0)
-    #expect(compact.maxBoundaryWidth == 0)
-    #expect(compact.maxActionIdWidth == 0)
-    #expect(compact.maxAdditionalWidth == 0)
+    XCTAssertEqual(compact.maxStrategyWidth , 0)
+    XCTAssertEqual(compact.maxBoundaryWidth , 0)
+    XCTAssertEqual(compact.maxActionIdWidth , 0)
+    XCTAssertEqual(compact.maxAdditionalWidth , 0)
 
     // Test default options
     let defaultOptions = Lockman.debug.FormatOptions.default
-    #expect(defaultOptions.maxStrategyWidth == 20)
-    #expect(defaultOptions.maxBoundaryWidth == 25)
-    #expect(defaultOptions.maxActionIdWidth == 36)
-    #expect(defaultOptions.maxAdditionalWidth == 20)
+    XCTAssertEqual(defaultOptions.maxStrategyWidth , 20)
+    XCTAssertEqual(defaultOptions.maxBoundaryWidth , 25)
+    XCTAssertEqual(defaultOptions.maxActionIdWidth , 36)
+    XCTAssertEqual(defaultOptions.maxAdditionalWidth , 20)
   }
 }
