@@ -12,32 +12,32 @@ final class LockmanGroupCoordinationStrategyTests: XCTestCase {
 
   // MARK: - Instance Management Tests
 
-  func testtestSharedInstanceSingleton() {
+  func testSharedInstanceSingleton() {
     let instance1 = LockmanGroupCoordinationStrategy.shared
     let instance2 = LockmanGroupCoordinationStrategy.shared
 
-    XCTAssertTrue(instance1 === instance2)
+    XCTAssertTrue(instance1  === instance2)
   }
 
-  func testtestMakeStrategyIdReturnsConsistentIdentifier() {
+  func testMakeStrategyIdReturnsConsistentIdentifier() {
     let id1 = LockmanGroupCoordinationStrategy.makeStrategyId()
     let id2 = LockmanGroupCoordinationStrategy.makeStrategyId()
 
-    XCTAssertEqual(id1 , id2)
-    XCTAssertEqual(id1 , .groupCoordination)
+    XCTAssertEqual(id1, id2)
+    XCTAssertEqual(id1, .groupCoordination)
   }
 
-  func testtestInstanceStrategyIdMatchesMakeStrategyId() {
-    let strategy = LockmanGroupCoordinationStrategy()
+  func testInstanceStrategyIdMatchesMakeStrategyId() {
+    let strategy  = LockmanGroupCoordinationStrategy()
     let staticId = LockmanGroupCoordinationStrategy.makeStrategyId()
 
-    XCTAssertEqual(strategy.strategyId , staticId)
+    XCTAssertEqual(strategy.strategyId, staticId)
   }
 
   // MARK: - Basic Functionality Tests
 
-  func testtestLeaderCanLockWhenGroupIsEmpty() {
-    let strategy = LockmanGroupCoordinationStrategy()
+  func testLeaderCanLockWhenGroupIsEmpty() {
+    let strategy  = LockmanGroupCoordinationStrategy()
     let boundaryId = TestBoundaryId(value: "test")
 
     let leaderInfo = LockmanGroupCoordinatedInfo(
@@ -46,10 +46,10 @@ final class LockmanGroupCoordinationStrategyTests: XCTestCase {
       coordinationRole: .leader
     )
 
-    XCTAssertTrue(strategy.canLock(id: boundaryId, info: leaderInfo) == .success)
+    XCTAssertEqual(strategy.canLock(id: boundaryId, info: leaderInfo), .success)
   }
 
-  func testtestLeaderCannotLockWhenGroupHasMembers() {
+  func testLeaderCannotLockWhenGroupHasMembers() {
     let strategy = LockmanGroupCoordinationStrategy()
     let boundaryId = TestBoundaryId(value: "test")
 
@@ -60,7 +60,7 @@ final class LockmanGroupCoordinationStrategyTests: XCTestCase {
       coordinationRole: .leader
     )
 
-    XCTAssertTrue(strategy.canLock(id: boundaryId, info: leader1) == .success)
+    XCTAssertEqual(strategy.canLock(id: boundaryId, info: leader1), .success)
     strategy.lock(id: boundaryId, info: leader1)
 
     // Second leader should fail
@@ -70,10 +70,10 @@ final class LockmanGroupCoordinationStrategyTests: XCTestCase {
       coordinationRole: .leader
     )
 
-    XCTAssertTrue(strategy.canLock(id: boundaryId, info: leader2) == .failure)
+    XCTAssertEqual(strategy.canLock(id: boundaryId, info: leader2), .failure)
   }
 
-  func testtestMemberCannotLockWhenGroupIsEmpty() {
+  func testMemberCannotLockWhenGroupIsEmpty() {
     let strategy = LockmanGroupCoordinationStrategy()
     let boundaryId = TestBoundaryId(value: "test")
 
@@ -83,10 +83,10 @@ final class LockmanGroupCoordinationStrategyTests: XCTestCase {
       coordinationRole: .member
     )
 
-    XCTAssertTrue(strategy.canLock(id: boundaryId, info: memberInfo) == .failure)
+    XCTAssertEqual(strategy.canLock(id: boundaryId, info: memberInfo), .failure)
   }
 
-  func testtestMemberCanLockWhenGroupHasMembers() {
+  func testMemberCanLockWhenGroupHasMembers() {
     let strategy = LockmanGroupCoordinationStrategy()
     let boundaryId = TestBoundaryId(value: "test")
 
@@ -106,10 +106,10 @@ final class LockmanGroupCoordinationStrategyTests: XCTestCase {
       coordinationRole: .member
     )
 
-    XCTAssertTrue(strategy.canLock(id: boundaryId, info: memberInfo) == .success)
+    XCTAssertEqual(strategy.canLock(id: boundaryId, info: memberInfo), .success)
   }
 
-  func testtestMultipleMembersCanJoinActiveGroup() {
+  func testMultipleMembersCanJoinActiveGroup() {
     let strategy = LockmanGroupCoordinationStrategy()
     let boundaryId = TestBoundaryId(value: "test")
 
@@ -133,14 +133,14 @@ final class LockmanGroupCoordinationStrategyTests: XCTestCase {
       coordinationRole: .member
     )
 
-    XCTAssertTrue(strategy.canLock(id: boundaryId, info: member1) == .success)
+    XCTAssertEqual(strategy.canLock(id: boundaryId, info: member1), .success)
     strategy.lock(id: boundaryId, info: member1)
 
-    XCTAssertTrue(strategy.canLock(id: boundaryId, info: member2) == .success)
+    XCTAssertEqual(strategy.canLock(id: boundaryId, info: member2), .success)
     strategy.lock(id: boundaryId, info: member2)
   }
 
-  func testtestSameActionIdCannotExecuteTwiceInSameGroup() {
+  func testSameActionIdCannotExecuteTwiceInSameGroup() {
     let strategy = LockmanGroupCoordinationStrategy()
     let boundaryId = TestBoundaryId(value: "test")
 
@@ -158,7 +158,7 @@ final class LockmanGroupCoordinationStrategyTests: XCTestCase {
       groupId: "group1",
       coordinationRole: .member
     )
-    XCTAssertTrue(strategy.canLock(id: boundaryId, info: action1) == .success)
+    XCTAssertEqual(strategy.canLock(id: boundaryId, info: action1), .success)
     strategy.lock(id: boundaryId, info: action1)
 
     // Second action with same ID fails
@@ -167,12 +167,12 @@ final class LockmanGroupCoordinationStrategyTests: XCTestCase {
       groupId: "group1",
       coordinationRole: .member
     )
-    XCTAssertTrue(strategy.canLock(id: boundaryId, info: action2) == .failure)
+    XCTAssertEqual(strategy.canLock(id: boundaryId, info: action2), .failure)
   }
 
   // MARK: - Group Lifecycle Tests
 
-  func testtestGroupRemainsActiveAfterLeaderUnlocks() {
+  func testGroupRemainsActiveAfterLeaderUnlocks() {
     let strategy = LockmanGroupCoordinationStrategy()
     let boundaryId = TestBoundaryId(value: "test")
 
@@ -201,7 +201,7 @@ final class LockmanGroupCoordinationStrategyTests: XCTestCase {
       groupId: "group1",
       coordinationRole: .member
     )
-    XCTAssertTrue(strategy.canLock(id: boundaryId, info: newMember) == .success)
+    XCTAssertEqual(strategy.canLock(id: boundaryId, info: newMember), .success)
 
     // New leader cannot start
     let newLeader = LockmanGroupCoordinatedInfo(
@@ -209,10 +209,10 @@ final class LockmanGroupCoordinationStrategyTests: XCTestCase {
       groupId: "group1",
       coordinationRole: .leader
     )
-    XCTAssertTrue(strategy.canLock(id: boundaryId, info: newLeader) == .failure)
+    XCTAssertEqual(strategy.canLock(id: boundaryId, info: newLeader), .failure)
   }
 
-  func testtestGroupDissolvesWhenLastMemberUnlocks() {
+  func testGroupDissolvesWhenLastMemberUnlocks() {
     let strategy = LockmanGroupCoordinationStrategy()
     let boundaryId = TestBoundaryId(value: "test")
 
@@ -248,7 +248,7 @@ final class LockmanGroupCoordinationStrategyTests: XCTestCase {
       groupId: "group1",
       coordinationRole: .leader
     )
-    XCTAssertTrue(strategy.canLock(id: boundaryId, info: newLeader) == .success)
+    XCTAssertEqual(strategy.canLock(id: boundaryId, info: newLeader), .success)
 
     // Member cannot join (group is empty)
     let newMember = LockmanGroupCoordinatedInfo(
@@ -256,12 +256,12 @@ final class LockmanGroupCoordinationStrategyTests: XCTestCase {
       groupId: "group1",
       coordinationRole: .member
     )
-    XCTAssertTrue(strategy.canLock(id: boundaryId, info: newMember) == .failure)
+    XCTAssertEqual(strategy.canLock(id: boundaryId, info: newMember), .failure)
   }
 
   // MARK: - Multiple Groups Tests
 
-  func testtestDifferentGroupsOperateIndependently() {
+  func testDifferentGroupsOperateIndependently() {
     let strategy = LockmanGroupCoordinationStrategy()
     let boundaryId = TestBoundaryId(value: "test")
 
@@ -280,10 +280,10 @@ final class LockmanGroupCoordinationStrategyTests: XCTestCase {
     )
 
     // Both can lock independently
-    XCTAssertTrue(strategy.canLock(id: boundaryId, info: group1Leader) == .success)
+    XCTAssertEqual(strategy.canLock(id: boundaryId, info: group1Leader), .success)
     strategy.lock(id: boundaryId, info: group1Leader)
 
-    XCTAssertTrue(strategy.canLock(id: boundaryId, info: group2Leader) == .success)
+    XCTAssertEqual(strategy.canLock(id: boundaryId, info: group2Leader), .success)
     strategy.lock(id: boundaryId, info: group2Leader)
 
     // Members for different groups
@@ -298,13 +298,13 @@ final class LockmanGroupCoordinationStrategyTests: XCTestCase {
       coordinationRole: .member
     )
 
-    XCTAssertTrue(strategy.canLock(id: boundaryId, info: group1Member) == .success)
-    XCTAssertTrue(strategy.canLock(id: boundaryId, info: group2Member) == .success)
+    XCTAssertEqual(strategy.canLock(id: boundaryId, info: group1Member), .success)
+    XCTAssertEqual(strategy.canLock(id: boundaryId, info: group2Member), .success)
   }
 
   // MARK: - Boundary Isolation Tests
 
-  func testtestSameGroupInDifferentBoundariesAreIsolated() {
+  func testSameGroupInDifferentBoundariesAreIsolated() {
     let strategy = LockmanGroupCoordinationStrategy()
     let boundary1 = TestBoundaryId(value: "boundary1")
     let boundary2 = TestBoundaryId(value: "boundary2")
@@ -322,16 +322,16 @@ final class LockmanGroupCoordinationStrategyTests: XCTestCase {
     )
 
     // Both can lock in their respective boundaries
-    XCTAssertTrue(strategy.canLock(id: boundary1, info: leader1) == .success)
+    XCTAssertEqual(strategy.canLock(id: boundary1, info: leader1), .success)
     strategy.lock(id: boundary1, info: leader1)
 
-    XCTAssertTrue(strategy.canLock(id: boundary2, info: leader2) == .success)
+    XCTAssertEqual(strategy.canLock(id: boundary2, info: leader2), .success)
     strategy.lock(id: boundary2, info: leader2)
   }
 
   // MARK: - Cleanup Tests
 
-  func testtestCleanUpRemovesAllGroupsAndStates() {
+  func testCleanUpRemovesAllGroupsAndStates() {
     let strategy = LockmanGroupCoordinationStrategy()
     let boundaryId = TestBoundaryId(value: "test")
 
@@ -365,11 +365,11 @@ final class LockmanGroupCoordinationStrategyTests: XCTestCase {
       coordinationRole: .leader
     )
 
-    XCTAssertTrue(strategy.canLock(id: boundaryId, info: newLeader1) == .success)
-    XCTAssertTrue(strategy.canLock(id: boundaryId, info: newLeader2) == .success)
+    XCTAssertEqual(strategy.canLock(id: boundaryId, info: newLeader1), .success)
+    XCTAssertEqual(strategy.canLock(id: boundaryId, info: newLeader2), .success)
   }
 
-  func testtestCleanUpWithBoundaryIdRemovesOnlyThatBoundary() {
+  func testCleanUpWithBoundaryIdRemovesOnlyThatBoundary() {
     let strategy = LockmanGroupCoordinationStrategy()
     let boundary1 = TestBoundaryId(value: "boundary1")
     let boundary2 = TestBoundaryId(value: "boundary2")
@@ -398,7 +398,7 @@ final class LockmanGroupCoordinationStrategyTests: XCTestCase {
       groupId: "group1",
       coordinationRole: .leader
     )
-    XCTAssertTrue(strategy.canLock(id: boundary1, info: newLeader1) == .success)
+    XCTAssertEqual(strategy.canLock(id: boundary1, info: newLeader1), .success)
 
     // boundary2 still has active group
     let newLeader2 = LockmanGroupCoordinatedInfo(
@@ -406,12 +406,12 @@ final class LockmanGroupCoordinationStrategyTests: XCTestCase {
       groupId: "group1",
       coordinationRole: .leader
     )
-    XCTAssertTrue(strategy.canLock(id: boundary2, info: newLeader2) == .failure)
+    XCTAssertEqual(strategy.canLock(id: boundary2, info: newLeader2), .failure)
   }
 
   // MARK: - Multiple Groups Tests
 
-  func testtestSingleActionCanBelongToMultipleGroups() {
+  func testSingleActionCanBelongToMultipleGroups() {
     let strategy = LockmanGroupCoordinationStrategy()
     let boundaryId = TestBoundaryId(value: "test")
 
@@ -423,7 +423,7 @@ final class LockmanGroupCoordinationStrategyTests: XCTestCase {
     )
 
     // Should succeed when all groups are empty
-    XCTAssertTrue(strategy.canLock(id: boundaryId, info: multiGroupLeader) == .success)
+    XCTAssertEqual(strategy.canLock(id: boundaryId, info: multiGroupLeader), .success)
     strategy.lock(id: boundaryId, info: multiGroupLeader)
 
     // Member can join any of these groups now
@@ -438,11 +438,11 @@ final class LockmanGroupCoordinationStrategyTests: XCTestCase {
       coordinationRole: .member
     )
 
-    XCTAssertTrue(strategy.canLock(id: boundaryId, info: member1) == .success)
-    XCTAssertTrue(strategy.canLock(id: boundaryId, info: member2) == .success)
+    XCTAssertEqual(strategy.canLock(id: boundaryId, info: member1), .success)
+    XCTAssertEqual(strategy.canLock(id: boundaryId, info: member2), .success)
   }
 
-  func testtestMultipleGroupsWithAndCondition() {
+  func testMultipleGroupsWithAndCondition() {
     let strategy = LockmanGroupCoordinationStrategy()
     let boundaryId = TestBoundaryId(value: "test")
 
@@ -460,7 +460,7 @@ final class LockmanGroupCoordinationStrategyTests: XCTestCase {
       groupIds: ["group1", "group2"],
       coordinationRole: .leader
     )
-    XCTAssertTrue(strategy.canLock(id: boundaryId, info: multiLeader) == .failure)
+    XCTAssertEqual(strategy.canLock(id: boundaryId, info: multiLeader), .failure)
 
     // Multi-group member needs all groups to have members
     let multiMember = LockmanGroupCoordinatedInfo(
@@ -468,7 +468,7 @@ final class LockmanGroupCoordinationStrategyTests: XCTestCase {
       groupIds: ["group1", "group2"],
       coordinationRole: .member
     )
-    XCTAssertTrue(strategy.canLock(id: boundaryId, info: multiMember) == .failure)
+    XCTAssertEqual(strategy.canLock(id: boundaryId, info: multiMember), .failure)
 
     // Start group2
     let group2Leader = LockmanGroupCoordinatedInfo(
@@ -479,29 +479,29 @@ final class LockmanGroupCoordinationStrategyTests: XCTestCase {
     strategy.lock(id: boundaryId, info: group2Leader)
 
     // Now multi-group member can join
-    XCTAssertTrue(strategy.canLock(id: boundaryId, info: multiMember) == .success)
+    XCTAssertEqual(strategy.canLock(id: boundaryId, info: multiMember), .success)
   }
 
-  func testtestMaximum5GroupsValidation() {
+  func testMaximum5GroupsValidation() {
     // Valid: exactly 5 groups
     let info5 = LockmanGroupCoordinatedInfo(
       actionId: LockmanActionId("test"),
       groupIds: ["g1", "g2", "g3", "g4", "g5"],
       coordinationRole: .leader
     )
-    XCTAssertEqual(info5.groupIds.count , 5)
+    XCTAssertEqual(info5.groupIds.count, 5)
 
     // Invalid: 6 groups (will trigger precondition in debug)
     // Note: In release builds, precondition is not checked
     // This test is commented out as it would crash in debug
-    // _ = LockmanGroupCoordinatedInfo(
+    // _  = LockmanGroupCoordinatedInfo(
     //   actionId: LockmanActionId("test"),
     //   groupIds: ["g1", "g2", "g3", "g4", "g5", "g6"],
     //   coordinationRole: .leader
     // )
   }
 
-  func testtestEmptyGroupValidation() {
+  func testEmptyGroupValidation() {
     // Empty set and empty strings will trigger precondition in debug
     // These tests are commented out as they would crash in debug
     // In a production setting, you might want to use a Result type instead
@@ -526,11 +526,11 @@ final class LockmanGroupCoordinationStrategyTests: XCTestCase {
       groupIds: ["valid1", "valid2"],
       coordinationRole: .leader
     )
-    XCTAssertEqual(validInfo.groupIds , ["valid1", "valid2"])
+    XCTAssertEqual(validInfo.groupIds, ["valid1", "valid2"])
   }
 
-  func testtestMultiGroupUnlockRemovesFromAllGroups() {
-    let strategy = LockmanGroupCoordinationStrategy()
+  func testMultiGroupUnlockRemovesFromAllGroups() {
+    let strategy  = LockmanGroupCoordinationStrategy()
     let boundaryId = TestBoundaryId(value: "test")
 
     // Lock multiple groups
@@ -564,7 +564,7 @@ final class LockmanGroupCoordinationStrategyTests: XCTestCase {
       groupId: "g1",
       coordinationRole: .member
     )
-    XCTAssertTrue(strategy.canLock(id: boundaryId, info: newP1) == .success)
+    XCTAssertEqual(strategy.canLock(id: boundaryId, info: newP1), .success)
 
     // But new leader cannot start in g1 (still has p1)
     let newInit = LockmanGroupCoordinatedInfo(
@@ -572,7 +572,7 @@ final class LockmanGroupCoordinationStrategyTests: XCTestCase {
       groupId: "g1",
       coordinationRole: .leader
     )
-    XCTAssertTrue(strategy.canLock(id: boundaryId, info: newInit) == .failure)
+    XCTAssertEqual(strategy.canLock(id: boundaryId, info: newInit), .failure)
 
     // g3 should be empty now (only had the multi-action)
     let g3Init = LockmanGroupCoordinatedInfo(
@@ -580,12 +580,12 @@ final class LockmanGroupCoordinationStrategyTests: XCTestCase {
       groupId: "g3",
       coordinationRole: .leader
     )
-    XCTAssertTrue(strategy.canLock(id: boundaryId, info: g3Init) == .success)
+    XCTAssertEqual(strategy.canLock(id: boundaryId, info: g3Init), .success)
   }
 
   // MARK: - Integration Tests
 
-  func testtestComplexScenarioWithMultipleGroupsAndRoles() {
+  func testComplexScenarioWithMultipleGroupsAndRoles() {
     let strategy = LockmanGroupCoordinationStrategy()
     let boundaryId = TestBoundaryId(value: "test")
 
@@ -614,18 +614,18 @@ final class LockmanGroupCoordinationStrategyTests: XCTestCase {
     )
 
     // Start navigation
-    XCTAssertTrue(strategy.canLock(id: boundaryId, info: navLeader) == .success)
+    XCTAssertEqual(strategy.canLock(id: boundaryId, info: navLeader), .success)
     strategy.lock(id: boundaryId, info: navLeader)
 
     // Start data loading (different group)
-    XCTAssertTrue(strategy.canLock(id: boundaryId, info: dataLeader) == .success)
+    XCTAssertEqual(strategy.canLock(id: boundaryId, info: dataLeader), .success)
     strategy.lock(id: boundaryId, info: dataLeader)
 
     // Add members to both groups
-    XCTAssertTrue(strategy.canLock(id: boundaryId, info: navAnimation) == .success)
+    XCTAssertEqual(strategy.canLock(id: boundaryId, info: navAnimation), .success)
     strategy.lock(id: boundaryId, info: navAnimation)
 
-    XCTAssertTrue(strategy.canLock(id: boundaryId, info: dataProgress) == .success)
+    XCTAssertEqual(strategy.canLock(id: boundaryId, info: dataProgress), .success)
     strategy.lock(id: boundaryId, info: dataProgress)
 
     // Navigation completes
@@ -638,7 +638,7 @@ final class LockmanGroupCoordinationStrategyTests: XCTestCase {
       groupId: "navigation",
       coordinationRole: .leader
     )
-    XCTAssertTrue(strategy.canLock(id: boundaryId, info: newNavLeader) == .success)
+    XCTAssertEqual(strategy.canLock(id: boundaryId, info: newNavLeader), .success)
 
     // Data loading still active
     let dataError = LockmanGroupCoordinatedInfo(
@@ -646,12 +646,12 @@ final class LockmanGroupCoordinationStrategyTests: XCTestCase {
       groupId: "dataLoading",
       coordinationRole: .member
     )
-    XCTAssertTrue(strategy.canLock(id: boundaryId, info: dataError) == .success)
+    XCTAssertEqual(strategy.canLock(id: boundaryId, info: dataError), .success)
   }
 
   // MARK: - Thread Safety Tests
 
-  func testtestConcurrentOperationsAreThreadSafe() async throws {
+  func testConcurrentOperationsAreThreadSafe() async {
     let strategy = LockmanGroupCoordinationStrategy()
     let boundaryId = TestBoundaryId(value: "test")
 
@@ -692,7 +692,7 @@ final class LockmanGroupCoordinationStrategyTests: XCTestCase {
       }
 
       // All unique members should succeed
-      XCTAssertEqual(successCount , 100)
+      XCTAssertEqual(successCount, 100)
     }
   }
 }

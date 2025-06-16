@@ -90,7 +90,7 @@ final class LockmanStateActionIndexTests: XCTestCase {
   }
 
   func testCurrentsByActionIdPreservesInsertionOrder() async throws {
-    let state = LockmanState<TestInfo>()
+    let state  = LockmanState<TestInfo>()
     let boundary = TestBoundaryId(value: "test")
 
     let info1 = TestInfo(actionId: "action1")
@@ -112,14 +112,14 @@ final class LockmanStateActionIndexTests: XCTestCase {
   // MARK: - Count Tests
 
   func testCountReturnsZeroForNonExistent() async throws {
-    let state = LockmanState<TestInfo>()
+    let state  = LockmanState<TestInfo>()
     let boundary = TestBoundaryId(value: "test")
 
     XCTAssertEqual(state.count(id: boundary, actionId: "nonexistent"), 0)
   }
 
   func testCountReturnsCorrectNumber() async throws {
-    let state = LockmanState<TestInfo>()
+    let state  = LockmanState<TestInfo>()
     let boundary = TestBoundaryId(value: "test")
 
     let info1 = TestInfo(actionId: "action1")
@@ -138,7 +138,7 @@ final class LockmanStateActionIndexTests: XCTestCase {
   // MARK: - ActionIds Tests
 
   func testActionIdsReturnsEmptyForEmptyBoundary() async throws {
-    let state = LockmanState<TestInfo>()
+    let state  = LockmanState<TestInfo>()
     let boundary = TestBoundaryId(value: "test")
 
     let actionIds = state.actionIds(id: boundary)
@@ -165,7 +165,7 @@ final class LockmanStateActionIndexTests: XCTestCase {
   // MARK: - Boundary Isolation Tests
 
   func testActionsAreIsolatedBetweenBoundaries() async throws {
-    let state = LockmanState<TestInfo>()
+    let state  = LockmanState<TestInfo>()
     let boundary1 = TestBoundaryId(value: "boundary1")
     let boundary2 = TestBoundaryId(value: "boundary2")
 
@@ -220,7 +220,7 @@ final class LockmanStateActionIndexTests: XCTestCase {
   }
 
   func testHandlesUnicodeActionIds() async throws {
-    let state = LockmanState<TestInfo>()
+    let state  = LockmanState<TestInfo>()
     let boundary = TestBoundaryId(value: "test")
 
     let actionId = "🚀アクション💻"
@@ -234,7 +234,7 @@ final class LockmanStateActionIndexTests: XCTestCase {
   // MARK: - Cleanup Tests
 
   func testRemoveAllClearsActionIndex() async throws {
-    let state = LockmanState<TestInfo>()
+    let state  = LockmanState<TestInfo>()
     let boundary = TestBoundaryId(value: "test")
 
     state.add(id: boundary, info: TestInfo(actionId: "action1"))

@@ -94,7 +94,7 @@ final class EffectLockmanErrorTests: XCTestCase {
   }
 
   func testWithLockWorksCorrectlyWithRegisteredStrategy() async {
-    let testContainer = LockmanStrategyContainer()
+    let testContainer  = LockmanStrategyContainer()
     try? testContainer.register(LockmanSingleExecutionStrategy.shared)
 
     await Lockman.withTestContainer(testContainer) {
@@ -129,7 +129,7 @@ final class EffectLockmanErrorTests: XCTestCase {
           operation: { _, _ in
             operationExecuted.setValue(true)
             unlockProvided.setValue(true)
-            XCTAssertTrue(false, "Operation should not execute with unregistered strategy")
+            XCTFail("Operation should not execute with unregistered strategy")
           },
           action: action,
           cancelID: cancelID
@@ -144,7 +144,7 @@ final class EffectLockmanErrorTests: XCTestCase {
   }
 
   func testConcatenateWithLockHandlesUnregisteredStrategy() async {
-    let testContainer = LockmanStrategyContainer()
+    let testContainer  = LockmanStrategyContainer()
 
     await Lockman.withTestContainer(testContainer) {
       let action = MockErrorAction.unregisteredStrategy
@@ -152,7 +152,7 @@ final class EffectLockmanErrorTests: XCTestCase {
 
       let operations = [
         Effect<Never>.run { _ in
-          XCTAssertTrue(Bool(false), "Operations should not execute with unregistered strategy")
+          XCTFail("Operations should not execute with unregistered strategy")
         },
       ]
 
@@ -244,7 +244,7 @@ final class EffectLockmanErrorTests: XCTestCase {
       XCTExpectFailure("Effect.withLock strategy 'LockmanSingleExecutionStrategy' not registered") {
         let effect = Effect<Never>.withLock(
           operation: { _ in
-            XCTAssertTrue(Bool(false), "Should not execute due to missing strategy")
+            XCTFail("Should not execute due to missing strategy")
           },
           catch: { _, _ in
             // Error handling would occur here in real usage
@@ -271,7 +271,7 @@ final class EffectLockmanErrorTests: XCTestCase {
         XCTExpectFailure("Effect.withLock strategy 'MockUnregisteredStrategy' not registered") {
           let effect = Effect<Never>.withLock(
             operation: { _ in
-              XCTAssertTrue(Bool(false), "No operations should execute")
+              XCTFail("No operations should execute")
             },
             action: action,
             cancelID: "multi-error-test"
@@ -296,7 +296,7 @@ final class EffectLockmanErrorTests: XCTestCase {
       XCTExpectFailure("Effect.withLock strategy 'LockmanSingleExecutionStrategy' not registered") {
         let effect1 = Effect<Never>.withLock(
           operation: { _ in
-            XCTAssertTrue(Bool(false), "Should fail without registration")
+            XCTFail("Should fail without registration")
           },
           action: action,
           cancelID: cancelID
@@ -349,7 +349,7 @@ final class EffectLockmanErrorTests: XCTestCase {
     case let .strategyNotRegistered(strategyType):
       XCTAssertEqual(strategyType, "DetailedStrategyName")
     default:
-      XCTAssertTrue(Bool(false), "Expected strategyNotRegistered error")
+      XCTFail("Expected strategyNotRegistered error")
     }
   }
 

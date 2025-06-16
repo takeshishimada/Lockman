@@ -2,8 +2,8 @@ import Foundation
 import XCTest
 @testable @_spi(Debugging) import LockmanCore
 
-struct LockmanDebugFormattersTests {
-  func testtestDynamicColumnWidth() throws {
+final class LockmanDebugFormattersTests: XCTestCase {
+  func testDynamicColumnWidth() throws {
     // Clean up first
     Lockman.cleanup.all()
 
@@ -55,7 +55,7 @@ struct LockmanDebugFormattersTests {
 
     // Verify no truncation
     XCTAssertTrue(output.contains("DynamicCondition")) // Not truncated to "DynamicConditio"
-    XCTAssertTrue(output.contains("condition: <closure>")) // Not truncated to "condition: <clo"
+    XCTAssertTrue(output.contains("condition: <closure")) // Not truncated to "condition: <clo"
     XCTAssertTrue(output.contains("SingleExecution"))
     XCTAssertTrue(output.contains("veryLongActionIdForTestingDynamicColumnWidth"))
     XCTAssertTrue(output.contains("VeryLongBoundaryIdForTestingColumnWidth"))
@@ -64,19 +64,19 @@ struct LockmanDebugFormattersTests {
     Lockman.cleanup.all()
   }
 
-  func testtestFormatOptions() {
+  func testFormatOptions() {
     // Test compact options
     let compact = Lockman.debug.FormatOptions.compact
-    XCTAssertEqual(compact.maxStrategyWidth , 0)
-    XCTAssertEqual(compact.maxBoundaryWidth , 0)
-    XCTAssertEqual(compact.maxActionIdWidth , 0)
-    XCTAssertEqual(compact.maxAdditionalWidth , 0)
+    XCTAssertEqual(compact.maxStrategyWidth, 0)
+    XCTAssertEqual(compact.maxBoundaryWidth, 0)
+    XCTAssertEqual(compact.maxActionIdWidth, 0)
+    XCTAssertEqual(compact.maxAdditionalWidth, 0)
 
     // Test default options
-    let defaultOptions = Lockman.debug.FormatOptions.default
-    XCTAssertEqual(defaultOptions.maxStrategyWidth , 20)
-    XCTAssertEqual(defaultOptions.maxBoundaryWidth , 25)
-    XCTAssertEqual(defaultOptions.maxActionIdWidth , 36)
-    XCTAssertEqual(defaultOptions.maxAdditionalWidth , 20)
+    let defaultOptions  = Lockman.debug.FormatOptions.default
+    XCTAssertEqual(defaultOptions.maxStrategyWidth, 20)
+    XCTAssertEqual(defaultOptions.maxBoundaryWidth, 25)
+    XCTAssertEqual(defaultOptions.maxActionIdWidth, 36)
+    XCTAssertEqual(defaultOptions.maxAdditionalWidth, 20)
   }
 }

@@ -312,13 +312,13 @@ final class LockmanMainTests: XCTestCase {
           XCTAssertEqual(canLockSingle, .success)
 
           singleStrategy.lock(id: singleBoundary, info: singleInfo)
-          let canLockAgain = singleStrategy.canLock(id: singleBoundary, info: singleInfo)
+          let canLockAgain  = singleStrategy.canLock(id: singleBoundary, info: singleInfo)
           XCTAssertEqual(canLockAgain, .failure)
 
           singleStrategy.unlock(id: singleBoundary, info: singleInfo)
 
           // 3. Test priority based strategy
-          let priorityBoundary = TestBoundaryId("priority")
+          let priorityBoundary  = TestBoundaryId("priority")
           let highPriorityInfo = LockmanPriorityBasedInfo(actionId: "high", priority: .high(.exclusive))
           let lowPriorityInfo = LockmanPriorityBasedInfo(actionId: "low", priority: .low(.replaceable))
 
@@ -329,7 +329,7 @@ final class LockmanMainTests: XCTestCase {
           // 4. Clean up
           Lockman.cleanup.all()
         } catch {
-          XCTAssertTrue(Bool(false), "Strategy resolution failed: \(error)")
+          XCTFail("Strategy resolution failed: \(error)")
         }
       }
     }

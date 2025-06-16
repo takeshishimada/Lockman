@@ -16,11 +16,11 @@ final class LockmanCompositeBasicTests: XCTestCase {
     )
 
     // Test basic lock workflow
-    XCTAssertTrue(composite.canLock(id: boundaryId, info: info) == .success)
+    XCTAssertEqual(composite.canLock(id: boundaryId, info: info), .success)
     composite.lock(id: boundaryId, info: info)
-    XCTAssertTrue(composite.canLock(id: boundaryId, info: info) == .failure)
+    XCTAssertEqual(composite.canLock(id: boundaryId, info: info), .failure)
     composite.unlock(id: boundaryId, info: info)
-    XCTAssertTrue(composite.canLock(id: boundaryId, info: info) == .success)
+    XCTAssertEqual(composite.canLock(id: boundaryId, info: info), .success)
 
     // Cleanup
     composite.cleanUp()
@@ -45,11 +45,11 @@ final class LockmanCompositeBasicTests: XCTestCase {
     )
 
     // Test basic lock workflow
-    XCTAssertTrue(composite.canLock(id: boundaryId, info: info) == .success)
+    XCTAssertEqual(composite.canLock(id: boundaryId, info: info), .success)
     composite.lock(id: boundaryId, info: info)
-    XCTAssertTrue(composite.canLock(id: boundaryId, info: info) == .failure)
+    XCTAssertEqual(composite.canLock(id: boundaryId, info: info), .failure)
     composite.unlock(id: boundaryId, info: info)
-    XCTAssertTrue(composite.canLock(id: boundaryId, info: info) == .success)
+    XCTAssertEqual(composite.canLock(id: boundaryId, info: info), .success)
 
     // Cleanup
     composite.cleanUp()
@@ -66,33 +66,33 @@ final class LockmanCompositeBasicTests: XCTestCase {
       lockmanInfoForStrategy2: singleInfo
     )
 
-    XCTAssertEqual(compositeInfo.actionId , actionId)
-    XCTAssertEqual(compositeInfo.lockmanInfoForStrategy1.actionId , actionId)
-    XCTAssertEqual(compositeInfo.lockmanInfoForStrategy2.actionId , actionId)
-    XCTAssertEqual(compositeInfo.lockmanInfoForStrategy1.priority , .high(.exclusive))
+    XCTAssertEqual(compositeInfo.actionId, actionId)
+    XCTAssertEqual(compositeInfo.lockmanInfoForStrategy1.actionId, actionId)
+    XCTAssertEqual(compositeInfo.lockmanInfoForStrategy2.actionId, actionId)
+    XCTAssertEqual(compositeInfo.lockmanInfoForStrategy1.priority, .high(.exclusive))
   }
 
   func testcompositeStrategy2MakeStrategyId() {
-    let priority = LockmanPriorityBasedStrategy.shared
+    let priority  = LockmanPriorityBasedStrategy.shared
     let single = LockmanSingleExecutionStrategy.shared
 
     // Test static method with parameters
     let staticId = LockmanCompositeStrategy2.makeStrategyId(strategy1: priority, strategy2: single)
     let expectedConfig = "\(priority.strategyId.value)+\(single.strategyId.value)"
 
-    XCTAssertEqual(staticId.value , "CompositeStrategy2:\(expectedConfig)")
+    XCTAssertEqual(staticId.value, "CompositeStrategy2:\(expectedConfig)")
 
     // Test instance strategyId matches static method
-    let composite = LockmanCompositeStrategy2(strategy1: priority, strategy2: single)
-    XCTAssertEqual(composite.strategyId , staticId)
+    let composite  = LockmanCompositeStrategy2(strategy1: priority, strategy2: single)
+    XCTAssertEqual(composite.strategyId, staticId)
 
     // Test parameterless makeStrategyId
-    let genericId = LockmanCompositeStrategy2<LockmanPriorityBasedInfo, LockmanPriorityBasedStrategy, LockmanSingleExecutionInfo, LockmanSingleExecutionStrategy>.makeStrategyId()
-    XCTAssertEqual(genericId.value , "CompositeStrategy2")
+    let genericId  = LockmanCompositeStrategy2<LockmanPriorityBasedInfo, LockmanPriorityBasedStrategy, LockmanSingleExecutionInfo, LockmanSingleExecutionStrategy>.makeStrategyId()
+    XCTAssertEqual(genericId.value, "CompositeStrategy2")
   }
 
   func testcompositeStrategy3MakeStrategyId() {
-    let s1 = LockmanPriorityBasedStrategy()
+    let s1  = LockmanPriorityBasedStrategy()
     let s2 = LockmanSingleExecutionStrategy()
     let s3 = LockmanGroupCoordinationStrategy()
 
@@ -100,15 +100,15 @@ final class LockmanCompositeBasicTests: XCTestCase {
     let staticId = LockmanCompositeStrategy3.makeStrategyId(strategy1: s1, strategy2: s2, strategy3: s3)
     let expectedConfig = "\(s1.strategyId.value)+\(s2.strategyId.value)+\(s3.strategyId.value)"
 
-    XCTAssertEqual(staticId.value , "CompositeStrategy3:\(expectedConfig)")
+    XCTAssertEqual(staticId.value, "CompositeStrategy3:\(expectedConfig)")
 
     // Test instance strategyId matches static method
-    let composite = LockmanCompositeStrategy3(strategy1: s1, strategy2: s2, strategy3: s3)
-    XCTAssertEqual(composite.strategyId , staticId)
+    let composite  = LockmanCompositeStrategy3(strategy1: s1, strategy2: s2, strategy3: s3)
+    XCTAssertEqual(composite.strategyId, staticId)
   }
 
   func teststrategyCleanupFunctionality() {
-    let composite = LockmanCompositeStrategy2(
+    let composite  = LockmanCompositeStrategy2(
       strategy1: LockmanPriorityBasedStrategy(),
       strategy2: LockmanSingleExecutionStrategy()
     )
@@ -122,16 +122,16 @@ final class LockmanCompositeBasicTests: XCTestCase {
 
     // Lock and verify it's active
     composite.lock(id: boundaryId, info: info)
-    XCTAssertTrue(composite.canLock(id: boundaryId, info: info) == .failure)
+    XCTAssertEqual(composite.canLock(id: boundaryId, info: info), .failure)
 
     // Global cleanup
     composite.cleanUp()
-    XCTAssertTrue(composite.canLock(id: boundaryId, info: info) == .success)
+    XCTAssertEqual(composite.canLock(id: boundaryId, info: info), .success)
 
     // Test boundary-specific cleanup
     composite.lock(id: boundaryId, info: info)
     composite.cleanUp(id: boundaryId)
-    XCTAssertTrue(composite.canLock(id: boundaryId, info: info) == .success)
+    XCTAssertEqual(composite.canLock(id: boundaryId, info: info), .success)
   }
 
   func testcoordinationLogicTesting() {
@@ -153,7 +153,7 @@ final class LockmanCompositeBasicTests: XCTestCase {
     )
 
     let result = composite.canLock(id: boundaryId, info: info)
-    XCTAssertEqual(result , .successWithPrecedingCancellation)
+    XCTAssertEqual(result, .successWithPrecedingCancellation)
 
     // Cleanup
     priority.cleanUp(id: boundaryId)

@@ -89,16 +89,16 @@ private struct DynamicPriorityAction: LockmanPriorityBasedAction {
 final class LockmanPriorityBasedActionTests: XCTestCase {
   // MARK: - Protocol Conformance
 
-  func testtestBasicProtocolConformance() {
+  func testBasicProtocolConformance() {
     let action = TestPriorityAction.lowExclusive("testAction")
 
-    XCTAssertEqual(action.actionName , "testAction")
-    XCTAssertEqual(action.lockmanInfo.actionId , "testAction")
-    XCTAssertEqual(action.lockmanInfo.priority , .low(.exclusive))
-    XCTAssertTrue(type(of: action.strategyType) == LockmanPriorityBasedStrategy.Type.self)
+    XCTAssertEqual(action.actionName, "testAction")
+    XCTAssertEqual(action.lockmanInfo.actionId, "testAction")
+    XCTAssertEqual(action.lockmanInfo.priority, .low(.exclusive))
+    XCTAssertTrue(action.strategyType == LockmanPriorityBasedStrategy.self)
   }
 
-  func testtestAllPriorityConfigurationsWorkCorrectly() {
+  func testAllPriorityConfigurationsWorkCorrectly() {
     let testCases: [(action: TestPriorityAction, expectedPriority: LockmanPriorityBasedInfo.Priority)] = [
       (TestPriorityAction.none("none"), .none),
       (TestPriorityAction.lowExclusive("lowExc"), .low(.exclusive)),
@@ -108,14 +108,14 @@ final class LockmanPriorityBasedActionTests: XCTestCase {
     ]
 
     for (action, expectedPriority) in testCases {
-      XCTAssertEqual(action.lockmanInfo.priority , expectedPriority)
+      XCTAssertEqual(action.lockmanInfo.priority, expectedPriority)
     }
   }
 
 //  // MARK: - Strategy Resolution
 //
 //  //  func testStrategyTypeResolution() async throws {
-//    let container = LockmanStrategyContainer()
+//    let container  = LockmanStrategyContainer()
 //    let strategy = LockmanPriorityBasedStrategy()
 //    try container.register(strategy)
 //
@@ -123,26 +123,26 @@ final class LockmanPriorityBasedActionTests: XCTestCase {
 //      let action = TestPriorityAction.highExclusive()
 //
 //      let resolvedStrategy = try! container.resolve(action.strategyType)
-//      XCTAssertTrue(resolvedStrategy is AnyLockmanStrategy<LockmanPriorityBasedInfo>)
-//      XCTAssertEqual(action.strategyType , LockmanPriorityBasedStrategy.self)
+//      XCTAssertLessThan(resolvedStrategy is AnyLockmanStrategy, LockmanPriorityBasedInfo>)
+//      XCTAssertEqual(action.strategyType, LockmanPriorityBasedStrategy.self)
 //    }
 //  }
 //
 //  //  func testMultipleActionsShareSameStrategyType() {
-//    let actions = [
+//    let actions  = [
 //      TestPriorityAction.lowExclusive("action1"),
 //      TestPriorityAction.highReplaceable("action2"),
 //      TestPriorityAction.none("action3")
 //    ]
 //
 //    let strategyTypes = Set(actions.map { $0.strategyType })
-//    XCTAssertEqual(strategyTypes.count , 1)
-//    XCTAssertEqual(strategyTypes.first , LockmanPriorityBasedStrategy.self)
+//    XCTAssertEqual(strategyTypes.count, 1)
+//    XCTAssertEqual(strategyTypes.first, LockmanPriorityBasedStrategy.self)
 //  }
 
   // MARK: - Priority Helper Methods
 
-  func testtestPriorityMethodCreatesInfoWithCorrectProperties() {
+  func testPriorityMethodCreatesInfoWithCorrectProperties() {
     let action = TestPriorityAction.none("baseAction")
 
     let testCases: [(priority: LockmanPriorityBasedInfo.Priority, expectedActionId: String)] = [
@@ -153,12 +153,12 @@ final class LockmanPriorityBasedActionTests: XCTestCase {
 
     for (priority, expectedActionId) in testCases {
       let info = action.priority(priority)
-      XCTAssertEqual(info.actionId , expectedActionId)
-      XCTAssertEqual(info.priority , priority)
+      XCTAssertEqual(info.actionId, expectedActionId)
+      XCTAssertEqual(info.priority, priority)
     }
   }
 
-  func testtestPriorityMethodWithIdSuffixCreatesCorrectActionIds() {
+  func testPriorityMethodWithIdSuffixCreatesCorrectActionIds() {
     let action = TestPriorityAction.none("base")
 
     let testCases: [(suffix: String, priority: LockmanPriorityBasedInfo.Priority, expectedActionId: String)] = [
@@ -169,35 +169,35 @@ final class LockmanPriorityBasedActionTests: XCTestCase {
 
     for (suffix, priority, expectedActionId) in testCases {
       let info = action.priority(suffix, priority)
-      XCTAssertEqual(info.actionId , expectedActionId)
-      XCTAssertEqual(info.priority , priority)
+      XCTAssertEqual(info.actionId, expectedActionId)
+      XCTAssertEqual(info.priority, priority)
     }
   }
 
-  func testtestPriorityMethodCreatesIndependentInstances() {
+  func testPriorityMethodCreatesIndependentInstances() {
     let action = TestPriorityAction.highExclusive("test")
 
     // Original lockmanInfo should remain unchanged
-    XCTAssertEqual(action.lockmanInfo.priority , .high(.exclusive))
+    XCTAssertEqual(action.lockmanInfo.priority, .high(.exclusive))
 
     // New info should be different
     let newInfo = action.priority(.low(.replaceable))
-    XCTAssertEqual(newInfo.priority , .low(.replaceable))
-    XCTAssertEqual(newInfo.actionId , "test")
+    XCTAssertEqual(newInfo.priority, .low(.replaceable))
+    XCTAssertEqual(newInfo.actionId, "test")
 
     // Original should still be unchanged
-    XCTAssertEqual(action.lockmanInfo.priority , .high(.exclusive))
+    XCTAssertEqual(action.lockmanInfo.priority, .high(.exclusive))
   }
 
   // MARK: - Description and String Representation (Removed)
 
   // MARK: - Dynamic Implementation
 
-  func testtestDynamicPriorityActionSupportsRuntimeChanges() {
+  func testDynamicPriorityActionSupportsRuntimeChanges() {
     var action = DynamicPriorityAction(actionName: "dynamic", priority: .low(.exclusive))
 
-    XCTAssertEqual(action.lockmanInfo.priority , .low(.exclusive))
-    XCTAssertEqual(action.actionName , "dynamic")
+    XCTAssertEqual(action.lockmanInfo.priority, .low(.exclusive))
+    XCTAssertEqual(action.actionName, "dynamic")
 
     // Test priority updates
     let priorityUpdates: [LockmanPriorityBasedInfo.Priority] = [
@@ -208,14 +208,14 @@ final class LockmanPriorityBasedActionTests: XCTestCase {
 
     for newPriority in priorityUpdates {
       action.updatePriority(newPriority)
-      XCTAssertEqual(action.lockmanInfo.priority , newPriority)
+      XCTAssertEqual(action.lockmanInfo.priority, newPriority)
     }
   }
 
   // MARK: - Integration Tests
 
 //  //  func testIntegrationWithStrategyContainerWorksCorrectly() async throws {
-//    let container = LockmanStrategyContainer()
+//    let container  = LockmanStrategyContainer()
 //    let strategy = LockmanPriorityBasedStrategy()
 //    try container.register(strategy)
 //
@@ -227,40 +227,45 @@ final class LockmanPriorityBasedActionTests: XCTestCase {
 //
 //      for action in actions {
 //        let resolvedStrategy = try! container.resolve(action.strategyType)
-//        XCTAssertTrue(resolvedStrategy is AnyLockmanStrategy<LockmanPriorityBasedInfo>)
+//        XCTAssertLessThan(resolvedStrategy is AnyLockmanStrategy, LockmanPriorityBasedInfo>)
 //      }
 //    }
 //  }
 
-  func testtestActionInfoEqualitySemanticsWorkAsExpected() {
+  func testActionInfoEqualitySemanticsWorkAsExpected() {
     let action1 = TestPriorityAction.lowExclusive("sameAction")
     let action2 = TestPriorityAction.highReplaceable("sameAction")
     let action3 = TestPriorityAction.lowExclusive("differentAction")
 
     // Same actionId but different instances
-    XCTAssertEqual(action1.lockmanInfo.actionId , action2.lockmanInfo.actionId)
-    XCTAssertNotEqual(action1.lockmanInfo , action2.lockmanInfo) // Different uniqueId
+    XCTAssertEqual(action1.lockmanInfo.actionId, action2.lockmanInfo.actionId)
+    XCTAssertNotEqual(action1.lockmanInfo, action2.lockmanInfo) // Different uniqueId
 
     // Different actionIds
-    XCTAssertNotEqual(action1.lockmanInfo.actionId , action3.lockmanInfo.actionId)
-    XCTAssertNotEqual(action2.lockmanInfo.actionId , action3.lockmanInfo.actionId)
+    XCTAssertNotEqual(action1.lockmanInfo.actionId, action3.lockmanInfo.actionId)
+    XCTAssertNotEqual(action2.lockmanInfo.actionId, action3.lockmanInfo.actionId)
   }
 
   // MARK: - Error Handling
 
-  func testtestUnregisteredStrategyThrowsAppropriateError() async throws {
+  func testUnregisteredStrategyThrowsAppropriateError() async throws {
     let emptyContainer = LockmanStrategyContainer()
 
     await Lockman.withTestContainer(emptyContainer) {
       let action = TestPriorityAction.highExclusive()
 
-      XCTAssertTrue(throws: LockmanError.self) {
-        try emptyContainer.resolve(action.strategyType)
+      do {
+        _ = try emptyContainer.resolve(action.strategyType)
+        XCTFail("Expected error to be thrown")
+      } catch is LockmanError {
+        // Expected error
+      } catch {
+        XCTFail("Unexpected error type: \(error)")
       }
     }
   }
 
-  func testtestErrorContainsCorrectStrategyInformation() async throws {
+  func testErrorContainsCorrectStrategyInformation() async throws {
     let emptyContainer = LockmanStrategyContainer()
 
     await Lockman.withTestContainer(emptyContainer) {
@@ -268,15 +273,15 @@ final class LockmanPriorityBasedActionTests: XCTestCase {
 
       do {
         _ = try emptyContainer.resolve(action.strategyType)
-        XCTAssertTrue(Bool(false), "Should have thrown an error")
+        XCTFail("Should have thrown an error")
       } catch let error as LockmanError {
         if case let .strategyNotRegistered(strategyName) = error {
           XCTAssertTrue(strategyName.contains("LockmanPriorityBasedStrategy"))
         } else {
-          XCTAssertTrue(Bool(false), "Wrong error case")
+          XCTFail("Wrong error case")
         }
       } catch {
-        XCTAssertTrue(Bool(false), "Wrong error type")
+        XCTFail("Wrong error type")
       }
     }
   }
@@ -307,7 +312,7 @@ final class LockmanPriorityBasedActionTests: XCTestCase {
 
   // MARK: - Edge Cases
 
-  func testtestSpecialActionNamesAreHandledCorrectly() {
+  func testSpecialActionNamesAreHandledCorrectly() {
     let specialNames = [
       "",
       " ",
@@ -322,26 +327,26 @@ final class LockmanPriorityBasedActionTests: XCTestCase {
 
     for name in specialNames {
       let action = TestPriorityAction.highReplaceable(name)
-      XCTAssertEqual(action.actionName , name)
-      XCTAssertEqual(action.lockmanInfo.actionId , name)
+      XCTAssertEqual(action.actionName, name)
+      XCTAssertEqual(action.lockmanInfo.actionId, name)
 
       // Should work with priority methods
       let infoWithSuffix = action.priority("_test", .low(.exclusive))
-      XCTAssertEqual(infoWithSuffix.actionId , name + "_test")
+      XCTAssertEqual(infoWithSuffix.actionId, name + "_test")
     }
   }
 
-  func testtestEmptyActionNameEdgeCases() {
+  func testEmptyActionNameEdgeCases() {
     let action = TestPriorityAction.none("")
 
-    XCTAssertEqual(action.actionName , "")
-    XCTAssertEqual(action.lockmanInfo.actionId , "")
+    XCTAssertEqual(action.actionName, "")
+    XCTAssertEqual(action.lockmanInfo.actionId, "")
 
     // Should work with priority methods
     let infoWithSuffix = action.priority("_suffix", .high(.exclusive))
-    XCTAssertEqual(infoWithSuffix.actionId , "_suffix")
+    XCTAssertEqual(infoWithSuffix.actionId, "_suffix")
 
     let infoWithEmpty = action.priority("", .low(.replaceable))
-    XCTAssertEqual(infoWithEmpty.actionId , "")
+    XCTAssertEqual(infoWithEmpty.actionId, "")
   }
 }

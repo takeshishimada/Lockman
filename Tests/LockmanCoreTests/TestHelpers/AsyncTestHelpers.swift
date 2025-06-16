@@ -61,7 +61,7 @@ enum AsyncTestHelpers {
     }
 
     let failureMessage = message ?? "Condition did not become true within \(timeout) seconds"
-    XCTAssertTrue(false, failureMessage)
+    XCTFail(failureMessage)
   }
 
   /// Wait for a specific duration
@@ -138,17 +138,17 @@ enum LockTestHelpers {
     info: S.I
   ) throws {
     let result = strategy.canLock(id: boundaryId, info: info)
-    XCTAssertEqual(result , .success, "Should be able to acquire lock")
+    XCTAssertEqual(result, .success, "Should be able to acquire lock")
 
     strategy.lock(id: boundaryId, info: info)
 
     let lockedResult = strategy.canLock(id: boundaryId, info: info)
-    XCTAssertEqual(lockedResult , .failure, "Should not be able to acquire locked resource")
+    XCTAssertEqual(lockedResult, .failure, "Should not be able to acquire locked resource")
 
     strategy.unlock(id: boundaryId, info: info)
 
     let unlockedResult = strategy.canLock(id: boundaryId, info: info)
-    XCTAssertEqual(unlockedResult , .success, "Should be able to acquire after unlock")
+    XCTAssertEqual(unlockedResult, .success, "Should be able to acquire after unlock")
   }
 
   /// Test concurrent lock attempts
@@ -178,9 +178,9 @@ enum LockTestHelpers {
     let result = strategy.canLock(id: boundaryId, info: info)
 
     if expectedLocked {
-      XCTAssertEqual(result , .failure, "Resource should be locked")
+      XCTAssertEqual(result, .failure, "Resource should be locked")
     } else {
-      XCTAssertEqual(result , .success, "Resource should be unlocked")
+      XCTAssertEqual(result, .success, "Resource should be unlocked")
     }
   }
 }
@@ -200,7 +200,7 @@ func XCTAssertTrue<E: Error>(throws errorType: E.Type, _ block: () throws -> Voi
 }
 
 /// Custom assertion for blocks that should not throw
-func XCTAssertTrue(throws errorType: Never.Type, _ block: () throws -> Void, file: StaticString = #file, line: UInt = #line) {
+func XCTAssertEqual(throws errorType: Never.Type, _ block: () throws -> Void, file: StaticString = #file, line: UInt = #line) {
     do {
         try block()
         // Success - no error thrown
@@ -251,29 +251,29 @@ enum PerformanceTestHelpers {
   }
 
   /// Assert performance meets expectations
-  static func assertPerformance(
+  static func testassertPerformance(
     _ result: PerformanceResult,
     averageUnder: TimeInterval? = nil,
     totalUnder: TimeInterval? = nil,
     maxUnder: TimeInterval? = nil
   ) {
     if let averageThreshold = averageUnder {
-      XCTAssertTrue(
-        result.averageDuration < averageThreshold,
+      XCTAssertLessThan(
+        result.averageDuration , averageThreshold,
         "Average duration \(result.averageDuration) should be under \(averageThreshold)"
       )
     }
 
     if let totalThreshold = totalUnder {
-      XCTAssertTrue(
-        result.totalDuration < totalThreshold,
+      XCTAssertLessThan(
+        result.totalDuration , totalThreshold,
         "Total duration \(result.totalDuration) should be under \(totalThreshold)"
       )
     }
 
     if let maxThreshold = maxUnder {
-      XCTAssertTrue(
-        result.maxDuration < maxThreshold,
+      XCTAssertLessThan(
+        result.maxDuration , maxThreshold,
         "Max duration \(result.maxDuration) should be under \(maxThreshold)"
       )
     }

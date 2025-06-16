@@ -50,9 +50,7 @@ final class StrategyContainerErrorTests: XCTestCase {
     let strategy2 = MockStrategyA() // Same type, different instance
 
     // First registration should succeed
-    XCTAssertTrue(throws: Never.self) {
-      try container.register(strategy1)
-    }
+    XCTAssertNoThrow(try container.register(strategy1))
 
     // Second registration should fail with specific error
     XCTAssertTrue(throws: LockmanError.self) {
@@ -61,16 +59,16 @@ final class StrategyContainerErrorTests: XCTestCase {
 
     do {
       try container.register(strategy2)
-      XCTAssertTrue(Bool(false), "Should have thrown error")
+      XCTFail("Should have thrown error")
     } catch let error as LockmanError {
       switch error {
       case let .strategyAlreadyRegistered(strategyType):
         XCTAssertTrue(strategyType.contains("MockStrategyA"))
       default:
-        XCTAssertTrue(Bool(false), "Expected strategyAlreadyRegistered error")
+        XCTFail("Expected strategyAlreadyRegistered error")
       }
     } catch {
-      XCTAssertTrue(Bool(false), "Expected LockmanError")
+      XCTFail("Expected LockmanError")
     }
   }
 
@@ -81,11 +79,9 @@ final class StrategyContainerErrorTests: XCTestCase {
     let strategyC = MockStrategyC()
 
     // All different types should register successfully
-    XCTAssertTrue(throws: Never.self) {
-      try container.register(strategyA)
-      try container.register(strategyB)
-      try container.register(strategyC)
-    }
+    XCTAssertNoThrow(try container.register(strategyA))
+    XCTAssertNoThrow(try container.register(strategyB))
+    XCTAssertNoThrow(try container.register(strategyC))
 
     // Verify all are registered
     XCTAssertTrue(container.isRegistered(MockStrategyA.self))
@@ -101,17 +97,17 @@ final class StrategyContainerErrorTests: XCTestCase {
 
     do {
       try container.register(strategy)
-      XCTAssertTrue(Bool(false), "Should have thrown error")
+      XCTFail("Should have thrown error")
     } catch let error as LockmanError {
       switch error {
       case let .strategyAlreadyRegistered(strategyType):
         XCTAssertTrue(strategyType.contains("LockmanSingleExecutionStrategy"))
         XCTAssertGreaterThan(strategyType.count, 10) // Should be descriptive
       default:
-        XCTAssertTrue(Bool(false), "Expected strategyAlreadyRegistered error")
+        XCTFail("Expected strategyAlreadyRegistered error")
       }
     } catch {
-      XCTAssertTrue(Bool(false), "Expected LockmanError")
+      XCTFail("Expected LockmanError")
     }
   }
 
@@ -138,10 +134,8 @@ final class StrategyContainerErrorTests: XCTestCase {
     XCTAssertEqual(container.isRegistered(MockStrategyA.self), true) // Original
 
     // Test with different strategy type for mixed scenario
-    let strategyB = MockStrategyB()
-    XCTAssertTrue(throws: Never.self) {
-      try container.register(strategyB)
-    }
+    let strategyB  = MockStrategyB()
+    XCTAssertNoThrow(try container.register(strategyB))
   }
 
   func testRegisterMultipleInstancesOfSameTypeInBulkOperation() {
@@ -162,17 +156,15 @@ final class StrategyContainerErrorTests: XCTestCase {
   }
 
   func testRegisterMultipleStrategiesOfDifferentTypesIndividually() {
-    let container = LockmanStrategyContainer()
+    let container  = LockmanStrategyContainer()
     let strategyA = MockStrategyA()
     let strategyB = MockStrategyB()
     let strategyC = MockStrategyC()
 
     // Since registerAll requires same type, register different types individually
-    XCTAssertTrue(throws: Never.self) {
-      try container.register(strategyA)
-      try container.register(strategyB)
-      try container.register(strategyC)
-    }
+    XCTAssertNoThrow(try container.register(strategyA))
+    XCTAssertNoThrow(try container.register(strategyB))
+    XCTAssertNoThrow(try container.register(strategyC))
 
     // Verify all are registered
     XCTAssertTrue(container.isRegistered(MockStrategyA.self))
@@ -188,17 +180,17 @@ final class StrategyContainerErrorTests: XCTestCase {
     // Try to resolve unregistered strategy
     do {
       _ = try container.resolve(MockStrategyA.self)
-      XCTAssertTrue(Bool(false), "Should have thrown error")
+      XCTFail("Should have thrown error")
     } catch let error as LockmanError {
       switch error {
       case let .strategyNotRegistered(strategyType):
         XCTAssertTrue(strategyType.contains("MockStrategyA"))
         XCTAssertGreaterThan(strategyType.count, 5) // Should be descriptive
       default:
-        XCTAssertTrue(Bool(false), "Expected strategyNotRegistered error")
+        XCTFail("Expected strategyNotRegistered error")
       }
     } catch {
-      XCTAssertTrue(Bool(false), "Expected LockmanError")
+      XCTFail("Expected LockmanError")
     }
   }
 
@@ -208,10 +200,7 @@ final class StrategyContainerErrorTests: XCTestCase {
 
     try? container.register(strategy)
 
-    XCTAssertTrue(throws: Never.self) {
-      _ = try container.resolve(MockStrategyA.self)
-      // Type erasure returns non-optional, so if we get here, resolution succeeded
-    }
+    XCTAssertNoThrow(_ = try container.resolve(MockStrategyA.self))
   }
 
   func testResolutionErrorWithComplexStrategyNames() {
@@ -231,17 +220,17 @@ final class StrategyContainerErrorTests: XCTestCase {
         } else if strategyType == LockmanPriorityBasedStrategy.self {
           _ = try container.resolve(LockmanPriorityBasedStrategy.self)
         }
-        XCTAssertTrue(Bool(false), "Should have thrown error for \(strategyType)")
+        XCTFail("Should have thrown error for \(strategyType)")
       } catch let error as LockmanError {
         switch error {
         case let .strategyNotRegistered(name):
           XCTAssertGreaterThan(name.count, 10) // Should be descriptive
           XCTAssertTrue(name.contains("Strategy")) // Should contain strategy identifier
         default:
-          XCTAssertTrue(Bool(false), "Expected strategyNotRegistered error")
+          XCTFail("Expected strategyNotRegistered error")
         }
       } catch {
-        XCTAssertTrue(Bool(false), "Expected LockmanError")
+        XCTFail("Expected LockmanError")
       }
     }
   }
@@ -286,7 +275,7 @@ final class StrategyContainerErrorTests: XCTestCase {
   }
 
   func testConcurrentResolutionOfUnregisteredStrategies() async {
-    let container = LockmanStrategyContainer()
+    let container  = LockmanStrategyContainer()
 
     await withTaskGroup(of: Bool.self) { group in
       // Try to resolve unregistered strategy concurrently
@@ -318,7 +307,7 @@ final class StrategyContainerErrorTests: XCTestCase {
   // MARK: - Container State Integrity Tests
 
   func testFailedRegistrationPreservesExistingRegistrations() {
-    let container = LockmanStrategyContainer()
+    let container  = LockmanStrategyContainer()
     let strategyA = MockStrategyA()
     let strategyB = MockStrategyB()
     let duplicateA = MockStrategyA()
@@ -333,7 +322,7 @@ final class StrategyContainerErrorTests: XCTestCase {
     // Try to register duplicate
     do {
       try container.register(duplicateA)
-      XCTAssertTrue(Bool(false), "Should have failed")
+      XCTFail("Should have failed")
     } catch {
       // Expected
     }
@@ -343,10 +332,8 @@ final class StrategyContainerErrorTests: XCTestCase {
     XCTAssertTrue(container.isRegistered(MockStrategyB.self))
 
     // Verify we can still resolve original strategies
-    XCTAssertTrue(throws: Never.self) {
-      _ = try container.resolve(MockStrategyA.self)
-      _ = try container.resolve(MockStrategyB.self)
-    }
+    XCTAssertNoThrow(_ = try container.resolve(MockStrategyA.self))
+    XCTAssertNoThrow(_ = try container.resolve(MockStrategyB.self))
   }
 
   func testFailedBulkRegistrationPreservesContainerState() {
@@ -365,7 +352,7 @@ final class StrategyContainerErrorTests: XCTestCase {
         (LockmanStrategyId(type: MockStrategyA.self), duplicateA1),
         (LockmanStrategyId(type: MockStrategyA.self), duplicateA2),
       ])
-      XCTAssertTrue(Bool(false), "Should have failed")
+      XCTFail("Should have failed")
     } catch {
       // Expected - already registered
     }
@@ -375,9 +362,7 @@ final class StrategyContainerErrorTests: XCTestCase {
 
     // Verify we can still register different type
     let strategyB = MockStrategyB()
-    XCTAssertTrue(throws: Never.self) {
-      try container.register(strategyB)
-    }
+    XCTAssertNoThrow(try container.register(strategyB))
   }
 
   // MARK: - Error Recovery Tests
@@ -393,29 +378,23 @@ final class StrategyContainerErrorTests: XCTestCase {
     // Step 2: Try duplicate registration (should fail)
     do {
       try container.register(strategy)
-      XCTAssertTrue(Bool(false), "Should have failed")
+      XCTFail("Should have failed")
     } catch is LockmanError {
       // Expected
     } catch {
-      XCTAssertTrue(Bool(false), "Expected LockmanError")
+      XCTFail("Expected LockmanError")
     }
 
     // Step 3: Verify original registration still works
-    XCTAssertTrue(throws: Never.self) {
-      _ = try container.resolve(MockStrategyA.self)
-    }
+    XCTAssertNoThrow(_ = try container.resolve(MockStrategyA.self))
 
     // Step 4: Register different strategy (should work)
     let strategyB = MockStrategyB()
-    XCTAssertTrue(throws: Never.self) {
-      try container.register(strategyB)
-    }
+    XCTAssertNoThrow(try container.register(strategyB))
 
     // Step 5: Verify both strategies work
-    XCTAssertTrue(throws: Never.self) {
-      _ = try container.resolve(MockStrategyA.self)
-      _ = try container.resolve(MockStrategyB.self)
-    }
+    XCTAssertNoThrow(_ = try container.resolve(MockStrategyA.self))
+    XCTAssertNoThrow(_ = try container.resolve(MockStrategyB.self))
   }
 
   func testResolutionErrorRecoveryWorkflow() {
@@ -424,11 +403,11 @@ final class StrategyContainerErrorTests: XCTestCase {
     // Step 1: Try to resolve unregistered strategy (should fail)
     do {
       _ = try container.resolve(MockStrategyA.self)
-      XCTAssertTrue(Bool(false), "Should have failed")
+      XCTFail("Should have failed")
     } catch is LockmanError {
       // Expected
     } catch {
-      XCTAssertTrue(Bool(false), "Expected LockmanError")
+      XCTFail("Expected LockmanError")
     }
 
     // Step 2: Register the strategy
@@ -436,15 +415,11 @@ final class StrategyContainerErrorTests: XCTestCase {
     try? container.register(strategy)
 
     // Step 3: Now resolution should succeed
-    XCTAssertTrue(throws: Never.self) {
-      _ = try container.resolve(MockStrategyA.self)
-    }
+    XCTAssertNoThrow(_ = try container.resolve(MockStrategyA.self))
 
     // Step 4: Multiple resolutions should continue to work
     for _ in 0 ..< 5 {
-      XCTAssertTrue(throws: Never.self) {
-        _ = try container.resolve(MockStrategyA.self)
-      }
+      XCTAssertNoThrow(_ = try container.resolve(MockStrategyA.self))
     }
   }
 
@@ -473,7 +448,7 @@ final class StrategyContainerErrorTests: XCTestCase {
   }
 
   func testContainerBehaviorWithEmptyState() {
-    let container = LockmanStrategyContainer()
+    let container  = LockmanStrategyContainer()
 
     // All isRegistered checks should return false
     XCTAssertEqual(container.isRegistered(MockStrategyA.self), false)
@@ -482,7 +457,7 @@ final class StrategyContainerErrorTests: XCTestCase {
 
     // All resolve attempts should throw errors
     XCTAssertTrue(throws: LockmanError.self) {
-      _ = try container.resolve(MockStrategyA.self)
+      _  = try container.resolve(MockStrategyA.self)
     }
 
     XCTAssertTrue(throws: LockmanError.self) {

@@ -6,7 +6,7 @@ import XCTest
 final class LockmanGroupCoordinatedInfoTests: XCTestCase {
   // MARK: - Initialization Tests
 
-  func testtestInitializeWithLockmanActionId() {
+  func testInitializeWithLockmanActionId() {
     let actionId = LockmanActionId("testAction")
     let info = LockmanGroupCoordinatedInfo(
       actionId: actionId,
@@ -14,27 +14,27 @@ final class LockmanGroupCoordinatedInfoTests: XCTestCase {
       coordinationRole: .leader
     )
 
-    XCTAssertEqual(info.actionId , actionId)
-    XCTAssertEqual(info.groupIds , ["testGroup"])
-    XCTAssertEqual(info.coordinationRole , .leader)
-    XCTAssertNotEqual(info.uniqueId , UUID())
+    XCTAssertEqual(info.actionId, actionId)
+    XCTAssertEqual(info.groupIds, ["testGroup"])
+    XCTAssertEqual(info.coordinationRole, .leader)
+    XCTAssertNotEqual(info.uniqueId, UUID())
   }
 
-  func testtestInitializeWithStringActionId() {
-    let info = LockmanGroupCoordinatedInfo(
+  func testInitializeWithStringActionId() {
+    let info  = LockmanGroupCoordinatedInfo(
       actionId: LockmanActionId("testAction"),
       groupId: "testGroup",
       coordinationRole: .member
     )
 
-    XCTAssertEqual(info.actionId , "testAction")
-    XCTAssertEqual(info.groupIds , ["testGroup"])
-    XCTAssertEqual(info.coordinationRole , .member)
-    XCTAssertNotEqual(info.uniqueId , UUID())
+    XCTAssertEqual(info.actionId, "testAction")
+    XCTAssertEqual(info.groupIds, ["testGroup"])
+    XCTAssertEqual(info.coordinationRole, .member)
+    XCTAssertNotEqual(info.uniqueId, UUID())
   }
 
-  func testtestEachInstanceHasUniqueId() {
-    let info1 = LockmanGroupCoordinatedInfo(
+  func testEachInstanceHasUniqueId() {
+    let info1  = LockmanGroupCoordinatedInfo(
       actionId: LockmanActionId("action"),
       groupId: "group",
       coordinationRole: .leader
@@ -47,59 +47,59 @@ final class LockmanGroupCoordinatedInfoTests: XCTestCase {
     )
 
     // Same properties but different unique IDs
-    XCTAssertEqual(info1.actionId , info2.actionId)
-    XCTAssertEqual(info1.groupIds , info2.groupIds)
-    XCTAssertEqual(info1.coordinationRole , info2.coordinationRole)
-    XCTAssertNotEqual(info1.uniqueId , info2.uniqueId)
+    XCTAssertEqual(info1.actionId, info2.actionId)
+    XCTAssertEqual(info1.groupIds, info2.groupIds)
+    XCTAssertEqual(info1.coordinationRole, info2.coordinationRole)
+    XCTAssertNotEqual(info1.uniqueId, info2.uniqueId)
   }
 
   // MARK: - GroupCoordinationRole Tests
 
-  func testtestGroupCoordinationRoleValues() {
-    let leader = GroupCoordinationRole.leader
+  func testGroupCoordinationRoleValues() {
+    let leader  = GroupCoordinationRole.leader
     let member = GroupCoordinationRole.member
 
-    XCTAssertEqual(leader.rawValue , "leader")
-    XCTAssertEqual(member.rawValue , "member")
+    XCTAssertEqual(leader.rawValue, "leader")
+    XCTAssertEqual(member.rawValue, "member")
 
     // All cases
-    XCTAssertEqual(GroupCoordinationRole.allCases.count , 2)
+    XCTAssertEqual(GroupCoordinationRole.allCases.count, 2)
     XCTAssertTrue(GroupCoordinationRole.allCases.contains(.leader))
     XCTAssertTrue(GroupCoordinationRole.allCases.contains(.member))
   }
 
-  func testtestGroupCoordinationRoleIsSendableAndHashable() {
-    let roles: Set<GroupCoordinationRole> = [.leader, .member, .leader]
-    XCTAssertEqual(roles.count , 2) // Duplicate .leader removed
+  func testGroupCoordinationRoleIsSendableAndHashable() {
+    let roles: Set<GroupCoordinationRole>  = [.leader, .member, .leader]
+    XCTAssertEqual(roles.count, 2) // Duplicate .leader removed
 
     // Can be used in dictionaries
     let roleMap: [GroupCoordinationRole: String] = [
       .leader: "Start",
       .member: "Join",
     ]
-    XCTAssertEqual(roleMap[.leader] , "Start")
-    XCTAssertEqual(roleMap[.member] , "Join")
+    XCTAssertEqual(roleMap[.leader], "Start")
+    XCTAssertEqual(roleMap[.member], "Join")
   }
 
   // MARK: - Equatable Tests
 
-  func testtestEqualityBasedOnUniqueIdOnly() {
-    let info1 = LockmanGroupCoordinatedInfo(
+  func testEqualityBasedOnUniqueIdOnly() {
+    let info1  = LockmanGroupCoordinatedInfo(
       actionId: LockmanActionId("action1"),
       groupId: "group1",
       coordinationRole: .leader
     )
 
     // Same instance equals itself
-    XCTAssertEqual(info1 , info1)
+    XCTAssertEqual(info1, info1)
 
     // Different instance with same properties is not equal
-    let info2 = LockmanGroupCoordinatedInfo(
+    let info2  = LockmanGroupCoordinatedInfo(
       actionId: LockmanActionId("action1"),
       groupId: "group1",
       coordinationRole: .leader
     )
-    XCTAssertNotEqual(info1 , info2)
+    XCTAssertNotEqual(info1, info2)
 
     // Different properties but would never have same uniqueId
     let info3 = LockmanGroupCoordinatedInfo(
@@ -107,10 +107,10 @@ final class LockmanGroupCoordinatedInfoTests: XCTestCase {
       groupId: "group2",
       coordinationRole: .member
     )
-    XCTAssertNotEqual(info1 , info3)
+    XCTAssertNotEqual(info1, info3)
   }
 
-  func testtestArrayOperationsWithEquality() {
+  func testArrayOperationsWithEquality() {
     let info1 = LockmanGroupCoordinatedInfo(
       actionId: LockmanActionId("action"),
       groupId: "group",
@@ -134,13 +134,13 @@ final class LockmanGroupCoordinatedInfoTests: XCTestCase {
 
     // Filter
     let filtered = array.filter { $0 == info1 }
-    XCTAssertEqual(filtered.count , 2) // info1 appears twice
+    XCTAssertEqual(filtered.count, 2) // info1 appears twice
   }
 
   // MARK: - LockmanInfo Protocol Tests
 
-  func testtestConformsToLockmanInfoProtocol() {
-    let info = LockmanGroupCoordinatedInfo(
+  func testConformsToLockmanInfoProtocol() {
+    let info  = LockmanGroupCoordinatedInfo(
       actionId: LockmanActionId("test"),
       groupId: "group",
       coordinationRole: .member
@@ -148,51 +148,51 @@ final class LockmanGroupCoordinatedInfoTests: XCTestCase {
 
     // Can be used as LockmanInfo
     let lockmanInfo: any LockmanInfo = info
-    XCTAssertEqual(lockmanInfo.actionId , "test")
-    XCTAssertEqual(lockmanInfo.uniqueId , info.uniqueId)
+    XCTAssertEqual(lockmanInfo.actionId, "test")
+    XCTAssertEqual(lockmanInfo.uniqueId, info.uniqueId)
   }
 
   // MARK: - Edge Cases
 
-  func testtestEmptyStrings() {
-    let info = LockmanGroupCoordinatedInfo(
+  func testEmptyStrings() {
+    let info  = LockmanGroupCoordinatedInfo(
       actionId: LockmanActionId(""),
       groupId: "",
       coordinationRole: .leader
     )
 
-    XCTAssertEqual(info.actionId , "")
-    XCTAssertEqual(info.groupIds , [""])
-    XCTAssertEqual(info.coordinationRole , .leader)
+    XCTAssertEqual(info.actionId, "")
+    XCTAssertEqual(info.groupIds, [""])
+    XCTAssertEqual(info.coordinationRole, .leader)
   }
 
-  func testtestSpecialCharactersInStrings() {
-    let info = LockmanGroupCoordinatedInfo(
+  func testSpecialCharactersInStrings() {
+    let info  = LockmanGroupCoordinatedInfo(
       actionId: LockmanActionId("action@#$%^&*()"),
       groupId: "group-with-特殊文字-🔒",
       coordinationRole: .member
     )
 
-    XCTAssertEqual(info.actionId , "action@#$%^&*()")
-    XCTAssertEqual(info.groupIds , ["group-with-特殊文字-🔒"])
+    XCTAssertEqual(info.actionId, "action@#$%^&*()")
+    XCTAssertEqual(info.groupIds, ["group-with-特殊文字-🔒"])
   }
 
-  func testtestVeryLongStrings() {
-    let longString = String(repeating: "x", count: 1000)
+  func testVeryLongStrings() {
+    let longString  = String(repeating: "x", count: 1000)
     let info = LockmanGroupCoordinatedInfo(
       actionId: longString,
       groupId: longString,
       coordinationRole: .leader
     )
 
-    XCTAssertEqual(info.actionId , longString)
-    XCTAssertEqual(info.groupIds , [longString])
+    XCTAssertEqual(info.actionId, longString)
+    XCTAssertEqual(info.groupIds, [longString])
   }
 
   // MARK: - Sendable Conformance
 
-  func testtestSendableAcrossConcurrentContexts() async throws {
-    let info = LockmanGroupCoordinatedInfo(
+  func testSendableAcrossConcurrentContexts() async {
+    let info  = LockmanGroupCoordinatedInfo(
       actionId: LockmanActionId("concurrent"),
       groupId: "test",
       coordinationRole: .leader
@@ -211,22 +211,22 @@ final class LockmanGroupCoordinatedInfoTests: XCTestCase {
         results.append(result)
       }
 
-      XCTAssertEqual(results.count , 10)
+      XCTAssertEqual(results.count, 10)
       XCTAssertTrue(results.allSatisfy { $0.contains("concurrent-test-leader") })
     }
   }
 
   // MARK: - Multiple Groups Tests
 
-  func testtestInitializeWithMultipleGroups() {
-    let info = LockmanGroupCoordinatedInfo(
+  func testInitializeWithMultipleGroups() {
+    let info  = LockmanGroupCoordinatedInfo(
       actionId: LockmanActionId("multi"),
       groupIds: ["group1", "group2", "group3"],
       coordinationRole: .member
     )
 
-    XCTAssertEqual(info.actionId , "multi")
-    XCTAssertEqual(info.groupIds , ["group1", "group2", "group3"])
-    XCTAssertEqual(info.coordinationRole , .member)
+    XCTAssertEqual(info.actionId, "multi")
+    XCTAssertEqual(info.groupIds, ["group1", "group2", "group3"])
+    XCTAssertEqual(info.coordinationRole, .member)
   }
 }

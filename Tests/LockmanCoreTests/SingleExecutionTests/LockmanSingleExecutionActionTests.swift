@@ -66,15 +66,15 @@ final class LockmanSingleExecutionActionTests: XCTestCase {
     let action = SimpleAction()
 
     // Test actionName
-    XCTAssertEqual(action.actionName , "simpleAction")
+    XCTAssertEqual(action.actionName, "simpleAction")
 
     // Test automatic strategyId
-    XCTAssertEqual(action.strategyId , .singleExecution)
+    XCTAssertEqual(action.strategyId, .singleExecution)
 
     // Test automatic lockmanInfo
-    let info = action.lockmanInfo
-    XCTAssertEqual(info.actionId , "simpleAction")
-    XCTAssertNotEqual(info.uniqueId , UUID())
+    let info  = action.lockmanInfo
+    XCTAssertEqual(info.actionId, "simpleAction")
+    XCTAssertNotEqual(info.uniqueId, UUID())
   }
 
   func testparameterizedActionUniqueNames() {
@@ -84,59 +84,59 @@ final class LockmanSingleExecutionActionTests: XCTestCase {
     let action4 = ParameterizedAction.deletePost(postId: 789)
 
     // Each should have unique actionName
-    XCTAssertEqual(action1.actionName , "fetchUser_123")
-    XCTAssertEqual(action2.actionName , "fetchUser_456")
-    XCTAssertEqual(action3.actionName , "updateProfile_123")
-    XCTAssertEqual(action4.actionName , "deletePost_789")
+    XCTAssertEqual(action1.actionName, "fetchUser_123")
+    XCTAssertEqual(action2.actionName, "fetchUser_456")
+    XCTAssertEqual(action3.actionName, "updateProfile_123")
+    XCTAssertEqual(action4.actionName, "deletePost_789")
 
     // All should use the same strategy ID
-    XCTAssertEqual(action1.strategyId , .singleExecution)
-    XCTAssertEqual(action2.strategyId , .singleExecution)
-    XCTAssertEqual(action3.strategyId , .singleExecution)
-    XCTAssertEqual(action4.strategyId , .singleExecution)
+    XCTAssertEqual(action1.strategyId, .singleExecution)
+    XCTAssertEqual(action2.strategyId, .singleExecution)
+    XCTAssertEqual(action3.strategyId, .singleExecution)
+    XCTAssertEqual(action4.strategyId, .singleExecution)
 
     // LockmanInfo should reflect the actionName
-    XCTAssertEqual(action1.lockmanInfo.actionId , "fetchUser_123")
-    XCTAssertEqual(action2.lockmanInfo.actionId , "fetchUser_456")
-    XCTAssertEqual(action3.lockmanInfo.actionId , "updateProfile_123")
-    XCTAssertEqual(action4.lockmanInfo.actionId , "deletePost_789")
+    XCTAssertEqual(action1.lockmanInfo.actionId, "fetchUser_123")
+    XCTAssertEqual(action2.lockmanInfo.actionId, "fetchUser_456")
+    XCTAssertEqual(action3.lockmanInfo.actionId, "updateProfile_123")
+    XCTAssertEqual(action4.lockmanInfo.actionId, "deletePost_789")
   }
 
   func testsharedLockActionBehavior() {
-    let saveAction = SharedLockAction.save(data: "test data")
+    let saveAction  = SharedLockAction.save(data: "test data")
     let loadAction = SharedLockAction.load
     let resetAction = SharedLockAction.reset
 
     // Save and load share the same actionName
-    XCTAssertEqual(saveAction.actionName , "sharedOperation")
-    XCTAssertEqual(loadAction.actionName , "sharedOperation")
-    XCTAssertEqual(resetAction.actionName , "reset")
+    XCTAssertEqual(saveAction.actionName, "sharedOperation")
+    XCTAssertEqual(loadAction.actionName, "sharedOperation")
+    XCTAssertEqual(resetAction.actionName, "reset")
 
     // They should conflict with each other
-    XCTAssertEqual(saveAction.lockmanInfo.actionId , loadAction.lockmanInfo.actionId)
-    XCTAssertNotEqual(saveAction.lockmanInfo.actionId , resetAction.lockmanInfo.actionId)
+    XCTAssertEqual(saveAction.lockmanInfo.actionId, loadAction.lockmanInfo.actionId)
+    XCTAssertNotEqual(saveAction.lockmanInfo.actionId, resetAction.lockmanInfo.actionId)
   }
 
   // MARK: - LockmanAction Protocol Tests
 
   func testsingleExecutionActionIsLockmanAction() {
     // Test that SingleExecutionAction conforms to LockmanAction
-    let action: any LockmanAction = SimpleAction()
+    let action: any LockmanAction  = SimpleAction()
 
     // Verify we can store it as LockmanAction
     let actions: [any LockmanAction] = [action]
-    XCTAssertEqual(actions.count , 1)
+    XCTAssertEqual(actions.count, 1)
 
     // Test type constraints are satisfied
-    let info = action.lockmanInfo as? LockmanSingleExecutionInfo
-    XCTAssertNotEqual(info , nil)
-    XCTAssertEqual(info?.actionId , "simpleAction")
+    let info  = action.lockmanInfo as? LockmanSingleExecutionInfo
+    XCTAssertNotNil(info )
+    XCTAssertEqual(info?.actionId, "simpleAction")
   }
 
   // MARK: - Integration Tests
 
-  func testintegrationWithStrategyContainer() async throws {
-    let container = LockmanStrategyContainer()
+  func testintegrationWithStrategyContainer() async {
+    let container  = LockmanStrategyContainer()
     try? container.register(LockmanSingleExecutionStrategy.shared)
 
     await Lockman.withTestContainer(container) {
@@ -153,13 +153,13 @@ final class LockmanSingleExecutionActionTests: XCTestCase {
         let boundaryId = "test-boundary"
         let info = action.lockmanInfo
 
-        XCTAssertTrue(strategy.canLock(id: boundaryId, info: info) == .success)
+        XCTAssertEqual(strategy.canLock(id: boundaryId, info: info), .success)
         strategy.lock(id: boundaryId, info: info)
-        XCTAssertTrue(strategy.canLock(id: boundaryId, info: info) == .failure)
+        XCTAssertEqual(strategy.canLock(id: boundaryId, info: info), .failure)
         strategy.unlock(id: boundaryId, info: info)
-        XCTAssertTrue(strategy.canLock(id: boundaryId, info: info) == .success)
+        XCTAssertEqual(strategy.canLock(id: boundaryId, info: info), .success)
       } catch {
-        XCTAssertTrue(Bool(false), "Strategy resolution should succeed")
+        XCTFail("Strategy resolution should succeed")
       }
     }
   }
@@ -173,15 +173,15 @@ final class LockmanSingleExecutionActionTests: XCTestCase {
     let action2 = ParameterizedAction.fetchUser(id: "123")
 
     // First lock should succeed
-    XCTAssertTrue(strategy.canLock(id: boundaryId, info: action1.lockmanInfo) == .success)
+    XCTAssertEqual(strategy.canLock(id: boundaryId, info: action1.lockmanInfo), .success)
     strategy.lock(id: boundaryId, info: action1.lockmanInfo)
 
     // Second lock should fail (boundary is locked)
-    XCTAssertTrue(strategy.canLock(id: boundaryId, info: action2.lockmanInfo) == .failure)
+    XCTAssertEqual(strategy.canLock(id: boundaryId, info: action2.lockmanInfo), .failure)
 
     // Different action should also fail (boundary is locked)
     let action3 = ParameterizedAction.fetchUser(id: "456")
-    XCTAssertTrue(strategy.canLock(id: boundaryId, info: action3.lockmanInfo) == .failure)
+    XCTAssertEqual(strategy.canLock(id: boundaryId, info: action3.lockmanInfo), .failure)
 
     // Cleanup
     strategy.cleanUp()
@@ -199,14 +199,14 @@ final class LockmanSingleExecutionActionTests: XCTestCase {
     }
 
     let action = EmptyNameAction()
-    XCTAssertEqual(action.actionName , "")
-    XCTAssertEqual(action.lockmanInfo.actionId , "")
-    XCTAssertEqual(action.strategyId , .singleExecution)
+    XCTAssertEqual(action.actionName, "")
+    XCTAssertEqual(action.lockmanInfo.actionId, "")
+    XCTAssertEqual(action.strategyId, .singleExecution)
   }
 
   func testunicodeActionNameHandling() {
     struct UnicodeAction: LockmanSingleExecutionAction {
-      let actionName = "🔒アクション🚀"
+      let actionName  = "🔒アクション🚀"
 
       var lockmanInfo: LockmanSingleExecutionInfo {
         .init(actionId: actionName, mode: .boundary)
@@ -214,13 +214,13 @@ final class LockmanSingleExecutionActionTests: XCTestCase {
     }
 
     let action = UnicodeAction()
-    XCTAssertEqual(action.actionName , "🔒アクション🚀")
-    XCTAssertEqual(action.lockmanInfo.actionId , "🔒アクション🚀")
+    XCTAssertEqual(action.actionName, "🔒アクション🚀")
+    XCTAssertEqual(action.lockmanInfo.actionId, "🔒アクション🚀")
   }
 
   func testveryLongActionNameHandling() {
     struct LongNameAction: LockmanSingleExecutionAction {
-      let actionName = String(repeating: "VeryLongActionName", count: 100)
+      let actionName  = String(repeating: "VeryLongActionName", count: 100)
 
       var lockmanInfo: LockmanSingleExecutionInfo {
         .init(actionId: actionName, mode: .boundary)
@@ -228,17 +228,17 @@ final class LockmanSingleExecutionActionTests: XCTestCase {
     }
 
     let action = LongNameAction()
-    XCTAssertEqual(action.actionName.count , 1800)
-    XCTAssertEqual(action.lockmanInfo.actionId , action.actionName)
+    XCTAssertEqual(action.actionName.count, 1800)
+    XCTAssertEqual(action.lockmanInfo.actionId, action.actionName)
   }
 
   func testactionNameConsistencyAcrossInstances() {
-    let action1 = SimpleAction()
+    let action1  = SimpleAction()
     let action2 = SimpleAction()
 
-    XCTAssertEqual(action1.actionName , action2.actionName)
-    XCTAssertEqual(action1.lockmanInfo.actionId , action2.lockmanInfo.actionId)
+    XCTAssertEqual(action1.actionName, action2.actionName)
+    XCTAssertEqual(action1.lockmanInfo.actionId, action2.lockmanInfo.actionId)
     // But unique IDs should be different
-    XCTAssertNotEqual(action1.lockmanInfo.uniqueId , action2.lockmanInfo.uniqueId)
+    XCTAssertNotEqual(action1.lockmanInfo.uniqueId, action2.lockmanInfo.uniqueId)
   }
 }

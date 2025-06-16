@@ -118,7 +118,7 @@ final class LockmanUnlockTests: XCTestCase {
       let name: String
     }
 
-    let container = LockmanStrategyContainer()
+    let container  = LockmanStrategyContainer()
     let boundaryId = AnotherBoundaryId(name: "another")
     let info = TestLockmanInfo(actionId: "action")
     let strategy = MockLockmanStrategy()
@@ -137,7 +137,7 @@ final class LockmanUnlockTests: XCTestCase {
   }
 
   func testInitializeWithDifferentInfoTypes() async throws {
-    let container = LockmanStrategyContainer()
+    let container  = LockmanStrategyContainer()
 
     // Register all strategies using the new protocol-based approach
     let singleStrategy = LockmanSingleExecutionStrategy.shared
@@ -184,7 +184,7 @@ final class LockmanUnlockTests: XCTestCase {
   // MARK: - CallAsFunction Tests
 
   func testCallAsFunctionInvokesStrategyUnlock() async throws {
-    let container = LockmanStrategyContainer()
+    let container  = LockmanStrategyContainer()
     let boundaryId = TestBoundaryId("test")
     let info = TestLockmanInfo(actionId: "action")
     let strategy = MockLockmanStrategy()
@@ -201,7 +201,7 @@ final class LockmanUnlockTests: XCTestCase {
 
       XCTAssertEqual(strategy.unlockCallCount, 1)
 
-      let calls = strategy.getUnlockCalls()
+      let calls  = strategy.getUnlockCalls()
       XCTAssertEqual(calls.count, 1)
       XCTAssertEqual((calls[0].boundaryId as? TestBoundaryId)?.value, "test")
       XCTAssertEqual(calls[0].info.actionId, "action")
@@ -209,7 +209,7 @@ final class LockmanUnlockTests: XCTestCase {
   }
 
   func testCallAsFunctionCanBeCalledMultipleTimes() async throws {
-    let container = LockmanStrategyContainer()
+    let container  = LockmanStrategyContainer()
     let boundaryId = TestBoundaryId("test")
     let info = TestLockmanInfo(actionId: "action")
     let strategy = MockLockmanStrategy()
@@ -226,7 +226,7 @@ final class LockmanUnlockTests: XCTestCase {
 
       XCTAssertEqual(strategy.unlockCallCount, 3)
 
-      let calls = strategy.getUnlockCalls()
+      let calls  = strategy.getUnlockCalls()
       XCTAssertEqual(calls.count, 3)
 
       // All calls should have same parameters
@@ -238,7 +238,7 @@ final class LockmanUnlockTests: XCTestCase {
   }
 
   func testCallAsFunctionWithDifferentBoundaryIds() async throws {
-    let container = LockmanStrategyContainer()
+    let container  = LockmanStrategyContainer()
     let boundaryId1 = TestBoundaryId("test1")
     let boundaryId2 = TestBoundaryId("test2")
     let info = TestLockmanInfo(actionId: "action")
@@ -255,7 +255,7 @@ final class LockmanUnlockTests: XCTestCase {
 
       XCTAssertEqual(strategy.unlockCallCount, 2)
 
-      let calls = strategy.getUnlockCalls()
+      let calls  = strategy.getUnlockCalls()
       XCTAssertEqual(calls.count, 2)
       XCTAssertEqual((calls[0].boundaryId as? TestBoundaryId)?.value, "test1")
       XCTAssertEqual((calls[1].boundaryId as? TestBoundaryId)?.value, "test2")
@@ -263,7 +263,7 @@ final class LockmanUnlockTests: XCTestCase {
   }
 
   func testCallAsFunctionWithDifferentInfo() async throws {
-    let container = LockmanStrategyContainer()
+    let container  = LockmanStrategyContainer()
     let boundaryId = TestBoundaryId("test")
     let info1 = TestLockmanInfo(actionId: "action1")
     let info2 = TestLockmanInfo(actionId: "action2")
@@ -280,7 +280,7 @@ final class LockmanUnlockTests: XCTestCase {
 
       XCTAssertEqual(strategy.unlockCallCount, 2)
 
-      let calls = strategy.getUnlockCalls()
+      let calls  = strategy.getUnlockCalls()
       XCTAssertEqual(calls.count, 2)
       XCTAssertEqual(calls[0].info.actionId, "action1")
       XCTAssertEqual(calls[1].info.actionId, "action2")
@@ -288,7 +288,7 @@ final class LockmanUnlockTests: XCTestCase {
   }
 
   func testCallAsFunctionWithDifferentStrategies() async throws {
-    let container = LockmanStrategyContainer()
+    let container  = LockmanStrategyContainer()
     let boundaryId = TestBoundaryId("test")
     let info = TestLockmanInfo(actionId: "action")
     let strategy1 = MockLockmanStrategy()
@@ -311,7 +311,7 @@ final class LockmanUnlockTests: XCTestCase {
       XCTAssertEqual(strategy1.unlockCallCount, 1)
       XCTAssertEqual(strategy2.unlockCallCount, 1)
 
-      let calls1 = strategy1.getUnlockCalls()
+      let calls1  = strategy1.getUnlockCalls()
       let calls2 = strategy2.getUnlockCalls()
 
       XCTAssertEqual(calls1.count, 1)
@@ -324,7 +324,7 @@ final class LockmanUnlockTests: XCTestCase {
   // MARK: - Integration Tests with Real Strategies
 
   func testIntegrationWithLockmanSingleExecutionStrategy() async throws {
-    let container = LockmanStrategyContainer()
+    let container  = LockmanStrategyContainer()
     let strategy = LockmanSingleExecutionStrategy.shared
     try? container.register(strategy)
 
@@ -381,7 +381,7 @@ final class LockmanUnlockTests: XCTestCase {
         let autoUnlock = LockmanAutoUnlock(unlockToken: unlockToken)
 
         XCTAssertEqual(strategy.unlockCallCount, 0)
-        let isLocked = await autoUnlock.isLocked
+        let isLocked  = await autoUnlock.isLocked
         XCTAssertEqual(isLocked, true)
 
         // autoUnlock will be deallocated here, triggering deinit
@@ -397,7 +397,7 @@ final class LockmanUnlockTests: XCTestCase {
   // MARK: - Sendable Conformance Tests
 
   func testSendableAcrossConcurrentContexts() async throws {
-    let container = LockmanStrategyContainer()
+    let container  = LockmanStrategyContainer()
     let boundaryId = TestBoundaryId("concurrent")
     let info = TestLockmanInfo(actionId: "action")
     let strategy = MockLockmanStrategy()
@@ -421,7 +421,7 @@ final class LockmanUnlockTests: XCTestCase {
   }
 
   func testConcurrentUnlockCallsAreThreadSafe() async throws {
-    let container = LockmanStrategyContainer()
+    let container  = LockmanStrategyContainer()
     let boundaryId = TestBoundaryId("thread-safe")
     let info = TestLockmanInfo(actionId: "action")
     let strategy = MockLockmanStrategy()
@@ -443,7 +443,7 @@ final class LockmanUnlockTests: XCTestCase {
       // All calls should be recorded
       XCTAssertEqual(strategy.unlockCallCount, 100)
 
-      let calls = strategy.getUnlockCalls()
+      let calls  = strategy.getUnlockCalls()
       XCTAssertEqual(calls.count, 100)
 
       // All calls should have correct parameters
@@ -457,7 +457,7 @@ final class LockmanUnlockTests: XCTestCase {
   // MARK: - Memory Management Tests
 
   func testUnlockInstanceLifecycle() async throws {
-    let container = LockmanStrategyContainer()
+    let container  = LockmanStrategyContainer()
     let boundaryId = TestBoundaryId("lifecycle")
     let info = TestLockmanInfo(actionId: "action")
     let strategy = MockLockmanStrategy()
@@ -472,7 +472,7 @@ final class LockmanUnlockTests: XCTestCase {
       XCTAssertEqual(strategy.unlockCallCount, 1)
 
       // Release the unlock instance
-      unlock = nil
+      unlock  = nil
 
       // Strategy should still have the call recorded
       XCTAssertEqual(strategy.unlockCallCount, 1)
@@ -498,7 +498,7 @@ final class LockmanUnlockTests: XCTestCase {
 
       XCTAssertEqual(strategy.unlockCallCount, 3)
 
-      let calls = strategy.getUnlockCalls()
+      let calls  = strategy.getUnlockCalls()
       XCTAssertEqual(calls.count, 3)
 
       // All should have the same parameters

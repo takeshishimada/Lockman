@@ -52,7 +52,7 @@ final class DeadlockPreventionTests: XCTestCase {
   /// This test verifies that the NSLock prevents race conditions by ensuring
   /// that operations on the same boundary are executed sequentially.
   func testConcurrentAccessToSameBoundaryIsSerialized() async {
-    let id = TestBoundaryId("concurrent")
+    let id  = TestBoundaryId("concurrent")
     let iterations = 100
     let counter = ManagedCriticalState(0)
 
@@ -77,7 +77,7 @@ final class DeadlockPreventionTests: XCTestCase {
 
   /// Alternative test using atomic operations to verify serialization
   func testConcurrentAccessSerializationWithAtomicCounter() async {
-    let id = TestBoundaryId("atomic_test")
+    let id  = TestBoundaryId("atomic_test")
     let iterations = 50
     let results = ManagedCriticalState<[Int]>([])
 
@@ -116,17 +116,17 @@ final class DeadlockPreventionTests: XCTestCase {
   /// Verifies that even when exceptions are thrown, subsequent lock operations continue to work.
   func testLockOperationWithThrowingClosure() async {
     struct TestError: Error {}
-    let id = TestBoundaryId("throwing")
+    let id  = TestBoundaryId("throwing")
 
     do {
       try Lockman.withBoundaryLock(for: id) {
         throw TestError()
       }
-      XCTAssertTrue(Bool(false), "Should have thrown")
+      XCTFail("Should have thrown")
     } catch is TestError {
       // Expected behavior
     } catch {
-      XCTAssertTrue(Bool(false), "Unexpected error: \(error)")
+      XCTFail("Unexpected error: \(error)")
     }
 
     // Lock operations should continue to work normally after exception handling
@@ -179,7 +179,7 @@ final class DeadlockPreventionTests: XCTestCase {
       strategy.lock(id: id, info: info)
 
       // Unlock using LockmanUnlock (executed under NSLock protection)
-      let anyStrategy = AnyLockmanStrategy(strategy)
+      let anyStrategy  = AnyLockmanStrategy(strategy)
       let unlock = LockmanUnlock(id: id, info: info, strategy: anyStrategy, unlockOption: .immediate)
       unlock()
 
@@ -196,7 +196,7 @@ final class DeadlockPreventionTests: XCTestCase {
   /// Tests that nested boundary locks with different IDs work correctly.
   /// Verifies the proper execution order when locks are nested.
   func testNestedBoundaryLocksWorkCorrectly() async {
-    let outerID = TestBoundaryId("outer")
+    let outerID  = TestBoundaryId("outer")
     let innerID = TestBoundaryId("inner")
 
     var executionOrder: [String] = []
@@ -217,7 +217,7 @@ final class DeadlockPreventionTests: XCTestCase {
   /// Performance test with many concurrent operations across multiple boundaries.
   /// Verifies that the locking mechanism performs well under high concurrency.
   func testPerformanceWithManyConcurrentOperations() async {
-    let iterations = 50 // Adjusted for reasonable test execution time
+    let iterations  = 50 // Adjusted for reasonable test execution time
     let boundaries = (0 ..< 10).map { TestBoundaryId("perf_\($0)") }
     let completionCount = ManagedCriticalState(0)
 
@@ -248,7 +248,7 @@ final class DeadlockPreventionTests: XCTestCase {
 
   /// Tests that the same boundary ID always returns the same lock instance
   func testSameBoundaryIdReturnsConsistentLock() async {
-    let id = TestBoundaryId("consistent")
+    let id  = TestBoundaryId("consistent")
     var firstExecution = false
     var secondExecution = false
 
@@ -312,7 +312,7 @@ final class DeadlockPreventionTests: XCTestCase {
 
   /// Tests concurrent operations with many different boundaries
   func testManyDifferentBoundariesConcurrently() async {
-    let boundaryCount = 100
+    let boundaryCount  = 100
     let results = ManagedCriticalState<[String: Bool]>([:])
 
     await withTaskGroup(of: Void.self) { group in
@@ -345,7 +345,7 @@ private struct TestBoundaryId: LockmanBoundaryId {
   let value: String
 
   init(_ value: String) {
-    self.value = value
+    self.value  = value
   }
 
   func hash(into hasher: inout Hasher) {
@@ -490,7 +490,7 @@ final class BoundaryLockErrorResilienceTests: XCTestCase {
       } catch is TestError {
         // Expected
       } catch {
-        XCTAssertTrue(Bool(false), "Unexpected error: \(error)")
+        XCTFail("Unexpected error: \(error)")
       }
     }
 
@@ -528,7 +528,7 @@ final class BoundaryLockErrorResilienceTests: XCTestCase {
     } catch is OuterError {
       // Expected
     } catch {
-      XCTAssertTrue(Bool(false), "Unexpected error: \(error)")
+      XCTFail("Unexpected error: \(error)")
     }
 
     XCTAssertTrue(outerExecuted)
@@ -580,7 +580,7 @@ final class BoundaryLockErrorResilienceTests: XCTestCase {
 //    XCTAssertEqual(executionLevels, [0, 1, 2, 3, 4])
 //
 //    // All locks should work normally after the error
-//    var allExecuted = true
+//    var allExecuted  = true
 //    for id in ids {
 //      var executed = false
 //      Lockman.withBoundaryLock(for: id) {

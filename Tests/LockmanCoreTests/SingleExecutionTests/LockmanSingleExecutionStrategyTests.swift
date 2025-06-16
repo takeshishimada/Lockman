@@ -26,37 +26,37 @@ private struct TestBoundaryId: LockmanBoundaryId {
 final class LockmanSingleExecutionStrategyTests: XCTestCase {
   // MARK: - Initialization Tests
 
-  func testtestSharedInstanceIsSingleton() {
+  func testSharedInstanceIsSingleton() {
     let instance1 = LockmanSingleExecutionStrategy.shared
     let instance2 = LockmanSingleExecutionStrategy.shared
 
     XCTAssertTrue(instance1  === instance2)
   }
 
-  func testtestMultipleInstancesAreIndependent() {
+  func testMultipleInstancesAreIndependent() {
     let strategy1 = LockmanSingleExecutionStrategy()
     let strategy2 = LockmanSingleExecutionStrategy()
 
     XCTAssertTrue(strategy1 !== strategy2)
   }
 
-  func testtestMakeStrategyIdReturnsConsistentIdentifier() {
+  func testMakeStrategyIdReturnsConsistentIdentifier() {
     let id1 = LockmanSingleExecutionStrategy.makeStrategyId()
     let id2 = LockmanSingleExecutionStrategy.makeStrategyId()
 
-    XCTAssertEqual(id1 , id2)
-    XCTAssertEqual(id1 , .singleExecution)
+    XCTAssertEqual(id1, id2)
+    XCTAssertEqual(id1, .singleExecution)
   }
 
-  func testtestInstanceStrategyIdMatchesMakeStrategyId() {
-    let strategy = LockmanSingleExecutionStrategy()
+  func testInstanceStrategyIdMatchesMakeStrategyId() {
+    let strategy  = LockmanSingleExecutionStrategy()
     let staticId = LockmanSingleExecutionStrategy.makeStrategyId()
 
-    XCTAssertEqual(strategy.strategyId , staticId)
+    XCTAssertEqual(strategy.strategyId, staticId)
   }
 
-  func testtestDifferentActionsOnSameBoundaryFailWithBoundaryMode() {
-    let strategy = LockmanSingleExecutionStrategy()
+  func testDifferentActionsOnSameBoundaryFailWithBoundaryMode() {
+    let strategy  = LockmanSingleExecutionStrategy()
     let id = TestBoundaryId("test")
     let info1 = LockmanSingleExecutionInfo(actionId: "action1", mode: .boundary)
     let info2 = LockmanSingleExecutionInfo(actionId: "action2", mode: .boundary)
@@ -65,7 +65,7 @@ final class LockmanSingleExecutionStrategyTests: XCTestCase {
     strategy.lock(id: id, info: info1)
 
     // Different action should fail in boundary mode
-    XCTAssertTrue(strategy.canLock(id: id, info: info2) == .failure)
+    XCTAssertEqual(strategy.canLock(id: id, info: info2), .failure)
 
     // Cleanup
     strategy.cleanUp()
@@ -73,47 +73,47 @@ final class LockmanSingleExecutionStrategyTests: XCTestCase {
 
   // MARK: - Basic Lock Behavior Tests
 
-  func testtestFirstLockSucceedsWithBoundaryMode() {
+  func testFirstLockSucceedsWithBoundaryMode() {
     let strategy = LockmanSingleExecutionStrategy()
     let id = TestBoundaryId("test")
     let info = LockmanSingleExecutionInfo(actionId: "action", mode: .boundary)
 
     let result = strategy.canLock(id: id, info: info)
-    XCTAssertEqual(result , .success)
+    XCTAssertEqual(result, .success)
   }
 
-  func testtestDuplicateLockFailsWithBoundaryMode() {
-    let strategy = LockmanSingleExecutionStrategy()
+  func testDuplicateLockFailsWithBoundaryMode() {
+    let strategy  = LockmanSingleExecutionStrategy()
     let id = TestBoundaryId("test")
     let info = LockmanSingleExecutionInfo(actionId: "action", mode: .boundary)
 
     // First lock should succeed
     let result1 = strategy.canLock(id: id, info: info)
-    XCTAssertEqual(result1 , .success)
+    XCTAssertEqual(result1, .success)
     strategy.lock(id: id, info: info)
 
     // Second lock should fail
-    let result2 = strategy.canLock(id: id, info: info)
-    XCTAssertEqual(result2 , .failure)
+    let result2  = strategy.canLock(id: id, info: info)
+    XCTAssertEqual(result2, .failure)
 
     // Cleanup for isolation
     strategy.unlock(id: id, info: info)
   }
 
-  func testtestAnySecondLockOnSameBoundaryFails() {
-    let strategy = LockmanSingleExecutionStrategy()
+  func testAnySecondLockOnSameBoundaryFails() {
+    let strategy  = LockmanSingleExecutionStrategy()
     let id = TestBoundaryId("test")
     let info1 = LockmanSingleExecutionInfo(actionId: "action1", mode: .boundary)
     let info2 = LockmanSingleExecutionInfo(actionId: "action1", mode: .boundary) // Same actionId
 
     // First lock should succeed
     let result1 = strategy.canLock(id: id, info: info1)
-    XCTAssertEqual(result1 , .success)
+    XCTAssertEqual(result1, .success)
     strategy.lock(id: id, info: info1)
 
     // Second lock should fail (any lock fails when boundary is locked)
-    let result2 = strategy.canLock(id: id, info: info2)
-    XCTAssertEqual(result2 , .failure)
+    let result2  = strategy.canLock(id: id, info: info2)
+    XCTAssertEqual(result2, .failure)
 
     // Cleanup
     strategy.unlock(id: id, info: info1)
@@ -121,26 +121,26 @@ final class LockmanSingleExecutionStrategyTests: XCTestCase {
 
   // MARK: - Unlock Tests
 
-  func testtestUnlockAllowsSubsequentLock() {
-    let strategy = LockmanSingleExecutionStrategy()
+  func testUnlockAllowsSubsequentLock() {
+    let strategy  = LockmanSingleExecutionStrategy()
     let id = TestBoundaryId("test")
     let info = LockmanSingleExecutionInfo(actionId: "action", mode: .boundary)
 
     // Lock
     let result1 = strategy.canLock(id: id, info: info)
-    XCTAssertEqual(result1 , .success)
+    XCTAssertEqual(result1, .success)
     strategy.lock(id: id, info: info)
 
     // Unlock
     strategy.unlock(id: id, info: info)
 
     // Lock again should succeed
-    let result2 = strategy.canLock(id: id, info: info)
-    XCTAssertEqual(result2 , .success)
+    let result2  = strategy.canLock(id: id, info: info)
+    XCTAssertEqual(result2, .success)
   }
 
-  func testtestUnlockWithoutPriorLockDoesNotCrash() {
-    let strategy = LockmanSingleExecutionStrategy()
+  func testUnlockWithoutPriorLockDoesNotCrash() {
+    let strategy  = LockmanSingleExecutionStrategy()
     let id = TestBoundaryId("test")
     let info = LockmanSingleExecutionInfo(actionId: "action", mode: .boundary)
 
@@ -149,25 +149,25 @@ final class LockmanSingleExecutionStrategyTests: XCTestCase {
 
     // Should still be able to lock after invalid unlock
     let result = strategy.canLock(id: id, info: info)
-    XCTAssertEqual(result , .success)
+    XCTAssertEqual(result, .success)
   }
 
   // MARK: - Boundary Isolation Tests
 
-  func testtestDifferentBoundaryIdsAreIsolated() {
-    let strategy = LockmanSingleExecutionStrategy()
+  func testDifferentBoundaryIdsAreIsolated() {
+    let strategy  = LockmanSingleExecutionStrategy()
     let id1 = TestBoundaryId("test1")
     let id2 = TestBoundaryId("test2")
     let info = LockmanSingleExecutionInfo(actionId: "action", mode: .boundary)
 
     // Lock with id1
     let result1 = strategy.canLock(id: id1, info: info)
-    XCTAssertEqual(result1 , .success)
+    XCTAssertEqual(result1, .success)
     strategy.lock(id: id1, info: info)
 
     // Lock with id2 should also succeed (different boundary)
-    let result2 = strategy.canLock(id: id2, info: info)
-    XCTAssertEqual(result2 , .success)
+    let result2  = strategy.canLock(id: id2, info: info)
+    XCTAssertEqual(result2, .success)
     strategy.lock(id: id2, info: info)
 
     // Cleanup
@@ -175,8 +175,8 @@ final class LockmanSingleExecutionStrategyTests: XCTestCase {
     strategy.unlock(id: id2, info: info)
   }
 
-  func testtestUnlockAffectsOnlySpecificBoundary() {
-    let strategy = LockmanSingleExecutionStrategy()
+  func testUnlockAffectsOnlySpecificBoundary() {
+    let strategy  = LockmanSingleExecutionStrategy()
     let id1 = TestBoundaryId("test1")
     let id2 = TestBoundaryId("test2")
     let info = LockmanSingleExecutionInfo(actionId: "action", mode: .boundary)
@@ -190,11 +190,11 @@ final class LockmanSingleExecutionStrategyTests: XCTestCase {
 
     // id1 should be able to lock again
     let result1 = strategy.canLock(id: id1, info: info)
-    XCTAssertEqual(result1 , .success)
+    XCTAssertEqual(result1, .success)
 
     // id2 should still be locked
-    let result2 = strategy.canLock(id: id2, info: info)
-    XCTAssertEqual(result2 , .failure)
+    let result2  = strategy.canLock(id: id2, info: info)
+    XCTAssertEqual(result2, .failure)
 
     // Cleanup id2
     strategy.unlock(id: id2, info: info)
@@ -202,8 +202,8 @@ final class LockmanSingleExecutionStrategyTests: XCTestCase {
 
   // MARK: - CleanUp Tests
 
-  func testtestCleanUpRemovesAllLockState() {
-    let strategy = LockmanSingleExecutionStrategy()
+  func testCleanUpRemovesAllLockState() {
+    let strategy  = LockmanSingleExecutionStrategy()
     let id1 = TestBoundaryId("test1")
     let id2 = TestBoundaryId("test2")
     let info = LockmanSingleExecutionInfo(actionId: "action", mode: .boundary)
@@ -219,12 +219,12 @@ final class LockmanSingleExecutionStrategyTests: XCTestCase {
     let result1 = strategy.canLock(id: id1, info: info)
     let result2 = strategy.canLock(id: id2, info: info)
 
-    XCTAssertEqual(result1 , .success)
-    XCTAssertEqual(result2 , .success)
+    XCTAssertEqual(result1, .success)
+    XCTAssertEqual(result2, .success)
   }
 
-  func testtestCleanUpWithSpecificBoundaryIdRemovesOnlyThatBoundary() {
-    let strategy = LockmanSingleExecutionStrategy()
+  func testCleanUpWithSpecificBoundaryIdRemovesOnlyThatBoundary() {
+    let strategy  = LockmanSingleExecutionStrategy()
     let id1 = TestBoundaryId("test1")
     let id2 = TestBoundaryId("test2")
     let info = LockmanSingleExecutionInfo(actionId: "action", mode: .boundary)
@@ -238,11 +238,11 @@ final class LockmanSingleExecutionStrategyTests: XCTestCase {
 
     // id1 should be able to lock again
     let result1 = strategy.canLock(id: id1, info: info)
-    XCTAssertEqual(result1 , .success)
+    XCTAssertEqual(result1, .success)
 
     // id2 should still be locked
-    let result2 = strategy.canLock(id: id2, info: info)
-    XCTAssertEqual(result2 , .failure)
+    let result2  = strategy.canLock(id: id2, info: info)
+    XCTAssertEqual(result2, .failure)
 
     // Cleanup id2
     strategy.cleanUp(id: id2)
@@ -250,8 +250,8 @@ final class LockmanSingleExecutionStrategyTests: XCTestCase {
 
   // MARK: - Lock/Unlock Sequence Tests
 
-  func testtestMultipleLockUnlockCycles() {
-    let strategy = LockmanSingleExecutionStrategy()
+  func testMultipleLockUnlockCycles() {
+    let strategy  = LockmanSingleExecutionStrategy()
     let id = TestBoundaryId("test")
     let info = LockmanSingleExecutionInfo(actionId: "action", mode: .boundary)
 
@@ -259,41 +259,41 @@ final class LockmanSingleExecutionStrategyTests: XCTestCase {
     for _ in 0 ..< 3 {
       // Lock should succeed
       let lockResult = strategy.canLock(id: id, info: info)
-      XCTAssertEqual(lockResult , .success)
+      XCTAssertEqual(lockResult, .success)
       strategy.lock(id: id, info: info)
 
       // Duplicate lock should fail
-      let duplicateResult = strategy.canLock(id: id, info: info)
-      XCTAssertEqual(duplicateResult , .failure)
+      let duplicateResult  = strategy.canLock(id: id, info: info)
+      XCTAssertEqual(duplicateResult, .failure)
 
       // Unlock
       strategy.unlock(id: id, info: info)
     }
   }
 
-  func testtestSequentialLockAndUnlockOperations() {
-    let strategy = LockmanSingleExecutionStrategy()
+  func testSequentialLockAndUnlockOperations() {
+    let strategy  = LockmanSingleExecutionStrategy()
     let id = TestBoundaryId("complex")
     let action1 = LockmanSingleExecutionInfo(actionId: "action1", mode: .boundary)
     let action2 = LockmanSingleExecutionInfo(actionId: "action2", mode: .boundary)
     let action3 = LockmanSingleExecutionInfo(actionId: "action3", mode: .boundary)
 
     // Lock action1
-    XCTAssertTrue(strategy.canLock(id: id, info: action1) == .success)
+    XCTAssertEqual(strategy.canLock(id: id, info: action1), .success)
     strategy.lock(id: id, info: action1)
 
     // Lock action2 should fail (boundary is locked)
-    XCTAssertTrue(strategy.canLock(id: id, info: action2) == .failure)
+    XCTAssertEqual(strategy.canLock(id: id, info: action2), .failure)
 
     // Unlock action1
     strategy.unlock(id: id, info: action1)
 
     // Now action2 should succeed
-    XCTAssertTrue(strategy.canLock(id: id, info: action2) == .success)
+    XCTAssertEqual(strategy.canLock(id: id, info: action2), .success)
     strategy.lock(id: id, info: action2)
 
     // action3 should fail
-    XCTAssertTrue(strategy.canLock(id: id, info: action3) == .failure)
+    XCTAssertEqual(strategy.canLock(id: id, info: action3), .failure)
 
     // Cleanup
     strategy.unlock(id: id, info: action2)
@@ -301,7 +301,7 @@ final class LockmanSingleExecutionStrategyTests: XCTestCase {
 
   // MARK: - State Management Tests
 
-  func testtestEmptyBoundaryCleanup() {
+  func testEmptyBoundaryCleanup() {
     let strategy = LockmanSingleExecutionStrategy()
     let id = TestBoundaryId("empty")
 
@@ -310,12 +310,12 @@ final class LockmanSingleExecutionStrategyTests: XCTestCase {
 
     // Should still be able to use the boundary
     let info = LockmanSingleExecutionInfo(actionId: "test", mode: .boundary)
-    XCTAssertTrue(strategy.canLock(id: id, info: info) == .success)
+    XCTAssertEqual(strategy.canLock(id: id, info: info), .success)
   }
 
   // MARK: - Boundary Lock Tests
 
-  func testtestBlocksAllActionsWhenOneIsLocked() {
+  func testBlocksAllActionsWhenOneIsLocked() {
     let strategy = LockmanSingleExecutionStrategy()
     let id = TestBoundaryId("test")
     let info1 = LockmanSingleExecutionInfo(actionId: "action1", mode: .boundary)
@@ -323,21 +323,21 @@ final class LockmanSingleExecutionStrategyTests: XCTestCase {
     let info3 = LockmanSingleExecutionInfo(actionId: "action3", mode: .boundary)
 
     // First lock succeeds
-    XCTAssertTrue(strategy.canLock(id: id, info: info1) == .success)
+    XCTAssertEqual(strategy.canLock(id: id, info: info1), .success)
     strategy.lock(id: id, info: info1)
 
     // All other actions should fail regardless of actionId
-    XCTAssertTrue(strategy.canLock(id: id, info: info2) == .failure)
-    XCTAssertTrue(strategy.canLock(id: id, info: info3) == .failure)
+    XCTAssertEqual(strategy.canLock(id: id, info: info2), .failure)
+    XCTAssertEqual(strategy.canLock(id: id, info: info3), .failure)
 
     // Even same actionId should fail
-    XCTAssertTrue(strategy.canLock(id: id, info: info1) == .failure)
+    XCTAssertEqual(strategy.canLock(id: id, info: info1), .failure)
 
     // Cleanup
     strategy.unlock(id: id, info: info1)
   }
 
-  func testtestAllowsLockAfterUnlock() {
+  func testAllowsLockAfterUnlock() {
     let strategy = LockmanSingleExecutionStrategy()
     let id = TestBoundaryId("test")
     let info1 = LockmanSingleExecutionInfo(actionId: "action1", mode: .boundary)
@@ -348,14 +348,14 @@ final class LockmanSingleExecutionStrategyTests: XCTestCase {
     strategy.unlock(id: id, info: info1)
 
     // Second action should now succeed
-    XCTAssertTrue(strategy.canLock(id: id, info: info2) == .success)
+    XCTAssertEqual(strategy.canLock(id: id, info: info2), .success)
     strategy.lock(id: id, info: info2)
 
     // Cleanup
     strategy.unlock(id: id, info: info2)
   }
 
-  func testtestSharedInstanceBehavior() {
+  func testSharedInstanceBehavior() {
     let strategy = LockmanSingleExecutionStrategy.shared
     let id = TestBoundaryId("test-shared")
     let info1 = LockmanSingleExecutionInfo(actionId: "action1", mode: .boundary)
@@ -365,7 +365,7 @@ final class LockmanSingleExecutionStrategyTests: XCTestCase {
     strategy.lock(id: id, info: info1)
 
     // Different action should fail
-    XCTAssertTrue(strategy.canLock(id: id, info: info2) == .failure)
+    XCTAssertEqual(strategy.canLock(id: id, info: info2), .failure)
 
     // Cleanup
     strategy.cleanUp(id: id)
@@ -373,7 +373,7 @@ final class LockmanSingleExecutionStrategyTests: XCTestCase {
 
   // MARK: - Thread Safety Tests
 
-  func testtestBasicConcurrentLockOperationsOnDifferentBoundaries() async throws {
+  func testBasicConcurrentLockOperationsOnDifferentBoundaries() async {
     let strategy = LockmanSingleExecutionStrategy()
 
     let results = await withTaskGroup(of: Bool.self, returning: [Bool].self) { group in
@@ -399,14 +399,14 @@ final class LockmanSingleExecutionStrategyTests: XCTestCase {
 
     let successCount = results.filter { $0 }.count
     // All should succeed since they use different boundaries
-    XCTAssertEqual(successCount , 10)
+    XCTAssertEqual(successCount, 10)
 
     // Cleanup
     strategy.cleanUp()
   }
 
-  func testtestConcurrentAccessToSameBoundary() async throws {
-    let strategy = LockmanSingleExecutionStrategy()
+  func testConcurrentAccessToSameBoundary() async {
+    let strategy  = LockmanSingleExecutionStrategy()
     let id = TestBoundaryId("concurrent")
 
     let results = await withTaskGroup(of: LockResult.self, returning: [LockResult].self) { group in
@@ -427,15 +427,15 @@ final class LockmanSingleExecutionStrategyTests: XCTestCase {
 
     let successCount = results.filter { $0 == .success }.count
     // At least one should succeed due to single execution semantics
-    XCTAssertTrue(successCount >= 1)
+    XCTAssertGreaterThanOrEqual(successCount , 1)
     // But not all should succeed
-    XCTAssertTrue(successCount <= 5)
+    XCTAssertLessThanOrEqual(successCount , 5)
 
     // Cleanup
     strategy.cleanUp()
   }
 
-  func testtestConcurrentAccessWithDifferentActionsOnSameBoundary() async throws {
+  func testConcurrentAccessWithDifferentActionsOnSameBoundary() async {
     let strategy = LockmanSingleExecutionStrategy()
     let id = TestBoundaryId("concurrent_different")
 
@@ -458,7 +458,7 @@ final class LockmanSingleExecutionStrategyTests: XCTestCase {
 
     let successCount = results.filter { $0.1 == .success }.count
     // All different actions should be able to succeed
-    XCTAssertEqual(successCount , 5)
+    XCTAssertEqual(successCount, 5)
 
     // Cleanup
     strategy.cleanUp()
@@ -466,30 +466,30 @@ final class LockmanSingleExecutionStrategyTests: XCTestCase {
 
   // MARK: - Integration Tests
 
-  func testtestIntegrationWithLockmanState() {
-    let strategy = LockmanSingleExecutionStrategy()
+  func testIntegrationWithLockmanState() {
+    let strategy  = LockmanSingleExecutionStrategy()
     let id = TestBoundaryId("integration")
 
     let action1 = LockmanSingleExecutionInfo(actionId: "action1", mode: .boundary)
     let action2 = LockmanSingleExecutionInfo(actionId: "action2", mode: .boundary)
 
     // Test that the strategy correctly uses its internal state
-    XCTAssertTrue(strategy.canLock(id: id, info: action1) == .success)
+    XCTAssertEqual(strategy.canLock(id: id, info: action1), .success)
     strategy.lock(id: id, info: action1)
 
     // Second action should fail (boundary is locked)
-    XCTAssertTrue(strategy.canLock(id: id, info: action2) == .failure)
+    XCTAssertEqual(strategy.canLock(id: id, info: action2), .failure)
 
     // Unlock and verify state changes
     strategy.unlock(id: id, info: action1)
 
     // Now action2 should succeed
-    XCTAssertTrue(strategy.canLock(id: id, info: action2) == .success)
+    XCTAssertEqual(strategy.canLock(id: id, info: action2), .success)
 
     strategy.cleanUp()
   }
 
-  func testtestPerformanceWithManySequentialOperations() {
+  func testPerformanceWithManySequentialOperations() {
     let strategy = LockmanSingleExecutionStrategy()
     let id = TestBoundaryId("performance")
 
@@ -499,18 +499,18 @@ final class LockmanSingleExecutionStrategyTests: XCTestCase {
     for i in 0 ..< 100 {
       let info = LockmanSingleExecutionInfo(actionId: "action\(i)", mode: .boundary)
 
-      XCTAssertTrue(strategy.canLock(id: id, info: info) == .success)
+      XCTAssertEqual(strategy.canLock(id: id, info: info), .success)
       strategy.lock(id: id, info: info)
       strategy.unlock(id: id, info: info)
     }
 
     let duration = Date().timeIntervalSince(startTime)
-    XCTAssertTrue(duration < 1.0) // Should complete quickly
+    XCTAssertLessThan(duration , 1.0) // Should complete quickly
 
     strategy.cleanUp()
   }
 
-  func testtestMemoryEfficiencyWithManyBoundaries() {
+  func testMemoryEfficiencyWithManyBoundaries() {
     let strategy = LockmanSingleExecutionStrategy()
     var boundaries: [TestBoundaryId] = []
 
@@ -531,7 +531,7 @@ final class LockmanSingleExecutionStrategyTests: XCTestCase {
     // Verify remaining boundaries are still locked
     for i in 25 ..< 50 {
       let info = LockmanSingleExecutionInfo(actionId: "action", mode: .boundary)
-      XCTAssertTrue(strategy.canLock(id: boundaries[i], info: info) == .failure)
+      XCTAssertEqual(strategy.canLock(id: boundaries[i], info: info), .failure)
     }
 
     // Full cleanup
@@ -540,48 +540,48 @@ final class LockmanSingleExecutionStrategyTests: XCTestCase {
     // All should be unlocked now
     for boundary in boundaries {
       let info = LockmanSingleExecutionInfo(actionId: "action", mode: .boundary)
-      XCTAssertTrue(strategy.canLock(id: boundary, info: info) == .success)
+      XCTAssertEqual(strategy.canLock(id: boundary, info: info), .success)
     }
   }
 
   // MARK: - Execution Mode Tests
 
-  func testtestNoneModeAlwaysAllowsLocks() {
+  func testNoneModeAlwaysAllowsLocks() {
     let strategy = LockmanSingleExecutionStrategy()
     let id = TestBoundaryId("test")
     let info1 = LockmanSingleExecutionInfo(actionId: "action1", mode: .none)
     let info2 = LockmanSingleExecutionInfo(actionId: "action2", mode: .none)
 
     // First lock succeeds
-    XCTAssertTrue(strategy.canLock(id: id, info: info1) == .success)
+    XCTAssertEqual(strategy.canLock(id: id, info: info1), .success)
     strategy.lock(id: id, info: info1)
 
     // Second lock also succeeds with none mode
-    XCTAssertTrue(strategy.canLock(id: id, info: info2) == .success)
+    XCTAssertEqual(strategy.canLock(id: id, info: info2), .success)
     strategy.lock(id: id, info: info2)
 
     // Cleanup
     strategy.cleanUp()
   }
 
-  func testtestBoundaryModeBlocksAllActions() {
+  func testBoundaryModeBlocksAllActions() {
     let strategy = LockmanSingleExecutionStrategy()
     let id = TestBoundaryId("test")
     let info1 = LockmanSingleExecutionInfo(actionId: "action1", mode: .boundary)
     let info2 = LockmanSingleExecutionInfo(actionId: "action2", mode: .boundary)
 
     // First lock succeeds
-    XCTAssertTrue(strategy.canLock(id: id, info: info1) == .success)
+    XCTAssertEqual(strategy.canLock(id: id, info: info1), .success)
     strategy.lock(id: id, info: info1)
 
     // Second lock fails (different actionId but same boundary)
-    XCTAssertTrue(strategy.canLock(id: id, info: info2) == .failure)
+    XCTAssertEqual(strategy.canLock(id: id, info: info2), .failure)
 
     // Cleanup
     strategy.cleanUp()
   }
 
-  func testtestActionModeBlocksOnlySameActionId() {
+  func testActionModeBlocksOnlySameActionId() {
     let strategy = LockmanSingleExecutionStrategy()
     let id = TestBoundaryId("test")
     let info1 = LockmanSingleExecutionInfo(actionId: "action1", mode: .action)
@@ -589,21 +589,21 @@ final class LockmanSingleExecutionStrategyTests: XCTestCase {
     let info3 = LockmanSingleExecutionInfo(actionId: "action1", mode: .action)
 
     // First lock succeeds
-    XCTAssertTrue(strategy.canLock(id: id, info: info1) == .success)
+    XCTAssertEqual(strategy.canLock(id: id, info: info1), .success)
     strategy.lock(id: id, info: info1)
 
     // Different actionId succeeds
-    XCTAssertTrue(strategy.canLock(id: id, info: info2) == .success)
+    XCTAssertEqual(strategy.canLock(id: id, info: info2), .success)
     strategy.lock(id: id, info: info2)
 
     // Same actionId as info1 fails
-    XCTAssertTrue(strategy.canLock(id: id, info: info3) == .failure)
+    XCTAssertEqual(strategy.canLock(id: id, info: info3), .failure)
 
     // Cleanup
     strategy.cleanUp()
   }
 
-  func testtestMixedModesWorkCorrectly() {
+  func testMixedModesWorkCorrectly() {
     let strategy = LockmanSingleExecutionStrategy()
     let id = TestBoundaryId("test")
     let actionInfo = LockmanSingleExecutionInfo(actionId: "action1", mode: .action)
@@ -611,15 +611,15 @@ final class LockmanSingleExecutionStrategyTests: XCTestCase {
     let noneInfo = LockmanSingleExecutionInfo(actionId: "action3", mode: .none)
 
     // Action mode lock succeeds
-    XCTAssertTrue(strategy.canLock(id: id, info: actionInfo) == .success)
+    XCTAssertEqual(strategy.canLock(id: id, info: actionInfo), .success)
     strategy.lock(id: id, info: actionInfo)
 
     // None mode always succeeds
-    XCTAssertTrue(strategy.canLock(id: id, info: noneInfo) == .success)
+    XCTAssertEqual(strategy.canLock(id: id, info: noneInfo), .success)
     strategy.lock(id: id, info: noneInfo)
 
     // Boundary mode fails because locks exist
-    XCTAssertTrue(strategy.canLock(id: id, info: boundaryInfo) == .failure)
+    XCTAssertEqual(strategy.canLock(id: id, info: boundaryInfo), .failure)
 
     // Cleanup
     strategy.cleanUp()

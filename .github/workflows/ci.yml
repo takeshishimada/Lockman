@@ -1,0 +1,127 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - '*'
+  workflow_dispatch:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+
+  swift-test:
+    name: Test (Swift ${{ matrix.swift }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: macos-15
+            swift: '6.0'
+            xcode: '16.2'
+    steps:
+      - uses: actions/checkout@v4
+      - name: Cache Swift dependencies
+        uses: actions/cache@v3
+        with:
+          path: |
+            .build
+            ~/Library/Developer/Xcode/DerivedData
+          key: ${{ runner.os }}-swift-${{ matrix.swift }}-${{ hashFiles('**/Package.resolved') }}
+          restore-keys: |
+            ${{ runner.os }}-swift-${{ matrix.swift }}-
+            ${{ runner.os }}-swift-
+      - name: Select Xcode ${{ matrix.xcode }}
+        run: |
+          sudo xcode-select -s /Applications/Xcode_${{ matrix.xcode }}.app
+      - name: Get swift version
+        run: swift --version
+      - name: Build
+        run: swift build
+      - name: Test
+        run: swift test
+
+  library-evolution:
+    name: Library evolution
+    runs-on: macos-14
+    steps:
+      - uses: actions/checkout@v4
+      - name: Cache Swift dependencies
+        uses: actions/cache@v3
+        with:
+          path: |
+            .build
+            ~/Library/Developer/Xcode/DerivedData
+          key: ${{ runner.os }}-lib-evolution-${{ hashFiles('**/Package.resolved') }}
+          restore-keys: |
+            ${{ runner.os }}-lib-evolution-
+      - name: Select Xcode 15.4
+        run: |
+          sudo xcode-select -s /Applications/Xcode_15.4.app
+      - name: Build for library evolution
+        run: make build-for-library-evolution
+
+  benchmarks:
+    name: Benchmarks
+    runs-on: macOS-15
+    steps:
+      - uses: actions/checkout@v4
+      - name: Cache Swift dependencies
+        uses: actions/cache@v3
+        with:
+          path: |
+            .build
+            Benchmarks/.build
+            ~/Library/Developer/Xcode/DerivedData
+          key: ${{ runner.os }}-benchmarks-${{ hashFiles('**/Package.resolved', 'Benchmarks/Package.resolved') }}
+          restore-keys: |
+            ${{ runner.os }}-benchmarks-
+      - name: Select Xcode 16.2
+        run: sudo xcode-select -s /Applications/Xcode_16.2.app
+      - name: Build benchmarks
+        working-directory: Benchmarks
+        run: |
+          make benchmarks
+
+  examples:
+    name: Examples
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v4
+      - name: Cache DerivedData
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/Library/Developer/Xcode/DerivedData
+            .build/DerivedData
+          key: ${{ runner.os }}-xcode-examples-${{ hashFiles('**/Package.resolved', 'Examples/**/*.xcodeproj/project.pbxproj') }}
+          restore-keys: |
+            ${{ runner.os }}-xcode-examples-
+            ${{ runner.os }}-xcode-
+      - name: Select Xcode 16.2
+        run: |
+          sudo xcode-select -s /Applications/Xcode_16.2.app
+      - name: Build examples for iOS
+        run: |
+          xcodebuild build \
+            -workspace Lockman.xcworkspace \
+            -scheme "Strategies" \
+            -destination "platform=iOS Simulator,name=iPhone 16 Pro" \
+            -derivedDataPath .build/DerivedData \
+            -skipMacroValidation \
+            -skipPackagePluginValidation
+      - name: Build examples for macOS
+        run: |
+          xcodebuild build \
+            -workspace Lockman.xcworkspace \
+            -scheme "Strategies" \
+            -destination "platform=macOS" \
+            -derivedDataPath .build/DerivedData \
+            -skipMacroValidation \
+            -skipPackagePluginValidation
