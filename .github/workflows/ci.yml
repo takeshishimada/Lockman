@@ -50,6 +50,12 @@ jobs:
           sudo xcode-select -s /Applications/Xcode_${{ matrix.xcode }}.app
       - name: Get swift version
         run: swift --version
+      - name: Clean build cache for Xcode 15.x
+        if: startsWith(matrix.xcode, '15.')
+        run: |
+          echo "Cleaning build cache for Xcode ${{ matrix.xcode }}..."
+          rm -rf .build
+          rm -rf ~/Library/Developer/Xcode/DerivedData
       - name: Build
         run: swift build
       - name: Test
