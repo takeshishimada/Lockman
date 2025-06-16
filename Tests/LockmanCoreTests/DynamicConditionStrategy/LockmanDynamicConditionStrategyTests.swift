@@ -364,13 +364,12 @@ final class LockmanDynamicConditionStrategyTests: XCTestCase {
     let info2 = LockmanDynamicConditionInfo(actionId: "test")
 
     XCTAssertNotEqual(info1.uniqueId, info2.uniqueId)
-    XCTAssertFalse(info1  === info2)
   }
 
   func testinfoEqualityBasedOnUniqueId() {
     let info = LockmanDynamicConditionInfo(actionId: "test")
 
-    XCTAssertIdentical(info, info)
+    // Same instance should have same unique ID
     XCTAssertEqual(info.uniqueId, info.uniqueId)
   }
 }

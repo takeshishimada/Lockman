@@ -126,14 +126,14 @@ final class LockmanMainTests: XCTestCase {
       var outsideTestContainer = false
 
       // Before test container
-      outsideTestContainer = Lockman.container = originalContainer
+      outsideTestContainer = Lockman.container === originalContainer
 
       await Lockman.withTestContainer(testContainer) {
-        insideTestContainer = Lockman.container = testContainer
+        insideTestContainer = Lockman.container === testContainer
       }
 
       // After test container
-      outsideTestContainer = outsideTestContainer && (Lockman.container = originalContainer)
+      outsideTestContainer = outsideTestContainer && (Lockman.container === originalContainer)
 
       XCTAssertTrue(insideTestContainer)
       XCTAssertTrue(outsideTestContainer)

@@ -63,28 +63,28 @@ final class LockmanPriorityBasedInfoTests: XCTestCase {
     for (info, expectedPriority) in testCases {
       XCTAssertEqual(info.actionId, actionId)
       XCTAssertEqual(info.priority, expectedPriority)
-      XCTAssertFalse(info.blocksSameAction ) // Default value
+      XCTAssertFalse(info.blocksSameAction) // Default value
     }
   }
 
   func testInitializeWithBlocksSameAction() {
-    let actionId  = "testAction"
+    let actionId = "testAction"
 
     // Test default value
     let info1 = LockmanPriorityBasedInfo(actionId: actionId, priority: .high(.exclusive))
-    XCTAssertFalse(info1.blocksSameAction )
+    XCTAssertFalse(info1.blocksSameAction)
 
     // Test explicit false
     let info2 = LockmanPriorityBasedInfo(actionId: actionId, priority: .high(.exclusive), blocksSameAction: false)
-    XCTAssertFalse(info2.blocksSameAction )
+    XCTAssertFalse(info2.blocksSameAction)
 
     // Test explicit true
     let info3 = LockmanPriorityBasedInfo(actionId: actionId, priority: .high(.exclusive), blocksSameAction: true)
-    XCTAssertTrue(info3.blocksSameAction )
+    XCTAssertTrue(info3.blocksSameAction)
 
     // Test with factory methods
     let info4 = TestInfoFactory.highExclusive(actionId, blocksSameAction: true)
-    XCTAssertTrue(info4.blocksSameAction )
+    XCTAssertTrue(info4.blocksSameAction)
   }
 
   func testUniqueIdGenerationEnsuresInstanceUniqueness() {
@@ -98,7 +98,7 @@ final class LockmanPriorityBasedInfoTests: XCTestCase {
   // MARK: - Equality Semantics (Based on Actual Implementation)
 
   func testEqualityBasedOnUniqueIdNotActionId() {
-    let info1  = TestInfoFactory.lowExclusive("same")
+    let info1 = TestInfoFactory.lowExclusive("same")
     let info2 = TestInfoFactory.highReplaceable("same") // Same actionId, different priority
     let info3 = info1 // Same instance
 
@@ -113,7 +113,7 @@ final class LockmanPriorityBasedInfoTests: XCTestCase {
   }
 
   func testArrayOperationsWorkCorrectlyWithEquality() {
-    let info1  = TestInfoFactory.lowExclusive("action1")
+    let info1 = TestInfoFactory.lowExclusive("action1")
     let info2 = TestInfoFactory.lowExclusive("action1") // Same actionId, different instance
     let info3 = TestInfoFactory.highReplaceable("action2")
 
@@ -138,12 +138,12 @@ final class LockmanPriorityBasedInfoTests: XCTestCase {
     let highReplaceable = LockmanPriorityBasedInfo.Priority.high(.replaceable)
 
     // Test hierarchy: none < low < high
-    XCTAssertLessThan(none , lowExclusive)
-    XCTAssertLessThan(none , lowReplaceable)
-    XCTAssertLessThan(lowExclusive , highExclusive)
-    XCTAssertLessThan(lowReplaceable , highReplaceable)
-    XCTAssertLessThan(none , highExclusive)
-    XCTAssertLessThan(none , highReplaceable)
+    XCTAssertLessThan(none, lowExclusive)
+    XCTAssertLessThan(none, lowReplaceable)
+    XCTAssertLessThan(lowExclusive, highExclusive)
+    XCTAssertLessThan(lowReplaceable, highReplaceable)
+    XCTAssertLessThan(none, highExclusive)
+    XCTAssertLessThan(none, highReplaceable)
   }
 
   func testSamePriorityLevelEqualityIgnoresBehavior() {
@@ -161,12 +161,12 @@ final class LockmanPriorityBasedInfoTests: XCTestCase {
     XCTAssertNotEqual(lowReplaceable, highReplaceable)
 
     // No ordering within same priority level
-    XCTAssertFalse((lowExclusive , lowReplaceable))
-    XCTAssertFalse((lowExclusive , lowReplaceable))
+    XCTAssertFalse(lowExclusive < lowReplaceable)
+    XCTAssertFalse(lowReplaceable < lowExclusive)
   }
 
   func testPriorityComparisonMatrixValidation() {
-    let priorities: [LockmanPriorityBasedInfo.Priority]  = [
+    let priorities: [LockmanPriorityBasedInfo.Priority] = [
       .none,
       .low(.exclusive),
       .low(.replaceable),
@@ -201,7 +201,7 @@ final class LockmanPriorityBasedInfoTests: XCTestCase {
   // MARK: - Behavior Property Access
 
   func testBehaviorPropertyAccess() {
-    let testCases: [(priority: LockmanPriorityBasedInfo.Priority, expectedBehavior: LockmanPriorityBasedInfo.ConcurrencyBehavior?)]  = [
+    let testCases: [(priority: LockmanPriorityBasedInfo.Priority, expectedBehavior: LockmanPriorityBasedInfo.ConcurrencyBehavior?)] = [
       (.none, nil),
       (.low(.exclusive), .exclusive),
       (.low(.replaceable), .replaceable),
@@ -219,7 +219,7 @@ final class LockmanPriorityBasedInfoTests: XCTestCase {
   // MARK: - Concurrency and Sendable
 
   func testConcurrentAccessMaintainsDataIntegrity() async {
-    let info  = TestInfoFactory.highExclusive("concurrentAction")
+    let info = TestInfoFactory.highExclusive("concurrentAction")
 
     let results = await withTaskGroup(of: LockmanPriorityBasedInfo.self, returning: [LockmanPriorityBasedInfo].self) { group in
       for _ in 0 ..< 5 {
@@ -237,7 +237,7 @@ final class LockmanPriorityBasedInfoTests: XCTestCase {
     for result in results {
       XCTAssertEqual(result, info)
       XCTAssertEqual(result.actionId, "concurrentAction")
-      XCTAssertEqual(result.priority, .high(.exclusive)
+      XCTAssertEqual(result.priority, .high(.exclusive))
     }
   }
 
@@ -265,7 +265,7 @@ final class LockmanPriorityBasedInfoTests: XCTestCase {
 //  }
 
   func testUnicodeActionIdSupport() {
-    let unicodeActionIds  = [
+    let unicodeActionIds = [
       "アクション",
       "行动",
       "действие",
@@ -278,13 +278,13 @@ final class LockmanPriorityBasedInfoTests: XCTestCase {
       let info = TestInfoFactory.lowReplaceable(actionId)
 
       XCTAssertEqual(info.actionId, actionId)
-      XCTAssertEqual(info.priority, .low(.replaceable)
+      XCTAssertEqual(info.priority, .low(.replaceable))
       // XCTAssertTrue(info.description.contains(actionId)) // Removed - description functionality removed
     }
   }
 
   func testValueTypeSemanticsPreservation() {
-    let original  = TestInfoFactory.lowExclusive("original")
+    let original = TestInfoFactory.lowExclusive("original")
     let copy = original
 
     // Copy should be equal to original (same instance)
@@ -294,7 +294,7 @@ final class LockmanPriorityBasedInfoTests: XCTestCase {
     XCTAssertEqual(copy.uniqueId, original.uniqueId)
 
     // New instance with same parameters should not be equal
-    let different  = TestInfoFactory.lowExclusive("original")
+    let different = TestInfoFactory.lowExclusive("original")
     XCTAssertNotEqual(different, original) // Different uniqueId
     XCTAssertEqual(different.actionId, original.actionId) // Same actionId
   }
@@ -302,7 +302,7 @@ final class LockmanPriorityBasedInfoTests: XCTestCase {
   // MARK: - Performance
 
   func testPriorityComparisonPerformance() {
-    let priorities: [LockmanPriorityBasedInfo.Priority]  = [
+    let priorities: [LockmanPriorityBasedInfo.Priority] = [
       .none,
       .low(.exclusive),
       .low(.replaceable),
@@ -324,7 +324,7 @@ final class LockmanPriorityBasedInfoTests: XCTestCase {
     }
 
     let duration = Date().timeIntervalSince(startTime)
-    XCTAssertLessThan(duration , 0.1) // Should complete quickly
+    XCTAssertLessThan(duration, 0.1) // Should complete quickly
   }
 
   // MARK: - Protocol Conformance
@@ -382,7 +382,7 @@ final class LockmanPriorityBasedInfoIntegrationTests: XCTestCase {
 //  }
 
   func testPriorityBasedSortingBehavior() {
-    var infos: [LockmanPriorityBasedInfo]  = [
+    var infos: [LockmanPriorityBasedInfo] = [
       TestInfoFactory.lowReplaceable("1"),
       TestInfoFactory.highExclusive("2"),
       TestInfoFactory.none("3"),
@@ -418,7 +418,7 @@ final class LockmanPriorityBasedInfoIntegrationTests: XCTestCase {
   }
 
   func testIntegrationWithPriorityStrategy() async {
-    let container  = LockmanStrategyContainer()
+    let container = LockmanStrategyContainer()
     let strategy = LockmanPriorityBasedStrategy()
     do {
       try container.register(strategy)

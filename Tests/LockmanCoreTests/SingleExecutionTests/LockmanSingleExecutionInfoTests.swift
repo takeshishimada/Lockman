@@ -337,7 +337,8 @@ final class LockmanSingleExecutionInfoIntegrationTests: XCTestCase {
     // multiple tasks might succeed before the lock state is properly synchronized.
     // The important thing is that not all tasks succeed (showing some exclusion works).
     let successCount  = results.filter(\.1).count
-    XCTAssertGreaterThanOrEqual(successCount , 1 && successCount < 10, "Expected some but not all tasks to succeed due to race conditions, got \(successCount) out of 10")
+    XCTAssertGreaterThanOrEqual(successCount, 1, "Expected some but not all tasks to succeed due to race conditions, got \(successCount) out of 10")
+    XCTAssertLessThan(successCount, 10, "Expected some but not all tasks to succeed due to race conditions, got \(successCount) out of 10")
 
     // Cleanup - both specific boundary and general cleanup
     strategy.cleanUp(id: boundaryId)

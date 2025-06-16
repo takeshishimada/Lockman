@@ -37,7 +37,7 @@ final class LockmanSingleExecutionStrategyTests: XCTestCase {
     let strategy1 = LockmanSingleExecutionStrategy()
     let strategy2 = LockmanSingleExecutionStrategy()
 
-    XCTAssertFalse(type(of: strategy1) == type(of: strategy2))
+    XCTAssertTrue(strategy1 !== strategy2)
   }
 
   func testMakeStrategyIdReturnsConsistentIdentifier() {

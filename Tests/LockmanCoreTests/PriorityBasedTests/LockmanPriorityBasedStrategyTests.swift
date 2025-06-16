@@ -68,7 +68,7 @@ final class LockmanPriorityBasedStrategyTests: XCTestCase {
     let strategy1 = LockmanPriorityBasedStrategy()
     let strategy2 = LockmanPriorityBasedStrategy()
 
-    XCTAssertFalse(type(of: strategy1) == type(of: strategy2))
+    XCTAssertTrue(strategy1 !== strategy2)
 
     // Verify state isolation
     let info = TestInfoFactory.highExclusive("test")

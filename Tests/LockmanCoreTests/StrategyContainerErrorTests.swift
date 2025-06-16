@@ -50,9 +50,7 @@ final class StrategyContainerErrorTests: XCTestCase {
     let strategy2 = MockStrategyA() // Same type, different instance
 
     // First registration should succeed
-    XCTAssertTrue(throws: Never.self) {
-      try container.register(strategy1)
-    }
+    XCTAssertNoThrow(try container.register(strategy1))
 
     // Second registration should fail with specific error
     XCTAssertTrue(throws: LockmanError.self) {
@@ -81,11 +79,9 @@ final class StrategyContainerErrorTests: XCTestCase {
     let strategyC = MockStrategyC()
 
     // All different types should register successfully
-    XCTAssertTrue(throws: Never.self) {
-      try container.register(strategyA)
-      try container.register(strategyB)
-      try container.register(strategyC)
-    }
+    XCTAssertNoThrow(try container.register(strategyA))
+    XCTAssertNoThrow(try container.register(strategyB))
+    XCTAssertNoThrow(try container.register(strategyC))
 
     // Verify all are registered
     XCTAssertTrue(container.isRegistered(MockStrategyA.self))
@@ -139,9 +135,7 @@ final class StrategyContainerErrorTests: XCTestCase {
 
     // Test with different strategy type for mixed scenario
     let strategyB  = MockStrategyB()
-    XCTAssertTrue(throws: Never.self) {
-      try container.register(strategyB)
-    }
+    XCTAssertNoThrow(try container.register(strategyB))
   }
 
   func testRegisterMultipleInstancesOfSameTypeInBulkOperation() {
@@ -168,11 +162,9 @@ final class StrategyContainerErrorTests: XCTestCase {
     let strategyC = MockStrategyC()
 
     // Since registerAll requires same type, register different types individually
-    XCTAssertTrue(throws: Never.self) {
-      try container.register(strategyA)
-      try container.register(strategyB)
-      try container.register(strategyC)
-    }
+    XCTAssertNoThrow(try container.register(strategyA))
+    XCTAssertNoThrow(try container.register(strategyB))
+    XCTAssertNoThrow(try container.register(strategyC))
 
     // Verify all are registered
     XCTAssertTrue(container.isRegistered(MockStrategyA.self))
@@ -208,10 +200,7 @@ final class StrategyContainerErrorTests: XCTestCase {
 
     try? container.register(strategy)
 
-    XCTAssertTrue(throws: Never.self) {
-      _ = try container.resolve(MockStrategyA.self)
-      // Type erasure returns non-optional, so if we get here, resolution succeeded
-    }
+    XCTAssertNoThrow(_ = try container.resolve(MockStrategyA.self))
   }
 
   func testResolutionErrorWithComplexStrategyNames() {
@@ -343,10 +332,8 @@ final class StrategyContainerErrorTests: XCTestCase {
     XCTAssertTrue(container.isRegistered(MockStrategyB.self))
 
     // Verify we can still resolve original strategies
-    XCTAssertTrue(throws: Never.self) {
-      _ = try container.resolve(MockStrategyA.self)
-      _ = try container.resolve(MockStrategyB.self)
-    }
+    XCTAssertNoThrow(_ = try container.resolve(MockStrategyA.self))
+    XCTAssertNoThrow(_ = try container.resolve(MockStrategyB.self))
   }
 
   func testFailedBulkRegistrationPreservesContainerState() {
@@ -375,9 +362,7 @@ final class StrategyContainerErrorTests: XCTestCase {
 
     // Verify we can still register different type
     let strategyB = MockStrategyB()
-    XCTAssertTrue(throws: Never.self) {
-      try container.register(strategyB)
-    }
+    XCTAssertNoThrow(try container.register(strategyB))
   }
 
   // MARK: - Error Recovery Tests
@@ -401,21 +386,15 @@ final class StrategyContainerErrorTests: XCTestCase {
     }
 
     // Step 3: Verify original registration still works
-    XCTAssertTrue(throws: Never.self) {
-      _ = try container.resolve(MockStrategyA.self)
-    }
+    XCTAssertNoThrow(_ = try container.resolve(MockStrategyA.self))
 
     // Step 4: Register different strategy (should work)
     let strategyB = MockStrategyB()
-    XCTAssertTrue(throws: Never.self) {
-      try container.register(strategyB)
-    }
+    XCTAssertNoThrow(try container.register(strategyB))
 
     // Step 5: Verify both strategies work
-    XCTAssertTrue(throws: Never.self) {
-      _ = try container.resolve(MockStrategyA.self)
-      _ = try container.resolve(MockStrategyB.self)
-    }
+    XCTAssertNoThrow(_ = try container.resolve(MockStrategyA.self))
+    XCTAssertNoThrow(_ = try container.resolve(MockStrategyB.self))
   }
 
   func testResolutionErrorRecoveryWorkflow() {
@@ -436,15 +415,11 @@ final class StrategyContainerErrorTests: XCTestCase {
     try? container.register(strategy)
 
     // Step 3: Now resolution should succeed
-    XCTAssertTrue(throws: Never.self) {
-      _ = try container.resolve(MockStrategyA.self)
-    }
+    XCTAssertNoThrow(_ = try container.resolve(MockStrategyA.self))
 
     // Step 4: Multiple resolutions should continue to work
     for _ in 0 ..< 5 {
-      XCTAssertTrue(throws: Never.self) {
-        _ = try container.resolve(MockStrategyA.self)
-      }
+      XCTAssertNoThrow(_ = try container.resolve(MockStrategyA.self))
     }
   }
 

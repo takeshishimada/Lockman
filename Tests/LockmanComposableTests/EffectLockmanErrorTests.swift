@@ -129,7 +129,7 @@ final class EffectLockmanErrorTests: XCTestCase {
           operation: { _, _ in
             operationExecuted.setValue(true)
             unlockProvided.setValue(true)
-            XCTAssertEqual(false, "Operation should not execute with unregistered strategy")
+            XCTFail("Operation should not execute with unregistered strategy")
           },
           action: action,
           cancelID: cancelID
@@ -354,7 +354,7 @@ final class EffectLockmanErrorTests: XCTestCase {
   }
 
   func testSourceLocationInformationInErrorHandling() {
-    let action  = MockValidAction.testAction
+    let action = MockValidAction.testAction
     let error = LockmanError.strategyAlreadyRegistered("TestStrategy")
 
     let testFileID: StaticString = "TestFile.swift"
