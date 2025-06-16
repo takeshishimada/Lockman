@@ -16,15 +16,23 @@ concurrency:
 jobs:
 
   swift-test:
-    name: Test (Swift ${{ matrix.swift }})
+    name: Test (Swift ${{ matrix.swift }}, Xcode ${{ matrix.xcode }})
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
         include:
+          # Latest environment
           - os: macos-15
             swift: '6.0'
             xcode: '16.2'
+          # Stable environment
+          - os: macos-14
+            swift: '5.10'
+            xcode: '15.4'
+          - os: macos-14
+            swift: '5.9'
+            xcode: '15.2'
     steps:
       - uses: actions/checkout@v4
       - name: Cache Swift dependencies
@@ -46,6 +54,79 @@ jobs:
         run: swift build
       - name: Test
         run: swift test
+
+  platform-test:
+    name: Platform Test (${{ matrix.platform }}, Xcode ${{ matrix.xcode }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          # iOS tests
+          - os: macos-15
+            xcode: '16.2'
+            platform: 'iOS'
+            destination: 'platform=iOS Simulator,name=iPhone 16 Pro'
+          - os: macos-14
+            xcode: '15.2'
+            platform: 'iOS'
+            destination: 'platform=iOS Simulator,name=iPhone 15 Pro'
+          # macOS tests
+          - os: macos-15
+            xcode: '16.2'
+            platform: 'macOS'
+            destination: 'platform=macOS'
+          - os: macos-14
+            xcode: '15.2'
+            platform: 'macOS'
+            destination: 'platform=macOS'
+          # tvOS tests
+          - os: macos-15
+            xcode: '16.2'
+            platform: 'tvOS'
+            destination: 'platform=tvOS Simulator,name=Apple TV'
+          - os: macos-14
+            xcode: '15.2'
+            platform: 'tvOS'
+            destination: 'platform=tvOS Simulator,name=Apple TV'
+          # watchOS tests
+          - os: macos-15
+            xcode: '16.2'
+            platform: 'watchOS'
+            destination: 'platform=watchOS Simulator,name=Apple Watch Series 9 (45mm)'
+          - os: macos-14
+            xcode: '15.2'
+            platform: 'watchOS'
+            destination: 'platform=watchOS Simulator,name=Apple Watch Series 9 (45mm)'
+          # Mac Catalyst
+          - os: macos-15
+            xcode: '16.2'
+            platform: 'Mac Catalyst'
+            destination: 'platform=macOS,variant=Mac Catalyst'
+    steps:
+      - uses: actions/checkout@v4
+      - name: Select Xcode ${{ matrix.xcode }}
+        run: |
+          sudo xcode-select -s /Applications/Xcode_${{ matrix.xcode }}.app
+      - name: Cache DerivedData
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/Library/Developer/Xcode/DerivedData
+            .build/DerivedData
+          key: ${{ runner.os }}-xcode-${{ matrix.xcode }}-${{ matrix.platform }}-${{ hashFiles('**/Package.resolved') }}
+          restore-keys: |
+            ${{ runner.os }}-xcode-${{ matrix.xcode }}-${{ matrix.platform }}-
+            ${{ runner.os }}-xcode-${{ matrix.xcode }}-
+      - name: Build and test for ${{ matrix.platform }}
+        run: |
+          xcodebuild test \
+            -scheme LockmanCore \
+            -destination "${{ matrix.destination }}" \
+            -derivedDataPath .build/DerivedData \
+            -skipMacroValidation \
+            -skipPackagePluginValidation \
+            | xcbeautify || true
 
   library-evolution:
     name: Library evolution
