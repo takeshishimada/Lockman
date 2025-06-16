@@ -114,11 +114,15 @@ jobs:
             -workspace Lockman.xcworkspace \
             -scheme "Strategies" \
             -destination "platform=iOS Simulator,name=iPhone 16 Pro" \
-            -derivedDataPath .build/DerivedData
+            -derivedDataPath .build/DerivedData \
+            -skipMacroValidation \
+            -skipPackagePluginValidation
       - name: Build examples for macOS
         run: |
           xcodebuild build \
             -workspace Lockman.xcworkspace \
             -scheme "Strategies" \
             -destination "platform=macOS" \
-            -derivedDataPath .build/DerivedData
+            -derivedDataPath .build/DerivedData \
+            -skipMacroValidation \
+            -skipPackagePluginValidation
