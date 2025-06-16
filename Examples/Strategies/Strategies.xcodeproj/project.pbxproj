@@ -7,7 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		3E4F84242DFE9EE3005B5C65 /* LockmanComposable in Frameworks */ = {isa = PBXBuildFile; productRef = 3E4F84232DFE9EE3005B5C65 /* LockmanComposable */; };
+		8278B5552E0059D20096EE15 /* LockmanComposable in Frameworks */ = {isa = PBXBuildFile; productRef = 8278B5542E0059D20096EE15 /* LockmanComposable */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -27,7 +27,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				3E4F84242DFE9EE3005B5C65 /* LockmanComposable in Frameworks */,
+				8278B5552E0059D20096EE15 /* LockmanComposable in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -78,7 +78,7 @@
 			);
 			name = Strategies;
 			packageProductDependencies = (
-				3E4F84232DFE9EE3005B5C65 /* LockmanComposable */,
+				8278B5542E0059D20096EE15 /* LockmanComposable */,
 			);
 			productName = Strategies;
 			productReference = 3E4F83C32DFE6AA5005B5C65 /* Strategies.app */;
@@ -109,7 +109,7 @@
 			mainGroup = 3E4F83BA2DFE6AA5005B5C65;
 			minimizedProjectReferenceProxies = 1;
 			packageReferences = (
-				3E4F84132DFE9D34005B5C65 /* XCLocalSwiftPackageReference "../../../Lockman" */,
+				8278B5532E0059D20096EE15 /* XCLocalSwiftPackageReference "../../../Lockman" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 3E4F83C42DFE6AA5005B5C65 /* Products */;
@@ -266,9 +266,9 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
-				CODE_SIGN_STYLE = Manual;
 				CODE_SIGNING_REQUIRED = NO;
 				CODE_SIGN_IDENTITY = "";
+				CODE_SIGN_STYLE = Manual;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_ASSET_PATHS = "\"Strategies/Preview Content\"";
 				ENABLE_PREVIEWS = YES;
@@ -296,9 +296,9 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
-				CODE_SIGN_STYLE = Manual;
 				CODE_SIGNING_REQUIRED = NO;
 				CODE_SIGN_IDENTITY = "";
+				CODE_SIGN_STYLE = Manual;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_ASSET_PATHS = "\"Strategies/Preview Content\"";
 				ENABLE_PREVIEWS = YES;
@@ -345,16 +345,15 @@
 /* End XCConfigurationList section */
 
 /* Begin XCLocalSwiftPackageReference section */
-		3E4F84132DFE9D34005B5C65 /* XCLocalSwiftPackageReference "../../../Lockman" */ = {
+		8278B5532E0059D20096EE15 /* XCLocalSwiftPackageReference "../../../Lockman" */ = {
 			isa = XCLocalSwiftPackageReference;
 			relativePath = ../../../Lockman;
 		};
 /* End XCLocalSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
-		3E4F84232DFE9EE3005B5C65 /* LockmanComposable */ = {
+		8278B5542E0059D20096EE15 /* LockmanComposable */ = {
 			isa = XCSwiftPackageProductDependency;
-			package = 3E4F84132DFE9D34005B5C65 /* XCLocalSwiftPackageReference "../../../Lockman" */;
 			productName = LockmanComposable;
 		};
 /* End XCSwiftPackageProductDependency section */
