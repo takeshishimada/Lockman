@@ -18,7 +18,7 @@ PLATFORM_ID = $(shell echo "$(DESTINATION)" | sed -E "s/.+,id=(.+)/\1/")
 
 SCHEME = LockmanCore
 
-WORKSPACE = Lockman.xcworkspace
+WORKSPACE = .github/package.xcworkspace
 
 XCODEBUILD_ARGUMENT = test
 
