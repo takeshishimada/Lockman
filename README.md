@@ -31,16 +31,6 @@ Traditional UI development has solved problems by simply prohibiting simultaneou
 
 Users expect some form of feedback even when pressing buttons simultaneously. It's crucial to clearly separate immediate response at the UI layer from appropriate mutual exclusion control at the business logic layer.
 
-### About This Library
-
-This library is an action mutual exclusion control library designed to realize the above principles.
-
-**Features:**
-* **Immediate Feedback** - Instant reaction to all user actions
-* **Graceful Mutual Exclusion** - Appropriate action control based on priority and context
-* **Declarative State Management** - Realize complex exclusion logic with simple state declarations
-* **Transparent Cancellation** - Action arbitration in a form users can understand
-
 ## Overview
 
 Lockman is a Swift library that solves concurrent action control issues in The Composable Architecture (TCA) applications.
