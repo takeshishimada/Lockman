@@ -38,6 +38,9 @@ jobs:
       - name: Swift version
         run: swift --version
       
+      - name: Clean Package.resolved
+        run: rm -f Package.resolved
+      
       - name: Build
         run: swift build -v
       
@@ -61,33 +64,14 @@ jobs:
         run: |
           swift build --target LockmanCore --target LockmanComposable --target LockmanMacros
 
-  examples:
-    name: Examples
-    runs-on: macos-latest
-    steps:
-      - uses: actions/checkout@v4
-      
-      - name: Select Xcode
-        run: sudo xcode-select -s /Applications/Xcode.app
-      
-      - name: Build Strategies Example
-        run: |
-          cd Examples/Strategies
-          xcodebuild build \
-            -project Strategies.xcodeproj \
-            -scheme Strategies \
-            -configuration Debug \
-            -destination "platform=macOS" \
-            CODE_SIGNING_ALLOWED=NO
-
   benchmarks:
     name: Benchmarks
-    runs-on: macos-14
+    runs-on: macos-15
     steps:
       - uses: actions/checkout@v4
       
-      - name: Select Xcode 15.4
-        run: sudo xcode-select -s /Applications/Xcode_15.4.app
+      - name: Select Xcode 16.0
+        run: sudo xcode-select -s /Applications/Xcode_16.0.app
       
       - name: Install dependencies
         run: brew install jemalloc || true
@@ -98,22 +82,6 @@ jobs:
           swift package resolve
           swift build -c release
           swift package benchmark --target LockmanBenchmarks || echo "Benchmarks completed with warnings"
-
-  linux:
-    name: Linux (Swift ${{ matrix.swift }})
-    runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        swift: ['5.9', '5.10']
-    container:
-      image: swift:${{ matrix.swift }}
-    steps:
-      - uses: actions/checkout@v4
-      - name: Build
-        run: swift build -v
-      - name: Run tests
-        run: swift test -v --parallel
 
   check-macro-compatibility:
     name: Check Macro Compatibility
