@@ -27,6 +27,16 @@ jobs:
             xcode: '16.2'
     steps:
       - uses: actions/checkout@v4
+      - name: Cache Swift dependencies
+        uses: actions/cache@v3
+        with:
+          path: |
+            .build
+            ~/Library/Developer/Xcode/DerivedData
+          key: ${{ runner.os }}-swift-${{ matrix.swift }}-${{ hashFiles('**/Package.resolved') }}
+          restore-keys: |
+            ${{ runner.os }}-swift-${{ matrix.swift }}-
+            ${{ runner.os }}-swift-
       - name: Select Xcode ${{ matrix.xcode }}
         run: |
           sudo xcode-select -s /Applications/Xcode_${{ matrix.xcode }}.app
@@ -42,6 +52,15 @@ jobs:
     runs-on: macos-14
     steps:
       - uses: actions/checkout@v4
+      - name: Cache Swift dependencies
+        uses: actions/cache@v3
+        with:
+          path: |
+            .build
+            ~/Library/Developer/Xcode/DerivedData
+          key: ${{ runner.os }}-lib-evolution-${{ hashFiles('**/Package.resolved') }}
+          restore-keys: |
+            ${{ runner.os }}-lib-evolution-
       - name: Select Xcode 15.4
         run: |
           sudo xcode-select -s /Applications/Xcode_15.4.app
@@ -53,6 +72,16 @@ jobs:
     runs-on: macOS-15
     steps:
       - uses: actions/checkout@v4
+      - name: Cache Swift dependencies
+        uses: actions/cache@v3
+        with:
+          path: |
+            .build
+            Benchmarks/.build
+            ~/Library/Developer/Xcode/DerivedData
+          key: ${{ runner.os }}-benchmarks-${{ hashFiles('**/Package.resolved', 'Benchmarks/Package.resolved') }}
+          restore-keys: |
+            ${{ runner.os }}-benchmarks-
       - name: Select Xcode 16.2
         run: sudo xcode-select -s /Applications/Xcode_16.2.app
       - name: Build benchmarks
@@ -70,6 +99,16 @@ jobs:
         platform: ['iOS', 'macOS']
     steps:
       - uses: actions/checkout@v4
+      - name: Cache DerivedData
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/Library/Developer/Xcode/DerivedData
+            .build/DerivedData
+          key: ${{ runner.os }}-xcode-${{ matrix.platform }}-${{ hashFiles('**/Package.resolved', 'Examples/**/*.xcodeproj/project.pbxproj') }}
+          restore-keys: |
+            ${{ runner.os }}-xcode-${{ matrix.platform }}-
+            ${{ runner.os }}-xcode-
       - name: Select Xcode 16.2
         run: |
           sudo xcode-select -s /Applications/Xcode_16.2.app
@@ -78,4 +117,5 @@ jobs:
           xcodebuild build \
             -workspace Lockman.xcworkspace \
             -scheme "Strategies (${{ matrix.platform }})" \
-            -destination "$(if [ "${{ matrix.platform }}" = "iOS" ]; then echo "platform=iOS Simulator,name=iPhone 15 Pro"; else echo "platform=macOS"; fi)"
+            -destination "$(if [ "${{ matrix.platform }}" = "iOS" ]; then echo "platform=iOS Simulator,name=iPhone 15 Pro"; else echo "platform=macOS"; fi)" \
+            -derivedDataPath .build/DerivedData
