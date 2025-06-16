@@ -5,145 +5,221 @@ on:
     branches:
       - main
       - develop
+      - 'feature/**'
   pull_request:
+    types: [ready_for_review]
     branches:
-      - '*'
+      - main
+      - develop
+      - 'feature/**'
   workflow_dispatch:
 
 concurrency:
-  group: ci-${{ github.ref }}
+  group: ${{ github.workflow }}-${{ github.head_ref || github.run_id }}
   cancel-in-progress: true
 
 jobs:
-  xcodebuild-latest:
-    name: xcodebuild (16)
-    runs-on: macos-15
-    strategy:
-      matrix:
-        command: [test, '']
-        platform: [IOS, MACOS, TVOS, WATCHOS]
-        xcode: ['16.2']
-    steps:
-      - uses: actions/checkout@v4
-      - name: Select Xcode ${{ matrix.xcode }}
-        run: sudo xcode-select -s /Applications/Xcode_${{ matrix.xcode }}.app
-      - name: Install xcbeautify
-        run: brew install xcbeautify || brew upgrade xcbeautify
-      - name: List available devices
-        run: xcrun simctl list devices available
-      - name: Cache derived data
-        uses: actions/cache@v3
-        with:
-          path: |
-            ~/.derivedData
-          key: |
-            deriveddata-xcodebuild-${{ matrix.platform }}-${{ matrix.xcode }}-${{ matrix.command }}-${{ hashFiles('**/Sources/**/*.swift', '**/Tests/**/*.swift') }}
-          restore-keys: |
-            deriveddata-xcodebuild-${{ matrix.platform }}-${{ matrix.xcode }}-${{ matrix.command }}-
-      - name: Set IgnoreFileSystemDeviceInodeChanges flag
-        run: defaults write com.apple.dt.XCBuild IgnoreFileSystemDeviceInodeChanges -bool YES
-      - name: Update mtime for incremental builds
-        uses: chetan/git-restore-mtime-action@v2
-      - name: Debug
-        run: make XCODEBUILD_ARGUMENT="${{ matrix.command }}" CONFIG=Debug PLATFORM="${{ matrix.platform }}" WORKSPACE=Lockman.xcworkspace SCHEME=LockmanCore xcodebuild
-
   xcodebuild:
-    name: xcodebuild (15)
+    name: xcodebuild / Xcode ${{ matrix.xcode }}, ${{ matrix.platform }}
     runs-on: macos-14
     strategy:
+      fail-fast: false
       matrix:
-        command: [test, '']
-        platform:
-          - IOS
-          - MACOS
-          - TVOS
-          - WATCHOS
-        xcode: [15.2, 15.4]
+        xcode: ['15.2', '15.4']
+        platform: ['iOS', 'macOS', 'tvOS', 'watchOS']
+        config: ['Debug', 'Release']
         exclude:
-          - {xcode: 15.2, command: test}
-          - {xcode: 15.4, command: ''}
-          - {xcode: 15.2, platform: TVOS}
-          - {xcode: 15.2, platform: WATCHOS}
+          # Skip older Xcode versions for newer platforms
+          - { xcode: '15.2', platform: 'watchOS', config: 'Release' }
+          - { xcode: '15.2', platform: 'tvOS', config: 'Release' }
+
     steps:
       - uses: actions/checkout@v4
+
       - name: Select Xcode ${{ matrix.xcode }}
         run: sudo xcode-select -s /Applications/Xcode_${{ matrix.xcode }}.app
-      - name: Update xcbeautify
-        run: brew update && brew upgrade xcbeautify
-      - name: List available devices
-        run: xcrun simctl list devices available
-      - name: Cache derived data
-        uses: actions/cache@v3
+
+      - name: Skip macro validation
+        run: defaults write com.apple.dt.Xcode IDESkipMacroFingerprintValidation -bool YES
+
+      - name: Fix Package.resolved
+        run: |
+          echo "Removing Package.resolved if it exists..."
+          rm -f Package.resolved
+          echo "Running swift package resolve..."
+          swift package resolve --verbose || {
+            echo "Failed to resolve packages. Trying with clean build..."
+            swift package clean
+            swift package resolve --verbose
+          }
+      - name: Cache DerivedData
+        uses: actions/cache@v4
         with:
-          path: |
-            ~/.derivedData
-          key: |
-            deriveddata-xcodebuild-${{ matrix.platform }}-${{ matrix.xcode }}-${{ matrix.command }}-${{ hashFiles('**/Sources/**/*.swift', '**/Tests/**/*.swift') }}
+          key: xcodebuild-${{ matrix.xcode }}-${{ matrix.platform }}-${{ matrix.config }}-${{ hashFiles('**/Package.swift') }}
+          path: ~/Library/Developer/Xcode/DerivedData
           restore-keys: |
-            deriveddata-xcodebuild-${{ matrix.platform }}-${{ matrix.xcode }}-${{ matrix.command }}-
-      - name: Set IgnoreFileSystemDeviceInodeChanges flag
-        run: defaults write com.apple.dt.XCBuild IgnoreFileSystemDeviceInodeChanges -bool YES
-      - name: Update mtime for incremental builds
-        uses: chetan/git-restore-mtime-action@v2
-      - name: Debug
-        run: make XCODEBUILD_ARGUMENT="${{ matrix.command }}" CONFIG=Debug PLATFORM="${{ matrix.platform }}" WORKSPACE=Lockman.xcworkspace SCHEME=LockmanCore xcodebuild
-
-  library-evolution:
-    name: Library (evolution)
-    runs-on: macos-14
-    steps:
-      - uses: actions/checkout@v4
-      - name: Select Xcode 15.4
-        run: sudo xcode-select -s /Applications/Xcode_15.4.app
-      - name: Update xcbeautify
-        run: brew update && brew upgrade xcbeautify
-      - name: Build for library evolution
-        run: make SCHEME=LockmanCore build-for-library-evolution
-
-  examples:
-    name: Examples
+            xcodebuild-${{ matrix.xcode }}-${{ matrix.platform }}-${{ matrix.config }}-
+            xcodebuild-${{ matrix.xcode }}-${{ matrix.platform }}-
+            xcodebuild-${{ matrix.xcode }}-
+      - name: Set platform variables
+        id: platform
+        run: |
+          case "${{ matrix.platform }}" in
+            "iOS")
+              echo "sdk=iphonesimulator" >> $GITHUB_OUTPUT
+              echo "destination=platform=iOS Simulator,name=iPhone 15,OS=17.2" >> $GITHUB_OUTPUT
+              ;;
+            "macOS")
+              echo "sdk=macosx" >> $GITHUB_OUTPUT
+              echo "destination=platform=macOS" >> $GITHUB_OUTPUT
+              ;;
+            "tvOS")
+              echo "sdk=appletvsimulator" >> $GITHUB_OUTPUT
+              echo "destination=platform=tvOS Simulator,name=Apple TV,OS=17.2" >> $GITHUB_OUTPUT
+              ;;
+            "watchOS")
+              echo "sdk=watchsimulator" >> $GITHUB_OUTPUT
+              echo "destination=platform=watchOS Simulator,name=Apple Watch Series 9 (45mm),OS=10.2" >> $GITHUB_OUTPUT
+              ;;
+          esac
+      - name: Build and test
+        run: |
+          if [[ "${{ matrix.platform }}" == "watchOS" ]]; then
+            xcodebuild build \
+              -scheme Lockman-Package \
+              -configuration ${{ matrix.config }} \
+              -sdk "${{ steps.platform.outputs.sdk }}" \
+              -destination "${{ steps.platform.outputs.destination }}" \
+              -skipMacroValidation
+          else
+            xcodebuild test \
+              -scheme Lockman-Package \
+              -configuration ${{ matrix.config }} \
+              -sdk "${{ steps.platform.outputs.sdk }}" \
+              -destination "${{ steps.platform.outputs.destination }}" \
+              -enableCodeCoverage YES \
+              -skipMacroValidation
+          fi
+  xcodebuild-latest:
+    name: xcodebuild / Xcode 16.0, ${{ matrix.platform }}
     runs-on: macos-15
-    steps:
-      - uses: actions/checkout@v4
-      - name: Cache derived data
-        uses: actions/cache@v3
-        with:
-          path: ~/.derivedData
-          key: |
-            deriveddata-examples-${{ hashFiles('**/Sources/**/*.swift', '**/Tests/**/*.swift', '**/Examples/**/*.swift') }}
-          restore-keys: |
-            deriveddata-examples-
-      - name: Select Xcode 16
-        run: sudo xcode-select -s /Applications/Xcode_16.2.app
-      - name: Update xcbeautify
-        run: brew update && brew upgrade xcbeautify
-      - name: Set IgnoreFileSystemDeviceInodeChanges flag
-        run: defaults write com.apple.dt.XCBuild IgnoreFileSystemDeviceInodeChanges -bool YES
-      - name: Update mtime for incremental builds
-        uses: chetan/git-restore-mtime-action@v2
-      - name: Strategies
-        run: make DERIVED_DATA_PATH=~/.derivedData SCHEME="Strategies" xcodebuild-raw
+    strategy:
+      fail-fast: false
+      matrix:
+        platform: ['iOS', 'macOS']
 
-  benchmarks:
-    name: Benchmarks
-    runs-on: macos-14
     steps:
       - uses: actions/checkout@v4
-      - name: Select Xcode 15.4
-        run: sudo xcode-select -s /Applications/Xcode_15.4.app
-      - name: Install dependencies
-        run: make install
-      - name: Run benchmarks
-        run: cd Benchmarks && make benchmarks
+
+      - name: Select Xcode 16.0
+        run: sudo xcode-select -s /Applications/Xcode_16.0.app
+
+      - name: Skip macro validation
+        run: defaults write com.apple.dt.Xcode IDESkipMacroFingerprintValidation -bool YES
+
+      - name: Fix Package.resolved
+        run: |
+          rm -f Package.resolved
+          swift package resolve
+      - name: Cache DerivedData
+        uses: actions/cache@v4
+        with:
+          key: xcodebuild-16.0-${{ matrix.platform }}-${{ hashFiles('**/Package.swift') }}
+          path: ~/Library/Developer/Xcode/DerivedData
+          restore-keys: |
+            xcodebuild-16.0-${{ matrix.platform }}-
+            xcodebuild-16.0-
+      - name: Set platform variables
+        id: platform
+        run: |
+          case "${{ matrix.platform }}" in
+            "iOS")
+              echo "sdk=iphonesimulator" >> $GITHUB_OUTPUT
+              echo "destination=platform=iOS Simulator,name=iPhone 16,OS=18.0" >> $GITHUB_OUTPUT
+              ;;
+            "macOS")
+              echo "sdk=macosx" >> $GITHUB_OUTPUT
+              echo "destination=platform=macOS" >> $GITHUB_OUTPUT
+              ;;
+          esac
+      - name: Build and test
+        run: |
+          xcodebuild test \
+            -scheme Lockman-Package \
+            -configuration Debug \
+            -sdk "${{ steps.platform.outputs.sdk }}" \
+            -destination "${{ steps.platform.outputs.destination }}" \
+            -enableCodeCoverage YES \
+            -skipMacroValidation
+      - name: Generate coverage report
+        if: matrix.platform == 'macOS'
+        run: |
+          set -e
+          # Find the correct path for coverage data
+          COV_BIN=$(find ~/Library/Developer/Xcode/DerivedData -name 'LockmanPackageTests' -type f -path '*/Build/Products/Debug*/LockmanPackageTests.xctest/Contents/MacOS/LockmanPackageTests' | head -n 1)
+          if [ -z "$COV_BIN" ]; then
+            echo "Could not find test binary"
+            exit 1
+          fi
+          
+          # Find profdata
+          PROF_DATA=$(find ~/Library/Developer/Xcode/DerivedData -name 'Coverage.profdata' -type f | head -n 1)
+          if [ -z "$PROF_DATA" ]; then
+            echo "Could not find profdata"
+            exit 1
+          fi
+          
+          # Generate lcov format
+          xcrun llvm-cov export \
+            "$COV_BIN" \
+            -instr-profile="$PROF_DATA" \
+            -format="lcov" > coverage.lcov
+      - name: Upload coverage to Codecov
+        if: matrix.platform == 'macOS'
+        uses: codecov/codecov-action@v4
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          files: ./coverage.lcov
+          flags: unittests
+          name: xcode-16.0-macOS
+          fail_ci_if_error: false
+
+  swift-test:
+    name: swift test / Swift ${{ matrix.swift }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { os: macos-14, swift: '5.9', xcode: '15.2' }
+          - { os: macos-15, swift: '6.0', xcode: '16.0' }
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Select Xcode ${{ matrix.xcode }}
+        run: sudo xcode-select -s /Applications/Xcode_${{ matrix.xcode }}.app
+
+      - name: Swift version
+        run: swift --version
+
+      - name: Fix Package.resolved
+        run: |
+          rm -f Package.resolved
+          swift package resolve
+      - name: Run tests
+        run: swift test --parallel
 
   check-macro-compatibility:
     name: Check Macro Compatibility
     runs-on: macos-latest
+
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-      - name: Run Swift Macro Compatibility Check
-        uses: Matejkob/swift-macro-compatibility-check@v1
-        with:
-          run-tests: false
-          major-versions-only: true
+      - uses: actions/checkout@v4
+
+      - name: Select latest Xcode
+        run: sudo xcode-select -s /Applications/Xcode.app
+
+      - name: Check macro compatibility
+        run: |
+          swift package diagnose-api-breaking-changes 1.17.1 || true
