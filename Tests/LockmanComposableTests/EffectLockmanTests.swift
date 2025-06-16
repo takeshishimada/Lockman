@@ -67,7 +67,7 @@ final class EffectWithLockSingleExecutionStrategyTests: XCTestCase {
   }
 
   func testActionExecutionAfterLockRelease() async {
-    let container = LockmanStrategyContainer()
+    let container  = LockmanStrategyContainer()
     let strategy = LockmanSingleExecutionStrategy()
     try? container.register(strategy)
 
@@ -100,7 +100,7 @@ final class EffectWithLockSingleExecutionStrategyTests: XCTestCase {
       // When: Second attempt after unlock
       await store.send(.tapIncrement)
       await store.receive(.increment) {
-        $0.count = 1
+        $0.count  = 1
       }
       await store.finish()
     }
@@ -141,7 +141,7 @@ final class EffectWithLockSingleExecutionStrategyTests: XCTestCase {
       // But: tapDecrement should work (different action name)
       await store.send(.tapDecrement)
       await store.receive(.decrement) {
-        $0.count = -1
+        $0.count  = -1
       }
       await store.finish()
     }
@@ -183,7 +183,7 @@ final class EffectWithLockSingleExecutionStrategyTests: XCTestCase {
   // MARK: - Concurrent Execution Tests
 
   func testConcurrentActionsWithDifferentIds() async {
-    let container = LockmanStrategyContainer()
+    let container  = LockmanStrategyContainer()
     let strategy = LockmanSingleExecutionStrategy()
     try? container.register(strategy)
 
@@ -360,7 +360,7 @@ final class EffectConcatenateWithLockTests: XCTestCase {
       // Verify that after unlock, action can execute normally
       await store.send(.executeConcatenateWithLock)
       await store.receive(\.increment) {
-        $0.count = 1
+        $0.count  = 1
       }
       await store.receive(\.increment) {
         $0.count = 2

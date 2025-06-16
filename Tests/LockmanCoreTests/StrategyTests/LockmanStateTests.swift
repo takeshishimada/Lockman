@@ -1,5 +1,5 @@
 import Foundation
-import Testing
+import XCTest
 @testable import LockmanCore
 
 // MARK: - Test Helpers
@@ -56,11 +56,9 @@ private struct TestLockmanInfo: LockmanInfo, Equatable {
 
 // MARK: - LockmanState Tests
 
-@Suite("LockmanState Tests")
-struct LockmanStateTests {
+final class LockmanStateTests: XCTestCase {
   // MARK: - Basic Operations
 
-  @Test("Add single entry")
   func testAddSingleEntry() {
     let state = LockmanState<TestLockmanInfo>()
     let boundaryId = TestBoundaryId(value: "test")
@@ -69,13 +67,12 @@ struct LockmanStateTests {
     state.add(id: boundaryId, info: info)
 
     let currents = state.currents(id: boundaryId)
-    #expect(currents.count == 1)
-    #expect(currents.first?.actionId == "1")
+    XCTAssertEqual(currents.count, 1)
+    XCTAssertEqual(currents.first?.actionId, "1")
   }
 
-  @Test("Add multiple entries to same boundary")
   func testAddMultipleEntriesToSameBoundary() {
-    let state = LockmanState<TestLockmanInfo>()
+    let state  = LockmanState<TestLockmanInfo>()
     let boundaryId = TestBoundaryId(value: "test")
     let info1 = TestLockmanInfo(id: "1")
     let info2 = TestLockmanInfo(id: "2")
@@ -86,11 +83,10 @@ struct LockmanStateTests {
     state.add(id: boundaryId, info: info3)
 
     let currents = state.currents(id: boundaryId)
-    #expect(currents.count == 3)
-    #expect(currents.map(\.actionId) == ["1", "2", "3"])
+    XCTAssertEqual(currents.count, 3)
+    XCTAssertEqual(currents.map(\.actionId), ["1", "2", "3"])
   }
 
-  @Test("Add entries to different boundaries")
   func testAddEntriesToDifferentBoundaries() {
     let state = LockmanState<TestLockmanInfo>()
     let boundary1 = TestBoundaryId(value: "boundary1")
@@ -104,15 +100,14 @@ struct LockmanStateTests {
     let currents1 = state.currents(id: boundary1)
     let currents2 = state.currents(id: boundary2)
 
-    #expect(currents1.count == 1)
-    #expect(currents1.first?.actionId == "1")
-    #expect(currents2.count == 1)
-    #expect(currents2.first?.actionId == "2")
+    XCTAssertEqual(currents1.count, 1)
+    XCTAssertEqual(currents1.first?.actionId, "1")
+    XCTAssertEqual(currents2.count, 1)
+    XCTAssertEqual(currents2.first?.actionId, "2")
   }
 
-  @Test("Remove last from single entry")
   func testRemoveLastFromSingleEntry() {
-    let state = LockmanState<TestLockmanInfo>()
+    let state  = LockmanState<TestLockmanInfo>()
     let boundaryId = TestBoundaryId(value: "test")
     let info = TestLockmanInfo(id: "1")
 
@@ -120,10 +115,9 @@ struct LockmanStateTests {
     state.removeAll(id: boundaryId)
 
     let currents = state.currents(id: boundaryId)
-    #expect(currents.isEmpty)
+    XCTAssertTrue(currents.isEmpty)
   }
 
-  @Test("Remove last from multiple entries")
   func testRemoveLastFromMultipleEntries() {
     let state = LockmanState<TestLockmanInfo>()
     let boundaryId = TestBoundaryId(value: "test")
@@ -138,11 +132,10 @@ struct LockmanStateTests {
     state.remove(id: boundaryId, info: info3)
 
     let currents = state.currents(id: boundaryId)
-    #expect(currents.count == 2)
-    #expect(currents.map(\.actionId) == ["1", "2"])
+    XCTAssertEqual(currents.count, 2)
+    XCTAssertEqual(currents.map(\.actionId), ["1", "2"])
   }
 
-  @Test("Remove last from non-existent boundary")
   func testRemoveLastFromNonExistentBoundary() {
     let state = LockmanState<TestLockmanInfo>()
     let boundaryId = TestBoundaryId(value: "non-existent")
@@ -151,19 +144,17 @@ struct LockmanStateTests {
     state.removeAll(id: boundaryId)
 
     let currents = state.currents(id: boundaryId)
-    #expect(currents.isEmpty)
+    XCTAssertTrue(currents.isEmpty)
   }
 
-  @Test("Get currents from empty state")
   func testGetCurrentsFromEmptyState() {
     let state = LockmanState<TestLockmanInfo>()
     let boundaryId = TestBoundaryId(value: "test")
 
     let currents = state.currents(id: boundaryId)
-    #expect(currents.isEmpty)
+    XCTAssertTrue(currents.isEmpty)
   }
 
-  @Test("Clean up all entries")
   func testCleanUpAllEntries() {
     let state = LockmanState<TestLockmanInfo>()
     let boundary1 = TestBoundaryId(value: "boundary1")
@@ -179,11 +170,10 @@ struct LockmanStateTests {
     let currents1 = state.currents(id: boundary1)
     let currents2 = state.currents(id: boundary2)
 
-    #expect(currents1.isEmpty)
-    #expect(currents2.isEmpty)
+    XCTAssertTrue(currents1.isEmpty)
+    XCTAssertTrue(currents2.isEmpty)
   }
 
-  @Test("Clean up specific boundary")
   func testCleanUpSpecificBoundary() {
     let state = LockmanState<TestLockmanInfo>()
     let boundary1 = TestBoundaryId(value: "boundary1")
@@ -199,16 +189,15 @@ struct LockmanStateTests {
     let currents1 = state.currents(id: boundary1)
     let currents2 = state.currents(id: boundary2)
 
-    #expect(currents1.isEmpty)
-    #expect(currents2.count == 1)
-    #expect(currents2.first?.actionId == "2")
+    XCTAssertTrue(currents1.isEmpty)
+    XCTAssertEqual(currents2.count, 1)
+    XCTAssertEqual(currents2.first?.actionId, "2")
   }
 
   // MARK: - Concurrent Access Tests
 
-  @Test("Concurrent adds to same boundary")
   func testConcurrentAddsToSameBoundary() async {
-    let state = LockmanState<TestLockmanInfo>()
+    let state  = LockmanState<TestLockmanInfo>()
     let boundaryId = TestBoundaryId("test")
     let iterations = 100
 
@@ -222,12 +211,11 @@ struct LockmanStateTests {
     }
 
     let currents = state.currents(id: boundaryId)
-    #expect(currents.count == iterations, "All concurrent adds should succeed")
+    XCTAssertEqual(currents.count, iterations, "All concurrent adds should succeed")
   }
 
-  @Test("Concurrent adds to different boundaries")
   func testConcurrentAddsToDifferentBoundaries() async {
-    let state = LockmanState<TestLockmanInfo>()
+    let state  = LockmanState<TestLockmanInfo>()
     let iterations = 50
     let boundaryCount = 5
 
@@ -245,13 +233,12 @@ struct LockmanStateTests {
       let boundaryId = TestBoundaryId("boundary\(i)")
       let currents = state.currents(id: boundaryId)
       let expectedCount = iterations / boundaryCount
-      #expect(currents.count == expectedCount, "Each boundary should have \(expectedCount) entries")
+      XCTAssertEqual(currents.count, expectedCount, "Each boundary should have \(expectedCount) entries")
     }
   }
 
-  @Test("Concurrent add and remove operations")
   func testConcurrentAddAndRemoveOperations() async {
-    let state = LockmanState<TestLockmanInfo>()
+    let state  = LockmanState<TestLockmanInfo>()
     let boundaryId = TestBoundaryId(value: "test")
     let iterations = 100
 
@@ -278,12 +265,11 @@ struct LockmanStateTests {
     }
 
     let currents = state.currents(id: boundaryId)
-    #expect(currents.count == iterations)
+    XCTAssertEqual(currents.count, iterations)
   }
 
-  @Test("Concurrent read operations")
   func testConcurrentReadOperations() async {
-    let state = LockmanState<TestLockmanInfo>()
+    let state  = LockmanState<TestLockmanInfo>()
     let boundaryId = TestBoundaryId(value: "test")
 
     // Add some initial data
@@ -305,14 +291,13 @@ struct LockmanStateTests {
       return counts
     }
 
-    #expect(results.allSatisfy { $0 == 10 })
+    XCTAssertTrue(results.allSatisfy { $0 == 10 })
   }
 
   // MARK: - Edge Cases
 
-  @Test("Stack-like behavior verification")
   func testStackLikeBehavior() {
-    let state = LockmanState<TestLockmanInfo>()
+    let state  = LockmanState<TestLockmanInfo>()
     let boundaryId = TestBoundaryId(value: "test")
 
     let infoList = (1 ... 5).map { TestLockmanInfo(id: "\($0)") }
@@ -324,16 +309,15 @@ struct LockmanStateTests {
     // Remove and verify LIFO order
     for info in infoList.reversed() {
       let currents = state.currents(id: boundaryId)
-      #expect(currents.last?.uniqueId == info.uniqueId)
+      XCTAssertEqual(currents.last?.uniqueId, info.uniqueId)
       state.remove(id: boundaryId, info: info)
     }
 
-    #expect(state.currents(id: boundaryId).isEmpty)
+    XCTAssertTrue(state.currents(id: boundaryId).isEmpty)
   }
 
-  @Test("Large number of entries")
   func testLargeNumberOfEntries() {
-    let state = LockmanState<TestLockmanInfo>()
+    let state  = LockmanState<TestLockmanInfo>()
     let boundaryId = TestBoundaryId(value: "test")
     let count = 1000 // Reduced from 10000 for reasonable test time
 
@@ -342,17 +326,16 @@ struct LockmanStateTests {
     }
 
     let currents = state.currents(id: boundaryId)
-    #expect(currents.count == count)
+    XCTAssertEqual(currents.count, count)
 
     // Verify order is maintained
     for (index, info) in currents.enumerated() {
-      #expect(info.actionId == "\(index)")
+      XCTAssertEqual(info.actionId, "\(index)")
     }
   }
 
-  @Test("Multiple clean up operations")
   func testMultipleCleanUpOperations() {
-    let state = LockmanState<TestLockmanInfo>()
+    let state  = LockmanState<TestLockmanInfo>()
     let boundaryId = TestBoundaryId(value: "test")
 
     state.add(id: boundaryId, info: TestLockmanInfo(id: "1"))
@@ -362,12 +345,11 @@ struct LockmanStateTests {
     state.removeAll(id: boundaryId)
     state.removeAll()
 
-    #expect(state.currents(id: boundaryId).isEmpty)
+    XCTAssertTrue(state.currents(id: boundaryId).isEmpty)
   }
 
   // MARK: - Data Integrity Tests
 
-  @Test("Order preservation")
   func testOrderPreservation() {
     let state = LockmanState<TestLockmanInfo>()
     let boundaryId = TestBoundaryId(value: "order_test")
@@ -378,10 +360,9 @@ struct LockmanStateTests {
     }
 
     let currents = state.currents(id: boundaryId)
-    #expect(currents.map(\.actionId) == testData)
+    XCTAssertTrue(currents.map(\.actionId) == testData)
   }
 
-  @Test("Boundary isolation")
   func testBoundaryIsolation() {
     let state = LockmanState<TestLockmanInfo>()
     let boundary1 = TestBoundaryId(value: "isolated1")
@@ -396,14 +377,13 @@ struct LockmanStateTests {
     // Operations on one boundary should not affect others
     state.removeAll(id: boundary1)
 
-    #expect(state.currents(id: boundary1).isEmpty)
-    #expect(state.currents(id: boundary2).count == 1)
-    #expect(state.currents(id: boundary3).count == 1)
-    #expect(state.currents(id: boundary2).first?.actionId == "b")
-    #expect(state.currents(id: boundary3).first?.actionId == "c")
+    XCTAssertTrue(state.currents(id: boundary1).isEmpty)
+    XCTAssertTrue(state.currents(id: boundary2).count == 1)
+    XCTAssertTrue(state.currents(id: boundary3).count == 1)
+    XCTAssertTrue(state.currents(id: boundary2).first?.actionId == "b")
+    XCTAssertTrue(state.currents(id: boundary3).first?.actionId == "c")
   }
 
-  @Test("Complex sequence operations")
   func testComplexSequenceOperations() {
     let state = LockmanState<TestLockmanInfo>()
     let boundaryId = TestBoundaryId(value: "complex")
@@ -416,12 +396,11 @@ struct LockmanStateTests {
     state.removeAll(id: boundaryId) // Remove "3"
     state.removeAll(id: boundaryId) // Remove "1"
 
-    #expect(state.currents(id: boundaryId).isEmpty)
+    XCTAssertTrue(state.currents(id: boundaryId).isEmpty)
   }
 
   // MARK: - Memory Management Tests
 
-  @Test("Memory cleanup after removals")
   func testMemoryCleanupAfterRemovals() {
     let state = LockmanState<TestLockmanInfo>()
     let boundaryId = TestBoundaryId(value: "memory_test")
@@ -437,14 +416,13 @@ struct LockmanStateTests {
     }
 
     // State should be completely empty
-    #expect(state.currents(id: boundaryId).isEmpty)
+    XCTAssertTrue(state.currents(id: boundaryId).isEmpty)
 
     // Should be able to add again without issues
     state.add(id: boundaryId, info: TestLockmanInfo(id: "new"))
-    #expect(state.currents(id: boundaryId).count == 1)
+    XCTAssertTrue(state.currents(id: boundaryId).count == 1)
   }
 
-  @Test("Cleanup with mixed boundary states")
   func testCleanupWithMixedBoundaryStates() {
     let state = LockmanState<TestLockmanInfo>()
     let emptyBoundary = TestBoundaryId(value: "empty")
@@ -465,17 +443,15 @@ struct LockmanStateTests {
     state.removeAll(id: emptyBoundary) // Should be safe
     state.removeAll(id: fullBoundary)
 
-    #expect(state.currents(id: emptyBoundary).isEmpty)
-    #expect(state.currents(id: fullBoundary).isEmpty)
-    #expect(state.currents(id: partialBoundary).count == 3)
+    XCTAssertTrue(state.currents(id: emptyBoundary).isEmpty)
+    XCTAssertTrue(state.currents(id: fullBoundary).isEmpty)
+    XCTAssertTrue(state.currents(id: partialBoundary).count == 3)
   }
 }
 
 // MARK: - AnyLockmanBoundaryId Tests
 
-@Suite("AnyLockmanBoundaryId Tests")
-struct AnyLockmanBoundaryIdTests {
-  @Test("Equality with same values")
+final class AnyLockmanBoundaryIdTests: XCTestCase {
   func testEqualityWithSameValues() {
     let id1 = TestBoundaryId(value: "test")
     let id2 = TestBoundaryId(value: "test")
@@ -483,42 +459,38 @@ struct AnyLockmanBoundaryIdTests {
     let any1 = AnyLockmanBoundaryId(id1)
     let any2 = AnyLockmanBoundaryId(id2)
 
-    #expect(any1 == any2)
+    XCTAssertEqual(any1, any2)
   }
 
-  @Test("Inequality with different values")
   func testInequalityWithDifferentValues() {
-    let id1 = TestBoundaryId(value: "test1")
+    let id1  = TestBoundaryId(value: "test1")
     let id2 = TestBoundaryId(value: "test2")
 
     let any1 = AnyLockmanBoundaryId(id1)
     let any2 = AnyLockmanBoundaryId(id2)
 
-    #expect(any1 != any2)
+    XCTAssertNotEqual(any1, any2)
   }
 
-  @Test("Hash consistency")
   func testHashConsistency() {
     let id = TestBoundaryId(value: "test")
     let any1 = AnyLockmanBoundaryId(id)
     let any2 = AnyLockmanBoundaryId(id)
 
-    #expect(any1.hashValue == any2.hashValue)
+    XCTAssertEqual(any1.hashValue, any2.hashValue)
   }
 
-  @Test("Different types with same value")
   func testDifferentTypesWithSameValue() {
-    let id1 = TestBoundaryId(value: "test")
+    let id1  = TestBoundaryId(value: "test")
     let id2 = AnotherBoundaryId(value: "test")
 
     let any1 = AnyLockmanBoundaryId(id1)
     let any2 = AnyLockmanBoundaryId(id2)
 
     // Different types should not be equal even with same value
-    #expect(any1 != any2)
+    XCTAssertNotEqual(any1, any2)
   }
 
-  @Test("Hash collision avoidance for different types")
   func testHashCollisionAvoidanceForDifferentTypes() {
     let id1 = TestBoundaryId(value: "test")
     let id2 = AnotherBoundaryId(value: "test")
@@ -532,18 +504,17 @@ struct AnyLockmanBoundaryIdTests {
     // and don't affect the correctness of the implementation
 
     // The important thing is that equality works correctly (tested elsewhere)
-    #expect(any1 != any2) // Different types should never be equal
+    XCTAssertNotEqual(any1, any2) // Different types should never be equal
 
     // Verify they can both be used as dictionary keys
     var dict: [AnyLockmanBoundaryId: String] = [:]
     dict[any1] = "value1"
     dict[any2] = "value2"
-    #expect(dict.count == 2) // Both should be stored separately
+    XCTAssertEqual(dict.count, 2) // Both should be stored separately
   }
 
-  @Test("Use as dictionary key")
   func testUseAsDictionaryKey() {
-    var dict: [AnyLockmanBoundaryId: String] = [:]
+    var dict: [AnyLockmanBoundaryId: String]  = [:]
 
     let id1 = TestBoundaryId(value: "key1")
     let id2 = TestBoundaryId(value: "key2")
@@ -557,14 +528,13 @@ struct AnyLockmanBoundaryIdTests {
     dict[any2] = "value2"
     dict[any1Copy] = "updated_value1" // Should overwrite
 
-    #expect(dict.count == 2)
-    #expect(dict[any1] == "updated_value1")
-    #expect(dict[any2] == "value2")
+    XCTAssertEqual(dict.count, 2)
+    XCTAssertEqual(dict[any1], "updated_value1")
+    XCTAssertEqual(dict[any2], "value2")
   }
 
-  @Test("Sendable compliance across tasks")
   func testSendableComplianceAcrossTasks() async {
-    let id = TestBoundaryId(value: "concurrent")
+    let id  = TestBoundaryId(value: "concurrent")
     let anyId = AnyLockmanBoundaryId(id)
 
     let results = await withTaskGroup(of: AnyLockmanBoundaryId.self, returning: [AnyLockmanBoundaryId].self) { group in
@@ -581,18 +551,16 @@ struct AnyLockmanBoundaryIdTests {
       return results
     }
 
-    #expect(results.count == 5)
-    #expect(results.allSatisfy { $0 == anyId })
+    XCTAssertEqual(results.count, 5)
+    XCTAssertTrue(results.allSatisfy { $0 == anyId })
   }
 }
 
 // MARK: - Performance Tests
 
-@Suite("LockmanState Performance Tests")
-struct LockmanStatePerformanceTests {
-  @Test("Performance with frequent adds and removes")
+final class LockmanStatePerformanceTests: XCTestCase {
   func testPerformanceWithFrequentAddsAndRemoves() async throws {
-    let state = LockmanState<TestLockmanInfo>()
+    let state  = LockmanState<TestLockmanInfo>()
     let boundaryId = TestBoundaryId(value: "test")
     let iterations = 1000
 
@@ -610,16 +578,15 @@ struct LockmanStatePerformanceTests {
     let duration = endTime.timeIntervalSince(startTime)
 
     // Should complete within reasonable time (adjust threshold as needed)
-    #expect(duration < 1.0)
+    XCTAssertLessThan(duration , 1.0)
 
     // Verify final state
     let finalCount = state.currents(id: boundaryId).count
-    #expect(finalCount == iterations / 2) // Half were removed
+    XCTAssertEqual(finalCount, iterations / 2) // Half were removed
   }
 
-  @Test("Performance with many boundaries")
   func testPerformanceWithManyBoundaries() {
-    let state = LockmanState<TestLockmanInfo>()
+    let state  = LockmanState<TestLockmanInfo>()
     let boundaryCount = 100
     let entriesPerBoundary = 10
 
@@ -635,16 +602,15 @@ struct LockmanStatePerformanceTests {
     let endTime = Date()
     let duration = endTime.timeIntervalSince(startTime)
 
-    #expect(duration < 1.0)
+    XCTAssertLessThan(duration , 1.0)
 
     // Verify all boundaries have correct number of entries
     for i in 0 ..< boundaryCount {
       let boundaryId = TestBoundaryId(value: "boundary_\(i)")
-      #expect(state.currents(id: boundaryId).count == entriesPerBoundary)
+      XCTAssertTrue(state.currents(id: boundaryId).count == entriesPerBoundary)
     }
   }
 
-  @Test("Concurrent performance test")
   func testConcurrentPerformance() async {
     let state = LockmanState<TestLockmanInfo>()
     let taskCount = 1
@@ -670,7 +636,7 @@ struct LockmanStatePerformanceTests {
     let endTime = Date()
     let duration = endTime.timeIntervalSince(startTime)
 
-    #expect(duration < 2.0)
+    XCTAssertLessThan(duration , 2.0)
 
     // Verify each task's boundary has expected number of entries
     for taskId in 0 ..< taskCount {
@@ -678,7 +644,7 @@ struct LockmanStatePerformanceTests {
       let currents = state.currents(id: boundaryId)
       let currentCount = currents.count
       let expectedCount = operationsPerTask - (operationsPerTask / 3) - 1
-      #expect(currentCount == expectedCount)
+      XCTAssertEqual(currentCount, expectedCount)
     }
   }
 }

@@ -52,7 +52,7 @@ final class DebugTests: XCTestCase {
 
   func testDebugDescriptionForAllInfoTypes() {
     // Test that all info types have proper debug descriptions
-    let singleExecInfo = LockmanSingleExecutionInfo(actionId: "testAction", mode: .boundary)
+    let singleExecInfo  = LockmanSingleExecutionInfo(actionId: "testAction", mode: .boundary)
     XCTAssertTrue(singleExecInfo.debugDescription.contains("LockmanSingleExecutionInfo"))
     XCTAssertTrue(singleExecInfo.debugDescription.contains("testAction"))
     XCTAssertTrue(singleExecInfo.debugDescription.contains("boundary"))

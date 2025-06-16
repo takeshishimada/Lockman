@@ -1,11 +1,10 @@
 
 import Foundation
-import Testing
+import XCTest
 @testable import LockmanCore
 
 /// Tests for LockmanSingleExecutionAction protocol and implementations
-@Suite("Single Execution Action Tests")
-struct LockmanSingleExecutionActionTests {
+final class LockmanSingleExecutionActionTests: XCTestCase {
   // MARK: - Mock Actions
 
   /// Simple action without parameters
@@ -63,86 +62,81 @@ struct LockmanSingleExecutionActionTests {
 
   // MARK: - Protocol Conformance Tests
 
-  @Test("Simple action protocol conformance")
-  func simpleActionProtocolConformance() {
+  func testsimpleActionProtocolConformance() {
     let action = SimpleAction()
 
     // Test actionName
-    #expect(action.actionName == "simpleAction")
+    XCTAssertEqual(action.actionName, "simpleAction")
 
     // Test automatic strategyId
-    #expect(action.strategyId == .singleExecution)
+    XCTAssertEqual(action.strategyId, .singleExecution)
 
     // Test automatic lockmanInfo
-    let info = action.lockmanInfo
-    #expect(info.actionId == "simpleAction")
-    #expect(info.uniqueId != UUID())
+    let info  = action.lockmanInfo
+    XCTAssertEqual(info.actionId, "simpleAction")
+    XCTAssertNotEqual(info.uniqueId, UUID())
   }
 
-  @Test("Parameterized action with unique names")
-  func parameterizedActionUniqueNames() {
+  func testparameterizedActionUniqueNames() {
     let action1 = ParameterizedAction.fetchUser(id: "123")
     let action2 = ParameterizedAction.fetchUser(id: "456")
     let action3 = ParameterizedAction.updateProfile(userId: "123", name: "John")
     let action4 = ParameterizedAction.deletePost(postId: 789)
 
     // Each should have unique actionName
-    #expect(action1.actionName == "fetchUser_123")
-    #expect(action2.actionName == "fetchUser_456")
-    #expect(action3.actionName == "updateProfile_123")
-    #expect(action4.actionName == "deletePost_789")
+    XCTAssertEqual(action1.actionName, "fetchUser_123")
+    XCTAssertEqual(action2.actionName, "fetchUser_456")
+    XCTAssertEqual(action3.actionName, "updateProfile_123")
+    XCTAssertEqual(action4.actionName, "deletePost_789")
 
     // All should use the same strategy ID
-    #expect(action1.strategyId == .singleExecution)
-    #expect(action2.strategyId == .singleExecution)
-    #expect(action3.strategyId == .singleExecution)
-    #expect(action4.strategyId == .singleExecution)
+    XCTAssertEqual(action1.strategyId, .singleExecution)
+    XCTAssertEqual(action2.strategyId, .singleExecution)
+    XCTAssertEqual(action3.strategyId, .singleExecution)
+    XCTAssertEqual(action4.strategyId, .singleExecution)
 
     // LockmanInfo should reflect the actionName
-    #expect(action1.lockmanInfo.actionId == "fetchUser_123")
-    #expect(action2.lockmanInfo.actionId == "fetchUser_456")
-    #expect(action3.lockmanInfo.actionId == "updateProfile_123")
-    #expect(action4.lockmanInfo.actionId == "deletePost_789")
+    XCTAssertEqual(action1.lockmanInfo.actionId, "fetchUser_123")
+    XCTAssertEqual(action2.lockmanInfo.actionId, "fetchUser_456")
+    XCTAssertEqual(action3.lockmanInfo.actionId, "updateProfile_123")
+    XCTAssertEqual(action4.lockmanInfo.actionId, "deletePost_789")
   }
 
-  @Test("Shared lock action behavior")
-  func sharedLockActionBehavior() {
-    let saveAction = SharedLockAction.save(data: "test data")
+  func testsharedLockActionBehavior() {
+    let saveAction  = SharedLockAction.save(data: "test data")
     let loadAction = SharedLockAction.load
     let resetAction = SharedLockAction.reset
 
     // Save and load share the same actionName
-    #expect(saveAction.actionName == "sharedOperation")
-    #expect(loadAction.actionName == "sharedOperation")
-    #expect(resetAction.actionName == "reset")
+    XCTAssertEqual(saveAction.actionName, "sharedOperation")
+    XCTAssertEqual(loadAction.actionName, "sharedOperation")
+    XCTAssertEqual(resetAction.actionName, "reset")
 
     // They should conflict with each other
-    #expect(saveAction.lockmanInfo.actionId == loadAction.lockmanInfo.actionId)
-    #expect(saveAction.lockmanInfo.actionId != resetAction.lockmanInfo.actionId)
+    XCTAssertEqual(saveAction.lockmanInfo.actionId, loadAction.lockmanInfo.actionId)
+    XCTAssertNotEqual(saveAction.lockmanInfo.actionId, resetAction.lockmanInfo.actionId)
   }
 
   // MARK: - LockmanAction Protocol Tests
 
-  @Test("SingleExecutionAction is LockmanAction")
-  func singleExecutionActionIsLockmanAction() {
+  func testsingleExecutionActionIsLockmanAction() {
     // Test that SingleExecutionAction conforms to LockmanAction
-    let action: any LockmanAction = SimpleAction()
+    let action: any LockmanAction  = SimpleAction()
 
     // Verify we can store it as LockmanAction
     let actions: [any LockmanAction] = [action]
-    #expect(actions.count == 1)
+    XCTAssertEqual(actions.count, 1)
 
     // Test type constraints are satisfied
-    let info = action.lockmanInfo as? LockmanSingleExecutionInfo
-    #expect(info != nil)
-    #expect(info?.actionId == "simpleAction")
+    let info  = action.lockmanInfo as? LockmanSingleExecutionInfo
+    XCTAssertNotNil(info )
+    XCTAssertEqual(info?.actionId, "simpleAction")
   }
 
   // MARK: - Integration Tests
 
-  @Test("Integration with strategy container")
-  func integrationWithStrategyContainer() async {
-    let container = LockmanStrategyContainer()
+  func testintegrationWithStrategyContainer() async {
+    let container  = LockmanStrategyContainer()
     try? container.register(LockmanSingleExecutionStrategy.shared)
 
     await Lockman.withTestContainer(container) {
@@ -159,19 +153,18 @@ struct LockmanSingleExecutionActionTests {
         let boundaryId = "test-boundary"
         let info = action.lockmanInfo
 
-        #expect(strategy.canLock(id: boundaryId, info: info) == .success)
+        XCTAssertEqual(strategy.canLock(id: boundaryId, info: info), .success)
         strategy.lock(id: boundaryId, info: info)
-        #expect(strategy.canLock(id: boundaryId, info: info) == .failure)
+        XCTAssertEqual(strategy.canLock(id: boundaryId, info: info), .failure)
         strategy.unlock(id: boundaryId, info: info)
-        #expect(strategy.canLock(id: boundaryId, info: info) == .success)
+        XCTAssertEqual(strategy.canLock(id: boundaryId, info: info), .success)
       } catch {
-        #expect(Bool(false), "Strategy resolution should succeed")
+        XCTFail("Strategy resolution should succeed")
       }
     }
   }
 
-  @Test("Concurrent execution prevention")
-  func concurrentExecutionPrevention() {
+  func testconcurrentExecutionPrevention() {
     let strategy = LockmanSingleExecutionStrategy()
     let boundaryId = "test-boundary"
 
@@ -180,15 +173,15 @@ struct LockmanSingleExecutionActionTests {
     let action2 = ParameterizedAction.fetchUser(id: "123")
 
     // First lock should succeed
-    #expect(strategy.canLock(id: boundaryId, info: action1.lockmanInfo) == .success)
+    XCTAssertEqual(strategy.canLock(id: boundaryId, info: action1.lockmanInfo), .success)
     strategy.lock(id: boundaryId, info: action1.lockmanInfo)
 
     // Second lock should fail (boundary is locked)
-    #expect(strategy.canLock(id: boundaryId, info: action2.lockmanInfo) == .failure)
+    XCTAssertEqual(strategy.canLock(id: boundaryId, info: action2.lockmanInfo), .failure)
 
     // Different action should also fail (boundary is locked)
     let action3 = ParameterizedAction.fetchUser(id: "456")
-    #expect(strategy.canLock(id: boundaryId, info: action3.lockmanInfo) == .failure)
+    XCTAssertEqual(strategy.canLock(id: boundaryId, info: action3.lockmanInfo), .failure)
 
     // Cleanup
     strategy.cleanUp()
@@ -196,8 +189,7 @@ struct LockmanSingleExecutionActionTests {
 
   // MARK: - Edge Cases
 
-  @Test("Empty actionName handling")
-  func emptyActionNameHandling() {
+  func testemptyActionNameHandling() {
     struct EmptyNameAction: LockmanSingleExecutionAction {
       let actionName = ""
 
@@ -207,15 +199,14 @@ struct LockmanSingleExecutionActionTests {
     }
 
     let action = EmptyNameAction()
-    #expect(action.actionName == "")
-    #expect(action.lockmanInfo.actionId == "")
-    #expect(action.strategyId == .singleExecution)
+    XCTAssertEqual(action.actionName, "")
+    XCTAssertEqual(action.lockmanInfo.actionId, "")
+    XCTAssertEqual(action.strategyId, .singleExecution)
   }
 
-  @Test("Unicode actionName handling")
-  func unicodeActionNameHandling() {
+  func testunicodeActionNameHandling() {
     struct UnicodeAction: LockmanSingleExecutionAction {
-      let actionName = "🔒アクション🚀"
+      let actionName  = "🔒アクション🚀"
 
       var lockmanInfo: LockmanSingleExecutionInfo {
         .init(actionId: actionName, mode: .boundary)
@@ -223,14 +214,13 @@ struct LockmanSingleExecutionActionTests {
     }
 
     let action = UnicodeAction()
-    #expect(action.actionName == "🔒アクション🚀")
-    #expect(action.lockmanInfo.actionId == "🔒アクション🚀")
+    XCTAssertEqual(action.actionName, "🔒アクション🚀")
+    XCTAssertEqual(action.lockmanInfo.actionId, "🔒アクション🚀")
   }
 
-  @Test("Very long actionName handling")
-  func veryLongActionNameHandling() {
+  func testveryLongActionNameHandling() {
     struct LongNameAction: LockmanSingleExecutionAction {
-      let actionName = String(repeating: "VeryLongActionName", count: 100)
+      let actionName  = String(repeating: "VeryLongActionName", count: 100)
 
       var lockmanInfo: LockmanSingleExecutionInfo {
         .init(actionId: actionName, mode: .boundary)
@@ -238,18 +228,17 @@ struct LockmanSingleExecutionActionTests {
     }
 
     let action = LongNameAction()
-    #expect(action.actionName.count == 1800)
-    #expect(action.lockmanInfo.actionId == action.actionName)
+    XCTAssertEqual(action.actionName.count, 1800)
+    XCTAssertEqual(action.lockmanInfo.actionId, action.actionName)
   }
 
-  @Test("ActionName consistency across instances")
-  func actionNameConsistencyAcrossInstances() {
-    let action1 = SimpleAction()
+  func testactionNameConsistencyAcrossInstances() {
+    let action1  = SimpleAction()
     let action2 = SimpleAction()
 
-    #expect(action1.actionName == action2.actionName)
-    #expect(action1.lockmanInfo.actionId == action2.lockmanInfo.actionId)
+    XCTAssertEqual(action1.actionName, action2.actionName)
+    XCTAssertEqual(action1.lockmanInfo.actionId, action2.lockmanInfo.actionId)
     // But unique IDs should be different
-    #expect(action1.lockmanInfo.uniqueId != action2.lockmanInfo.uniqueId)
+    XCTAssertNotEqual(action1.lockmanInfo.uniqueId, action2.lockmanInfo.uniqueId)
   }
 }

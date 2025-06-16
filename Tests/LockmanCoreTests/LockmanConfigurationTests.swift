@@ -5,7 +5,7 @@ import XCTest
 final class LockmanConfigurationTests: XCTestCase {
   // MARK: - Test Setup
 
-  override func setUp() async throws {
+  override func setUp() {
     // Reset configuration to default before each test
     Lockman.config.reset()
   }
@@ -19,7 +19,7 @@ final class LockmanConfigurationTests: XCTestCase {
 
   func testConfigurationCanBeModified() async throws {
     // Change to immediate
-    Lockman.config.defaultUnlockOption = .immediate
+    Lockman.config.defaultUnlockOption  = .immediate
     XCTAssertEqual(Lockman.config.defaultUnlockOption, .immediate)
 
     // Change to mainRunLoop
@@ -27,7 +27,7 @@ final class LockmanConfigurationTests: XCTestCase {
     XCTAssertEqual(Lockman.config.defaultUnlockOption, .mainRunLoop)
 
     // Change to delayed
-    Lockman.config.defaultUnlockOption = .delayed(0.5)
+    Lockman.config.defaultUnlockOption  = .delayed(0.5)
     if case let .delayed(interval) = Lockman.config.defaultUnlockOption {
       XCTAssertEqual(interval, 0.5)
     } else {
@@ -37,7 +37,7 @@ final class LockmanConfigurationTests: XCTestCase {
 
   func testConfigurationCanBeReset() async throws {
     // Modify configuration
-    Lockman.config.defaultUnlockOption = .immediate
+    Lockman.config.defaultUnlockOption  = .immediate
     XCTAssertEqual(Lockman.config.defaultUnlockOption, .immediate)
 
     // Reset to default
@@ -46,7 +46,7 @@ final class LockmanConfigurationTests: XCTestCase {
   }
 
   func testConfigurationIsThreadSafe() async throws {
-    let iterations = 100
+    let iterations  = 100
 
     await withTaskGroup(of: Void.self) { group in
       // Multiple readers
@@ -83,7 +83,7 @@ final class LockmanConfigurationTests: XCTestCase {
     XCTAssertEqual(Lockman.config.defaultUnlockOption, .immediate)
 
     // Change to mainRunLoop
-    Lockman.config.defaultUnlockOption = .mainRunLoop
+    Lockman.config.defaultUnlockOption  = .mainRunLoop
     XCTAssertEqual(Lockman.config.defaultUnlockOption, .mainRunLoop)
   }
 
@@ -105,7 +105,7 @@ final class LockmanConfigurationTests: XCTestCase {
 final class LockmanConfigurationIntegrationTests: XCTestCase {
   // MARK: - Test Setup
 
-  override func setUp() async throws {
+  override func setUp() {
     // Reset configuration to default before each test
     Lockman.config.reset()
   }
@@ -115,7 +115,7 @@ final class LockmanConfigurationIntegrationTests: XCTestCase {
     Lockman.config.reset()
 
     // Test with immediate option
-    Lockman.config.defaultUnlockOption = .immediate
+    Lockman.config.defaultUnlockOption  = .immediate
 
     // Verify configuration is set correctly
     XCTAssertEqual(Lockman.config.defaultUnlockOption, .immediate)
@@ -132,7 +132,7 @@ final class LockmanConfigurationIntegrationTests: XCTestCase {
     XCTAssertEqual(strategy.canLock(id: boundaryId, info: anotherInfo), .failure)
 
     // Create unlock token with immediate option
-    let unlockToken = LockmanUnlock(
+    let unlockToken  = LockmanUnlock(
       id: boundaryId,
       info: info,
       strategy: AnyLockmanStrategy(strategy),
@@ -154,7 +154,7 @@ final class LockmanConfigurationIntegrationTests: XCTestCase {
   @MainActor
   func testConfigurationWithTransitionOptionDelaysUnlock() async throws {
     // Use a unique boundary ID to avoid interference from other tests
-    let boundaryId = TestBoundaryId("test-transition-\(UUID().uuidString)")
+    let boundaryId  = TestBoundaryId("test-transition-\(UUID().uuidString)")
 
     // Create a fresh strategy instance
     let strategy = LockmanSingleExecutionStrategy()
@@ -202,7 +202,7 @@ private struct TestBoundaryId: LockmanBoundaryId {
   let value: String
 
   init(_ value: String) {
-    self.value = value
+    self.value  = value
   }
 
   func hash(into hasher: inout Hasher) {

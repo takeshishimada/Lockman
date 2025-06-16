@@ -23,7 +23,7 @@ final class LockmanEdgeCaseTests: XCTestCase {
   }
 
   func testVeryLongBoundaryIDHandling() async throws {
-    let strategy = LockmanPriorityBasedStrategy()
+    let strategy  = LockmanPriorityBasedStrategy()
     let info = LockmanPriorityBasedInfo(actionId: "test-action", priority: .high(.exclusive))
     let longBoundaryId = String(repeating: "VeryLongBoundaryId", count: 100) // 1800 characters
 
@@ -36,7 +36,7 @@ final class LockmanEdgeCaseTests: XCTestCase {
   }
 
   func testUnicodeBoundaryIDHandling() async throws {
-    let strategy = LockmanSingleExecutionStrategy()
+    let strategy  = LockmanSingleExecutionStrategy()
     let info = LockmanSingleExecutionInfo(actionId: "test-action", mode: .boundary)
     let unicodeBoundaryId = "🔒境界識別子📱测试🚀"
 
@@ -49,7 +49,7 @@ final class LockmanEdgeCaseTests: XCTestCase {
   }
 
   func testSpecialCharacterBoundaryIDHandling() async throws {
-    let strategy = LockmanPriorityBasedStrategy()
+    let strategy  = LockmanPriorityBasedStrategy()
     let info = LockmanPriorityBasedInfo(actionId: "test", priority: .low(.replaceable))
     let specialBoundaryId = "boundary@#$%^&*()_+-=[]{}|;':\",./<>?"
 
@@ -61,7 +61,7 @@ final class LockmanEdgeCaseTests: XCTestCase {
   // MARK: - Action ID Edge Cases
 
   func testEmptyActionIDHandling() async throws {
-    let strategy = LockmanSingleExecutionStrategy()
+    let strategy  = LockmanSingleExecutionStrategy()
     let emptyActionInfo = LockmanSingleExecutionInfo(actionId: "", mode: .boundary)
     let boundaryId = "test-boundary"
 
@@ -70,7 +70,7 @@ final class LockmanEdgeCaseTests: XCTestCase {
     XCTAssertEqual(strategy.canLock(id: boundaryId, info: emptyActionInfo), .failure)
 
     // Different empty action should also conflict
-    let anotherEmptyInfo = LockmanSingleExecutionInfo(actionId: "", mode: .boundary)
+    let anotherEmptyInfo  = LockmanSingleExecutionInfo(actionId: "", mode: .boundary)
     XCTAssertEqual(strategy.canLock(id: boundaryId, info: anotherEmptyInfo), .failure)
 
     strategy.unlock(id: boundaryId, info: emptyActionInfo)
@@ -78,7 +78,7 @@ final class LockmanEdgeCaseTests: XCTestCase {
   }
 
   func testVeryLongActionIDHandling() async throws {
-    let strategy = LockmanPriorityBasedStrategy()
+    let strategy  = LockmanPriorityBasedStrategy()
     let longActionId = String(repeating: "VeryLongActionIdentifier", count: 50) // 1250 characters
     let info = LockmanPriorityBasedInfo(actionId: longActionId, priority: .high(.exclusive))
     let boundaryId = "test-boundary"
@@ -87,14 +87,14 @@ final class LockmanEdgeCaseTests: XCTestCase {
     strategy.lock(id: boundaryId, info: info)
 
     // Same long action ID with lower priority should fail
-    let sameActionInfo = LockmanPriorityBasedInfo(actionId: longActionId, priority: .low(.exclusive))
+    let sameActionInfo  = LockmanPriorityBasedInfo(actionId: longActionId, priority: .low(.exclusive))
     XCTAssertEqual(strategy.canLock(id: boundaryId, info: sameActionInfo), .failure)
 
     strategy.cleanUp()
   }
 
   func testUnicodeActionIDHandling() async throws {
-    let strategy = LockmanSingleExecutionStrategy()
+    let strategy  = LockmanSingleExecutionStrategy()
     let unicodeActionId = "🚀アクション测试🔒動作識別子📱"
     let info = LockmanSingleExecutionInfo(actionId: unicodeActionId, mode: .boundary)
     let boundaryId = "test-boundary"
@@ -103,7 +103,7 @@ final class LockmanEdgeCaseTests: XCTestCase {
     strategy.lock(id: boundaryId, info: info)
 
     // Same unicode action ID should conflict
-    let sameUnicodeInfo = LockmanSingleExecutionInfo(actionId: unicodeActionId, mode: .boundary)
+    let sameUnicodeInfo  = LockmanSingleExecutionInfo(actionId: unicodeActionId, mode: .boundary)
     XCTAssertEqual(strategy.canLock(id: boundaryId, info: sameUnicodeInfo), .failure)
 
     strategy.unlock(id: boundaryId, info: info)
@@ -113,7 +113,7 @@ final class LockmanEdgeCaseTests: XCTestCase {
   // MARK: - Priority Edge Cases
 
   func testNonePriorityBehaviorWithConflicts() async throws {
-    let strategy = LockmanPriorityBasedStrategy()
+    let strategy  = LockmanPriorityBasedStrategy()
     let boundaryId = "priority-test"
 
     let noneInfo1 = LockmanPriorityBasedInfo(actionId: "none-action", priority: .none)
@@ -129,7 +129,7 @@ final class LockmanEdgeCaseTests: XCTestCase {
     strategy.lock(id: boundaryId, info: noneInfo2)
 
     // High priority should succeed (may not cancel if none priority doesn't block)
-    let result = strategy.canLock(id: boundaryId, info: highInfo)
+    let result  = strategy.canLock(id: boundaryId, info: highInfo)
     XCTAssertTrue(result == .success || result == .successWithPrecedingCancellation)
 
     strategy.cleanUp()
@@ -158,7 +158,7 @@ final class LockmanEdgeCaseTests: XCTestCase {
   // MARK: - Memory and Performance Edge Cases
 
   func testHighFrequencyLockOperations() async throws {
-    let strategy = LockmanSingleExecutionStrategy()
+    let strategy  = LockmanSingleExecutionStrategy()
     let boundaryId = "performance-test"
     let operationCount = 1000
 
@@ -172,7 +172,7 @@ final class LockmanEdgeCaseTests: XCTestCase {
       strategy.unlock(id: boundaryId, info: info)
     }
 
-    let endTime = CFAbsoluteTimeGetCurrent()
+    let endTime  = CFAbsoluteTimeGetCurrent()
     let executionTime = endTime - startTime
 
     // Should complete 1000 operations in reasonable time
@@ -196,7 +196,7 @@ final class LockmanEdgeCaseTests: XCTestCase {
 
     // Verify all are locked independently
     for i in 0 ..< boundaryCount {
-      let boundaryId = "boundary-\(i)"
+      let boundaryId  = "boundary-\(i)"
       let newInfo = LockmanPriorityBasedInfo(actionId: "action", priority: .low(.exclusive))
 
       XCTAssertEqual(strategy.canLock(id: boundaryId, info: newInfo), .failure)
@@ -206,7 +206,7 @@ final class LockmanEdgeCaseTests: XCTestCase {
   }
 
   func testMemoryEfficiencyWithManyInfoInstances() async throws {
-    var infos: [LockmanSingleExecutionInfo] = []
+    var infos: [LockmanSingleExecutionInfo]  = []
     let instanceCount = 10000
 
     // Create many info instances
@@ -220,7 +220,7 @@ final class LockmanEdgeCaseTests: XCTestCase {
     XCTAssertEqual(uniqueIds.count, instanceCount)
 
     // Verify they can be used with strategies
-    let strategy = LockmanSingleExecutionStrategy()
+    let strategy  = LockmanSingleExecutionStrategy()
     let boundaryId = "memory-test"
 
     // Use a subset to avoid excessive test time
@@ -239,7 +239,7 @@ final class LockmanEdgeCaseTests: XCTestCase {
   func testStrategyContainerWithManyStrategyTypes() async throws {
     // Create multiple unique strategy types for testing
     struct Strategy1: LockmanStrategy {
-      typealias I = LockmanSingleExecutionInfo
+      typealias I  = LockmanSingleExecutionInfo
       var strategyId: LockmanStrategyId { LockmanStrategyId(type: Self.self) }
       static func makeStrategyId() -> LockmanStrategyId { LockmanStrategyId(type: self) }
       func canLock<B: LockmanBoundaryId>(id _: B, info _: LockmanSingleExecutionInfo) -> LockResult { .success }
@@ -319,7 +319,7 @@ final class LockmanEdgeCaseTests: XCTestCase {
   }
 
   func testMultipleCleanupCalls() async throws {
-    let strategy = LockmanPriorityBasedStrategy()
+    let strategy  = LockmanPriorityBasedStrategy()
     let boundaryId = "cleanup-test"
     let info = LockmanPriorityBasedInfo(actionId: "test", priority: .high(.exclusive))
 
@@ -337,7 +337,7 @@ final class LockmanEdgeCaseTests: XCTestCase {
   }
 
   func testCleanupDuringActiveOperations() async throws {
-    let strategy = LockmanSingleExecutionStrategy()
+    let strategy  = LockmanSingleExecutionStrategy()
     let boundaryId = "concurrent-cleanup"
     let info = LockmanSingleExecutionInfo(actionId: "test-action", mode: .boundary)
 
@@ -359,7 +359,7 @@ final class LockmanEdgeCaseTests: XCTestCase {
   // MARK: - Boundary Lock Edge Cases
 
   func testSameBoundaryIDWithDifferentTypes() async throws {
-    let singleStrategy = LockmanSingleExecutionStrategy()
+    let singleStrategy  = LockmanSingleExecutionStrategy()
     let priorityStrategy = LockmanPriorityBasedStrategy()
 
     let boundaryId = "shared-boundary"
@@ -385,7 +385,7 @@ final class LockmanEdgeCaseTests: XCTestCase {
   // MARK: - Unique ID Edge Cases
 
   func testUniqueIDCollisionResistance() async throws {
-    var uniqueIds: Set<UUID> = []
+    var uniqueIds: Set<UUID>  = []
     let instanceCount = 10000
 
     // Generate many instances with same action ID
@@ -398,7 +398,7 @@ final class LockmanEdgeCaseTests: XCTestCase {
   }
 
   func testUniqueIDPersistenceAcrossOperations() async throws {
-    let info = LockmanPriorityBasedInfo(actionId: "test", priority: .high(.exclusive))
+    let info  = LockmanPriorityBasedInfo(actionId: "test", priority: .high(.exclusive))
     let originalUniqueId = info.uniqueId
 
     let strategy = LockmanPriorityBasedStrategy()

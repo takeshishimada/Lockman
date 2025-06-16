@@ -146,7 +146,7 @@ final class LockmanFacadeTests: XCTestCase {
   }
 
   func testTargetedCleanupDelegatesToContainer() async throws {
-    let testContainer = LockmanStrategyContainer()
+    let testContainer  = LockmanStrategyContainer()
     let mockStrategy = MockLockmanStrategy()
     let boundaryId = MockBoundaryId(value: "test")
     try? testContainer.register(mockStrategy)
@@ -161,7 +161,7 @@ final class LockmanFacadeTests: XCTestCase {
   }
 
   func testMultipleCleanupCalls() async throws {
-    let testContainer = LockmanStrategyContainer()
+    let testContainer  = LockmanStrategyContainer()
     let mockStrategy = MockLockmanStrategy()
     let boundaryId1 = MockBoundaryId(value: "test1")
     let boundaryId2 = MockBoundaryId(value: "test2")
@@ -182,7 +182,7 @@ final class LockmanFacadeTests: XCTestCase {
   // MARK: - Test Container Tests
 
   func testTestContainerIsolation() async throws {
-    let testContainer = LockmanStrategyContainer()
+    let testContainer  = LockmanStrategyContainer()
     let mockStrategy = MockLockmanStrategy()
     try? testContainer.register(mockStrategy)
 
@@ -200,7 +200,7 @@ final class LockmanFacadeTests: XCTestCase {
         let resolvedMock = try containerInScope.resolve(MockLockmanStrategy.self)
         XCTAssertTrue(type(of: resolvedMock) == AnyLockmanStrategy<MockLockmanInfo>.self)
       } catch {
-        XCTAssertTrue(Bool(false), "Should be able to resolve mock strategy")
+        XCTFail("Should be able to resolve mock strategy")
       }
     }
 
@@ -232,7 +232,7 @@ final class LockmanFacadeTests: XCTestCase {
       }
 
       // Back to outer container
-      let container3 = Lockman.container
+      let container3  = Lockman.container
       XCTAssertTrue(container3 === outerContainer)
 
       Lockman.cleanup.all()
@@ -244,7 +244,7 @@ final class LockmanFacadeTests: XCTestCase {
   func testTestContainerWithThrowingOperation() async throws {
     struct TestError: Error {}
 
-    let testContainer = LockmanStrategyContainer()
+    let testContainer  = LockmanStrategyContainer()
     let mockStrategy = MockLockmanStrategy()
     try? testContainer.register(mockStrategy)
 
@@ -255,11 +255,11 @@ final class LockmanFacadeTests: XCTestCase {
 
         throw TestError()
       }
-      XCTAssertTrue(Bool(false), "Should have thrown TestError")
+      XCTFail("Should have thrown TestError")
     } catch is TestError {
       // Expected
     } catch {
-      XCTAssertTrue(Bool(false), "Should have thrown TestError, got \(error)")
+      XCTFail("Should have thrown TestError, got \(error)")
     }
 
     // Should be back to default container
@@ -280,7 +280,7 @@ final class LockmanFacadeTests: XCTestCase {
   // MARK: - Concurrent Access Tests
 
   func testConcurrentAccessToDefaultContainer() async throws {
-    let containers = await withTaskGroup(of: LockmanStrategyContainer.self) { group in
+    let containers  = await withTaskGroup(of: LockmanStrategyContainer.self) { group in
       for _ in 0 ..< 100 {
         group.addTask {
           Lockman.container
@@ -395,7 +395,7 @@ final class LockmanFacadeTests: XCTestCase {
       do {
         resolvedStrategy = try testContainer.resolve(MockLockmanStrategy.self)
       } catch {
-        XCTAssertTrue(Bool(false), "Unexpected error: \(error)")
+        XCTFail("Unexpected error: \(error)")
         return
       }
 
@@ -407,7 +407,7 @@ final class LockmanFacadeTests: XCTestCase {
       XCTAssertEqual(result, .success)
 
       // Test individual operations
-      let canLockResult = resolvedStrategy.canLock(id: boundaryId, info: info)
+      let canLockResult  = resolvedStrategy.canLock(id: boundaryId, info: info)
       XCTAssertEqual(canLockResult, .success)
 
       resolvedStrategy.lock(id: boundaryId, info: info)
@@ -427,7 +427,7 @@ final class LockmanFacadeTests: XCTestCase {
 final class LockmanIntegrationTests: XCTestCase {
   func testIntegrationPotential() async throws {
     // This test verifies that the container setup would work with Effect.withLock
-    let testContainer = LockmanStrategyContainer()
+    let testContainer  = LockmanStrategyContainer()
     try? testContainer.register(LockmanSingleExecutionStrategy.shared)
     try? testContainer.register(LockmanPriorityBasedStrategy.shared)
 

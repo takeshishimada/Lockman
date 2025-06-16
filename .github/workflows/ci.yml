@@ -82,8 +82,8 @@ jobs:
           key: ${{ runner.os }}-benchmarks-${{ hashFiles('**/Package.resolved', 'Benchmarks/Package.resolved') }}
           restore-keys: |
             ${{ runner.os }}-benchmarks-
-      - name: Select Xcode 16.2
-        run: sudo xcode-select -s /Applications/Xcode_16.2.app
+      - name: Select Xcode 16.0
+        run: sudo xcode-select -s /Applications/Xcode_16.0.app
       - name: Build benchmarks
         working-directory: Benchmarks
         run: |
@@ -93,10 +93,6 @@ jobs:
   examples:
     name: Examples
     runs-on: macos-15
-    strategy:
-      fail-fast: false
-      matrix:
-        platform: ['iOS', 'macOS']
     steps:
       - uses: actions/checkout@v4
       - name: Cache DerivedData
@@ -105,17 +101,24 @@ jobs:
           path: |
             ~/Library/Developer/Xcode/DerivedData
             .build/DerivedData
-          key: ${{ runner.os }}-xcode-${{ matrix.platform }}-${{ hashFiles('**/Package.resolved', 'Examples/**/*.xcodeproj/project.pbxproj') }}
+          key: ${{ runner.os }}-xcode-examples-${{ hashFiles('**/Package.resolved', 'Examples/**/*.xcodeproj/project.pbxproj') }}
           restore-keys: |
-            ${{ runner.os }}-xcode-${{ matrix.platform }}-
+            ${{ runner.os }}-xcode-examples-
             ${{ runner.os }}-xcode-
       - name: Select Xcode 16.2
         run: |
           sudo xcode-select -s /Applications/Xcode_16.2.app
-      - name: Build examples
+      - name: Build examples for iOS
         run: |
           xcodebuild build \
             -workspace Lockman.xcworkspace \
-            -scheme "Strategies (${{ matrix.platform }})" \
-            -destination "$(if [ "${{ matrix.platform }}" = "iOS" ]; then echo "platform=iOS Simulator,name=iPhone 15 Pro"; else echo "platform=macOS"; fi)" \
+            -scheme "Strategies" \
+            -destination "platform=iOS Simulator,name=iPhone 15 Pro" \
+            -derivedDataPath .build/DerivedData
+      - name: Build examples for macOS
+        run: |
+          xcodebuild build \
+            -workspace Lockman.xcworkspace \
+            -scheme "Strategies" \
+            -destination "platform=macOS" \
             -derivedDataPath .build/DerivedData
