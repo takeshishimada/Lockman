@@ -113,7 +113,7 @@ jobs:
           xcodebuild build \
             -workspace Lockman.xcworkspace \
             -scheme "Strategies" \
-            -destination "platform=iOS Simulator,name=iPhone 15 Pro" \
+            -destination "platform=iOS Simulator,name=iPhone 16 Pro" \
             -derivedDataPath .build/DerivedData
       - name: Build examples for macOS
         run: |
