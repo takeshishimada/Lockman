@@ -1,0 +1,121 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - '*'
+  workflow_dispatch:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  xcodebuild-latest:
+    name: Test latest (Xcode ${{ matrix.xcode }}, ${{ matrix.platform }})
+    runs-on: macos-15
+    strategy:
+      fail-fast: false
+      matrix:
+        xcode: ['16.2']
+        platform: ['iOS', 'macOS', 'tvOS', 'watchOS']
+    steps:
+      - uses: actions/checkout@v4
+      - name: Select Xcode ${{ matrix.xcode }}
+        run: |
+          sudo xcode-select -s /Applications/Xcode_${{ matrix.xcode }}.app
+      - name: Get swift version
+        run: swift --version
+      - name: Test ${{ matrix.platform }}
+        run: |
+          make xcodebuild XCODE_VERSION="${{ matrix.xcode }}" XCODEBUILD_ARGUMENT="test" PLATFORM="${{ matrix.platform }}"
+
+  xcodebuild:
+    name: Test (Xcode ${{ matrix.xcode }}, ${{ matrix.platform }})
+    runs-on: macos-14
+    strategy:
+      fail-fast: false
+      matrix:
+        xcode: ['15.2', '15.4']
+        platform: ['iOS', 'macOS', 'tvOS', 'watchOS']
+    steps:
+      - uses: actions/checkout@v4
+      - name: Select Xcode ${{ matrix.xcode }}
+        run: |
+          sudo xcode-select -s /Applications/Xcode_${{ matrix.xcode }}.app
+      - name: Get swift version
+        run: swift --version
+      - name: Test ${{ matrix.platform }}
+        run: |
+          make xcodebuild XCODE_VERSION="${{ matrix.xcode }}" XCODEBUILD_ARGUMENT="test" PLATFORM="${{ matrix.platform }}"
+
+  swift-build:
+    name: Swift ${{ matrix.swift }} on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: macos-14
+            swift: '5.9'
+            xcode: '15.2'
+          - os: macos-14
+            swift: '5.10'
+            xcode: '15.4'
+          - os: macos-15
+            swift: '6.0'
+            xcode: '16.2'
+    steps:
+      - uses: actions/checkout@v4
+      - name: Select Xcode ${{ matrix.xcode }}
+        run: |
+          sudo xcode-select -s /Applications/Xcode_${{ matrix.xcode }}.app
+      - name: Get swift version
+        run: swift --version
+      - name: Build
+        run: swift build
+      - name: Test
+        run: swift test
+
+  library-evolution:
+    name: Library evolution
+    runs-on: macos-14
+    steps:
+      - uses: actions/checkout@v4
+      - name: Select Xcode 15.4
+        run: |
+          sudo xcode-select -s /Applications/Xcode_15.4.app
+      - name: Build for library evolution
+        run: make build-for-library-evolution
+
+  benchmarks:
+    name: Benchmarks
+    runs-on: macOS-15
+    steps:
+      - uses: actions/checkout@v4
+      - name: Select Xcode 16.2
+        run: sudo xcode-select -s /Applications/Xcode_16.2.app
+      - name: Build benchmarks
+        working-directory: Benchmarks
+        run: |
+          swift package resolve
+          swift build -c release
+
+  examples:
+    name: Examples
+    runs-on: macos-14
+    strategy:
+      fail-fast: false
+      matrix:
+        platform: ['iOS', 'macOS']
+    steps:
+      - uses: actions/checkout@v4
+      - name: Select Xcode 15.4
+        run: |
+          sudo xcode-select -s /Applications/Xcode_15.4.app
+      - name: Build examples
+        run: |
+          make xcodebuild-raw XCODEBUILD_ARGUMENT="build" PROJECT="Examples/Strategies/Strategies.xcodeproj" SCHEME="Strategies (${{ matrix.platform }})" PLATFORM="${{ matrix.platform }}"
