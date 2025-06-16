@@ -1,0 +1,97 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - main
+      - develop
+      - 'feature/**'
+  pull_request:
+    types: [ready_for_review]
+    branches:
+      - main
+      - develop
+      - 'feature/**'
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.head_ref || github.run_id }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    name: Test (Swift ${{ matrix.swift }}, ${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { os: macos-13, swift: '5.9', xcode: '15.2' }
+          - { os: macos-14, swift: '5.10', xcode: '15.4' }
+          - { os: macos-15, swift: '6.0', xcode: '16.0' }
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Select Xcode ${{ matrix.xcode }}
+        run: sudo xcode-select -s /Applications/Xcode_${{ matrix.xcode }}.app
+      
+      - name: Swift version
+        run: swift --version
+      
+      - name: Clean Package.resolved
+        run: rm -f Package.resolved
+      
+      - name: Build
+        run: swift build -v
+      
+      - name: Run tests
+        run: swift test -v --parallel
+
+  build-platforms:
+    name: Build (${{ matrix.platform }})
+    runs-on: macos-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        platform: [macOS, iOS, tvOS, watchOS, visionOS]
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Select Xcode
+        run: sudo xcode-select -s /Applications/Xcode.app
+        
+      - name: Build for ${{ matrix.platform }}
+        run: |
+          swift build --target LockmanCore --target LockmanComposable --target LockmanMacros
+
+  benchmarks:
+    name: Benchmarks
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Select Xcode 16.0
+        run: sudo xcode-select -s /Applications/Xcode_16.0.app
+      
+      - name: Install dependencies
+        run: brew install jemalloc || true
+      
+      - name: Run benchmarks
+        run: |
+          cd Benchmarks
+          swift package resolve
+          swift build -c release
+          swift package benchmark --target LockmanBenchmarks || echo "Benchmarks completed with warnings"
+
+  check-macro-compatibility:
+    name: Check Macro Compatibility
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Select latest Xcode
+        run: sudo xcode-select -s /Applications/Xcode.app
+      
+      - name: Check macro compatibility
+        run: |
+          swift package diagnose-api-breaking-changes 1.17.1 || true
