@@ -87,8 +87,7 @@ jobs:
       - name: Build benchmarks
         working-directory: Benchmarks
         run: |
-          swift package resolve
-          swift build -c release
+          make benchmarks
 
   examples:
     name: Examples
