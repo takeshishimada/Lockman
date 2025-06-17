@@ -4,158 +4,208 @@ import XCTest
 @testable @_spi(Logging) import LockmanCore
 
 /// Tests for the Logger class (Internal/Logger.swift)
-@MainActor
 final class LoggerTests: XCTestCase {
+  // MARK: - Helper Methods
+  
+  /// Execute a closure on the MainActor and return the result
+  private func onMainActor<T>(_ closure: @MainActor () throws -> T) async rethrows -> T {
+    try await MainActor.run {
+      try closure()
+    }
+  }
+  
   // MARK: - Test Setup
 
-  override func setUp() {
-        super.setUp()
+  override func setUp() async throws {
+    try await super.setUp()
     // Reset logger state before each test
-    Logger.shared.isEnabled = false
-    Logger.shared.clear()
+    await onMainActor {
+      Logger.shared.isEnabled = false
+      Logger.shared.clear()
+    }
   }
 
   // MARK: - Singleton Tests
 
-  func testloggerSingletonInstance() {
-    let logger1 = Logger.shared
-    let logger2 = Logger.shared
-
-    // Verify same instance
-    XCTAssertTrue(logger1  === logger2)
+  func testloggerSingletonInstance() async {
+    let isSameInstance = await onMainActor {
+      let logger1 = Logger.shared
+      let logger2 = Logger.shared
+      // Verify same instance
+      return logger1 === logger2
+    }
+    XCTAssertTrue(isSameInstance)
   }
 
   // MARK: - Basic Property Tests
 
-  func testloggerIsEnabledDefaultValue() {
-    // Store current state
-    let originalState = Logger.shared.isEnabled
+  func testloggerIsEnabledDefaultValue() async {
+    await onMainActor {
+      // Store current state
+      let originalState = Logger.shared.isEnabled
 
-    // Reset to default state (false)
-    Logger.shared.isEnabled = false
+      // Reset to default state (false)
+      Logger.shared.isEnabled = false
 
-    // Test default behavior
-    XCTAssertFalse(Logger.shared.isEnabled )
+      // Test default behavior
+      XCTAssertFalse(Logger.shared.isEnabled)
 
-    // Restore original state
-    Logger.shared.isEnabled = originalState
+      // Restore original state
+      Logger.shared.isEnabled = originalState
+    }
   }
 
-  func testloggerCanToggleIsEnabled() {
-    // Clear logs at the beginning
-    Logger.shared.clear()
+  func testloggerCanToggleIsEnabled() async {
+    await onMainActor {
+      // Clear logs at the beginning
+      Logger.shared.clear()
 
-    Logger.shared.isEnabled = false
-    XCTAssertFalse(Logger.shared.isEnabled )
+      Logger.shared.isEnabled = false
+      XCTAssertFalse(Logger.shared.isEnabled)
 
-    Logger.shared.isEnabled = true
-    XCTAssertTrue(Logger.shared.isEnabled )
+      Logger.shared.isEnabled = true
+      XCTAssertTrue(Logger.shared.isEnabled)
 
-    Logger.shared.isEnabled = false
-    XCTAssertFalse(Logger.shared.isEnabled )
+      Logger.shared.isEnabled = false
+      XCTAssertFalse(Logger.shared.isEnabled)
 
-    // Clear logs at the end
-    Logger.shared.clear()
+      // Clear logs at the end
+      Logger.shared.clear()
+    }
   }
 
-  func testloggerLogsStartEmpty() {
+  func testloggerLogsStartEmpty() async {
     // Clear any previous logs first
-    Logger.shared.clear()
+    await onMainActor {
+      Logger.shared.clear()
+    }
 
-    XCTAssertTrue(Logger.shared.logs.isEmpty)
-    XCTAssertTrue(Logger.shared.logs.isEmpty)
+    let logsEmpty = await onMainActor {
+      Logger.shared.logs.isEmpty
+    }
+    XCTAssertTrue(logsEmpty)
   }
 
   // MARK: - Logging Tests (DEBUG mode)
 
   #if DEBUG
-    func testloggerLogsWhenEnabled() {
+    func testloggerLogsWhenEnabled() async {
       // Clear logs at the beginning
-      Logger.shared.clear()
+      await Logger.shared.clear()
 
-      Logger.shared.isEnabled = true
+      await MainActor.run {
+        Logger.shared.isEnabled = true
 
-      Logger.shared.log("Test message 1")
-      Logger.shared.log("Test message 2")
+        Logger.shared.log("Test message 1")
+        Logger.shared.log("Test message 2")
+      }
 
-      XCTAssertEqual(Logger.shared.logs.count, 2)
-      XCTAssertEqual(Logger.shared.logs[0], "Test message 1")
-      XCTAssertEqual(Logger.shared.logs[1], "Test message 2")
+      let logs = await Logger.shared.logs
+      XCTAssertEqual(logs.count, 2)
+      XCTAssertEqual(logs[0], "Test message 1")
+      XCTAssertEqual(logs[1], "Test message 2")
 
       // Clear logs at the end and reset isEnabled
-      Logger.shared.clear()
-      Logger.shared.isEnabled  = false
+      await onMainActor {
+        Logger.shared.clear()
+        Logger.shared.isEnabled = false
+      }
     }
 
-    func testloggerDoesNotLogWhenDisabled() {
+    func testloggerDoesNotLogWhenDisabled() async {
       // Clear logs at the beginning
-      Logger.shared.clear()
+      await onMainActor {
+        Logger.shared.clear()
+        Logger.shared.isEnabled = false
+        Logger.shared.log("This should not be logged")
+      }
 
-      Logger.shared.isEnabled = false
-
-      Logger.shared.log("This should not be logged")
-
-      XCTAssertTrue(Logger.shared.logs.isEmpty)
+      let logsEmpty = await onMainActor {
+        Logger.shared.logs.isEmpty
+      }
+      XCTAssertTrue(logsEmpty)
 
       // Clear logs at the end (already empty, but for consistency)
-      Logger.shared.clear()
+      await onMainActor {
+        Logger.shared.clear()
+      }
     }
 
-    func testloggerLogWithDifferentLevels() {
+    func testloggerLogWithDifferentLevels() async {
       // Clear logs at the beginning
-      Logger.shared.clear()
+      await onMainActor {
+        Logger.shared.clear()
+        Logger.shared.isEnabled = true
 
-      Logger.shared.isEnabled = true
+        Logger.shared.log(level: .default, "Default level")
+        Logger.shared.log(level: .info, "Info level")
+        Logger.shared.log(level: .debug, "Debug level")
+        Logger.shared.log(level: .error, "Error level")
+        Logger.shared.log(level: .fault, "Fault level")
+      }
 
-      Logger.shared.log(level: .default, "Default level")
-      Logger.shared.log(level: .info, "Info level")
-      Logger.shared.log(level: .debug, "Debug level")
-      Logger.shared.log(level: .error, "Error level")
-      Logger.shared.log(level: .fault, "Fault level")
-
-      XCTAssertEqual(Logger.shared.logs.count, 5)
-      XCTAssertEqual(Logger.shared.logs[0], "Default level")
-      XCTAssertEqual(Logger.shared.logs[1], "Info level")
-      XCTAssertEqual(Logger.shared.logs[2], "Debug level")
-      XCTAssertEqual(Logger.shared.logs[3], "Error level")
-      XCTAssertEqual(Logger.shared.logs[4], "Fault level")
+      let logs = await onMainActor {
+        Logger.shared.logs
+      }
+      XCTAssertEqual(logs.count, 5)
+      XCTAssertEqual(logs[0], "Default level")
+      XCTAssertEqual(logs[1], "Info level")
+      XCTAssertEqual(logs[2], "Debug level")
+      XCTAssertEqual(logs[3], "Error level")
+      XCTAssertEqual(logs[4], "Fault level")
 
       // Clear logs at the end and reset isEnabled
-      Logger.shared.clear()
-      Logger.shared.isEnabled  = false
+      await onMainActor {
+        Logger.shared.clear()
+        Logger.shared.isEnabled = false
+      }
     }
 
-    func testloggerClearRemovesAllLogs() {
+    func testloggerClearRemovesAllLogs() async {
       // Clear logs at the beginning
-      Logger.shared.clear()
+      await onMainActor {
+        Logger.shared.clear()
+        Logger.shared.isEnabled = true
 
-      Logger.shared.isEnabled = true
+        Logger.shared.log("Message 1")
+        Logger.shared.log("Message 2")
+        Logger.shared.log("Message 3")
+      }
 
-      Logger.shared.log("Message 1")
-      Logger.shared.log("Message 2")
-      Logger.shared.log("Message 3")
+      let logCount = await onMainActor {
+        Logger.shared.logs.count
+      }
+      XCTAssertEqual(logCount, 3)
 
-      XCTAssertEqual(Logger.shared.logs.count, 3)
+      await onMainActor {
+        Logger.shared.clear()
+      }
 
-      Logger.shared.clear()
-
-      XCTAssertTrue(Logger.shared.logs.isEmpty)
-      XCTAssertTrue(Logger.shared.logs.isEmpty)
+      let logsEmpty = await onMainActor {
+        Logger.shared.logs.isEmpty
+      }
+      XCTAssertTrue(logsEmpty)
 
       // Reset isEnabled at the end
-      Logger.shared.isEnabled  = false
+      await onMainActor {
+        Logger.shared.isEnabled = false
+      }
     }
 
-    func testloggerAutoclosureEvaluationBehavior() {
+    func testloggerAutoclosureEvaluationBehavior() async {
       // Ensure clean state at the beginning
-      Logger.shared.clear()
-      Logger.shared.isEnabled = false
+      await onMainActor {
+        Logger.shared.clear()
+        Logger.shared.isEnabled = false
+      }
 
       var evaluationCount = 0
 
       // Test 1: When enabled, autoclosure is evaluated
-      Logger.shared.isEnabled = true
-      Logger.shared.clear()
+      await onMainActor {
+        Logger.shared.isEnabled = true
+        Logger.shared.clear()
+      }
 
       // Create a function that returns a string
       func getMessage() -> String {
@@ -163,23 +213,37 @@ final class LoggerTests: XCTestCase {
         return "Message \(evaluationCount)"
       }
 
-      Logger.shared.log(getMessage())
+      await onMainActor {
+        Logger.shared.log(getMessage())
+      }
 
+      let (logCount1, logs1) = await onMainActor {
+        (Logger.shared.logs.count, Logger.shared.logs)
+      }
       XCTAssertEqual(evaluationCount, 1)
-      XCTAssertEqual(Logger.shared.logs.count, 1)
-      XCTAssertEqual(Logger.shared.logs[0], "Message 1")
+      XCTAssertEqual(logCount1, 1)
+      XCTAssertEqual(logs1[0], "Message 1")
 
       // Test 2: When disabled, autoclosure is NOT evaluated
-      Logger.shared.isEnabled  = false
-      let logCountBefore = Logger.shared.logs.count
+      let logCountBefore = await onMainActor {
+        Logger.shared.isEnabled = false
+        return Logger.shared.logs.count
+      }
 
-      Logger.shared.log(getMessage())
+      await onMainActor {
+        Logger.shared.log(getMessage())
+      }
 
+      let logCountAfter = await onMainActor {
+        Logger.shared.logs.count
+      }
       XCTAssertEqual(evaluationCount, 1) // Function was NOT evaluated (autoclosure)
-      XCTAssertEqual(Logger.shared.logs.count, logCountBefore) // Not logged
+      XCTAssertEqual(logCountAfter, logCountBefore) // Not logged
 
       // Test 3: Autoclosure prevents evaluation when disabled
-      Logger.shared.isEnabled  = false
+      await onMainActor {
+        Logger.shared.isEnabled = false
+      }
       var sideEffectCount = 0
 
       // Define a function that has side effects
@@ -189,72 +253,101 @@ final class LoggerTests: XCTestCase {
       }
 
       // This will NOT evaluate when disabled (autoclosure)
-      Logger.shared.log(getSideEffectMessage())
+      await onMainActor {
+        Logger.shared.log(getSideEffectMessage())
+      }
 
       XCTAssertEqual(sideEffectCount, 0) // No side effect (autoclosure prevents evaluation)
 
       // Test 4: Direct string literals
-      Logger.shared.isEnabled  = true
-      Logger.shared.log("Direct message")
-      XCTAssertEqual(Logger.shared.logs.last, "Direct message")
+      await onMainActor {
+        Logger.shared.isEnabled = true
+        Logger.shared.log("Direct message")
+      }
+      
+      let lastLog = await onMainActor {
+        Logger.shared.logs.last
+      }
+      XCTAssertEqual(lastLog, "Direct message")
 
       // Clear logs at the end and reset isEnabled
-      Logger.shared.clear()
-      Logger.shared.isEnabled  = false
+      await onMainActor {
+        Logger.shared.clear()
+        Logger.shared.isEnabled = false
+      }
     }
 
-    func testloggerHandlesEmptyStrings() {
+    func testloggerHandlesEmptyStrings() async {
       // Clear logs at the beginning
-      Logger.shared.clear()
+      await onMainActor {
+        Logger.shared.clear()
+        Logger.shared.isEnabled = true
+        Logger.shared.log("")
+      }
 
-      Logger.shared.isEnabled = true
-
-      Logger.shared.log("")
-
-      XCTAssertEqual(Logger.shared.logs.count, 1)
-      XCTAssertEqual(Logger.shared.logs[0], "")
+      let logs = await onMainActor {
+        Logger.shared.logs
+      }
+      XCTAssertEqual(logs.count, 1)
+      XCTAssertEqual(logs[0], "")
 
       // Clear logs at the end and reset isEnabled
-      Logger.shared.clear()
-      Logger.shared.isEnabled  = false
+      await onMainActor {
+        Logger.shared.clear()
+        Logger.shared.isEnabled = false
+      }
     }
 
-    func testloggerHandlesUnicodeAndSpecialCharacters() {
+    func testloggerHandlesUnicodeAndSpecialCharacters() async {
       // Clear logs at the beginning
-      Logger.shared.clear()
+      await onMainActor {
+        Logger.shared.clear()
+        Logger.shared.isEnabled = true
 
-      Logger.shared.isEnabled = true
+        Logger.shared.log("Unicode: 🔒 日本語 🚀")
+        Logger.shared.log("Special: \n\t\r")
+        Logger.shared.log("Quotes: \"Hello\" 'World'")
+      }
 
-      Logger.shared.log("Unicode: 🔒 日本語 🚀")
-      Logger.shared.log("Special: \n\t\r")
-      Logger.shared.log("Quotes: \"Hello\" 'World'")
-
-      XCTAssertEqual(Logger.shared.logs.count, 3)
-      XCTAssertEqual(Logger.shared.logs[0], "Unicode: 🔒 日本語 🚀")
-      XCTAssertEqual(Logger.shared.logs[1], "Special: \n\t\r")
-      XCTAssertEqual(Logger.shared.logs[2], "Quotes: \"Hello\" 'World'")
+      let logs = await onMainActor {
+        Logger.shared.logs
+      }
+      XCTAssertEqual(logs.count, 3)
+      XCTAssertEqual(logs[0], "Unicode: 🔒 日本語 🚀")
+      XCTAssertEqual(logs[1], "Special: \n\t\r")
+      XCTAssertEqual(logs[2], "Quotes: \"Hello\" 'World'")
 
       // Clear logs at the end and reset isEnabled
-      Logger.shared.clear()
-      Logger.shared.isEnabled  = false
+      await onMainActor {
+        Logger.shared.clear()
+        Logger.shared.isEnabled = false
+      }
     }
 
-    func testloggerHandlesVeryLongMessages() {
+    func testloggerHandlesVeryLongMessages() async {
       // Clear logs at the beginning
-      Logger.shared.clear()
-
-      Logger.shared.isEnabled = true
+      await onMainActor {
+        Logger.shared.clear()
+        Logger.shared.isEnabled = true
+      }
 
       let longMessage = String(repeating: "VeryLongMessage", count: 1000)
-      Logger.shared.log(longMessage)
+      await onMainActor {
+        Logger.shared.log(longMessage)
+      }
 
-      XCTAssertEqual(Logger.shared.logs.count, 1)
-      XCTAssertEqual(Logger.shared.logs[0], longMessage)
-      XCTAssertEqual(Logger.shared.logs[0].count, 15000)
+      let logs = await onMainActor {
+        Logger.shared.logs
+      }
+      XCTAssertEqual(logs.count, 1)
+      XCTAssertEqual(logs[0], longMessage)
+      XCTAssertEqual(logs[0].count, 15000)
 
       // Clear logs at the end and reset isEnabled
-      Logger.shared.clear()
-      Logger.shared.isEnabled  = false
+      await onMainActor {
+        Logger.shared.clear()
+        Logger.shared.isEnabled = false
+      }
     }
 
     func disabled_loggerThreadSafetyForLogging() async {
@@ -274,7 +367,10 @@ final class LoggerTests: XCTestCase {
       }
 
       // All messages should be logged
-      XCTAssertEqual(Logger.shared.logs.count, iterations)
+      let logCount = await onMainActor {
+        Logger.shared.logs.count
+      }
+      XCTAssertEqual(logCount, iterations)
 
       // Clear logs at the end and reset isEnabled
       await MainActor.run {
@@ -289,95 +385,136 @@ final class LoggerTests: XCTestCase {
       // to reliably test without interference from other tests.
     }
 
-    func testloggerMaintainsOrderOfLogs() {
+    func testloggerMaintainsOrderOfLogs() async {
       // Clear logs at the beginning
-      Logger.shared.clear()
+      await onMainActor {
+        Logger.shared.clear()
+        Logger.shared.isEnabled = true
 
-      Logger.shared.isEnabled = true
-
-      for i in 0 ..< 10 {
-        Logger.shared.log("Message \(i)")
+        for i in 0 ..< 10 {
+          Logger.shared.log("Message \(i)")
+        }
       }
 
-      XCTAssertEqual(Logger.shared.logs.count, 10)
+      let logs = await onMainActor {
+        Logger.shared.logs
+      }
+      XCTAssertEqual(logs.count, 10)
       for i in 0 ..< 10 {
-        XCTAssertEqual(Logger.shared.logs[i], "Message \(i)")
+        XCTAssertEqual(logs[i], "Message \(i)")
       }
 
       // Clear logs at the end and reset isEnabled
-      Logger.shared.clear()
-      Logger.shared.isEnabled  = false
+      await onMainActor {
+        Logger.shared.clear()
+        Logger.shared.isEnabled = false
+      }
     }
 
-    func testloggerPublishedLogsProperty() {
+    func testloggerPublishedLogsProperty() async {
       // Clear logs at the beginning
-      Logger.shared.clear()
-
-      Logger.shared.isEnabled = true
+      await onMainActor {
+        Logger.shared.clear()
+        Logger.shared.isEnabled = true
+      }
 
       // Initial state
-      XCTAssertTrue(Logger.shared.logs.isEmpty)
+      let initialEmpty = await onMainActor {
+        Logger.shared.logs.isEmpty
+      }
+      XCTAssertTrue(initialEmpty)
 
       // Add logs
-      Logger.shared.log("First")
-      XCTAssertEqual(Logger.shared.logs, ["First"])
+      await onMainActor {
+        Logger.shared.log("First")
+      }
+      let logsAfterFirst = await onMainActor {
+        Logger.shared.logs
+      }
+      XCTAssertEqual(logsAfterFirst, ["First"])
 
-      Logger.shared.log("Second")
-      XCTAssertEqual(Logger.shared.logs, ["First", "Second"])
+      await onMainActor {
+        Logger.shared.log("Second")
+      }
+      let logsAfterSecond = await onMainActor {
+        Logger.shared.logs
+      }
+      XCTAssertEqual(logsAfterSecond, ["First", "Second"])
 
       // Clear
-      Logger.shared.clear()
-      XCTAssertTrue(Logger.shared.logs.isEmpty)
+      await onMainActor {
+        Logger.shared.clear()
+      }
+      let finalEmpty = await onMainActor {
+        Logger.shared.logs.isEmpty
+      }
+      XCTAssertTrue(finalEmpty)
 
       // Reset isEnabled at the end
-      Logger.shared.isEnabled  = false
+      await onMainActor {
+        Logger.shared.isEnabled = false
+      }
     }
 
   #else
 
     // Tests for non-DEBUG mode
-    func testloggerNoOpInReleaseMode() {
+    func testloggerNoOpInReleaseMode() async {
       // Clear logs at the beginning
-      Logger.shared.clear()
+      await onMainActor {
+        Logger.shared.clear()
+        Logger.shared.isEnabled = true
 
-      Logger.shared.isEnabled = true
-
-      // These should do nothing in release mode
-      Logger.shared.log("This does nothing")
-      Logger.shared.log(level: .error, "This also does nothing")
-      Logger.shared.clear()
+        // These should do nothing in release mode
+        Logger.shared.log("This does nothing")
+        Logger.shared.log(level: .error, "This also does nothing")
+        Logger.shared.clear()
+      }
 
       // No way to verify in release mode, but should not crash
       XCTAssertTrue(true)
 
       // Reset isEnabled at the end
-      Logger.shared.isEnabled = false
+      await onMainActor {
+        Logger.shared.isEnabled = false
+      }
     }
 
   #endif
 
   // MARK: - Edge Cases
 
-  func testloggerStatePersistenceAcrossTests() {
+  func testloggerStatePersistenceAcrossTests() async {
     // This test verifies that Logger.shared maintains its state
-    let initialEnabled = Logger.shared.isEnabled
+    let initialEnabled = await onMainActor {
+      Logger.shared.isEnabled
+    }
 
     // Change state
-    Logger.shared.isEnabled = !initialEnabled
+    await onMainActor {
+      Logger.shared.isEnabled = !initialEnabled
+    }
 
     // Verify change persisted
-    XCTAssertNotEqual(Logger.shared.isEnabled, initialEnabled)
+    let currentEnabled = await onMainActor {
+      Logger.shared.isEnabled
+    }
+    XCTAssertNotEqual(currentEnabled, initialEnabled)
 
     // Reset for other tests
-    Logger.shared.isEnabled  = false
-    Logger.shared.clear()
+    await onMainActor {
+      Logger.shared.isEnabled = false
+      Logger.shared.clear()
+    }
   }
 
-  func testloggerSubsystemAndCategory() {
+  func testloggerSubsystemAndCategory() async {
     #if DEBUG
       if #available(iOS 14, macOS 11, tvOS 14, watchOS 7, *) {
         // Access the logger property to ensure it's created without error
-        _ = Logger.shared.logger
+        await onMainActor {
+          _ = Logger.shared.logger
+        }
 
         // We can't directly test the subsystem and category values,
         // but we can verify the logger is created successfully
@@ -389,52 +526,73 @@ final class LoggerTests: XCTestCase {
 
 // MARK: - Performance Tests
 
-@MainActor
 final class LoggerPerformanceTests: XCTestCase {
-  func testloggerPerformanceHighVolume() {
+  private func onMainActor<T>(_ closure: @MainActor () throws -> T) async rethrows -> T {
+    try await MainActor.run {
+      try closure()
+    }
+  }
+  
+  func testloggerPerformanceHighVolume() async {
     // Clear logs at the beginning
-    Logger.shared.clear()
-
-    Logger.shared.isEnabled = true
+    await onMainActor {
+      Logger.shared.clear()
+      Logger.shared.isEnabled = true
+    }
 
     let startTime = Date()
 
-    for i in 0 ..< 1000 {
-      Logger.shared.log("Performance test message \(i)")
+    await onMainActor {
+      for i in 0 ..< 1000 {
+        Logger.shared.log("Performance test message \(i)")
+      }
     }
 
     let elapsed = Date().timeIntervalSince(startTime)
 
     #if DEBUG
-      XCTAssertEqual(Logger.shared.logs.count, 1000)
+      let logCount = await onMainActor {
+        Logger.shared.logs.count
+      }
+      XCTAssertEqual(logCount, 1000)
       XCTAssertLessThan(elapsed , 1.0) // Should complete within 1 second
     #else
       XCTAssertLessThan(elapsed , 0.1) // Should be very fast in release mode
     #endif
 
     // Clear logs at the end and reset isEnabled
-    Logger.shared.clear()
-    Logger.shared.isEnabled  = false
+    await onMainActor {
+      Logger.shared.clear()
+      Logger.shared.isEnabled = false
+    }
   }
 
-  func testloggerPerformanceWhenDisabled() {
+  func testloggerPerformanceWhenDisabled() async {
     // Clear logs at the beginning
-    Logger.shared.clear()
-
-    Logger.shared.isEnabled = false
+    await onMainActor {
+      Logger.shared.clear()
+      Logger.shared.isEnabled = false
+    }
 
     let startTime = Date()
 
-    for i in 0 ..< 10000 {
-      Logger.shared.log("This should not be logged \(i)")
+    await onMainActor {
+      for i in 0 ..< 10000 {
+        Logger.shared.log("This should not be logged \(i)")
+      }
     }
 
     let elapsed = Date().timeIntervalSince(startTime)
 
-    XCTAssertTrue(Logger.shared.logs.isEmpty)
+    let logsEmpty = await onMainActor {
+      Logger.shared.logs.isEmpty
+    }
+    XCTAssertTrue(logsEmpty)
     XCTAssertLessThan(elapsed , 0.1) // Should be very fast when disabled
 
     // Clear logs at the end (already empty, but for consistency)
-    Logger.shared.clear()
+    await onMainActor {
+      Logger.shared.clear()
+    }
   }
 }

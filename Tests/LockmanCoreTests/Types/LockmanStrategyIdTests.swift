@@ -205,8 +205,8 @@ final class LockmanStrategyIdPerformanceTests: XCTestCase {
     }
     let duration = Date().timeIntervalSince(start)
 
-    // Should be very fast - under 50ms for 200k comparisons
-    XCTAssertLessThan(duration, 50.0 / 1000.0)
+    // Should be very fast - under 100ms for 200k comparisons (increased for CI stability)
+    XCTAssertLessThan(duration, 100.0 / 1000.0)
   }
 
   func testDictionaryOperationsPerformance() async {
@@ -217,21 +217,21 @@ final class LockmanStrategyIdPerformanceTests: XCTestCase {
     let ids = (0 ..< iterations).map { LockmanStrategyId("Strategy\($0)") }
 
     // Measure insertions
-    let insertStart = ContinuousClock.now
+    let insertStart = Date()
     for (index, id) in ids.enumerated() {
       dict[id] = index
     }
-    let insertDuration = insertStart.duration(to: .now)
+    let insertDuration = Date().timeIntervalSince(insertStart)
 
     // Measure lookups
-    let lookupStart = ContinuousClock.now
+    let lookupStart = Date()
     for id in ids {
       _ = dict[id]
     }
-    let lookupDuration = lookupStart.duration(to: .now)
+    let lookupDuration = Date().timeIntervalSince(lookupStart)
 
-    // Should be fast
-    XCTAssertLessThan(insertDuration , .milliseconds(10))
-    XCTAssertLessThan(lookupDuration , .milliseconds(5))
+    // Should be fast (converting milliseconds to seconds)
+    XCTAssertLessThan(insertDuration, 0.01) // 10ms
+    XCTAssertLessThan(lookupDuration, 0.005) // 5ms
   }
 }

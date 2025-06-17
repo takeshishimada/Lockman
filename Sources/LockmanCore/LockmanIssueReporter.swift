@@ -35,15 +35,41 @@ public enum DefaultLockmanIssueReporter: LockmanIssueReporter {
 /// Global issue reporter configuration.
 public enum LockmanIssueReporting {
   /// The current issue reporter. Defaults to `DefaultIssueReporter`.
-  public nonisolated(unsafe) static var reporter: any LockmanIssueReporter.Type = DefaultLockmanIssueReporter.self
+  private static let _reporter = LockIsolated<any LockmanIssueReporter.Type>(DefaultLockmanIssueReporter.self)
+  
+  public static var reporter: any LockmanIssueReporter.Type {
+    get { _reporter.value }
+    set { _reporter.withValue { $0 = newValue } }
+  }
 
   /// Reports an issue using the configured reporter.
-  @inlinable
   public static func reportIssue(
     _ message: String,
     file: StaticString = #file,
     line: UInt = #line
   ) {
     reporter.reportIssue(message, file: file, line: line)
+  }
+}
+
+/// A simple lock-isolated wrapper for thread-safe access to values.
+private final class LockIsolated<Value>: @unchecked Sendable {
+  private var _value: Value
+  private let lock = NSLock()
+  
+  init(_ value: Value) {
+    self._value = value
+  }
+  
+  var value: Value {
+    lock.lock()
+    defer { lock.unlock() }
+    return _value
+  }
+  
+  func withValue<T>(_ operation: (inout Value) throws -> T) rethrows -> T {
+    lock.lock()
+    defer { lock.unlock() }
+    return try operation(&_value)
   }
 }

@@ -388,7 +388,7 @@ final class LockmanUnlockTests: XCTestCase {
       }
 
       // Give some time for deinit to be called
-      try? await Task.sleep(for: .milliseconds(10))
+      try? await Task.sleep(nanoseconds: 10_000_000) // 10ms
 
       XCTAssertEqual(strategy.unlockCallCount, 1)
     }

@@ -425,7 +425,7 @@ final class LockmanStrategyContainerTests: XCTestCase {
       for i in 0 ..< 5 {
         group.addTask {
           // Wait a bit to let registration potentially complete
-          try? await Task.sleep(for: .milliseconds(10))
+          try? await Task.sleep(nanoseconds: 10_000_000) // 10ms
           do {
             _ = try container.resolve(AnotherMockLockmanStrategy.self)
             return "resolve_success_\(i)"

@@ -42,7 +42,7 @@ struct SingleExecutionStrategyFeature {
         case .decrementButtonTapped:
           return .withLock(
             operation: { send in
-              try? await Task.sleep(for: .seconds(2))
+              try? await Task.sleep(nanoseconds: 2_000_000_000) // 2 seconds
               await send(.state(.decrement))
             },
             action: viewAction,
@@ -51,7 +51,7 @@ struct SingleExecutionStrategyFeature {
         case .incrementButtonTapped:
           return .withLock(
             operation: { send in
-              try? await Task.sleep(for: .seconds(2))
+              try? await Task.sleep(nanoseconds: 2_000_000_000) // 2 seconds
               await send(.state(.increment))
             },
             action: viewAction,
