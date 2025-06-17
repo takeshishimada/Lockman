@@ -1,0 +1,38 @@
+{
+  "configurations" : [
+    {
+      "id" : "1211A731-AC95-4D1D-B906-0CEE5BB89243",
+      "name" : "Test Scheme Action",
+      "options" : {
+
+      }
+    }
+  ],
+  "defaultOptions" : {
+
+  },
+  "testTargets" : [
+    {
+      "target" : {
+        "containerPath" : "container:",
+        "identifier" : "LockmanComposableTests",
+        "name" : "LockmanComposableTests"
+      }
+    },
+    {
+      "target" : {
+        "containerPath" : "container:",
+        "identifier" : "LockmanCoreTests",
+        "name" : "LockmanCoreTests"
+      }
+    },
+    {
+      "target" : {
+        "containerPath" : "container:",
+        "identifier" : "LockmanMacrosTests",
+        "name" : "LockmanMacrosTests"
+      }
+    }
+  ],
+  "version" : 1
+}
