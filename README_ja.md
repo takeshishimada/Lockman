@@ -3,7 +3,7 @@
 [![CI](https://github.com/takeshishimada/Lockman/workflows/CI/badge.svg)](https://github.com/takeshishimada/Lockman/actions?query=workflow%3ACI)
 [![Swift 5.9](https://img.shields.io/badge/swift-5.9-ED523F.svg?style=flat)](https://swift.org/download/)
 
-フィードバックファーストなアプローチで、応答性、透明性、宣言的設計を重視したアクション排他制御ライブラリ
+LockmanはThe Composable Architecture（TCA）アプリケーションにおける並行アクションの制御問題を解決するSwiftライブラリです。応答性、透明性、宣言的設計を重視しています。
 
 * [設計思想](#設計思想)
 * [概要](#概要)
@@ -31,8 +31,6 @@ WWDC18「Designing Fluid Interfaces」では、優れたインターフェース
 ユーザーは押下可能なボタンに対して、同時押しの場合でも何らかのフィードバックを期待します。UI層での即座の応答と、ビジネスロジック層での適切な排他制御を明確に分離することが重要です。
 
 ## 概要
-
-LockmanはThe Composable Architecture（TCA）アプリケーションにおける並行アクションの制御問題を解決するSwiftライブラリです。
 
 Lockmanは以下の制御戦略を提供し、実際のアプリ開発で頻繁に発生する問題に対処します：
 

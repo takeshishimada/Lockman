@@ -3,7 +3,7 @@
 [![CI](https://github.com/takeshishimada/Lockman/workflows/CI/badge.svg)](https://github.com/takeshishimada/Lockman/actions?query=workflow%3ACI)
 [![Swift 5.9](https://img.shields.io/badge/swift-5.9-ED523F.svg?style=flat)](https://swift.org/download/)
 
-A library for building action exclusive control with feedback-first approach, with responsiveness, transparency, and declarative design in mind.
+Lockman is a Swift library that solves concurrent action control issues in The Composable Architecture (TCA) applications, with responsiveness, transparency, and declarative design in mind.
 
 * [Design Philosophy](#design-philosophy)
 * [Overview](#overview)
@@ -31,8 +31,6 @@ Traditional UI development has solved problems by simply prohibiting simultaneou
 Users expect some form of feedback even when pressing buttons simultaneously. It's crucial to clearly separate immediate response at the UI layer from appropriate mutual exclusion control at the business logic layer.
 
 ## Overview
-
-Lockman is a Swift library that solves concurrent action control issues in The Composable Architecture (TCA) applications.
 
 Lockman provides the following control strategies to address common problems in app development:
 
