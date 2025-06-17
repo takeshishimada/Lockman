@@ -2,6 +2,29 @@ import Foundation
 import XCTest
 @testable import LockmanCore
 
+// Helper class for thread-safe mutable state in tests
+private final class Atomic<Value> {
+  private var _value: Value
+  private let lock = NSLock()
+  
+  init(_ value: Value) {
+    self._value = value
+  }
+  
+  var value: Value {
+    get {
+      lock.lock()
+      defer { lock.unlock() }
+      return _value
+    }
+    set {
+      lock.lock()
+      defer { lock.unlock() }
+      _value = newValue
+    }
+  }
+}
+
 final class LockmanDynamicConditionStrategyTests: XCTestCase {
   // MARK: - Test Helpers
 
@@ -42,36 +65,36 @@ final class LockmanDynamicConditionStrategyTests: XCTestCase {
     let boundary = TestBoundaryId(value: "test")
 
     // Business logic: only allow if count is less than 2
-    var currentCount = 0
+    let currentCount = Atomic<Int>(0)
 
     let info1 = LockmanDynamicConditionInfo(
       actionId: "fetch",
       condition: {
-        currentCount < 2
+        currentCount.value < 2
       }
     )
 
     // First lock succeeds
     XCTAssertEqual(strategy.canLock(id: boundary, info: info1), .success)
     strategy.lock(id: boundary, info: info1)
-    currentCount += 1
+    currentCount.value += 1
 
     // Second lock succeeds
     let info2 = LockmanDynamicConditionInfo(
       actionId: "fetch",
       condition: {
-        currentCount < 2
+        currentCount.value < 2
       }
     )
     XCTAssertEqual(strategy.canLock(id: boundary, info: info2), .success)
     strategy.lock(id: boundary, info: info2)
-    currentCount += 1
+    currentCount.value += 1
 
     // Third lock fails
     let info3 = LockmanDynamicConditionInfo(
       actionId: "fetch",
       condition: {
-        currentCount < 2
+        currentCount.value < 2
       }
     )
     XCTAssertEqual(strategy.canLock(id: boundary, info: info3), .failure)
@@ -140,38 +163,38 @@ final class LockmanDynamicConditionStrategyTests: XCTestCase {
     let strategy = LockmanDynamicConditionStrategy()
     let boundary = TestBoundaryId(value: "test")
 
-    var isLocked = false
+    let isLocked = Atomic<Bool>(false)
 
     let info = LockmanDynamicConditionInfo(
       actionId: "exclusive",
       condition: {
-        !isLocked
+        !isLocked.value
       }
     )
 
     // First lock should succeed
     XCTAssertEqual(strategy.canLock(id: boundary, info: info), .success)
     strategy.lock(id: boundary, info: info)
-    isLocked = true
+    isLocked.value = true
 
     // Second lock should fail
     let info2 = LockmanDynamicConditionInfo(
       actionId: "exclusive",
       condition: {
-        !isLocked
+        !isLocked.value
       }
     )
     XCTAssertEqual(strategy.canLock(id: boundary, info: info2), .failure)
 
     // Unlock
     strategy.unlock(id: boundary, info: info)
-    isLocked = false
+    isLocked.value = false
 
     // Now should succeed again
     let info3 = LockmanDynamicConditionInfo(
       actionId: "exclusive",
       condition: {
-        !isLocked
+        !isLocked.value
       }
     )
     XCTAssertEqual(strategy.canLock(id: boundary, info: info3), .success)
@@ -236,7 +259,7 @@ final class LockmanDynamicConditionStrategyTests: XCTestCase {
     let boundary = TestBoundaryId(value: "test")
 
     // Simulate a rate limiter with quota
-    var requestCount = 0
+    let requestCount = Atomic<Int>(0)
     let quota = 3
     let resetTime = Date().addingTimeInterval(3600) // 1 hour from now
 
@@ -246,10 +269,10 @@ final class LockmanDynamicConditionStrategyTests: XCTestCase {
         condition: {
           if Date() > resetTime {
             // Reset quota after time window
-            requestCount = 0
+            requestCount.value = 0
           }
 
-          return requestCount < quota
+          return requestCount.value < quota
         }
       )
     }
@@ -259,7 +282,7 @@ final class LockmanDynamicConditionStrategyTests: XCTestCase {
       let info = makeInfo()
       XCTAssertEqual(strategy.canLock(id: boundary, info: info), .success)
       strategy.lock(id: boundary, info: info)
-      requestCount += 1
+      requestCount.value += 1
     }
 
     // Next request fails
@@ -290,37 +313,37 @@ final class LockmanDynamicConditionStrategyTests: XCTestCase {
     let boundary2 = TestBoundaryId(value: "user2")
 
     // Each user has their own counter
-    var user1Count = 0
-    var user2Count = 0
+    let user1Count = Atomic<Int>(0)
+    let user2Count = Atomic<Int>(0)
 
     let user1Info = LockmanDynamicConditionInfo(
       actionId: "request",
       condition: {
-        user1Count < 1
+        user1Count.value < 1
       }
     )
 
     // User1 makes a request
     XCTAssertEqual(strategy.canLock(id: boundary1, info: user1Info), .success)
     strategy.lock(id: boundary1, info: user1Info)
-    user1Count += 1
+    user1Count.value += 1
 
     // User2 can still make requests
     let user2Info = LockmanDynamicConditionInfo(
       actionId: "request",
       condition: {
-        user2Count < 1
+        user2Count.value < 1
       }
     )
     XCTAssertEqual(strategy.canLock(id: boundary2, info: user2Info), .success)
     strategy.lock(id: boundary2, info: user2Info)
-    user2Count += 1
+    user2Count.value += 1
 
     // User1 second request fails
     let user1Info2 = LockmanDynamicConditionInfo(
       actionId: "request",
       condition: {
-        user1Count < 1
+        user1Count.value < 1
       }
     )
     XCTAssertEqual(strategy.canLock(id: boundary1, info: user1Info2), .failure)

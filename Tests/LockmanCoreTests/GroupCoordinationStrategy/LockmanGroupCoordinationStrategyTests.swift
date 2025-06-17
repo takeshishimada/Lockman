@@ -676,7 +676,7 @@ final class LockmanGroupCoordinationStrategyTests: XCTestCase {
           if strategy.canLock(id: boundaryId, info: member) == .success {
             strategy.lock(id: boundaryId, info: member)
             // Simulate some work
-            try? await Task.sleep(for: .milliseconds(1))
+            try? await Task.sleep(nanoseconds: 1_000_000) // 1ms
             strategy.unlock(id: boundaryId, info: member)
             return true
           }
