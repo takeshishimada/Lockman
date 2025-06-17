@@ -6,3 +6,4 @@
 /*.xcodeproj
 xcuserdata/
 .docc-build/
+.claude/
