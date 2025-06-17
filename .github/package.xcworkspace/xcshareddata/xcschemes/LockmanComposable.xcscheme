@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Scheme
    LastUpgradeVersion = "1600"
-   version = "1.7">
+   version = "2.1">
    <BuildAction
       parallelizeBuildables = "YES"
       buildImplicitDependencies = "YES"
@@ -13,12 +13,64 @@
             buildForProfiling = "YES"
             buildForArchiving = "YES"
             buildForAnalyzing = "YES">
+            <TestPlanReference
+               reference = "container:.github/LockmanComposable.xctestplan">
+            </TestPlanReference>
+         </BuildActionEntry>
+         <BuildActionEntry
+            buildForTesting = "YES"
+            buildForRunning = "YES"
+            buildForProfiling = "YES"
+            buildForArchiving = "YES"
+            buildForAnalyzing = "YES">
             <BuildableReference
                BuildableIdentifier = "primary"
-               BlueprintIdentifier = "LockmanComposable"
-               BuildableName = "LockmanComposable"
-               BlueprintName = "LockmanComposable"
-               ReferencedContainer = "container:">
+               BlueprintIdentifier = "LockmanCore"
+               BuildableName = "LockmanCore"
+               BlueprintName = "LockmanCore"
+               ReferencedContainer = "container:..">
+            </BuildableReference>
+         </BuildActionEntry>
+         <BuildActionEntry
+            buildForTesting = "YES"
+            buildForRunning = "NO"
+            buildForProfiling = "NO"
+            buildForArchiving = "NO"
+            buildForAnalyzing = "NO">
+            <BuildableReference
+               BuildableIdentifier = "primary"
+               BlueprintIdentifier = "LockmanComposableTests"
+               BuildableName = "LockmanComposableTests"
+               BlueprintName = "LockmanComposableTests"
+               ReferencedContainer = "container:..">
+            </BuildableReference>
+         </BuildActionEntry>
+         <BuildActionEntry
+            buildForTesting = "YES"
+            buildForRunning = "NO"
+            buildForProfiling = "NO"
+            buildForArchiving = "NO"
+            buildForAnalyzing = "NO">
+            <BuildableReference
+               BuildableIdentifier = "primary"
+               BlueprintIdentifier = "LockmanMacrosTests"
+               BuildableName = "LockmanMacrosTests"
+               BlueprintName = "LockmanMacrosTests"
+               ReferencedContainer = "container:..">
+            </BuildableReference>
+         </BuildActionEntry>
+         <BuildActionEntry
+            buildForTesting = "YES"
+            buildForRunning = "NO"
+            buildForProfiling = "NO"
+            buildForArchiving = "NO"
+            buildForAnalyzing = "NO">
+            <BuildableReference
+               BuildableIdentifier = "primary"
+               BlueprintIdentifier = "LockmanCoreTests"
+               BuildableName = "LockmanCoreTests"
+               BlueprintName = "LockmanCoreTests"
+               ReferencedContainer = "container:..">
             </BuildableReference>
          </BuildActionEntry>
       </BuildActionEntries>
@@ -30,7 +82,7 @@
       shouldUseLaunchSchemeArgsEnv = "YES">
       <TestPlans>
          <TestPlanReference
-            reference = "container:.github/LockmanComposable.xctestplan"
+            reference = "container:LockmanComposable.xctestplan"
             default = "YES">
          </TestPlanReference>
       </TestPlans>
@@ -55,10 +107,10 @@
       <MacroExpansion>
          <BuildableReference
             BuildableIdentifier = "primary"
-            BlueprintIdentifier = "LockmanComposable"
-            BuildableName = "LockmanComposable"
-            BlueprintName = "LockmanComposable"
-            ReferencedContainer = "container:">
+            BlueprintIdentifier = "LockmanCore"
+            BuildableName = "LockmanCore"
+            BlueprintName = "LockmanCore"
+            ReferencedContainer = "container:..">
          </BuildableReference>
       </MacroExpansion>
    </ProfileAction>
