@@ -1,0 +1,24 @@
+{
+  "configurations" : [
+    {
+      "id" : "A606EC60-F0FE-4F56-B58C-7501A462ECC7",
+      "name" : "Test Scheme Action",
+      "options" : {
+
+      }
+    }
+  ],
+  "defaultOptions" : {
+
+  },
+  "testTargets" : [
+    {
+      "target" : {
+        "containerPath" : "container:",
+        "identifier" : "LockmanComposableTests",
+        "name" : "LockmanComposableTests"
+      }
+    }
+  ],
+  "version" : 1
+}
