@@ -35,10 +35,9 @@ public enum DefaultLockmanIssueReporter: LockmanIssueReporter {
 /// Global issue reporter configuration.
 public enum LockmanIssueReporting {
   /// The current issue reporter. Defaults to `DefaultIssueReporter`.
-  public nonisolated(unsafe) static var reporter: any LockmanIssueReporter.Type = DefaultLockmanIssueReporter.self
+  public static var reporter: any LockmanIssueReporter.Type = DefaultLockmanIssueReporter.self
 
   /// Reports an issue using the configured reporter.
-  @inlinable
   public static func reportIssue(
     _ message: String,
     file: StaticString = #file,
