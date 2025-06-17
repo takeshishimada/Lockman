@@ -131,22 +131,14 @@ jobs:
         run: defaults write com.apple.dt.XCBuild IgnoreFileSystemDeviceInodeChanges -bool YES
       - name: Update mtime for incremental builds
         uses: chetan/git-restore-mtime-action@v2
-      - name: CaseStudies (SwiftUI)
-        run: make DERIVED_DATA_PATH=~/.derivedData SCHEME="CaseStudies (SwiftUI)" xcodebuild-raw
-      - name: CaseStudies (UIKit)
-        run: make DERIVED_DATA_PATH=~/.derivedData SCHEME="CaseStudies (UIKit)" xcodebuild-raw
-      - name: Search
-        run: make DERIVED_DATA_PATH=~/.derivedData SCHEME="Search" xcodebuild-raw
-      - name: SyncUps
-        run: make DERIVED_DATA_PATH=~/.derivedData SCHEME="SyncUps" xcodebuild-raw
-      - name: SpeechRecognition
-        run: make DERIVED_DATA_PATH=~/.derivedData SCHEME="SpeechRecognition" xcodebuild-raw
-      - name: TicTacToe
-        run: make DERIVED_DATA_PATH=~/.derivedData SCHEME="TicTacToe" xcodebuild-raw
-      - name: Todos
-        run: make DERIVED_DATA_PATH=~/.derivedData SCHEME="Todos" xcodebuild-raw
-      - name: VoiceMemos
-        run: make DERIVED_DATA_PATH=~/.derivedData SCHEME="VoiceMemos" xcodebuild-raw
+      - name: Strategies
+        run: |
+          cd Examples/Strategies
+          xcodebuild build \
+            -project Strategies.xcodeproj \
+            -scheme "Strategies" \
+            -destination "platform=iOS Simulator,name=iPhone 16 Pro" \
+            -derivedDataPath ~/.derivedData
 
   check-macro-compatibility:
     name: Check Macro Compatibility
