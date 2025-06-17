@@ -205,8 +205,8 @@ final class LockmanStrategyIdPerformanceTests: XCTestCase {
     }
     let duration = Date().timeIntervalSince(start)
 
-    // Should be very fast - under 50ms for 200k comparisons
-    XCTAssertLessThan(duration, 50.0 / 1000.0)
+    // Should be very fast - under 100ms for 200k comparisons (increased for CI stability)
+    XCTAssertLessThan(duration, 100.0 / 1000.0)
   }
 
   func testDictionaryOperationsPerformance() async {

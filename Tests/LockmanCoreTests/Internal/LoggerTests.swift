@@ -4,7 +4,6 @@ import XCTest
 @testable @_spi(Logging) import LockmanCore
 
 /// Tests for the Logger class (Internal/Logger.swift)
-@MainActor
 final class LoggerTests: XCTestCase {
   // MARK: - Test Setup
 
@@ -389,7 +388,6 @@ final class LoggerTests: XCTestCase {
 
 // MARK: - Performance Tests
 
-@MainActor
 final class LoggerPerformanceTests: XCTestCase {
   func testloggerPerformanceHighVolume() {
     // Clear logs at the beginning
