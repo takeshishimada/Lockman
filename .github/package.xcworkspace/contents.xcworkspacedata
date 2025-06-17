@@ -7,7 +7,4 @@
    <FileRef
       location = "group:LockmanComposable.xctestplan">
    </FileRef>
-   <FileRef
-      location = "group:LockmanComposableTests.xctestplan">
-   </FileRef>
 </Workspace>
