@@ -138,7 +138,9 @@ jobs:
             -project Strategies.xcodeproj \
             -scheme "Strategies" \
             -destination "platform=iOS Simulator,name=iPhone 16 Pro" \
-            -derivedDataPath ~/.derivedData
+            -derivedDataPath ~/.derivedData \
+            -skipMacroValidation \
+            -skipPackagePluginValidation
 
   check-macro-compatibility:
     name: Check Macro Compatibility
