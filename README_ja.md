@@ -4,7 +4,7 @@
 [![Swift](https://img.shields.io/badge/Swift-5.9%20%7C%205.10%20%7C%206.0-ED523F.svg?style=flat)](https://swift.org/download/)
 [![Platforms](https://img.shields.io/badge/Platforms-iOS%20%7C%20macOS%20%7C%20tvOS%20%7C%20watchOS%20%7C%20Mac%20Catalyst-333333.svg?style=flat)](https://developer.apple.com/)
 
-LockmanはThe Composable Architecture（TCA）アプリケーションにおける並行アクションの制御問題を解決するSwiftライブラリです。応答性、透明性、宣言的設計を重視しています。
+LockmanはThe Composable Architectureアプリケーションにおける並行アクション制御の課題を解決するSwiftライブラリです。レスポンシブで透明性の高い、宣言的な設計により、シンプルかつ型安全に制御できます。
 
 * [設計思想](#設計思想)
 * [概要](#概要)
