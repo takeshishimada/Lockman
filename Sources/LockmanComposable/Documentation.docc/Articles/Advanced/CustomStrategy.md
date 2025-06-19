@@ -74,7 +74,7 @@ struct BusinessHoursInfo: LockmanInfo {
 final class BusinessHoursStrategy: LockmanStrategy {
     func canLock(info: some LockmanInfo) -> LockResult {
         guard let bhInfo = info as? BusinessHoursInfo else {
-            return .failure
+            return .failure()
         }
         
         let now = Date()
@@ -86,13 +86,13 @@ final class BusinessHoursStrategy: LockmanStrategy {
         // 曜日チェック（1=日曜...7=土曜）
         if let weekday = components.weekday,
            !bhInfo.allowedDays.contains(weekday) {
-            return .failure
+            return .failure()
         }
         
         // 時間チェック
         if let hour = components.hour,
            !bhInfo.allowedHours.contains(hour) {
-            return .failure
+            return .failure()
         }
         
         return .success

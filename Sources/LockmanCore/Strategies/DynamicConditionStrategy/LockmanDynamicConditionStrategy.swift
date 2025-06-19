@@ -63,8 +63,8 @@ public final class LockmanDynamicConditionStrategy: LockmanStrategy, @unchecked 
     info: LockmanDynamicConditionInfo
   ) -> LockResult {
     // Convert Bool to LockResult
-    let result: LockResult = info.condition() ? .success : .failure
-    let failureReason = result == .failure ? "Dynamic condition returned false" : nil
+    let result: LockResult = info.condition() ? .success : .failure()
+    let failureReason = result == .failure() ? "Dynamic condition returned false" : nil
 
     LockmanLogger.shared.logCanLock(
       result: result,

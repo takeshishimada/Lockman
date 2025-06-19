@@ -375,7 +375,7 @@ internal extension Effect {
       )
 
       // Early exit if lock cannot be acquired
-      guard result != .failure else {
+      guard result != .failure() else {
         return .none
       }
 
