@@ -3,7 +3,7 @@
 LockmanのメインAPIであるEffect.withLockの詳細解説
 
 @Metadata {
-    @PageImage(purpose: card, source: "Lockman", alt: "Lockman Logo")
+    @PageImage(purpose: icon, source: "Lockman", alt: "Lockman Logo")
 }
 
 ## 概要
@@ -80,11 +80,18 @@ return .withLock(
 ロック解放のタイミングを制御します：
 
 ```swift
-public enum UnlockOption {
-    case immediate           // 即座に解放
-    case mainRunLoop        // メインランループで解放
-    case transition(seconds: Double)  // 指定秒後に解放
-    case delayed(seconds: Double)     // 遅延解放
+public enum UnlockOption: Sendable, Equatable {
+    /// 即座にロックを解放
+    case immediate
+    
+    /// メインランループで次のサイクルに解放
+    case mainRunLoop
+    
+    /// アニメーションなどの遷移時間を考慮して解放
+    case transition
+    
+    /// 指定秒数後に解放
+    case delayed(seconds: Double)
 }
 ```
 
@@ -168,22 +175,17 @@ return .withLock(
 
 ### cancelID: LockmanBoundaryId
 
-TCAのCancelIDが境界として機能します。**1画面1境界の原則**に従い、各画面/機能は1つのCancelIDのみを持つべきです：
+TCAのCancelIDが境界として機能します：
 
 ```swift
 enum CancelID {
-    case userAction  // この画面/機能内のすべてのユーザーアクションを制御
+    case userAction
 }
 ```
 
-**1画面1境界の原則とは：**
-- 各画面または機能は1つのCancelIDケース（`case userAction`）のみを持つ
-- これにより、その画面内のすべてのユーザーアクションが適切に排他制御される
-- 複数のケースを作ると別々の境界が作られ、適切な相互排他が行われない
-
 ## 実践例
 
-### 1. 基本的なデータ保存
+### 1. 自動アンロック制御
 
 ```swift
 @Reducer
@@ -312,39 +314,7 @@ let effect = Effect.withLock(
 
 ## ベストプラクティス
 
-### 1. 適切なCancelIDの設計
-
-**1画面1境界の原則**に従い、各画面/機能で1つのCancelIDのみを定義：
-
-```swift
-// ✅ 正しい：1画面1境界
-enum CancelID {
-    case userAction  // この画面のすべてのユーザーアクションを制御
-}
-
-// ❌ 誤り：複数の境界を作ってしまう
-enum CancelID {
-    case userProfile
-    case settings
-    case dataSync
-}
-
-// 必要に応じて、動的なIDを使用することは可能：
-enum CancelID {
-    case userAction  // 基本はこれ1つ
-    // 特別なケースとして、動的なIDが必要な場合：
-    case chat(roomId: String)  // チャットルームごとに別の境界
-}
-```
-
-### 2. UnlockOptionの選択
-
-- **`.immediate`**: 通常の非同期処理
-- **`.mainRunLoop`**: UI更新を伴う処理
-- **`.transition`**: アニメーションを伴う処理
-- **`.delayed`**: クリーンアップが必要な処理
-
-### 3. エラーハンドリング
+### エラーハンドリング
 
 ```swift
 return .withLock(
@@ -369,5 +339,5 @@ return .withLock(
 
 ## 次のステップ
 
-- <doc:CancelIDAndBoundaries> - CancelIDと境界の詳細
 - <doc:UnlockOptions> - UnlockOptionの詳細な使い方
+- <doc:SingleExecution> - 組み込み戦略の使用例

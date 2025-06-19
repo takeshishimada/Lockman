@@ -3,7 +3,7 @@
 Lockmanのデバッグ機能を使用してロック状態を監視・分析する方法
 
 @Metadata {
-    @PageImage(purpose: card, source: "Lockman", alt: "Lockman Logo")
+    @PageImage(purpose: icon, source: "Lockman", alt: "Lockman Logo")
 }
 
 ## 概要
@@ -94,70 +94,6 @@ Lockman.debug.printCurrentLocks(options: .compact)
 Lockman.debug.printCurrentLocks(options: .detailed)
 ```
 
-## 実践的なデバッグ例
-
-### SwiftUIでのデバッグビュー
-
-```swift
-struct DebugMenuView: View {
-    var body: some View {
-        Menu("Debug") {
-            Button("Show Current Locks") {
-                print("\n📊 Current Lock State:")
-                Lockman.debug.printCurrentLocks()
-            }
-            
-            Button("Show Locks (Compact)") {
-                print("\n📊 Current Lock State (Compact):")
-                Lockman.debug.printCurrentLocks(options: .compact)
-            }
-            
-            #if DEBUG
-            Toggle("Enable Logging", isOn: Binding(
-                get: { Lockman.debug.isLoggingEnabled },
-                set: { Lockman.debug.isLoggingEnabled = $0 }
-            ))
-            #endif
-        }
-    }
-}
-```
-
-### TCAでのデバッグアクション
-
-```swift
-@Reducer
-struct MyFeature {
-    enum Action {
-        case debugShowLocks
-        case debugToggleLogging
-        // ... other actions
-    }
-    
-    var body: some ReducerOf<Self> {
-        Reduce { state, action in
-            switch action {
-            case .debugShowLocks:
-                print("\n=== Lockman Debug Info ===")
-                print("Timestamp: \(Date())")
-                Lockman.debug.printCurrentLocks()
-                print("========================\n")
-                return .none
-                
-            case .debugToggleLogging:
-                #if DEBUG
-                Lockman.debug.isLoggingEnabled.toggle()
-                print("Lockman logging: \(Lockman.debug.isLoggingEnabled ? "Enabled" : "Disabled")")
-                #endif
-                return .none
-                
-            // ... other cases
-            }
-        }
-    }
-}
-```
-
 ## トラブルシューティング
 
 ### ロックが解放されない場合
@@ -184,55 +120,6 @@ store.send(.myAction)
 // → 既存のロックが原因
 ```
 
-### デバッグ情報のエクスポート
-
-```swift
-// コンソール出力をファイルに保存
-func exportDebugInfo() {
-    let output = captureStdout {
-        print("=== Lockman Debug Export ===")
-        print("Date: \(Date())")
-        print("App Version: \(Bundle.main.infoDictionary?["CFBundleShortVersionString"] ?? "Unknown")")
-        print("\nCurrent Locks:")
-        Lockman.debug.printCurrentLocks(options: .detailed)
-        print("===========================")
-    }
-    
-    // ファイルに保存またはシェア
-    saveToFile(output)
-}
-```
-
-## パフォーマンスへの影響
-
-- `isLoggingEnabled`: DEBUGビルドでのみ有効。本番環境では自動的に無効化
-- `printCurrentLocks()`: 本番環境でも使用可能だが、大量のロックがある場合は注意が必要
-
-## ベストプラクティス
-
-1. **開発時は常にログを有効化**
-   ```swift
-   #if DEBUG
-   Lockman.debug.isLoggingEnabled = true
-   #endif
-   ```
-
-2. **問題発生時は即座にロック状態を確認**
-   ```swift
-   print("🚨 Issue detected, current locks:")
-   Lockman.debug.printCurrentLocks()
-   ```
-
-3. **CI/CDでのデバッグ出力**
-   ```swift
-   // テスト失敗時に自動的にロック状態を出力
-   override func tearDown() {
-       if testFailed {
-           Lockman.debug.printCurrentLocks()
-       }
-       super.tearDown()
-   }
-   ```
 
 ## 次のステップ
 

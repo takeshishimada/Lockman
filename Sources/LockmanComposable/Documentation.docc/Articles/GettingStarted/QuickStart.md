@@ -3,7 +3,7 @@
 LockmanをTCAプロジェクトで使い始めるための最短ガイド
 
 @Metadata {
-    @PageImage(purpose: card, source: "Lockman", alt: "Lockman Logo")
+    @PageImage(purpose: icon, source: "Lockman", alt: "Lockman Logo")
 }
 
 ## 概要
@@ -28,7 +28,7 @@ dependencies: [
 
 ## 基本的な使い方
 
-### 1. インポートとCancelIDの定義
+### 1. アクションの定義
 
 ```swift
 import ComposableArchitecture
@@ -99,27 +99,9 @@ var body: some Reducer<State, Action> {
 }
 ```
 
-## よくある質問
-
-### Q: LockmanCoreもインポートする必要はありますか？
-
-A: いいえ、`LockmanComposable`が`LockmanCore`のすべての機能を再エクスポートしています。
-
-### Q: CancelIDとLockmanBoundaryIdの関係は？
-
-A: TCAの`CancelID`がそのまま`LockmanBoundaryId`として機能します。新しい型を定義する必要はありません。
-
-### Q: 戦略はどう選べばいいですか？
-
-A: 一般的なガイドライン：
-- **重複防止**: `SingleExecutionStrategy`
-- **優先度制御**: `PriorityBasedStrategy`
-- **グループ処理**: `GroupCoordinationStrategy`
-- **条件付き実行**: `DynamicConditionStrategy`
-
-詳細は戦略ガイドセクションを参照してください。
-
 ## 次のステップ
 
 - <doc:EffectWithLock> - Effect.withLockAPIの詳細
+- <doc:SingleExecution> - 組み込み戦略の詳細
+- <doc:PriorityBased> - 優先度ベースの制御
 - <doc:Debugging> - デバッグとトラブルシューティング
