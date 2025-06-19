@@ -58,21 +58,23 @@ public struct LockmanGroupCoordinationMacro: ExtensionMacro {
   /// Generates an extension declaration that makes the given type conform to
   /// `LockmanGroupCoordinatedAction`.
   ///
+  /// This method validates that the macro is applied only to enum declarations
+  /// before generating the conformance extension.
+  ///
   /// - Parameters:
-  ///   - node: The attribute syntax node containing macro arguments.
-  ///   - declaration: The declaration group syntax node to which the attribute is attached.
-  ///   - type: The `TypeSyntax` node representing the type to extend.
-  ///   - protocols: An array of `TypeSyntax` representing inherited protocols.
-  ///   - context: The macro expansion context for diagnostics.
-  /// - Returns: An array containing a single `ExtensionDeclSyntax` that declares
-  ///            conformance to `LockmanGroupCoordinatedAction`.
+  ///   - node: The attribute syntax node (unused).
+  ///   - declaration: The declaration to validate and extend.
+  ///   - type: The type to add the extension to.
+  ///   - protocols: Inherited protocols (unused).
+  ///   - context: Macro expansion context (unused).
+  /// - Returns: An array containing the extension declaration, or empty if validation fails.
   /// - Throws: An error if constructing the `ExtensionDeclSyntax` fails.
   public static func expansion(
-    of node: AttributeSyntax,
+    of _: AttributeSyntax,
     attachedTo declaration: some DeclGroupSyntax,
     providingExtensionsOf type: some TypeSyntaxProtocol,
     conformingTo _: [TypeSyntax],
-    in context: some MacroExpansionContext
+    in _: some MacroExpansionContext
   ) throws -> [ExtensionDeclSyntax] {
     // Only generate extension for enums
     guard declaration.is(EnumDeclSyntax.self) else {
