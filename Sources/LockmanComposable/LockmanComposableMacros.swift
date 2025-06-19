@@ -263,7 +263,6 @@ public macro LockmanCompositeStrategy<S1: LockmanStrategy, S2: LockmanStrategy, 
 /// Apply this macro to an enum declaration to automatically generate:
 /// - Protocol conformance to `LockmanDynamicConditionAction`
 /// - `actionName` property that returns the enum case name as a String
-/// - `extractMetadata()` method that extracts enum associated values as metadata
 /// - `lockmanInfo` property with default condition (always success)
 /// - Default `strategyId` implementation is provided by the protocol
 ///
@@ -327,7 +326,7 @@ public macro LockmanCompositeStrategy<S1: LockmanStrategy, S2: LockmanStrategy, 
 /// }
 /// ```
 @attached(extension, conformances: LockmanDynamicConditionAction)
-@attached(member, names: named(actionName), named(extractMetadata), named(lockmanInfo))
+@attached(member, names: named(actionName), named(lockmanInfo))
 public macro LockmanDynamicCondition() = #externalMacro(
   module: "LockmanMacros",
   type: "LockmanDynamicConditionMacro"
