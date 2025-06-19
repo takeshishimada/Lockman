@@ -1,133 +1,128 @@
-import SwiftSyntaxMacros
-import SwiftSyntaxMacrosTestSupport
-import XCTest
-
 #if canImport(LockmanMacros)
   import LockmanMacros
+  import MacroTesting
+  import XCTest
 
   final class LockmanGroupCoordinationMacroTests: XCTestCase {
-    func testBasicGroupCoordinationMacro() throws {
-      assertMacroExpansion(
-        """
-        @LockmanGroupCoordination
-        enum NavigationAction {
-          case navigate(to: String)
-          case back
-        }
-        """,
-        expandedSource: """
-        enum NavigationAction {
-          case navigate(to: String)
-          case back
+    func testBasicGroupCoordinationMacro() {
+      withMacroTesting(macros: [LockmanGroupCoordinationMacro.self]) {
+        assertMacro {
+          """
+          @LockmanGroupCoordination
+          enum NavigationAction {
+            case navigate(to: String)
+            case back
+          }
+          """
+        } expansion: {
+          """
+          enum NavigationAction {
+            case navigate(to: String)
+            case back
 
             internal var actionName: String {
               switch self {
               case .navigate(_):
-                  return "navigate"
+                return "navigate"
               case .back:
-                  return "back"
+                return "back"
               }
             }
-        }
+          }
 
-        extension NavigationAction: LockmanGroupCoordinatedAction {
+          extension NavigationAction: LockmanGroupCoordinatedAction {
+          }
+          """
         }
-        """,
-        macros: testMacros
-      )
+      }
     }
 
-    func testSingleCaseEnum() throws {
-      assertMacroExpansion(
-        """
-        @LockmanGroupCoordination
-        enum SingleAction {
-          case action
-        }
-        """,
-        expandedSource: """
-        enum SingleAction {
-          case action
+    func testSingleCaseEnum() {
+      withMacroTesting(macros: [LockmanGroupCoordinationMacro.self]) {
+        assertMacro {
+          """
+          @LockmanGroupCoordination
+          enum SingleAction {
+            case action
+          }
+          """
+        } expansion: {
+          """
+          enum SingleAction {
+            case action
 
             internal var actionName: String {
               switch self {
               case .action:
-                  return "action"
+                return "action"
               }
             }
-        }
+          }
 
-        extension SingleAction: LockmanGroupCoordinatedAction {
+          extension SingleAction: LockmanGroupCoordinatedAction {
+          }
+          """
         }
-        """,
-        macros: testMacros
-      )
+      }
     }
 
-    func testEnumWithAssociatedValues() throws {
-      assertMacroExpansion(
-        """
-        @LockmanGroupCoordination
-        enum ComplexAction {
-          case fetch(id: String, priority: Int)
-          case update(data: Data)
-          case delete
-        }
-        """,
-        expandedSource: """
-        enum ComplexAction {
-          case fetch(id: String, priority: Int)
-          case update(data: Data)
-          case delete
+    func testEnumWithAssociatedValues() {
+      withMacroTesting(macros: [LockmanGroupCoordinationMacro.self]) {
+        assertMacro {
+          """
+          @LockmanGroupCoordination
+          enum ComplexAction {
+            case fetch(id: String, priority: Int)
+            case update(data: Data)
+            case delete
+          }
+          """
+        } expansion: {
+          """
+          enum ComplexAction {
+            case fetch(id: String, priority: Int)
+            case update(data: Data)
+            case delete
 
             internal var actionName: String {
               switch self {
               case .fetch(_, _):
-                  return "fetch"
+                return "fetch"
               case .update(_):
-                  return "update"
+                return "update"
               case .delete:
-                  return "delete"
+                return "delete"
               }
             }
-        }
+          }
 
-        extension ComplexAction: LockmanGroupCoordinatedAction {
+          extension ComplexAction: LockmanGroupCoordinatedAction {
+          }
+          """
         }
-        """,
-        macros: testMacros
-      )
+      }
     }
 
-    func testAppliedToNonEnum() throws {
-      assertMacroExpansion(
-        """
-        @LockmanGroupCoordination
-        struct NotAnEnum {
-          let value: String
+    func testAppliedToNonEnum() {
+      withMacroTesting(macros: [LockmanGroupCoordinationMacro.self]) {
+        assertMacro {
+          """
+          @LockmanGroupCoordination
+          struct NotAnEnum {
+            let value: String
+          }
+          """
+        } diagnostics: {
+          """
+          @LockmanGroupCoordination
+          ┬────────────────────────
+          ╰─ 🛑 @LockmanGroupCoordination can only be attached to an enum declaration.
+          struct NotAnEnum {
+            let value: String
+          }
+          """
         }
-        """,
-        expandedSource: """
-        struct NotAnEnum {
-          let value: String
-        }
-
-        extension NotAnEnum: LockmanGroupCoordinatedAction {
-        }
-        """,
-        diagnostics: [
-          DiagnosticSpec(
-            message: "@LockmanGroupCoordination can only be attached to an enum declaration.",
-            line: 1,
-            column: 1
-          ),
-        ],
-        macros: testMacros
-      )
+      }
     }
   }
-
-  private let testMacros: [String: any Macro.Type] = [
-    "LockmanGroupCoordination": LockmanGroupCoordinationMacro.self,
-  ]
 #endif

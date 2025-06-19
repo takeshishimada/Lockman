@@ -3,6 +3,10 @@ import SwiftSyntax
 import SwiftSyntaxBuilder
 import SwiftSyntaxMacros
 
+#if !canImport(SwiftSyntax600)
+  import SwiftSyntaxMacroExpansion
+#endif
+
 // MARK: - Core Types
 
 /// Represents an enum case with its structural information.
