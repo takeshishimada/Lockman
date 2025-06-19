@@ -111,6 +111,9 @@ import XCTest
         struct NotAnEnum {
           let value: String
         }
+
+        extension NotAnEnum: LockmanGroupCoordinatedAction {
+        }
         """,
         diagnostics: [
           DiagnosticSpec(
