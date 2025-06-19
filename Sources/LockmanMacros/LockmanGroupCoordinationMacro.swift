@@ -68,12 +68,18 @@ public struct LockmanGroupCoordinationMacro: ExtensionMacro {
   ///            conformance to `LockmanGroupCoordinatedAction`.
   /// - Throws: An error if constructing the `ExtensionDeclSyntax` fails.
   public static func expansion(
-    of _: AttributeSyntax,
-    attachedTo _: some DeclGroupSyntax,
+    of node: AttributeSyntax,
+    attachedTo declaration: some DeclGroupSyntax,
     providingExtensionsOf type: some TypeSyntaxProtocol,
     conformingTo _: [TypeSyntax],
-    in _: some MacroExpansionContext
+    in context: some MacroExpansionContext
   ) throws -> [ExtensionDeclSyntax] {
+    // Only generate extension for enums
+    guard declaration.is(EnumDeclSyntax.self) else {
+      // Diagnostic will be emitted by MemberMacro
+      return []
+    }
+    
     let extensionDecl = try makeConformanceExtensionDecl(
       for: type,
       conformingTo: "LockmanGroupCoordinatedAction"

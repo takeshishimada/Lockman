@@ -114,7 +114,7 @@ import XCTest
         """,
         diagnostics: [
           DiagnosticSpec(
-            message: "LockmanGroupCoordination can only be applied to enums",
+            message: "@LockmanGroupCoordination can only be attached to an enum declaration.",
             line: 1,
             column: 1
           ),
@@ -124,7 +124,7 @@ import XCTest
     }
   }
 
-  private let testMacros: [String: Macro.Type] = [
+  private let testMacros: [String: any Macro.Type] = [
     "LockmanGroupCoordination": LockmanGroupCoordinationMacro.self,
   ]
 #endif
