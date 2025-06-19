@@ -21,10 +21,10 @@ public enum UnlockOption: Sendable, Equatable {
     case mainRunLoop
     
     /// アニメーションなどの遷移時間を考慮して解放
-    case transition
+    case transition  // プラットフォームごとのデフォルト遅延を使用
     
     /// 指定秒数後に解放
-    case delayed(seconds: Double)
+    case delayed(TimeInterval)  // 秒単位で指定
 }
 ```
 
@@ -84,9 +84,20 @@ return .withLock(
 - macOS: 0.25秒
 - その他: 0.3秒
 
-### .delayed(seconds:)
+### .delayed(_:)
 
-指定した秒数の遅延後にロックを解放します。
+指定した秒数（TimeInterval）の遅延後にロックを解放します。
+
+```swift
+return .withLock(
+    unlockOption: .delayed(0.5),  // 0.5秒後に解放
+    operation: { send in
+        await send(.customAnimation)
+    },
+    action: CustomAction.animate,
+    cancelID: CancelID.animation
+)
+```
 
 ## 実装例
 
@@ -123,7 +134,7 @@ struct NavigationFeature {
             switch action {
             case let .rowTapped(item):
                 return .withLock(
-                    unlockOption: .transition(seconds: 0.35),  // iOS標準のpush animation
+                    unlockOption: .transition,  // プラットフォーム固有の遷移時間を使用
                     operation: { send in
                         // データ準備
                         let details = try await loadDetails(item.id)
@@ -155,7 +166,7 @@ struct ToastFeature {
             switch action {
             case .showSuccessToast:
                 return .withLock(
-                    unlockOption: .delayed(seconds: 3.0), // 3秒間表示
+                    unlockOption: .delayed(3.0), // 3秒間表示
                     operation: { send in
                         state.toast = .success("保存しました")
                         

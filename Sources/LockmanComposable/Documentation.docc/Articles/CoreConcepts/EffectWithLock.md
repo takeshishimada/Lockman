@@ -88,10 +88,10 @@ public enum UnlockOption: Sendable, Equatable {
     case mainRunLoop
     
     /// アニメーションなどの遷移時間を考慮して解放
-    case transition
+    case transition  // プラットフォームごとのデフォルト遅延を使用
     
     /// 指定秒数後に解放
-    case delayed(seconds: Double)
+    case delayed(TimeInterval)  // 秒単位で指定
 }
 ```
 
@@ -99,11 +99,21 @@ public enum UnlockOption: Sendable, Equatable {
 
 ```swift
 return .withLock(
-    unlockOption: .transition(seconds: 0.3),  // アニメーション完了後に解放
+    unlockOption: .transition,  // プラットフォーム固有の遷移時間を使用
     operation: { send in
         await send(.startAnimation)
     },
     action: animationAction,
+    cancelID: CancelID.userAction
+)
+
+// またはカスタム遅延
+return .withLock(
+    unlockOption: .delayed(0.5),  // 0.5秒後に解放
+    operation: { send in
+        await send(.customTransition)
+    },
+    action: customAction,
     cancelID: CancelID.userAction
 )
 ```
