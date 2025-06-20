@@ -3,7 +3,7 @@
 /// This enum represents the possible outcomes when a strategy attempts
 /// to acquire a lock for a given boundary and lock information. The result
 /// determines how the calling code should proceed with the requested operation.
-public enum LockResult: Equatable, Sendable {
+public enum LockResult: Sendable {
   /// Lock acquisition succeeded without conflicts.
   ///
   /// The requested lock was successfully acquired and no existing locks
@@ -31,7 +31,27 @@ public enum LockResult: Equatable, Sendable {
   /// - Strategy-specific conflict conditions are met
   ///
   /// When this result is returned, the requesting operation should not proceed.
-  case failure
+  ///
+  /// - Parameter error: An optional error describing why the lock acquisition failed
+  case failure((any Error)? = nil)
+}
+
+// MARK: - Equatable Conformance
+
+extension LockResult: Equatable {
+  public static func == (lhs: LockResult, rhs: LockResult) -> Bool {
+    switch (lhs, rhs) {
+    case (.success, .success):
+      return true
+    case (.successWithPrecedingCancellation, .successWithPrecedingCancellation):
+      return true
+    case (.failure(let lhsError), .failure(let rhsError)):
+      // Compare errors by their localized description since Error is not Equatable
+      return lhsError?.localizedDescription == rhsError?.localizedDescription
+    default:
+      return false
+    }
+  }
 }
 
 /// A protocol defining the core locking operations that all strategies must implement.

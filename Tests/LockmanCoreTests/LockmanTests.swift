@@ -16,7 +16,7 @@ extension AnyLockmanStrategy {
       lock(id: id, info: info)
     case .successWithPrecedingCancellation:
       lock(id: id, info: info)
-    case .failure:
+    case .failure(_):
       break
     }
     return result

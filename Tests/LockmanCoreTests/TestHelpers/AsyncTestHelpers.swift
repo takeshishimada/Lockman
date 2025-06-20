@@ -143,7 +143,7 @@ enum LockTestHelpers {
     strategy.lock(id: boundaryId, info: info)
 
     let lockedResult = strategy.canLock(id: boundaryId, info: info)
-    XCTAssertEqual(lockedResult, .failure, "Should not be able to acquire locked resource")
+    XCTAssertEqual(lockedResult, .failure(), "Should not be able to acquire locked resource")
 
     strategy.unlock(id: boundaryId, info: info)
 
@@ -162,8 +162,8 @@ enum LockTestHelpers {
       strategy.canLock(id: boundaryId, info: info)
     }
 
-    let successful = results.filter { $0 != .failure }.count
-    let failed = results.filter { $0 == .failure }.count
+    let successful = results.filter { $0 != .failure() }.count
+    let failed = results.filter { $0 == .failure() }.count
 
     return (successful, failed)
   }
@@ -178,7 +178,7 @@ enum LockTestHelpers {
     let result = strategy.canLock(id: boundaryId, info: info)
 
     if expectedLocked {
-      XCTAssertEqual(result, .failure, "Resource should be locked")
+      XCTAssertEqual(result, .failure(), "Resource should be locked")
     } else {
       XCTAssertEqual(result, .success, "Resource should be unlocked")
     }

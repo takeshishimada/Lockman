@@ -14,7 +14,7 @@ final class LockmanEdgeCaseTests: XCTestCase {
     // Should handle empty boundary ID without crashing
     XCTAssertEqual(strategy.canLock(id: emptyBoundaryId, info: info), .success)
     strategy.lock(id: emptyBoundaryId, info: info)
-    XCTAssertEqual(strategy.canLock(id: emptyBoundaryId, info: info), .failure)
+    XCTAssertEqual(strategy.canLock(id: emptyBoundaryId, info: info), .failure())
     strategy.unlock(id: emptyBoundaryId, info: info)
     XCTAssertEqual(strategy.canLock(id: emptyBoundaryId, info: info), .success)
 
@@ -29,7 +29,7 @@ final class LockmanEdgeCaseTests: XCTestCase {
 
     XCTAssertEqual(strategy.canLock(id: longBoundaryId, info: info), .success)
     strategy.lock(id: longBoundaryId, info: info)
-    XCTAssertEqual(strategy.canLock(id: longBoundaryId, info: info), .failure)
+    XCTAssertEqual(strategy.canLock(id: longBoundaryId, info: info), .failure())
     strategy.unlock(id: longBoundaryId, info: info)
 
     strategy.cleanUp(id: longBoundaryId)
@@ -42,7 +42,7 @@ final class LockmanEdgeCaseTests: XCTestCase {
 
     XCTAssertEqual(strategy.canLock(id: unicodeBoundaryId, info: info), .success)
     strategy.lock(id: unicodeBoundaryId, info: info)
-    XCTAssertEqual(strategy.canLock(id: unicodeBoundaryId, info: info), .failure)
+    XCTAssertEqual(strategy.canLock(id: unicodeBoundaryId, info: info), .failure())
     strategy.unlock(id: unicodeBoundaryId, info: info)
 
     strategy.cleanUp(id: unicodeBoundaryId)
@@ -67,11 +67,11 @@ final class LockmanEdgeCaseTests: XCTestCase {
 
     XCTAssertEqual(strategy.canLock(id: boundaryId, info: emptyActionInfo), .success)
     strategy.lock(id: boundaryId, info: emptyActionInfo)
-    XCTAssertEqual(strategy.canLock(id: boundaryId, info: emptyActionInfo), .failure)
+    XCTAssertEqual(strategy.canLock(id: boundaryId, info: emptyActionInfo), .failure())
 
     // Different empty action should also conflict
     let anotherEmptyInfo  = LockmanSingleExecutionInfo(actionId: "", mode: .boundary)
-    XCTAssertEqual(strategy.canLock(id: boundaryId, info: anotherEmptyInfo), .failure)
+    XCTAssertEqual(strategy.canLock(id: boundaryId, info: anotherEmptyInfo), .failure())
 
     strategy.unlock(id: boundaryId, info: emptyActionInfo)
     strategy.cleanUp()
@@ -88,7 +88,7 @@ final class LockmanEdgeCaseTests: XCTestCase {
 
     // Same long action ID with lower priority should fail
     let sameActionInfo  = LockmanPriorityBasedInfo(actionId: longActionId, priority: .low(.exclusive))
-    XCTAssertEqual(strategy.canLock(id: boundaryId, info: sameActionInfo), .failure)
+    XCTAssertEqual(strategy.canLock(id: boundaryId, info: sameActionInfo), .failure())
 
     strategy.cleanUp()
   }
@@ -104,7 +104,7 @@ final class LockmanEdgeCaseTests: XCTestCase {
 
     // Same unicode action ID should conflict
     let sameUnicodeInfo  = LockmanSingleExecutionInfo(actionId: unicodeActionId, mode: .boundary)
-    XCTAssertEqual(strategy.canLock(id: boundaryId, info: sameUnicodeInfo), .failure)
+    XCTAssertEqual(strategy.canLock(id: boundaryId, info: sameUnicodeInfo), .failure())
 
     strategy.unlock(id: boundaryId, info: info)
     strategy.cleanUp()
@@ -199,7 +199,7 @@ final class LockmanEdgeCaseTests: XCTestCase {
       let boundaryId  = "boundary-\(i)"
       let newInfo = LockmanPriorityBasedInfo(actionId: "action", priority: .low(.exclusive))
 
-      XCTAssertEqual(strategy.canLock(id: boundaryId, info: newInfo), .failure)
+      XCTAssertEqual(strategy.canLock(id: boundaryId, info: newInfo), .failure())
     }
 
     strategy.cleanUp()
@@ -343,7 +343,7 @@ final class LockmanEdgeCaseTests: XCTestCase {
 
     // Lock first
     strategy.lock(id: boundaryId, info: info)
-    XCTAssertEqual(strategy.canLock(id: boundaryId, info: info), .failure)
+    XCTAssertEqual(strategy.canLock(id: boundaryId, info: info), .failure())
 
     // Cleanup should clear the lock
     strategy.cleanUp()
@@ -351,7 +351,7 @@ final class LockmanEdgeCaseTests: XCTestCase {
 
     // Should be able to lock again
     strategy.lock(id: boundaryId, info: info)
-    XCTAssertEqual(strategy.canLock(id: boundaryId, info: info), .failure)
+    XCTAssertEqual(strategy.canLock(id: boundaryId, info: info), .failure())
 
     strategy.cleanUp()
   }
@@ -371,13 +371,13 @@ final class LockmanEdgeCaseTests: XCTestCase {
     priorityStrategy.lock(id: boundaryId, info: priorityInfo)
 
     // Each should respect their own locks
-    XCTAssertEqual(singleStrategy.canLock(id: boundaryId, info: singleInfo), .failure)
-    XCTAssertEqual(priorityStrategy.canLock(id: boundaryId, info: priorityInfo), .failure)
+    XCTAssertEqual(singleStrategy.canLock(id: boundaryId, info: singleInfo), .failure())
+    XCTAssertEqual(priorityStrategy.canLock(id: boundaryId, info: priorityInfo), .failure())
 
     // Cleanup one shouldn't affect the other
     singleStrategy.cleanUp(id: boundaryId)
     XCTAssertEqual(singleStrategy.canLock(id: boundaryId, info: singleInfo), .success)
-    XCTAssertEqual(priorityStrategy.canLock(id: boundaryId, info: priorityInfo), .failure)
+    XCTAssertEqual(priorityStrategy.canLock(id: boundaryId, info: priorityInfo), .failure())
 
     priorityStrategy.cleanUp()
   }

@@ -70,7 +70,7 @@ final class LockmanGroupCoordinationStrategyTests: XCTestCase {
       coordinationRole: .leader
     )
 
-    XCTAssertEqual(strategy.canLock(id: boundaryId, info: leader2), .failure)
+    XCTAssertEqual(strategy.canLock(id: boundaryId, info: leader2), .failure())
   }
 
   func testMemberCannotLockWhenGroupIsEmpty() {
@@ -83,7 +83,7 @@ final class LockmanGroupCoordinationStrategyTests: XCTestCase {
       coordinationRole: .member
     )
 
-    XCTAssertEqual(strategy.canLock(id: boundaryId, info: memberInfo), .failure)
+    XCTAssertEqual(strategy.canLock(id: boundaryId, info: memberInfo), .failure())
   }
 
   func testMemberCanLockWhenGroupHasMembers() {
@@ -167,7 +167,7 @@ final class LockmanGroupCoordinationStrategyTests: XCTestCase {
       groupId: "group1",
       coordinationRole: .member
     )
-    XCTAssertEqual(strategy.canLock(id: boundaryId, info: action2), .failure)
+    XCTAssertEqual(strategy.canLock(id: boundaryId, info: action2), .failure())
   }
 
   // MARK: - Group Lifecycle Tests
@@ -209,7 +209,7 @@ final class LockmanGroupCoordinationStrategyTests: XCTestCase {
       groupId: "group1",
       coordinationRole: .leader
     )
-    XCTAssertEqual(strategy.canLock(id: boundaryId, info: newLeader), .failure)
+    XCTAssertEqual(strategy.canLock(id: boundaryId, info: newLeader), .failure())
   }
 
   func testGroupDissolvesWhenLastMemberUnlocks() {
@@ -256,7 +256,7 @@ final class LockmanGroupCoordinationStrategyTests: XCTestCase {
       groupId: "group1",
       coordinationRole: .member
     )
-    XCTAssertEqual(strategy.canLock(id: boundaryId, info: newMember), .failure)
+    XCTAssertEqual(strategy.canLock(id: boundaryId, info: newMember), .failure())
   }
 
   // MARK: - Multiple Groups Tests
@@ -406,7 +406,7 @@ final class LockmanGroupCoordinationStrategyTests: XCTestCase {
       groupId: "group1",
       coordinationRole: .leader
     )
-    XCTAssertEqual(strategy.canLock(id: boundary2, info: newLeader2), .failure)
+    XCTAssertEqual(strategy.canLock(id: boundary2, info: newLeader2), .failure())
   }
 
   // MARK: - Multiple Groups Tests
@@ -460,7 +460,7 @@ final class LockmanGroupCoordinationStrategyTests: XCTestCase {
       groupIds: ["group1", "group2"],
       coordinationRole: .leader
     )
-    XCTAssertEqual(strategy.canLock(id: boundaryId, info: multiLeader), .failure)
+    XCTAssertEqual(strategy.canLock(id: boundaryId, info: multiLeader), .failure())
 
     // Multi-group member needs all groups to have members
     let multiMember = LockmanGroupCoordinatedInfo(
@@ -468,7 +468,7 @@ final class LockmanGroupCoordinationStrategyTests: XCTestCase {
       groupIds: ["group1", "group2"],
       coordinationRole: .member
     )
-    XCTAssertEqual(strategy.canLock(id: boundaryId, info: multiMember), .failure)
+    XCTAssertEqual(strategy.canLock(id: boundaryId, info: multiMember), .failure())
 
     // Start group2
     let group2Leader = LockmanGroupCoordinatedInfo(
@@ -572,7 +572,7 @@ final class LockmanGroupCoordinationStrategyTests: XCTestCase {
       groupId: "g1",
       coordinationRole: .leader
     )
-    XCTAssertEqual(strategy.canLock(id: boundaryId, info: newInit), .failure)
+    XCTAssertEqual(strategy.canLock(id: boundaryId, info: newInit), .failure())
 
     // g3 should be empty now (only had the multi-action)
     let g3Init = LockmanGroupCoordinatedInfo(

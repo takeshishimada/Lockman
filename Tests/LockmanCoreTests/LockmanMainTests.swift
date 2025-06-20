@@ -313,7 +313,7 @@ final class LockmanMainTests: XCTestCase {
 
           singleStrategy.lock(id: singleBoundary, info: singleInfo)
           let canLockAgain  = singleStrategy.canLock(id: singleBoundary, info: singleInfo)
-          XCTAssertEqual(canLockAgain, .failure)
+          XCTAssertEqual(canLockAgain, .failure())
 
           singleStrategy.unlock(id: singleBoundary, info: singleInfo)
 
