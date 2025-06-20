@@ -132,6 +132,9 @@ Every PR must have at least one label from each applicable category:
 ## Testing
 Use the following commands to run tests:
 ```bash
-make XCODEBUILD_ARGUMENT="test" CONFIG=Debug PLATFORM="IOS" WORKSPACE=.github/package.xcworkspace xcodebuild
-make XCODEBUILD_ARGUMENT="test" CONFIG=Debug PLATFORM="MACOS" WORKSPACE=.github/package.xcworkspace xcodebuild
+# iOS tests
+xcodebuild test -configuration Debug -scheme "Lockman-Package" -destination "platform=iOS Simulator,name=iPhone 16" -workspace .github/package.xcworkspace
+
+# macOS tests  
+xcodebuild test -configuration Debug -scheme "Lockman-Package" -destination "platform=macOS" -workspace .github/package.xcworkspace
 ```
