@@ -3,7 +3,7 @@ import XCTest
 @testable import LockmanCore
 
 // Helper class for thread-safe mutable state in tests
-private final class Atomic<Value> {
+private final class Atomic<Value>: @unchecked Sendable {
   private var _value: Value
   private let lock = NSLock()
   
