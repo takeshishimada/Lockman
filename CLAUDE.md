@@ -21,6 +21,19 @@ Develop a library to implement exclusive control of user actions in application 
 - Assign yourself as the assignee
 - Direct commits to main and develop branches are prohibited - all changes must be made through Pull Requests
 
+### Git Branch Protection Rules
+- NEVER execute the following commands on main or develop branches:
+  - `git commit`
+  - `git cherry-pick`
+  - `git merge` (except from PR)
+  - `git rebase`
+- When requested to cherry-pick, merge, or rebase:
+  1. First check the current branch with `git branch --show-current`
+  2. If on main or develop, create a new feature branch first
+  3. Perform the operation on the feature branch
+  4. Create a Pull Request for review
+- Always work on feature branches (e.g., feat/xxx, fix/xxx, refactor/xxx)
+
 ### PR Title Format
 PR titles should follow the semantic commit format:
 - `feat:` New features
