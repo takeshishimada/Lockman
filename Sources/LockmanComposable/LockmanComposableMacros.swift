@@ -109,18 +109,37 @@ public macro LockmanPriorityBased() = #externalMacro(module: "LockmanMacros", ty
 /// Apply this macro to an enum declaration to automatically generate:
 /// - Protocol conformance to `LockmanGroupCoordinatedAction`
 /// - `actionName` property that returns the enum case name as a String
-/// - `coordinationRole` property with the specified role
-/// - `groupId` or `groupIds` property with the specified group identifiers
 /// - Default `strategyId` implementation is provided by the protocol
 ///
-/// Example usage with TCA (single group):
+/// **Important**: You must implement the `lockmanInfo` property to specify coordination details:
+/// - The group ID(s) this action belongs to
+/// - The coordination role (.leader or .member)
+///
+/// Example usage with TCA:
 /// ```swift
 /// @Reducer
 /// struct NavigationFeature {
-///   @LockmanGroupCoordination(groupId: "navigation", role: .leader)
+///   @LockmanGroupCoordination
 ///   enum Action {
 ///     case navigate(to: String)
 ///     case back
+///     
+///     var lockmanInfo: LockmanGroupCoordinatedInfo {
+///       switch self {
+///       case .navigate:
+///         return LockmanGroupCoordinatedInfo(
+///           actionId: actionName,
+///           groupId: "navigation",
+///           coordinationRole: .leader
+///         )
+///       case .back:
+///         return LockmanGroupCoordinatedInfo(
+///           actionId: actionName,
+///           groupId: "navigation",
+///           coordinationRole: .member
+///         )
+///       }
+///     }
 ///   }
 ///
 ///   var body: some ReducerOf<Self> {
@@ -140,22 +159,9 @@ public macro LockmanPriorityBased() = #externalMacro(module: "LockmanMacros", ty
 ///   }
 /// }
 /// ```
-///
-/// - Parameters:
-///   - groupId: The single group identifier for coordination
-///   - role: The coordination role (.leader or .member)
 @attached(extension, conformances: LockmanGroupCoordinatedAction)
-@attached(member, names: named(actionName), named(coordinationRole), named(groupId))
-public macro LockmanGroupCoordination(groupId: String, role: GroupCoordinationRole) = #externalMacro(module: "LockmanMacros", type: "LockmanGroupCoordinationMacro")
-
-/// A macro that generates protocol conformance and required members for group coordination locking behavior with multiple groups.
-///
-/// - Parameters:
-///   - groupIds: Multiple group identifiers for coordination (maximum 5)
-///   - role: The coordination role (.leader or .member)
-@attached(extension, conformances: LockmanGroupCoordinatedAction)
-@attached(member, names: named(actionName), named(coordinationRole), named(groupIds))
-public macro LockmanGroupCoordination(groupIds: [String], role: GroupCoordinationRole) = #externalMacro(module: "LockmanMacros", type: "LockmanGroupCoordinationMacro")
+@attached(member, names: named(actionName))
+public macro LockmanGroupCoordination() = #externalMacro(module: "LockmanMacros", type: "LockmanGroupCoordinationMacro")
 
 /// A macro that generates protocol conformance and required members for composite locking behavior with 2 strategies.
 ///

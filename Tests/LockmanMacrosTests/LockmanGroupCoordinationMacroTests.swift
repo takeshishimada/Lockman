@@ -6,12 +6,12 @@ import XCTest
   import LockmanMacros
 
   final class LockmanGroupCoordinationMacroTests: XCTestCase {
-    // MARK: - Single Group Tests
+    // MARK: - Basic Tests
 
-    func testSingleGroupLeaderMacro() throws {
+    func testBasicMacro() throws {
       assertMacroExpansion(
         """
-        @LockmanGroupCoordination(groupId: "navigation", role: .leader)
+        @LockmanGroupCoordination
         enum NavigationAction {
           case navigate(to: String)
           case back
@@ -30,14 +30,6 @@ import XCTest
                   return "back"
               }
             }
-
-            var coordinationRole: GroupCoordinationRole {
-              .leader
-            }
-
-            var groupId: String {
-              "navigation"
-            }
         }
 
         extension NavigationAction: LockmanGroupCoordinatedAction {
@@ -47,92 +39,16 @@ import XCTest
       )
     }
 
-    func testSingleGroupMemberMacro() throws {
+    func testSingleCaseEnum() throws {
       assertMacroExpansion(
         """
-        @LockmanGroupCoordination(groupId: "dataLoading", role: .member)
-        enum DataAction {
-          case loadData
-          case updateProgress
-        }
-        """,
-        expandedSource: """
-        enum DataAction {
-          case loadData
-          case updateProgress
-
-            internal var actionName: String {
-              switch self {
-              case .loadData:
-                  return "loadData"
-              case .updateProgress:
-                  return "updateProgress"
-              }
-            }
-
-            var coordinationRole: GroupCoordinationRole {
-              .member
-            }
-
-            var groupId: String {
-              "dataLoading"
-            }
-        }
-
-        extension DataAction: LockmanGroupCoordinatedAction {
-        }
-        """,
-        macros: testMacros
-      )
-    }
-
-    // MARK: - Multiple Groups Tests
-
-    func testMultipleGroupsMacro() throws {
-      assertMacroExpansion(
-        """
-        @LockmanGroupCoordination(groupIds: ["navigation", "ui"], role: .member)
-        enum ComplexAction {
-          case complexOperation
-        }
-        """,
-        expandedSource: """
-        enum ComplexAction {
-          case complexOperation
-
-            internal var actionName: String {
-              switch self {
-              case .complexOperation:
-                  return "complexOperation"
-              }
-            }
-
-            var coordinationRole: GroupCoordinationRole {
-              .member
-            }
-
-            var groupIds: Set<String> {
-              ["navigation", "ui"]
-            }
-        }
-
-        extension ComplexAction: LockmanGroupCoordinatedAction {
-        }
-        """,
-        macros: testMacros
-      )
-    }
-
-    func testMaximumGroupsMacro() throws {
-      assertMacroExpansion(
-        """
-        @LockmanGroupCoordination(groupIds: ["group1", "group2", "group3", "group4", "group5"], role: .leader)
-        enum MaxGroupsAction {
+        @LockmanGroupCoordination
+        enum SimpleAction {
           case action
         }
         """,
         expandedSource: """
-        enum MaxGroupsAction {
+        enum SimpleAction {
           case action
 
             internal var actionName: String {
@@ -141,156 +57,11 @@ import XCTest
                   return "action"
               }
             }
-
-            var coordinationRole: GroupCoordinationRole {
-              .leader
-            }
-
-            var groupIds: Set<String> {
-              ["group1", "group2", "group3", "group4", "group5"]
-            }
         }
 
-        extension MaxGroupsAction: LockmanGroupCoordinatedAction {
+        extension SimpleAction: LockmanGroupCoordinatedAction {
         }
         """,
-        macros: testMacros
-      )
-    }
-
-    // MARK: - Error Cases
-
-    func testMissingArgumentsError() throws {
-      assertMacroExpansion(
-        """
-        @LockmanGroupCoordination
-        enum InvalidAction {
-          case action
-        }
-        """,
-        expandedSource: """
-        enum InvalidAction {
-          case action
-        }
-
-        extension InvalidAction: LockmanGroupCoordinatedAction {
-        }
-        """,
-        diagnostics: [
-          DiagnosticSpec(
-            message: "Missing required arguments for LockmanGroupCoordination macro. Provide either 'groupId' or 'groupIds' parameter along with 'role'",
-            line: 1,
-            column: 1
-          ),
-        ],
-        macros: testMacros
-      )
-    }
-
-    func testMissingRoleError() throws {
-      assertMacroExpansion(
-        """
-        @LockmanGroupCoordination(groupId: "test")
-        enum InvalidAction {
-          case action
-        }
-        """,
-        expandedSource: """
-        enum InvalidAction {
-          case action
-        }
-
-        extension InvalidAction: LockmanGroupCoordinatedAction {
-        }
-        """,
-        diagnostics: [
-          DiagnosticSpec(
-            message: "Missing role argument for LockmanGroupCoordination macro",
-            line: 1,
-            column: 1
-          ),
-        ],
-        macros: testMacros
-      )
-    }
-
-    func testInvalidRoleError() throws {
-      assertMacroExpansion(
-        """
-        @LockmanGroupCoordination(groupId: "test", role: .invalid)
-        enum InvalidAction {
-          case action
-        }
-        """,
-        expandedSource: """
-        enum InvalidAction {
-          case action
-        }
-
-        extension InvalidAction: LockmanGroupCoordinatedAction {
-        }
-        """,
-        diagnostics: [
-          DiagnosticSpec(
-            message: "Role must be .leader or .member for LockmanGroupCoordination macro, got .invalid",
-            line: 1,
-            column: 1
-          ),
-        ],
-        macros: testMacros
-      )
-    }
-
-    func testTooManyGroupsError() throws {
-      assertMacroExpansion(
-        """
-        @LockmanGroupCoordination(groupIds: ["g1", "g2", "g3", "g4", "g5", "g6"], role: .leader)
-        enum InvalidAction {
-          case action
-        }
-        """,
-        expandedSource: """
-        enum InvalidAction {
-          case action
-        }
-
-        extension InvalidAction: LockmanGroupCoordinatedAction {
-        }
-        """,
-        diagnostics: [
-          DiagnosticSpec(
-            message: "Maximum 5 groups allowed for LockmanGroupCoordination macro, got 6",
-            line: 1,
-            column: 1
-          ),
-        ],
-        macros: testMacros
-      )
-    }
-
-    func testEmptyGroupsError() throws {
-      assertMacroExpansion(
-        """
-        @LockmanGroupCoordination(groupIds: [], role: .leader)
-        enum InvalidAction {
-          case action
-        }
-        """,
-        expandedSource: """
-        enum InvalidAction {
-          case action
-        }
-
-        extension InvalidAction: LockmanGroupCoordinatedAction {
-        }
-        """,
-        diagnostics: [
-          DiagnosticSpec(
-            message: "At least one group ID must be provided for LockmanGroupCoordination macro",
-            line: 1,
-            column: 1
-          ),
-        ],
         macros: testMacros
       )
     }
@@ -300,7 +71,7 @@ import XCTest
     func testComplexEnumCases() throws {
       assertMacroExpansion(
         """
-        @LockmanGroupCoordination(groupId: "ui", role: .member)
+        @LockmanGroupCoordination
         enum UIAction {
           case showAlert(message: String)
           case updateProgress(value: Double, animated: Bool)
@@ -323,14 +94,6 @@ import XCTest
                   return "navigate"
               }
             }
-
-            var coordinationRole: GroupCoordinationRole {
-              .member
-            }
-
-            var groupId: String {
-              "ui"
-            }
         }
 
         extension UIAction: LockmanGroupCoordinatedAction {
@@ -345,7 +108,7 @@ import XCTest
     func testNonEnumTypeError() throws {
       assertMacroExpansion(
         """
-        @LockmanGroupCoordination(groupId: "test", role: .leader)
+        @LockmanGroupCoordination
         struct InvalidAction {
           let value: String
         }
@@ -365,6 +128,62 @@ import XCTest
             column: 1
           ),
         ],
+        macros: testMacros
+      )
+    }
+
+    // MARK: - Public/Internal Cases
+
+    func testPublicEnum() throws {
+      assertMacroExpansion(
+        """
+        @LockmanGroupCoordination
+        public enum PublicAction {
+          case action
+        }
+        """,
+        expandedSource: """
+        public enum PublicAction {
+          case action
+
+            public var actionName: String {
+              switch self {
+              case .action:
+                  return "action"
+              }
+            }
+        }
+
+        extension PublicAction: LockmanGroupCoordinatedAction {
+        }
+        """,
+        macros: testMacros
+      )
+    }
+
+    func testInternalEnum() throws {
+      assertMacroExpansion(
+        """
+        @LockmanGroupCoordination
+        internal enum InternalAction {
+          case action
+        }
+        """,
+        expandedSource: """
+        internal enum InternalAction {
+          case action
+
+            internal var actionName: String {
+              switch self {
+              case .action:
+                  return "action"
+              }
+            }
+        }
+
+        extension InternalAction: LockmanGroupCoordinatedAction {
+        }
+        """,
         macros: testMacros
       )
     }
