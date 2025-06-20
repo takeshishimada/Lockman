@@ -98,14 +98,14 @@ public final class LockmanSingleExecutionStrategy: LockmanStrategy, @unchecked S
       if currentLocks.isEmpty {
         result = .success
       } else {
-        result = .failure
+        result = .failure()
         failureReason = "Boundary '\(id)' already has an active lock"
       }
 
     case .action:
       // Exclusive per action - check if same actionId exists
       if state.contains(id: id, actionId: info.actionId) {
-        result = .failure
+        result = .failure()
         failureReason = "Action '\(info.actionId)' is already locked"
       } else {
         result = .success
