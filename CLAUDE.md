@@ -34,6 +34,63 @@ Develop a library to implement exclusive control of user actions in application 
   4. Create a Pull Request for review
 - Always work on feature branches (e.g., feat/xxx, fix/xxx, refactor/xxx)
 
+### PR Creation Command
+When creating a PR, use the following command format:
+```bash
+gh pr create \
+  --title "type: description" \
+  --assignee @me \
+  --label "label1,label2" \
+  --body "PR body content"
+```
+- Always include `--assignee @me` to assign yourself
+- The `--title` should follow the semantic commit format
+- The `--body` should include Summary, Changes, and Test plan sections
+- Use `--label` to add appropriate labels based on the mappings below
+
+### Automatic Label Mapping
+Apply labels based on the PR title prefix:
+
+**Change Type Labels (required):**
+- `feat:` → `enhancement`
+- `fix:` → `bug`
+- `docs:` → `documentation`
+- `refactor:` → `refactor`
+- `test:` → `test`
+- `perf:` → `performance`
+- `chore:` → `enhancement`
+- `ci:` → `enhancement`
+- `breaking:` or `!:` → `breaking change`
+
+**Module Labels (add if changes affect specific modules):**
+- Changes in `Sources/LockmanCore/` → `core`
+- Changes in `Sources/LockmanComposable/` → `composable`
+- Changes in `Sources/LockmanMacros/` → `macro`
+
+**Example Commands:**
+```bash
+# Documentation change
+gh pr create \
+  --title "docs: update README" \
+  --assignee @me \
+  --label "documentation" \
+  --body "..."
+
+# Feature affecting LockmanCore
+gh pr create \
+  --title "feat: add new locking strategy" \
+  --assignee @me \
+  --label "enhancement,core" \
+  --body "..."
+
+# Refactoring with breaking changes
+gh pr create \
+  --title "refactor!: restructure API" \
+  --assignee @me \
+  --label "refactor,breaking change" \
+  --body "..."
+```
+
 ### PR Title Format
 PR titles should follow the semantic commit format:
 - `feat:` New features
