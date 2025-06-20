@@ -6,4 +6,4 @@
 /*.xcodeproj
 xcuserdata/
 .docc-build/
-.claude/
+.claude/*.xcodeproj/project.xcworkspace/contents.xcworkspacedata
