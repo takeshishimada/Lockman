@@ -34,6 +34,18 @@ Develop a library to implement exclusive control of user actions in application 
   4. Create a Pull Request for review
 - Always work on feature branches (e.g., feat/xxx, fix/xxx, refactor/xxx)
 
+### PR Creation Command
+When creating a PR, use the following command format:
+```bash
+gh pr create \
+  --title "type: description" \
+  --assignee @me \
+  --body "PR body content"
+```
+- Always include `--assignee @me` to assign yourself
+- The `--title` should follow the semantic commit format
+- The `--body` should include Summary, Changes, and Test plan sections
+
 ### PR Title Format
 PR titles should follow the semantic commit format:
 - `feat:` New features
