@@ -29,21 +29,30 @@ struct IssuesFeature {
         var selectedFilter: IssueFilter = .all
         var isLoading = false
         var isRefreshing = false
-        @Presents var alert: AlertState<Action.Alert>?
+        @Presents var alert: AlertState<Action.ViewAction.Alert>?
     }
     
-    enum Action {
-        case onAppear
-        case filterChanged(IssueFilter)
-        case refreshButtonTapped
-        case pullToRefresh
-        case issueTapped(Issue)
-        case createIssueButtonTapped
-        case issuesResponse(Result<[Issue], Error>)
-        case alert(PresentationAction<Alert>)
+    enum Action: ViewAction {
+        case view(ViewAction)
+        case `internal`(InternalAction)
         case delegate(Delegate)
         
-        enum Alert: Equatable {}
+        @CasePathable
+        enum ViewAction {
+            case onAppear
+            case filterChanged(IssueFilter)
+            case refreshButtonTapped
+            case pullToRefresh
+            case issueTapped(Issue)
+            case createIssueButtonTapped
+            case alert(PresentationAction<Alert>)
+            
+            enum Alert: Equatable {}
+        }
+        
+        enum InternalAction {
+            case issuesResponse(Result<[Issue], Error>)
+        }
         
         enum Delegate: Equatable {
             case issueTapped(String)
@@ -57,70 +66,76 @@ struct IssuesFeature {
     var body: some ReducerOf<Self> {
         Reduce { state, action in
             switch action {
-            case .onAppear:
-                guard state.issues.isEmpty else { return .none }
-                state.isLoading = true
-                return .run { send in
-                    await send(.issuesResponse(
-                        Result { try await gitHubClient.getMyIssues() }
-                    ))
+            case let .view(viewAction):
+                switch viewAction {
+                case .onAppear:
+                    guard state.issues.isEmpty else { return .none }
+                    state.isLoading = true
+                    return .run { send in
+                        await send(.internal(.issuesResponse(
+                            Result { try await gitHubClient.getMyIssues() }
+                        )))
+                    }
+                    
+                case .filterChanged(let filter):
+                    state.selectedFilter = filter
+                    return .none
+                    
+                case .refreshButtonTapped:
+                    state.isLoading = true
+                    return .run { send in
+                        await send(.internal(.issuesResponse(
+                            Result { try await gitHubClient.getMyIssues() }
+                        )))
+                    }
+                    
+                case .pullToRefresh:
+                    state.isRefreshing = true
+                    return .run { send in
+                        await send(.internal(.issuesResponse(
+                            Result { try await gitHubClient.getMyIssues() }
+                        )))
+                    }
+                    
+                case .issueTapped(let issue):
+                    return .send(.delegate(.issueTapped(String(issue.id))))
+                    
+                case .createIssueButtonTapped:
+                    return .send(.delegate(.createIssueTapped))
+                    
+                case .alert:
+                    return .none
                 }
                 
-            case .filterChanged(let filter):
-                state.selectedFilter = filter
-                return .none
-                
-            case .refreshButtonTapped:
-                state.isLoading = true
-                return .run { send in
-                    await send(.issuesResponse(
-                        Result { try await gitHubClient.getMyIssues() }
-                    ))
+            case let .internal(internalAction):
+                switch internalAction {
+                case .issuesResponse(.success(let issues)):
+                    state.issues = issues
+                    state.isLoading = false
+                    state.isRefreshing = false
+                    return .none
+                    
+                case .issuesResponse(.failure(let error)):
+                    state.isLoading = false
+                    state.isRefreshing = false
+                    
+                    // Check if it's an authentication error
+                    if case GitHubClientError.notAuthenticated = error {
+                        return .send(.delegate(.authenticationError))
+                    }
+                    
+                    state.alert = AlertState {
+                        TextState("Error")
+                    } message: {
+                        TextState(error.localizedDescription)
+                    }
+                    return .none
                 }
-                
-            case .pullToRefresh:
-                state.isRefreshing = true
-                return .run { send in
-                    await send(.issuesResponse(
-                        Result { try await gitHubClient.getMyIssues() }
-                    ))
-                }
-                
-            case .issueTapped(let issue):
-                return .send(.delegate(.issueTapped(String(issue.id))))
-                
-            case .createIssueButtonTapped:
-                return .send(.delegate(.createIssueTapped))
-                
-            case .issuesResponse(.success(let issues)):
-                state.issues = issues
-                state.isLoading = false
-                state.isRefreshing = false
-                return .none
-                
-            case .issuesResponse(.failure(let error)):
-                state.isLoading = false
-                state.isRefreshing = false
-                
-                // Check if it's an authentication error
-                if case GitHubClientError.notAuthenticated = error {
-                    return .send(.delegate(.authenticationError))
-                }
-                
-                state.alert = AlertState {
-                    TextState("Error")
-                } message: {
-                    TextState(error.localizedDescription)
-                }
-                return .none
-                
-            case .alert:
-                return .none
                 
             case .delegate:
                 return .none
             }
         }
-        .ifLet(\.$alert, action: \.alert)
+        .ifLet(\.$alert, action: \.view.alert)
     }
 }

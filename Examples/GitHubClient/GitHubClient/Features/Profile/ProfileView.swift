@@ -1,6 +1,7 @@
 import ComposableArchitecture
 import SwiftUI
 
+@ViewAction(for: ProfileFeature.self)
 struct ProfileView: View {
     @Bindable var store: StoreOf<ProfileFeature>
     
@@ -20,8 +21,8 @@ struct ProfileView: View {
                             user: user,
                             followersCount: store.followersCount,
                             followingCount: store.followingCount,
-                            onFollowersTapped: { store.send(.followersTapped) },
-                            onFollowingTapped: { store.send(.followingTapped) }
+                            onFollowersTapped: { send(.followersTapped) },
+                            onFollowingTapped: { send(.followingTapped) }
                         )
                         .padding(.horizontal)
                         
@@ -29,7 +30,7 @@ struct ProfileView: View {
                         
                         // Stats Section
                         StatsSection(repositoryCount: store.repositories.count) {
-                            store.send(.repositoriesTapped)
+                            send(.repositoriesTapped)
                         }
                         .padding(.horizontal)
                         
@@ -45,22 +46,22 @@ struct ProfileView: View {
                 }
             }
             .refreshable {
-                await store.send(.pullToRefresh).finish()
+                await store.send(.view(.pullToRefresh)).finish()
             }
             .navigationTitle("Profile")
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Button(action: {
-                        store.send(.settingsButtonTapped)
+                        send(.settingsButtonTapped)
                     }) {
                         Image(systemName: "gearshape")
                     }
                 }
             }
         }
-        .alert($store.scope(state: \.alert, action: \.alert))
+        .alert($store.scope(state: \.alert, action: \.view.alert))
         .onAppear {
-            store.send(.onAppear)
+            send(.onAppear)
         }
     }
 }

@@ -1,6 +1,7 @@
 import ComposableArchitecture
 import SwiftUI
 
+@ViewAction(for: SearchFeature.self)
 struct SearchView: View {
     @Bindable var store: StoreOf<SearchFeature>
     
@@ -13,15 +14,15 @@ struct SearchView: View {
                         Image(systemName: "magnifyingglass")
                             .foregroundStyle(.secondary)
                         
-                        TextField("Search GitHub...", text: $store.searchQuery.sending(\.searchQueryChanged))
+                        TextField("Search GitHub...", text: $store.searchQuery.sending(\.view.searchQueryChanged))
                             .textFieldStyle(.plain)
                             .onSubmit {
-                                store.send(.searchButtonTapped)
+                                send(.searchButtonTapped)
                             }
                         
                         if !store.searchQuery.isEmpty {
                             Button(action: {
-                                store.send(.clearButtonTapped)
+                                send(.clearButtonTapped)
                             }) {
                                 Image(systemName: "xmark.circle.fill")
                                     .foregroundStyle(.secondary)
@@ -35,7 +36,7 @@ struct SearchView: View {
                     
                     if !store.searchQuery.isEmpty {
                         Button("Search") {
-                            store.send(.searchButtonTapped)
+                            send(.searchButtonTapped)
                         }
                         .disabled(store.isSearching)
                     }
@@ -43,7 +44,10 @@ struct SearchView: View {
                 .padding()
                 
                 // Search Type Picker
-                Picker("Search Type", selection: $store.selectedType.sending(\.searchTypeChanged)) {
+                Picker("Search Type", selection: Binding(
+                    get: { store.selectedType },
+                    set: { send(.searchTypeChanged($0)) }
+                )) {
                     ForEach(SearchFeature.SearchType.allCases, id: \.self) { type in
                         Label(type.rawValue, systemImage: type.systemImage)
                             .tag(type)
@@ -88,13 +92,13 @@ struct SearchView: View {
                         if store.selectedType == .repositories {
                             ForEach(store.repositories) { repository in
                                 RepositorySearchRow(repository: repository) {
-                                    store.send(.repositoryTapped(repository))
+                                    send(.repositoryTapped(repository))
                                 }
                             }
                         } else {
                             ForEach(store.users) { user in
                                 UserSearchRow(user: user) {
-                                    store.send(.userTapped(user))
+                                    send(.userTapped(user))
                                 }
                             }
                         }
@@ -104,9 +108,9 @@ struct SearchView: View {
             }
             .navigationTitle("Search")
         }
-        .alert($store.scope(state: \.alert, action: \.alert))
+        .alert($store.scope(state: \.alert, action: \.view.alert))
         .onAppear {
-            store.send(.onAppear)
+            send(.onAppear)
         }
     }
 }

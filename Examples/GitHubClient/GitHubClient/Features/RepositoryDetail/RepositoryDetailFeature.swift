@@ -12,7 +12,7 @@ struct RepositoryDetailFeature {
         var issues: [Issue] = []
         var isLoading = false
         var isLoadingStarStatus = false
-        @Presents var alert: AlertState<Action.Alert>?
+        @Presents var alert: AlertState<Action.ViewAction.Alert>?
         
         var repositoryOwner: String? {
             repository?.owner.login
@@ -23,21 +23,30 @@ struct RepositoryDetailFeature {
         }
     }
     
-    enum Action {
-        case onAppear
-        case refreshButtonTapped
-        case starButtonTapped
-        case viewWebButtonTapped
-        case viewIssuesButtonTapped
-        case viewOwnerButtonTapped
-        case repositoryResponse(Result<Repository, Error>)
-        case starStatusResponse(Result<Bool, Error>)
-        case issuesResponse(Result<[Issue], Error>)
-        case starToggleResponse(Result<Bool, Error>)
-        case alert(PresentationAction<Alert>)
+    enum Action: ViewAction {
+        case view(ViewAction)
+        case `internal`(InternalAction)
         case delegate(Delegate)
         
-        enum Alert: Equatable {}
+        @CasePathable
+        enum ViewAction {
+            case onAppear
+            case refreshButtonTapped
+            case starButtonTapped
+            case viewWebButtonTapped
+            case viewIssuesButtonTapped
+            case viewOwnerButtonTapped
+            case alert(PresentationAction<Alert>)
+            
+            enum Alert: Equatable {}
+        }
+        
+        enum InternalAction {
+            case repositoryResponse(Result<Repository, Error>)
+            case starStatusResponse(Result<Bool, Error>)
+            case issuesResponse(Result<[Issue], Error>)
+            case starToggleResponse(Result<Bool, Error>)
+        }
         
         enum Delegate: Equatable {
             case viewIssuesTapped(String)
@@ -51,7 +60,9 @@ struct RepositoryDetailFeature {
     var body: some ReducerOf<Self> {
         Reduce { state, action in
             switch action {
-            case .onAppear:
+            case let .view(viewAction):
+                switch viewAction {
+                case .onAppear:
                 guard state.repository == nil else { return .none }
                 state.isLoading = true
                 state.isLoadingStarStatus = true
@@ -72,37 +83,37 @@ struct RepositoryDetailFeature {
                 
                 return .run { send in
                     // Load repository details
-                    await send(.repositoryResponse(
+                    await send(.internal(.repositoryResponse(
                         Result { try await gitHubClient.getRepository(owner: owner, repo: repo) }
-                    ))
+                    )))
                     
                     // Check star status
-                    await send(.starStatusResponse(
+                    await send(.internal(.starStatusResponse(
                         Result { try await gitHubClient.checkIfStarred(owner: owner, repo: repo) }
-                    ))
+                    )))
                     
                     // Load issues
-                    await send(.issuesResponse(
+                    await send(.internal(.issuesResponse(
                         Result { try await gitHubClient.getRepositoryIssues(owner: owner, repo: repo) }
-                    ))
+                    )))
                 }
                 
-            case .refreshButtonTapped:
+                case .refreshButtonTapped:
                 guard let owner = state.repositoryOwner,
                       let repo = state.repositoryName else { return .none }
                 
                 state.isLoading = true
                 return .run { send in
-                    await send(.repositoryResponse(
+                    await send(.internal(.repositoryResponse(
                         Result { try await gitHubClient.getRepository(owner: owner, repo: repo) }
-                    ))
+                    )))
                     
-                    await send(.issuesResponse(
+                    await send(.internal(.issuesResponse(
                         Result { try await gitHubClient.getRepositoryIssues(owner: owner, repo: repo) }
-                    ))
+                    )))
                 }
                 
-            case .starButtonTapped:
+                case .starButtonTapped:
                 guard let owner = state.repositoryOwner,
                       let repo = state.repositoryName else { return .none }
                 
@@ -116,25 +127,31 @@ struct RepositoryDetailFeature {
                         } else {
                             try await gitHubClient.unstarRepository(owner: owner, repo: repo)
                         }
-                        await send(.starToggleResponse(.success(newStarState)))
+                        await send(.internal(.starToggleResponse(.success(newStarState))))
                     } catch {
-                        await send(.starToggleResponse(.failure(error)))
+                        await send(.internal(.starToggleResponse(.failure(error))))
                     }
                 }
                 
-            case .viewWebButtonTapped:
+                case .viewWebButtonTapped:
                 guard let urlString = state.repository?.htmlURL,
                       let url = URL(string: urlString) else { return .none }
                 return .send(.delegate(.openURL(url)))
                 
-            case .viewIssuesButtonTapped:
+                case .viewIssuesButtonTapped:
                 return .send(.delegate(.viewIssuesTapped(state.repositoryId)))
                 
-            case .viewOwnerButtonTapped:
-                guard let owner = state.repositoryOwner else { return .none }
-                return .send(.delegate(.viewOwnerTapped(owner)))
+                case .viewOwnerButtonTapped:
+                    guard let owner = state.repositoryOwner else { return .none }
+                    return .send(.delegate(.viewOwnerTapped(owner)))
+                    
+                case .alert:
+                    return .none
+                }
                 
-            case .repositoryResponse(.success(let repository)):
+            case let .internal(internalAction):
+                switch internalAction {
+                case .repositoryResponse(.success(let repository)):
                 state.repository = repository
                 state.isLoading = false
                 return .none
@@ -178,15 +195,13 @@ struct RepositoryDetailFeature {
                 } message: {
                     TextState(error.localizedDescription)
                 }
-                return .none
-                
-            case .alert:
-                return .none
+                    return .none
+                }
                 
             case .delegate:
                 return .none
             }
         }
-        .ifLet(\.$alert, action: \.alert)
+        .ifLet(\.$alert, action: \.view.alert)
     }
 }

@@ -1,6 +1,7 @@
 import ComposableArchitecture
 import SwiftUI
 
+@ViewAction(for: IssuesFeature.self)
 struct IssuesView: View {
     @Bindable var store: StoreOf<IssuesFeature>
     
@@ -8,7 +9,10 @@ struct IssuesView: View {
         NavigationStack {
             VStack(spacing: 0) {
                 // Filter Segment Control
-                Picker("Filter", selection: $store.selectedFilter.sending(\.filterChanged)) {
+                Picker("Filter", selection: Binding(
+                    get: { store.selectedFilter },
+                    set: { send(.filterChanged($0)) }
+                )) {
                     ForEach(IssuesFeature.IssueFilter.allCases, id: \.self) { filter in
                         Text(filter.rawValue)
                             .tag(filter)
@@ -42,13 +46,13 @@ struct IssuesView: View {
                     List {
                         ForEach(store.filteredIssues) { issue in
                             IssueRow(issue: issue) {
-                                store.send(.issueTapped(issue))
+                                send(.issueTapped(issue))
                             }
                         }
                     }
                     .listStyle(.plain)
                     .refreshable {
-                        await store.send(.pullToRefresh).finish()
+                        await store.send(.view(.pullToRefresh)).finish()
                     }
                 }
             }
@@ -56,7 +60,7 @@ struct IssuesView: View {
             .toolbar {
                 ToolbarItem(placement: .navigationBarLeading) {
                     Button(action: {
-                        store.send(.refreshButtonTapped)
+                        send(.refreshButtonTapped)
                     }) {
                         Image(systemName: "arrow.clockwise")
                     }
@@ -65,16 +69,16 @@ struct IssuesView: View {
                 
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Button(action: {
-                        store.send(.createIssueButtonTapped)
+                        send(.createIssueButtonTapped)
                     }) {
                         Image(systemName: "plus")
                     }
                 }
             }
         }
-        .alert($store.scope(state: \.alert, action: \.alert))
+        .alert($store.scope(state: \.alert, action: \.view.alert))
         .onAppear {
-            store.send(.onAppear)
+            send(.onAppear)
         }
     }
 }

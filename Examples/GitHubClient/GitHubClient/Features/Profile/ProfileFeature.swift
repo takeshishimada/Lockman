@@ -12,24 +12,33 @@ struct ProfileFeature {
         var followingCount = 0
         var isLoading = false
         var isRefreshing = false
-        @Presents var alert: AlertState<Action.Alert>?
+        @Presents var alert: AlertState<Action.ViewAction.Alert>?
     }
     
-    enum Action {
-        case onAppear
-        case refreshButtonTapped
-        case pullToRefresh
-        case settingsButtonTapped
-        case repositoriesTapped
-        case followersTapped
-        case followingTapped
-        case profileResponse(Result<User, Error>)
-        case repositoriesResponse(Result<[Repository], Error>)
-        case countsResponse(followers: Int, following: Int)
-        case alert(PresentationAction<Alert>)
+    enum Action: ViewAction {
+        case view(ViewAction)
+        case `internal`(InternalAction)
         case delegate(Delegate)
         
-        enum Alert: Equatable {}
+        @CasePathable
+        enum ViewAction {
+            case onAppear
+            case refreshButtonTapped
+            case pullToRefresh
+            case settingsButtonTapped
+            case repositoriesTapped
+            case followersTapped
+            case followingTapped
+            case alert(PresentationAction<Alert>)
+            
+            enum Alert: Equatable {}
+        }
+        
+        enum InternalAction {
+            case profileResponse(Result<User, Error>)
+            case repositoriesResponse(Result<[Repository], Error>)
+            case countsResponse(followers: Int, following: Int)
+        }
         
         enum Delegate: Equatable {
             case settingsTapped
@@ -42,59 +51,67 @@ struct ProfileFeature {
     var body: some ReducerOf<Self> {
         Reduce { state, action in
             switch action {
-            case .onAppear:
+            case let .view(viewAction):
+                switch viewAction {
+                case .onAppear:
                 guard state.user == nil else { return .none }
                 state.isLoading = true
                 return .run { send in
-                    await send(.profileResponse(
+                    await send(.internal(.profileResponse(
                         Result { try await gitHubClient.getCurrentUser() }
-                    ))
+                    )))
                     
                     // Load repositories in parallel
-                    await send(.repositoriesResponse(
+                    await send(.internal(.repositoriesResponse(
                         Result { try await gitHubClient.getMyRepositories() }
-                    ))
+                    )))
                 }
                 
-            case .refreshButtonTapped:
+                case .refreshButtonTapped:
                 state.isLoading = true
                 return .run { send in
-                    await send(.profileResponse(
+                    await send(.internal(.profileResponse(
                         Result { try await gitHubClient.getCurrentUser() }
-                    ))
+                    )))
                     
-                    await send(.repositoriesResponse(
+                    await send(.internal(.repositoriesResponse(
                         Result { try await gitHubClient.getMyRepositories() }
-                    ))
+                    )))
                 }
                 
-            case .pullToRefresh:
+                case .pullToRefresh:
                 state.isRefreshing = true
                 return .run { send in
-                    await send(.profileResponse(
+                    await send(.internal(.profileResponse(
                         Result { try await gitHubClient.getCurrentUser() }
-                    ))
+                    )))
                     
-                    await send(.repositoriesResponse(
+                    await send(.internal(.repositoriesResponse(
                         Result { try await gitHubClient.getMyRepositories() }
-                    ))
+                    )))
                 }
                 
-            case .settingsButtonTapped:
+                case .settingsButtonTapped:
                 return .send(.delegate(.settingsTapped))
                 
-            case .repositoriesTapped:
+                case .repositoriesTapped:
                 // Navigate to repositories list
                 return .none
                 
-            case .followersTapped:
+                case .followersTapped:
                 // Navigate to followers list
                 return .none
                 
-            case .followingTapped:
+                case .followingTapped:
                 // Navigate to following list
                 return .none
                 
+            case .alert:
+                return .none
+            }
+            
+        case let .internal(internalAction):
+            switch internalAction {
             case .profileResponse(.success(let user)):
                 state.user = user
                 state.isLoading = false
@@ -105,10 +122,10 @@ struct ProfileFeature {
                     async let followers = try await gitHubClient.getFollowers(username: username)
                     async let following = try await gitHubClient.getFollowing(username: username)
                     
-                    await send(.countsResponse(
+                    await send(.internal(.countsResponse(
                         followers: (try? await followers)?.count ?? 0,
                         following: (try? await following)?.count ?? 0
-                    ))
+                    )))
                 }
                 
             case .profileResponse(.failure(let error)):
@@ -143,14 +160,12 @@ struct ProfileFeature {
                 state.followersCount = followers
                 state.followingCount = following
                 return .none
-                
-            case .alert:
-                return .none
-                
-            case .delegate:
-                return .none
             }
+            
+        case .delegate:
+            return .none
         }
-        .ifLet(\.$alert, action: \.alert)
+    }
+    .ifLet(\.$alert, action: \.view.alert)
     }
 }

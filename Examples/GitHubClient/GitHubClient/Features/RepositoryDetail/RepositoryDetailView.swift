@@ -1,6 +1,7 @@
 import ComposableArchitecture
 import SwiftUI
 
+@ViewAction(for: RepositoryDetailFeature.self)
 struct RepositoryDetailView: View {
     @Bindable var store: StoreOf<RepositoryDetailFeature>
     
@@ -19,8 +20,8 @@ struct RepositoryDetailView: View {
                         repository: repository,
                         isStarred: store.isStarred,
                         isLoadingStarStatus: store.isLoadingStarStatus,
-                        onStarTapped: { store.send(.starButtonTapped) },
-                        onOwnerTapped: { store.send(.viewOwnerButtonTapped) }
+                        onStarTapped: { send(.starButtonTapped) },
+                        onOwnerTapped: { send(.viewOwnerButtonTapped) }
                     )
                     .padding(.horizontal)
                     
@@ -34,8 +35,8 @@ struct RepositoryDetailView: View {
                     
                     // Action Buttons
                     ActionButtonsSection(
-                        onViewWeb: { store.send(.viewWebButtonTapped) },
-                        onViewIssues: { store.send(.viewIssuesButtonTapped) }
+                        onViewWeb: { send(.viewWebButtonTapped) },
+                        onViewIssues: { send(.viewIssuesButtonTapped) }
                     )
                     .padding(.horizontal)
                     
@@ -44,7 +45,7 @@ struct RepositoryDetailView: View {
                         
                         // Recent Issues
                         RecentIssuesSection(issues: store.issues) {
-                            store.send(.viewIssuesButtonTapped)
+                            send(.viewIssuesButtonTapped)
                         }
                         .padding(.horizontal)
                     }
@@ -57,16 +58,16 @@ struct RepositoryDetailView: View {
         .toolbar {
             ToolbarItem(placement: .navigationBarTrailing) {
                 Button(action: {
-                    store.send(.refreshButtonTapped)
+                    send(.refreshButtonTapped)
                 }) {
                     Image(systemName: "arrow.clockwise")
                 }
                 .disabled(store.isLoading)
             }
         }
-        .alert($store.scope(state: \.alert, action: \.alert))
+        .alert($store.scope(state: \.alert, action: \.view.alert))
         .onAppear {
-            store.send(.onAppear)
+            send(.onAppear)
         }
     }
 }

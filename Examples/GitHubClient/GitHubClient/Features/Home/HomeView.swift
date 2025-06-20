@@ -1,6 +1,7 @@
 import ComposableArchitecture
 import SwiftUI
 
+@ViewAction(for: HomeFeature.self)
 struct HomeView: View {
     @Bindable var store: StoreOf<HomeFeature>
     
@@ -8,7 +9,10 @@ struct HomeView: View {
         NavigationStack {
             VStack(spacing: 0) {
                 // Segment Control
-                Picker("Repository Type", selection: $store.selectedType.sending(\.segmentChanged)) {
+                Picker("Repository Type", selection: Binding(
+                    get: { store.selectedType },
+                    set: { send(.segmentChanged($0)) }
+                )) {
                     ForEach(HomeFeature.RepositoryType.allCases, id: \.self) { type in
                         Label(type.rawValue, systemImage: type.systemImage)
                             .tag(type)
@@ -37,13 +41,13 @@ struct HomeView: View {
                     List {
                         ForEach(store.repositories) { repository in
                             RepositoryRow(repository: repository) {
-                                store.send(.repositoryTapped(repository))
+                                send(.repositoryTapped(repository))
                             }
                         }
                     }
                     .listStyle(.plain)
                     .refreshable {
-                        await store.send(.pullToRefresh).finish()
+                        await send(.pullToRefresh).finish()
                     }
                 }
             }
@@ -51,7 +55,7 @@ struct HomeView: View {
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Button(action: {
-                        store.send(.refreshButtonTapped)
+                        send(.refreshButtonTapped)
                     }) {
                         Image(systemName: "arrow.clockwise")
                     }
@@ -59,9 +63,9 @@ struct HomeView: View {
                 }
             }
         }
-        .alert($store.scope(state: \.alert, action: \.alert))
+        .alert($store.scope(state: \.alert, action: \.view.alert))
         .onAppear {
-            store.send(.onAppear)
+            send(.onAppear)
         }
     }
 }
