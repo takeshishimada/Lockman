@@ -3,12 +3,35 @@ import OSLog
 import XCTest
 @testable @_spi(Logging) import LockmanCore
 
+// Helper class for thread-safe mutable state in tests
+private final class Atomic<Value>: @unchecked Sendable {
+  private var _value: Value
+  private let lock = NSLock()
+  
+  init(_ value: Value) {
+    self._value = value
+  }
+  
+  var value: Value {
+    get {
+      lock.lock()
+      defer { lock.unlock() }
+      return _value
+    }
+    set {
+      lock.lock()
+      defer { lock.unlock() }
+      _value = newValue
+    }
+  }
+}
+
 /// Tests for the Logger class (Internal/Logger.swift)
 final class LoggerTests: XCTestCase {
   // MARK: - Helper Methods
   
   /// Execute a closure on the MainActor and return the result
-  private func onMainActor<T>(_ closure: @MainActor () throws -> T) async rethrows -> T {
+  private func onMainActor<T: Sendable>(_ closure: @MainActor @Sendable () throws -> T) async rethrows -> T {
     try await MainActor.run {
       try closure()
     }
@@ -199,7 +222,7 @@ final class LoggerTests: XCTestCase {
         Logger.shared.isEnabled = false
       }
 
-      var evaluationCount = 0
+      let evaluationCount = Atomic(0)
 
       // Test 1: When enabled, autoclosure is evaluated
       await onMainActor {
@@ -207,20 +230,20 @@ final class LoggerTests: XCTestCase {
         Logger.shared.clear()
       }
 
-      // Create a function that returns a string
-      func getMessage() -> String {
-        evaluationCount += 1
-        return "Message \(evaluationCount)"
+      // Create a @Sendable function that returns a string  
+      let getMessage: @Sendable () -> String = { [evaluationCount] in
+        evaluationCount.value += 1
+        return "Message \(evaluationCount.value)"
       }
 
-      await onMainActor {
+      await onMainActor { [getMessage] in
         Logger.shared.log(getMessage())
       }
 
       let (logCount1, logs1) = await onMainActor {
         (Logger.shared.logs.count, Logger.shared.logs)
       }
-      XCTAssertEqual(evaluationCount, 1)
+      XCTAssertEqual(evaluationCount.value, 1)
       XCTAssertEqual(logCount1, 1)
       XCTAssertEqual(logs1[0], "Message 1")
 
@@ -230,34 +253,34 @@ final class LoggerTests: XCTestCase {
         return Logger.shared.logs.count
       }
 
-      await onMainActor {
+      await onMainActor { [getMessage] in
         Logger.shared.log(getMessage())
       }
 
       let logCountAfter = await onMainActor {
         Logger.shared.logs.count
       }
-      XCTAssertEqual(evaluationCount, 1) // Function was NOT evaluated (autoclosure)
+      XCTAssertEqual(evaluationCount.value, 1) // Function was NOT evaluated (autoclosure)
       XCTAssertEqual(logCountAfter, logCountBefore) // Not logged
 
       // Test 3: Autoclosure prevents evaluation when disabled
       await onMainActor {
         Logger.shared.isEnabled = false
       }
-      var sideEffectCount = 0
+      let sideEffectCount = Atomic(0)
 
-      // Define a function that has side effects
-      func getSideEffectMessage() -> String {
-        sideEffectCount += 1
-        return "Count: \(sideEffectCount)"
+      // Define a @Sendable function that has side effects
+      let getSideEffectMessage: @Sendable () -> String = { [sideEffectCount] in
+        sideEffectCount.value += 1
+        return "Count: \(sideEffectCount.value)"
       }
 
       // This will NOT evaluate when disabled (autoclosure)
-      await onMainActor {
+      await onMainActor { [getSideEffectMessage] in
         Logger.shared.log(getSideEffectMessage())
       }
 
-      XCTAssertEqual(sideEffectCount, 0) // No side effect (autoclosure prevents evaluation)
+      XCTAssertEqual(sideEffectCount.value, 0) // No side effect (autoclosure prevents evaluation)
 
       // Test 4: Direct string literals
       await onMainActor {
@@ -527,7 +550,7 @@ final class LoggerTests: XCTestCase {
 // MARK: - Performance Tests
 
 final class LoggerPerformanceTests: XCTestCase {
-  private func onMainActor<T>(_ closure: @MainActor () throws -> T) async rethrows -> T {
+  private func onMainActor<T: Sendable>(_ closure: @MainActor @Sendable () throws -> T) async rethrows -> T {
     try await MainActor.run {
       try closure()
     }
