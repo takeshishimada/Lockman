@@ -20,7 +20,13 @@ public final class LockmanLogger: @unchecked Sendable {
   /// Public accessor for logging state
   public var isEnabled: Bool {
     get { _isEnabled.withCriticalRegion { $0 } }
-    set { _isEnabled.withCriticalRegion { $0 = newValue } }
+    set { 
+      _isEnabled.withCriticalRegion { $0 = newValue }
+      // Also update the internal Logger state
+      Task { @MainActor in
+        Logger.shared.isEnabled = newValue
+      }
+    }
   }
 
   // MARK: - Initialization
