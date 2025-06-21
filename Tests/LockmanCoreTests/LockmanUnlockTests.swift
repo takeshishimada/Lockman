@@ -63,7 +63,7 @@ private final class MockLockmanStrategy: LockmanStrategy, @unchecked Sendable {
   func canLock<B: LockmanBoundaryId>(
     id _: B,
     info _: TestLockmanInfo
-  ) -> LockResult {
+  ) -> LockmanResult {
     .success
   }
 

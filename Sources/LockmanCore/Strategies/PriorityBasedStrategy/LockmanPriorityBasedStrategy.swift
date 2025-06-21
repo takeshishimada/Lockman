@@ -110,13 +110,13 @@ public final class LockmanPriorityBasedStrategy: LockmanStrategy, @unchecked Sen
   /// - Parameters:
   ///   - id: A unique boundary identifier conforming to `LockmanBoundaryId`
   ///   - info: Priority-based lock information containing action ID and priority
-  /// - Returns: A `LockResult` indicating the outcome of the lock evaluation
+  /// - Returns: A `LockmanResult` indicating the outcome of the lock evaluation
   public func canLock<B: LockmanBoundaryId>(
     id: B,
     info: LockmanPriorityBasedInfo
-  ) -> LockResult {
+  ) -> LockmanResult {
     let requestedInfo = info
-    let result: LockResult
+    let result: LockmanResult
     var failureReason: String?
     var cancelledInfo: (actionId: String, uniqueId: UUID)?
 
@@ -343,11 +343,11 @@ private extension LockmanPriorityBasedStrategy {
   /// - Parameters:
   ///   - current: The currently active priority-based lock info
   ///   - requested: The requested priority-based lock info (behavior ignored)
-  /// - Returns: A `LockResult` based on the existing action's concurrency behavior
+  /// - Returns: A `LockmanResult` based on the existing action's concurrency behavior
   func applySamePriorityBehavior(
     current: LockmanPriorityBasedInfo,
     requested _: LockmanPriorityBasedInfo
-  ) -> LockResult {
+  ) -> LockmanResult {
     // Use the existing action's behavior to determine the outcome
     guard let currentBehavior = current.priority.behavior else {
       // This shouldn't happen since we filtered out .none priorities,

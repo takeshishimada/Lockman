@@ -34,7 +34,7 @@ public struct AnyLockmanStrategy<I: LockmanInfo>: LockmanStrategy, Sendable {
   ///
   /// - Performance: Direct function pointer call with minimal overhead
   /// - Thread Safety: Marked as `@Sendable` to ensure concurrent access safety
-  private let _canLock: @Sendable (any LockmanBoundaryId, I) -> LockResult
+  private let _canLock: @Sendable (any LockmanBoundaryId, I) -> LockmanResult
 
   /// Type-erased function for lock acquisition.
   ///
@@ -161,8 +161,8 @@ public struct AnyLockmanStrategy<I: LockmanInfo>: LockmanStrategy, Sendable {
   /// - Parameters:
   ///   - id: A unique boundary identifier conforming to `LockmanBoundaryId`
   ///   - info: Lock information of type `I`
-  /// - Returns: A `LockResult` indicating whether the lock can be acquired
-  public func canLock<B: LockmanBoundaryId>(id: B, info: I) -> LockResult {
+  /// - Returns: A `LockmanResult` indicating whether the lock can be acquired
+  public func canLock<B: LockmanBoundaryId>(id: B, info: I) -> LockmanResult {
     _canLock(id, info)
   }
 
