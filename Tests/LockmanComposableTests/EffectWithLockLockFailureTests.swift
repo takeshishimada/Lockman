@@ -122,6 +122,7 @@ final class EffectWithLockLockFailureTests: XCTestCase {
     case testBoundary2
   }
   
+  @MainActor
   func testLockFailureHandlerIsCalledWhenLockAcquisitionFails() async throws {
     // Register strategy if not already registered
     if !Lockman.container.isRegistered(LockmanSingleExecutionStrategy.self) {
@@ -151,6 +152,7 @@ final class EffectWithLockLockFailureTests: XCTestCase {
     strategy.cleanUp()
   }
   
+  @MainActor
   func testCatchHandlerIsCalledForOperationErrors() async throws {
     // Register strategy if not already registered
     if !Lockman.container.isRegistered(LockmanSingleExecutionStrategy.self) {
@@ -213,6 +215,7 @@ final class EffectWithLockLockFailureTests: XCTestCase {
     }
   }
   
+  @MainActor
   func testBothHandlersAreOptional() async throws {
     // Register strategy if not already registered
     if !Lockman.container.isRegistered(LockmanSingleExecutionStrategy.self) {
