@@ -46,7 +46,7 @@ struct ProfileView: View {
                 }
             }
             .refreshable {
-                await store.send(.view(.pullToRefresh)).finish()
+                await send(.pullToRefresh).finish()
             }
             .navigationTitle("Profile")
             .toolbar {

@@ -109,7 +109,7 @@ struct SettingsFeature {
                         Version \(appVersion) (\(buildNumber))
                         
                         Built with The Composable Architecture
-                        Using OctoKit.swift for GitHub API
+                        Using Mock GitHub API
                         """)
                     }
                     return .none

@@ -2,11 +2,10 @@ import ComposableArchitecture
 import Dependencies
 
 @Reducer
-struct FollowerListFeature {
+struct UserRepositoriesFeature {
     @ObservableState
     struct State: Equatable {
-        let username: String
-        var followers: [User] = []
+        var repositories: [Repository] = []
         var isLoading = false
         var isRefreshing = false
         @Presents var alert: AlertState<Action.ViewAction.Alert>?
@@ -22,18 +21,18 @@ struct FollowerListFeature {
             case onAppear
             case refreshButtonTapped
             case pullToRefresh
-            case userTapped(User)
+            case repositoryTapped(Repository)
             case alert(PresentationAction<Alert>)
             
             enum Alert: Equatable {}
         }
         
         enum InternalAction {
-            case followersResponse(Result<[User], Error>)
+            case repositoriesResponse(Result<[Repository], Error>)
         }
         
         enum Delegate: Equatable {
-            case userTapped(String)
+            case repositoryTapped(String)
             case authenticationError
         }
     }
@@ -46,32 +45,32 @@ struct FollowerListFeature {
             case let .view(viewAction):
                 switch viewAction {
                 case .onAppear:
-                    guard state.followers.isEmpty else { return .none }
+                    guard state.repositories.isEmpty else { return .none }
                     state.isLoading = true
-                    return .run { [username = state.username] send in
-                        await send(.internal(.followersResponse(
-                            Result { try await gitHubClient.getFollowers(username: username) }
+                    return .run { send in
+                        await send(.internal(.repositoriesResponse(
+                            Result { try await gitHubClient.getMyRepositories() }
                         )))
                     }
                     
                 case .refreshButtonTapped:
                     state.isLoading = true
-                    return .run { [username = state.username] send in
-                        await send(.internal(.followersResponse(
-                            Result { try await gitHubClient.getFollowers(username: username) }
+                    return .run { send in
+                        await send(.internal(.repositoriesResponse(
+                            Result { try await gitHubClient.getMyRepositories() }
                         )))
                     }
                     
                 case .pullToRefresh:
                     state.isRefreshing = true
-                    return .run { [username = state.username] send in
-                        await send(.internal(.followersResponse(
-                            Result { try await gitHubClient.getFollowers(username: username) }
+                    return .run { send in
+                        await send(.internal(.repositoriesResponse(
+                            Result { try await gitHubClient.getMyRepositories() }
                         )))
                     }
                     
-                case .userTapped(let user):
-                    return .send(.delegate(.userTapped(user.login)))
+                case .repositoryTapped(let repository):
+                    return .send(.delegate(.repositoryTapped(repository.fullName)))
                     
                 case .alert:
                     return .none
@@ -79,13 +78,13 @@ struct FollowerListFeature {
                 
             case let .internal(internalAction):
                 switch internalAction {
-                case .followersResponse(.success(let followers)):
-                    state.followers = followers
+                case .repositoriesResponse(.success(let repositories)):
+                    state.repositories = repositories
                     state.isLoading = false
                     state.isRefreshing = false
                     return .none
                     
-                case .followersResponse(.failure(let error)):
+                case .repositoriesResponse(.failure(let error)):
                     state.isLoading = false
                     state.isRefreshing = false
                     

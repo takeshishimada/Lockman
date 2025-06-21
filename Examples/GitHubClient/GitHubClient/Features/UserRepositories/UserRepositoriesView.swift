@@ -1,26 +1,20 @@
 import ComposableArchitecture
 import SwiftUI
 
-struct FollowingListView: View {
-    @Bindable var store: StoreOf<FollowingListFeature>
+struct UserRepositoriesView: View {
+    @Bindable var store: StoreOf<UserRepositoriesFeature>
     
     var body: some View {
         WithViewStore(store, observe: { $0 }) { viewStore in
             Group {
-                if viewStore.isLoading && viewStore.following.isEmpty {
+                if viewStore.isLoading && viewStore.repositories.isEmpty {
                     ProgressView()
                         .frame(maxWidth: .infinity, maxHeight: .infinity)
-                } else if viewStore.following.isEmpty {
-                    ContentUnavailableView(
-                        "Not Following Anyone",
-                        systemImage: "person.3",
-                        description: Text("\(viewStore.username) isn't following anyone yet")
-                    )
                 } else {
                     List {
-                        ForEach(viewStore.following) { user in
-                            UserRow(user: user) {
-                                store.send(.view(.userTapped(user)))
+                        ForEach(viewStore.repositories) { repository in
+                            RepositoryRow(repository: repository) {
+                                store.send(.view(.repositoryTapped(repository)))
                             }
                         }
                     }
@@ -29,7 +23,7 @@ struct FollowingListView: View {
                     }
                 }
             }
-            .navigationTitle("Following")
+            .navigationTitle("Repositories")
             .navigationBarTitleDisplayMode(.large)
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {

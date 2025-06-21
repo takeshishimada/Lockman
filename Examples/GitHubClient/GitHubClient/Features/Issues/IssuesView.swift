@@ -1,5 +1,6 @@
 import ComposableArchitecture
 import SwiftUI
+import Foundation
 
 @ViewAction(for: IssuesFeature.self)
 struct IssuesView: View {
@@ -9,52 +10,11 @@ struct IssuesView: View {
         NavigationStack {
             VStack(spacing: 0) {
                 // Filter Segment Control
-                Picker("Filter", selection: Binding(
-                    get: { store.selectedFilter },
-                    set: { send(.filterChanged($0)) }
-                )) {
-                    ForEach(IssuesFeature.IssueFilter.allCases, id: \.self) { filter in
-                        Text(filter.rawValue)
-                            .tag(filter)
-                    }
-                }
-                .pickerStyle(.segmented)
-                .padding()
+                filterPicker
+                    .padding()
                 
                 // Issues List
-                if store.isLoading && store.issues.isEmpty {
-                    Spacer()
-                    ProgressView("Loading issues...")
-                    Spacer()
-                } else if store.filteredIssues.isEmpty {
-                    Spacer()
-                    VStack(spacing: 10) {
-                        Image(systemName: "exclamationmark.circle")
-                            .font(.system(size: 50))
-                            .foregroundStyle(.secondary)
-                        Text("No issues found")
-                            .font(.headline)
-                            .foregroundStyle(.secondary)
-                        if store.selectedFilter != .all {
-                            Text("Try changing the filter")
-                                .font(.subheadline)
-                                .foregroundStyle(.secondary)
-                        }
-                    }
-                    Spacer()
-                } else {
-                    List {
-                        ForEach(store.filteredIssues) { issue in
-                            IssueRow(issue: issue) {
-                                send(.issueTapped(issue))
-                            }
-                        }
-                    }
-                    .listStyle(.plain)
-                    .refreshable {
-                        await store.send(.view(.pullToRefresh)).finish()
-                    }
-                }
+                issuesContent
             }
             .navigationTitle("Issues")
             .toolbar {
@@ -79,6 +39,69 @@ struct IssuesView: View {
         .alert($store.scope(state: \.alert, action: \.view.alert))
         .onAppear {
             send(.onAppear)
+        }
+    }
+    
+    private var filterPicker: some View {
+        Picker("Filter", selection: $store.selectedFilter.sending(\.view.filterChanged)) {
+            ForEach(IssuesFeature.IssueFilter.allCases, id: \.self) { filter in
+                Text(filter.rawValue)
+                    .tag(filter)
+            }
+        }
+        .pickerStyle(.segmented)
+    }
+    
+    @ViewBuilder
+    private var issuesContent: some View {
+        if store.isLoading && store.issues.isEmpty {
+            loadingView
+        } else if store.filteredIssues.isEmpty {
+            emptyView
+        } else {
+            issuesList
+        }
+    }
+    
+    private var loadingView: some View {
+        VStack {
+            Spacer()
+            ProgressView("Loading issues...")
+            Spacer()
+        }
+    }
+    
+    private var emptyView: some View {
+        VStack {
+            Spacer()
+            VStack(spacing: 10) {
+                Image(systemName: "exclamationmark.circle")
+                    .font(.system(size: 50))
+                    .foregroundStyle(.secondary)
+                Text("No issues found")
+                    .font(.headline)
+                    .foregroundStyle(.secondary)
+                if store.selectedFilter != .all {
+                    Text("Try changing the filter")
+                        .font(.subheadline)
+                        .foregroundStyle(.secondary)
+                }
+            }
+            Spacer()
+        }
+    }
+    
+    private var issuesList: some View {
+        List {
+            ForEach(store.filteredIssues) { issue in
+                IssueRow(issue: issue) {
+                    send(.issueTapped(issue))
+                }
+            }
+        }
+        .listStyle(.plain)
+        .refreshable {
+            send(.pullToRefresh)
         }
     }
 }

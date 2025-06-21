@@ -43,6 +43,9 @@ struct ProfileFeature {
         enum Delegate: Equatable {
             case settingsTapped
             case authenticationError
+            case repositoriesTapped
+            case followersTapped(username: String)
+            case followingTapped(username: String)
         }
     }
     
@@ -95,16 +98,15 @@ struct ProfileFeature {
                 return .send(.delegate(.settingsTapped))
                 
                 case .repositoriesTapped:
-                // Navigate to repositories list
-                return .none
+                return .send(.delegate(.repositoriesTapped))
                 
                 case .followersTapped:
-                // Navigate to followers list
-                return .none
+                guard let username = state.user?.login else { return .none }
+                return .send(.delegate(.followersTapped(username: username)))
                 
                 case .followingTapped:
-                // Navigate to following list
-                return .none
+                guard let username = state.user?.login else { return .none }
+                return .send(.delegate(.followingTapped(username: username)))
                 
             case .alert:
                 return .none

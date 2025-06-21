@@ -51,6 +51,9 @@ struct TabContainerFeature {
             case createIssueTapped
             case settingsTapped
             case authenticationError
+            case repositoriesTapped
+            case followersTapped(username: String)
+            case followingTapped(username: String)
         }
     }
     
@@ -111,6 +114,12 @@ struct TabContainerFeature {
                     return .send(.delegate(.settingsTapped))
                 case .authenticationError:
                     return .send(.delegate(.authenticationError))
+                case .repositoriesTapped:
+                    return .send(.delegate(.repositoriesTapped))
+                case .followersTapped(let username):
+                    return .send(.delegate(.followersTapped(username: username)))
+                case .followingTapped(let username):
+                    return .send(.delegate(.followingTapped(username: username)))
                 }
                 
             case .home, .search, .issues, .profile:
