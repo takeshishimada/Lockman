@@ -26,6 +26,9 @@ struct AppStackView: View {
             case let .followingList(store):
                 FollowingListView(store: store)
                 
+            case let .userRepositories(store):
+                UserRepositoriesView(store: store)
+                
             case let .issueDetail(store):
                 IssueDetailView(store: store)
                 

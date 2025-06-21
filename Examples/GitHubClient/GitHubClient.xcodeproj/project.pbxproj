@@ -8,7 +8,6 @@
 
 /* Begin PBXBuildFile section */
 		3E2B57AF2E0518ED00B241D9 /* LockmanComposable in Frameworks */ = {isa = PBXBuildFile; productRef = 3E2B57AE2E0518ED00B241D9 /* LockmanComposable */; };
-		3E2B57B42E05191900B241D9 /* OctoKit in Frameworks */ = {isa = PBXBuildFile; productRef = 3E2B57B32E05191900B241D9 /* OctoKit */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -28,7 +27,6 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				3E2B57B42E05191900B241D9 /* OctoKit in Frameworks */,
 				3E2B57AF2E0518ED00B241D9 /* LockmanComposable in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -73,7 +71,6 @@
 			name = GitHubClient;
 			packageProductDependencies = (
 				3E2B57AE2E0518ED00B241D9 /* LockmanComposable */,
-				3E2B57B32E05191900B241D9 /* OctoKit */,
 			);
 			productName = GitHubClient;
 			productReference = 3E2B579C2E0518A000B241D9 /* GitHubClient.app */;
@@ -105,7 +102,6 @@
 			minimizedProjectReferenceProxies = 1;
 			packageReferences = (
 				3E2B57AD2E0518ED00B241D9 /* XCLocalSwiftPackageReference "../../../Lockman" */,
-				3E2B57B22E05191900B241D9 /* XCRemoteSwiftPackageReference "octokit" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 3E2B579D2E0518A000B241D9 /* Products */;
@@ -343,26 +339,10 @@
 		};
 /* End XCLocalSwiftPackageReference section */
 
-/* Begin XCRemoteSwiftPackageReference section */
-		3E2B57B22E05191900B241D9 /* XCRemoteSwiftPackageReference "octokit" */ = {
-			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/nerdishbynature/octokit.swift";
-			requirement = {
-				kind = upToNextMajorVersion;
-				minimumVersion = 0.14.0;
-			};
-		};
-/* End XCRemoteSwiftPackageReference section */
-
 /* Begin XCSwiftPackageProductDependency section */
 		3E2B57AE2E0518ED00B241D9 /* LockmanComposable */ = {
 			isa = XCSwiftPackageProductDependency;
 			productName = LockmanComposable;
-		};
-		3E2B57B32E05191900B241D9 /* OctoKit */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = 3E2B57B22E05191900B241D9 /* XCRemoteSwiftPackageReference "octokit" */;
-			productName = OctoKit;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};

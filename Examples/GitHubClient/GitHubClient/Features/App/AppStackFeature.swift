@@ -14,6 +14,7 @@ struct AppStackFeature {
         case userProfile(UserProfileFeature)
         case followerList(FollowerListFeature)
         case followingList(FollowingListFeature)
+        case userRepositories(UserRepositoriesFeature)
         case issueDetail(IssueDetailFeature)
         case issueCreate(IssueCreateFeature)
         case issueEdit(IssueEditFeature)
@@ -82,6 +83,18 @@ struct AppStackFeature {
                     
                 case .authenticationError:
                     return .send(.authenticationError)
+                    
+                case .repositoriesTapped:
+                    state.path.append(.userRepositories(UserRepositoriesFeature.State()))
+                    return .none
+                    
+                case .followersTapped(let username):
+                    state.path.append(.followerList(FollowerListFeature.State(username: username)))
+                    return .none
+                    
+                case .followingTapped(let username):
+                    state.path.append(.followingList(FollowingListFeature.State(username: username)))
+                    return .none
                 }
                 
             case .path(.element(id: _, action: .repositoryDetail(.delegate(let action)))):
@@ -122,6 +135,8 @@ struct AppStackFeature {
                 case .userTapped(let username):
                     state.path.append(.userProfile(UserProfileFeature.State(username: username)))
                     return .none
+                case .authenticationError:
+                    return .send(.authenticationError)
                 }
                 
             case .path(.element(id: _, action: .followingList(.delegate(let action)))):
@@ -129,6 +144,17 @@ struct AppStackFeature {
                 case .userTapped(let username):
                     state.path.append(.userProfile(UserProfileFeature.State(username: username)))
                     return .none
+                case .authenticationError:
+                    return .send(.authenticationError)
+                }
+                
+            case .path(.element(id: _, action: .userRepositories(.delegate(let action)))):
+                switch action {
+                case .repositoryTapped(let repositoryId):
+                    state.path.append(.repositoryDetail(RepositoryDetailFeature.State(repositoryId: repositoryId)))
+                    return .none
+                case .authenticationError:
+                    return .send(.authenticationError)
                 }
                 
             case .path(.element(id: _, action: .issueDetail(.delegate(let action)))):
@@ -136,6 +162,30 @@ struct AppStackFeature {
                 case .editTapped(let issueId):
                     state.path.append(.issueEdit(IssueEditFeature.State(issueId: issueId)))
                     return .none
+                case .authenticationError:
+                    return .send(.authenticationError)
+                }
+                
+            case .path(.element(id: _, action: .issueCreate(.delegate(let action)))):
+                switch action {
+                case .issueCreated(_):
+                    // Could navigate to the created issue, but for now just pop
+                    return .none
+                case .cancelled:
+                    return .none
+                case .authenticationError:
+                    return .send(.authenticationError)
+                }
+                
+            case .path(.element(id: _, action: .issueEdit(.delegate(let action)))):
+                switch action {
+                case .issueUpdated(_):
+                    // Could update the issue in the previous screen
+                    return .none
+                case .cancelled:
+                    return .none
+                case .authenticationError:
+                    return .send(.authenticationError)
                 }
                 
             case .settings(.presented(.delegate(let action))):

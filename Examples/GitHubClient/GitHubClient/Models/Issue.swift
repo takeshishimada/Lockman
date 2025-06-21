@@ -3,15 +3,15 @@ import Foundation
 struct Issue: Equatable, Identifiable {
     let id: Int
     let number: Int
-    let title: String
-    let body: String?
-    let state: IssueState
+    var title: String
+    var body: String?
+    var state: IssueState
     let author: IssueAuthor
     let createdAt: Date
-    let updatedAt: Date
-    let closedAt: Date?
+    var updatedAt: Date
+    var closedAt: Date?
     let repository: IssueRepository
-    let labels: [IssueLabel]
+    var labels: [IssueLabel]
     let commentsCount: Int
 }
 

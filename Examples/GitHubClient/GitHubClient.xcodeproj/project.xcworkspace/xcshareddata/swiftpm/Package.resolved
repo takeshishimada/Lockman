@@ -1,5 +1,5 @@
 {
-  "originHash" : "1f15fd956d829112b95b0bf428d38b86f9dc30e401e6aae8a4678a876c73cc02",
+  "originHash" : "55ffa477eb4c99d8e2bce28d5bdd6c1f83240712f7f42dc1c3b885c17a7e1c90",
   "pins" : [
     {
       "identity" : "combine-schedulers",
@@ -8,24 +8,6 @@
       "state" : {
         "revision" : "5928286acce13def418ec36d05a001a9641086f2",
         "version" : "1.0.3"
-      }
-    },
-    {
-      "identity" : "octokit.swift",
-      "kind" : "remoteSourceControl",
-      "location" : "https://github.com/nerdishbynature/octokit.swift",
-      "state" : {
-        "revision" : "cd108b387782d8509e64e298cf4800dc47fc40ae",
-        "version" : "0.14.0"
-      }
-    },
-    {
-      "identity" : "requestkit",
-      "kind" : "remoteSourceControl",
-      "location" : "https://github.com/nerdishbynature/RequestKit.git",
-      "state" : {
-        "revision" : "e4d905fed938807e36d87f28375f88b7c1c26840",
-        "version" : "3.3.0"
       }
     },
     {
