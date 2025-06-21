@@ -531,7 +531,7 @@ private struct TestConcatenateWithLockFeature {
 
       case .operationFailed:
         return .run { _ in
-          throw LockmanError.strategyNotRegistered("TestError")
+          throw LockmanRegistrationError.strategyNotRegistered("TestError")
         }
 
       case .operationCanceled:

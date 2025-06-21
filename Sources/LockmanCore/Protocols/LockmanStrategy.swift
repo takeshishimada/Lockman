@@ -32,8 +32,11 @@ public enum LockResult: Sendable {
   ///
   /// When this result is returned, the requesting operation should not proceed.
   ///
-  /// - Parameter error: An optional error describing why the lock acquisition failed
-  case failure((any Error)? = nil)
+  /// - Parameter error: An error conforming to `LockmanError` that provides
+  ///   detailed information about why the lock acquisition failed. Each strategy
+  ///   returns its own error type (e.g., `LockmanSingleExecutionError`,
+  ///   `LockmanPriorityBasedError`) to help with debugging and error handling.
+  case failure(any Error)
 }
 
 // MARK: - Equatable Conformance
@@ -47,7 +50,7 @@ extension LockResult: Equatable {
       return true
     case (.failure(let lhsError), .failure(let rhsError)):
       // Compare errors by their localized description since Error is not Equatable
-      return lhsError?.localizedDescription == rhsError?.localizedDescription
+      return lhsError.localizedDescription == rhsError.localizedDescription
     default:
       return false
     }
@@ -170,12 +173,20 @@ public protocol LockmanStrategy<I>: Sendable {
   /// - Should not modify internal state
   /// - Should return quickly as this may be called frequently
   /// - Should consider all conflict conditions specific to the strategy
+  /// - Should return detailed error information when lock acquisition fails
+  ///
+  /// ## Error Handling
+  /// When returning `.failure`, strategies should include a specific error
+  /// conforming to `LockmanError` that explains why the lock cannot be acquired.
+  /// This helps with debugging and allows callers to handle different failure
+  /// scenarios appropriately.
   ///
   /// - Parameters:
   ///   - id: A unique boundary identifier conforming to `LockmanBoundaryId`
   ///   - info: Lock information of type `I` containing action details
-  /// - Returns: A `LockResult` indicating whether the lock can be acquired
-  ///   and any required actions (such as canceling existing operations)
+  /// - Returns: A `LockResult` indicating whether the lock can be acquired,
+  ///   any required actions (such as canceling existing operations), and
+  ///   detailed error information if the lock cannot be acquired
   func canLock<B: LockmanBoundaryId>(id: B, info: I) -> LockResult
 
   /// Attempts to acquire a lock for the given boundary and information.

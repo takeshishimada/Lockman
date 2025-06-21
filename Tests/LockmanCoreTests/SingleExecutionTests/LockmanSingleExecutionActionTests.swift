@@ -155,7 +155,7 @@ final class LockmanSingleExecutionActionTests: XCTestCase {
 
         XCTAssertEqual(strategy.canLock(id: boundaryId, info: info), .success)
         strategy.lock(id: boundaryId, info: info)
-        XCTAssertEqual(strategy.canLock(id: boundaryId, info: info), .failure())
+        XCTAssertLockFailure(strategy.canLock(id: boundaryId, info: info))
         strategy.unlock(id: boundaryId, info: info)
         XCTAssertEqual(strategy.canLock(id: boundaryId, info: info), .success)
       } catch {
@@ -177,11 +177,11 @@ final class LockmanSingleExecutionActionTests: XCTestCase {
     strategy.lock(id: boundaryId, info: action1.lockmanInfo)
 
     // Second lock should fail (boundary is locked)
-    XCTAssertEqual(strategy.canLock(id: boundaryId, info: action2.lockmanInfo), .failure())
+    XCTAssertLockFailure(strategy.canLock(id: boundaryId, info: action2.lockmanInfo))
 
     // Different action should also fail (boundary is locked)
     let action3 = ParameterizedAction.fetchUser(id: "456")
-    XCTAssertEqual(strategy.canLock(id: boundaryId, info: action3.lockmanInfo), .failure())
+    XCTAssertLockFailure(strategy.canLock(id: boundaryId, info: action3.lockmanInfo))
 
     // Cleanup
     strategy.cleanUp()

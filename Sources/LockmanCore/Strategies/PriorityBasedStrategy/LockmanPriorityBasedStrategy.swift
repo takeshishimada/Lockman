@@ -148,7 +148,7 @@ public final class LockmanPriorityBasedStrategy: LockmanStrategy, @unchecked Sen
         $0.actionId == requestedInfo.actionId
       }
       if hasSameActionConflict {
-        result = .failure()
+        result = .failure(LockmanPriorityBasedError.blockedBySameAction(actionId: requestedInfo.actionId))
         failureReason = "Same action '\(requestedInfo.actionId)' is blocked by policy"
 
         LockmanLogger.shared.logCanLock(
@@ -184,7 +184,7 @@ public final class LockmanPriorityBasedStrategy: LockmanStrategy, @unchecked Sen
     // Compare priority levels using the Comparable implementation
     if currentPriority > requestedPriority {
       // Current action has higher priority - request fails
-      result = .failure()
+      result = .failure(LockmanPriorityBasedError.higherPriorityExists(requested: requestedPriority, currentHighest: currentPriority))
       failureReason = "Higher priority action '\(currentHighestPriorityInfo.actionId)' (priority: \(currentPriority)) is currently locked"
     } else if currentPriority == requestedPriority {
       // Same priority level - apply existing action's concurrency behavior
@@ -194,7 +194,7 @@ public final class LockmanPriorityBasedStrategy: LockmanStrategy, @unchecked Sen
       )
       result = behaviorResult
 
-      if behaviorResult == .failure() {
+      if case .failure = behaviorResult {
         failureReason = "Same priority action '\(currentHighestPriorityInfo.actionId)' with exclusive behavior is already running"
       } else if behaviorResult == .successWithPrecedingCancellation {
         cancelledInfo = (currentHighestPriorityInfo.actionId, currentHighestPriorityInfo.uniqueId)
@@ -359,7 +359,7 @@ private extension LockmanPriorityBasedStrategy {
     case .exclusive:
       // Existing action: "I run exclusively, block new same-priority actions"
       // → New action must wait or fail
-      return .failure()
+      return .failure(LockmanPriorityBasedError.samePriorityConflict(priority: current.priority))
 
     case .replaceable:
       // Existing action: "I am replaceable, allow new same-priority actions to take over"

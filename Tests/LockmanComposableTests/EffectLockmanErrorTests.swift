@@ -173,7 +173,7 @@ final class EffectLockmanErrorTests: XCTestCase {
 
   func testHandleErrorProcessesStrategyNotRegisteredCorrectly() {
     let action = MockErrorAction.unregisteredStrategy
-    let error = LockmanError.strategyNotRegistered("MockUnregisteredStrategy")
+    let error = LockmanRegistrationError.strategyNotRegistered("MockUnregisteredStrategy")
 
     // This would typically call reportIssue in a real environment
     // For testing, we verify that the error handling path is reachable
@@ -194,7 +194,7 @@ final class EffectLockmanErrorTests: XCTestCase {
 
   func testHandleErrorProcessesStrategyAlreadyRegisteredCorrectly() {
     let action = MockValidAction.testAction
-    let error = LockmanError.strategyAlreadyRegistered("LockmanSingleExecutionStrategy")
+    let error = LockmanRegistrationError.strategyAlreadyRegistered("LockmanSingleExecutionStrategy")
 
     XCTExpectFailure("Effect.withLock strategy 'LockmanSingleExecutionStrategy' already registered") {
       Effect<Never>.handleError(
@@ -330,7 +330,7 @@ final class EffectLockmanErrorTests: XCTestCase {
 
   func testErrorInformationPreservation() {
     let action = MockErrorAction.unregisteredStrategy
-    let originalError = LockmanError.strategyNotRegistered("DetailedStrategyName")
+    let originalError = LockmanRegistrationError.strategyNotRegistered("DetailedStrategyName")
 
     // Verify error information is preserved through handleError
     XCTExpectFailure("Effect.withLock strategy 'DetailedStrategyName' not registered") {
@@ -355,7 +355,7 @@ final class EffectLockmanErrorTests: XCTestCase {
 
   func testSourceLocationInformationInErrorHandling() {
     let action = MockValidAction.testAction
-    let error = LockmanError.strategyAlreadyRegistered("TestStrategy")
+    let error = LockmanRegistrationError.strategyAlreadyRegistered("TestStrategy")
 
     let testFileID: StaticString = "TestFile.swift"
     let testFilePath: StaticString = "/path/to/TestFile.swift"
@@ -391,7 +391,7 @@ final class EffectLockmanErrorTests: XCTestCase {
     }
 
     let action = EmptyNameAction.empty
-    let error = LockmanError.strategyNotRegistered("")
+    let error = LockmanRegistrationError.strategyNotRegistered("")
 
     XCTExpectFailure("Effect.withLock strategy '' not registered") {
       Effect<Never>.handleError(
@@ -418,7 +418,7 @@ final class EffectLockmanErrorTests: XCTestCase {
     }
 
     let action = UnicodeAction.unicode
-    let error = LockmanError.strategyNotRegistered("UnicodeStrategy🌟")
+    let error = LockmanRegistrationError.strategyNotRegistered("UnicodeStrategy🌟")
 
     XCTExpectFailure("Effect.withLock strategy 'UnicodeStrategy🌟' not registered") {
       Effect<Never>.handleError(

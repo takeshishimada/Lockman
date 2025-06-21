@@ -116,7 +116,7 @@ public final class LockmanStrategyContainer: @unchecked Sendable {
 
     try storage.withCriticalRegion { storage in
       if storage[id] != nil {
-        throw LockmanError.strategyAlreadyRegistered(id.value)
+        throw LockmanRegistrationError.strategyAlreadyRegistered(id.value)
       } else {
         storage[id] = entry
       }
@@ -173,7 +173,7 @@ public final class LockmanStrategyContainer: @unchecked Sendable {
     var seenIds = Set<LockmanStrategyId>()
     for (id, _) in entries {
       if !seenIds.insert(id).inserted {
-        throw LockmanError.strategyAlreadyRegistered(id.value)
+        throw LockmanRegistrationError.strategyAlreadyRegistered(id.value)
       }
     }
 
@@ -181,7 +181,7 @@ public final class LockmanStrategyContainer: @unchecked Sendable {
       // Check for conflicts with existing registrations
       for (id, _) in entries {
         if storage[id] != nil {
-          throw LockmanError.strategyAlreadyRegistered(id.value)
+          throw LockmanRegistrationError.strategyAlreadyRegistered(id.value)
         }
       }
 
@@ -249,7 +249,7 @@ public final class LockmanStrategyContainer: @unchecked Sendable {
       guard let entry = storage[id],
             let anyStrategy = entry.strategy as? AnyLockmanStrategy<I> else
       {
-        throw LockmanError.strategyNotRegistered(id.value)
+        throw LockmanRegistrationError.strategyNotRegistered(id.value)
       }
       return anyStrategy
     }

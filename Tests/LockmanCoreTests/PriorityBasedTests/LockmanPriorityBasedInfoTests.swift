@@ -475,7 +475,7 @@ final class LockmanPriorityBasedInfoIntegrationTests: XCTestCase {
     strategy.lock(id: boundaryId, info: highReplaceableInfo)
 
     // Another low priority fails against high priority
-    XCTAssertEqual(strategy.canLock(id: boundaryId, info: anotherLowInfo), .failure())
+    XCTAssertLockFailure(strategy.canLock(id: boundaryId, info: anotherLowInfo))
 
     // None priority still succeeds
     XCTAssertEqual(strategy.canLock(id: boundaryId, info: noneInfo), .success)
@@ -498,13 +498,13 @@ final class LockmanPriorityBasedInfoIntegrationTests: XCTestCase {
     strategy.lock(id: boundary2, info: info)
 
     // But duplicate on same boundary fails
-    XCTAssertEqual(strategy.canLock(id: boundary1, info: info), .failure())
-    XCTAssertEqual(strategy.canLock(id: boundary2, info: info), .failure())
+    XCTAssertLockFailure(strategy.canLock(id: boundary1, info: info))
+    XCTAssertLockFailure(strategy.canLock(id: boundary2, info: info))
 
     // Cleanup only affects specific boundary
     strategy.cleanUp(id: boundary1)
     XCTAssertEqual(strategy.canLock(id: boundary1, info: info), .success)
-    XCTAssertEqual(strategy.canLock(id: boundary2, info: info), .failure()) // Still locked
+    XCTAssertLockFailure(strategy.canLock(id: boundary2, info: info)) // Still locked
 
     strategy.cleanUp()
   }

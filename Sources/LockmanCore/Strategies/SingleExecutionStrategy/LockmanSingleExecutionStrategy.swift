@@ -69,7 +69,7 @@ public final class LockmanSingleExecutionStrategy: LockmanStrategy, @unchecked S
   ///   - info: The lock information containing the action ID and execution mode
   /// - Returns:
   ///   - `.success` if the lock can be acquired
-  ///   - `.failure` if a lock conflict exists based on the execution mode
+  ///   - `.failure(error)` if a lock conflict exists based on the execution mode, with detailed error information
   ///
   /// ## Example
   /// ```swift
@@ -98,14 +98,14 @@ public final class LockmanSingleExecutionStrategy: LockmanStrategy, @unchecked S
       if currentLocks.isEmpty {
         result = .success
       } else {
-        result = .failure()
+        result = .failure(LockmanSingleExecutionError.boundaryAlreadyLocked(boundaryId: String(describing: id)))
         failureReason = "Boundary '\(id)' already has an active lock"
       }
 
     case .action:
       // Exclusive per action - check if same actionId exists
       if state.contains(id: id, actionId: info.actionId) {
-        result = .failure()
+        result = .failure(LockmanSingleExecutionError.actionAlreadyRunning(actionId: info.actionId))
         failureReason = "Action '\(info.actionId)' is already locked"
       } else {
         result = .success

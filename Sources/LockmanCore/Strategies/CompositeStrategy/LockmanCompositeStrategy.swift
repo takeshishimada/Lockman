@@ -71,12 +71,12 @@ public final class LockmanCompositeStrategy2<
     let result = coordinateResults(result1, result2)
 
     let failureReason: String?
-    if result == .failure() {
+    if case .failure = result {
       var failedStrategies: [String] = []
-      if result1 == .failure() {
+      if case .failure = result1 {
         failedStrategies.append("Strategy1")
       }
-      if result2 == .failure() {
+      if case .failure = result2 {
         failedStrategies.append("Strategy2")
       }
       failureReason = "Failed strategies: \(failedStrategies.joined(separator: ", "))"
@@ -157,8 +157,11 @@ public final class LockmanCompositeStrategy2<
   /// - Returns: The coordinated result following composite strategy rules
   private func coordinateResults(_ results: LockResult...) -> LockResult {
     // If any strategy failed, the entire operation fails
-    if results.contains(.failure()) {
-      return .failure()
+    // Return the first failure with its error
+    for result in results {
+      if case .failure(let error) = result {
+        return .failure(error)
+      }
     }
 
     // If all strategies succeeded without cancellation, operation succeeds
@@ -230,15 +233,15 @@ public final class LockmanCompositeStrategy3<
     let result = coordinateResults(result1, result2, result3)
 
     let failureReason: String?
-    if result == .failure() {
+    if case .failure = result {
       var failedStrategies: [String] = []
-      if result1 == .failure() {
+      if case .failure = result1 {
         failedStrategies.append("Strategy1")
       }
-      if result2 == .failure() {
+      if case .failure = result2 {
         failedStrategies.append("Strategy2")
       }
-      if result3 == .failure() {
+      if case .failure = result3 {
         failedStrategies.append("Strategy3")
       }
       failureReason = "Failed strategies: \(failedStrategies.joined(separator: ", "))"
@@ -316,8 +319,11 @@ public final class LockmanCompositeStrategy3<
   // MARK: - Private Helpers
 
   private func coordinateResults(_ results: LockResult...) -> LockResult {
-    if results.contains(.failure()) {
-      return .failure()
+    // If any strategy failed, return the first failure with its error
+    for result in results {
+      if case .failure(let error) = result {
+        return .failure(error)
+      }
     }
 
     if results.allSatisfy({ $0 == .success }) {
@@ -382,18 +388,18 @@ public final class LockmanCompositeStrategy4<
     let result = coordinateResults(result1, result2, result3, result4)
 
     let failureReason: String?
-    if result == .failure() {
+    if case .failure = result {
       var failedStrategies: [String] = []
-      if result1 == .failure() {
+      if case .failure = result1 {
         failedStrategies.append("Strategy1")
       }
-      if result2 == .failure() {
+      if case .failure = result2 {
         failedStrategies.append("Strategy2")
       }
-      if result3 == .failure() {
+      if case .failure = result3 {
         failedStrategies.append("Strategy3")
       }
-      if result4 == .failure() {
+      if case .failure = result4 {
         failedStrategies.append("Strategy4")
       }
       failureReason = "Failed strategies: \(failedStrategies.joined(separator: ", "))"
@@ -479,8 +485,11 @@ public final class LockmanCompositeStrategy4<
   // MARK: - Private Helpers
 
   private func coordinateResults(_ results: LockResult...) -> LockResult {
-    if results.contains(.failure()) {
-      return .failure()
+    // If any strategy failed, return the first failure with its error
+    for result in results {
+      if case .failure(let error) = result {
+        return .failure(error)
+      }
     }
 
     if results.allSatisfy({ $0 == .success }) {
@@ -555,21 +564,21 @@ public final class LockmanCompositeStrategy5<
     let result = coordinateResults(result1, result2, result3, result4, result5)
 
     let failureReason: String?
-    if result == .failure() {
+    if case .failure = result {
       var failedStrategies: [String] = []
-      if result1 == .failure() {
+      if case .failure = result1 {
         failedStrategies.append("Strategy1")
       }
-      if result2 == .failure() {
+      if case .failure = result2 {
         failedStrategies.append("Strategy2")
       }
-      if result3 == .failure() {
+      if case .failure = result3 {
         failedStrategies.append("Strategy3")
       }
-      if result4 == .failure() {
+      if case .failure = result4 {
         failedStrategies.append("Strategy4")
       }
-      if result5 == .failure() {
+      if case .failure = result5 {
         failedStrategies.append("Strategy5")
       }
       failureReason = "Failed strategies: \(failedStrategies.joined(separator: ", "))"
@@ -664,8 +673,11 @@ public final class LockmanCompositeStrategy5<
   // MARK: - Private Helpers
 
   private func coordinateResults(_ results: LockResult...) -> LockResult {
-    if results.contains(.failure()) {
-      return .failure()
+    // If any strategy failed, return the first failure with its error
+    for result in results {
+      if case .failure(let error) = result {
+        return .failure(error)
+      }
     }
 
     if results.allSatisfy({ $0 == .success }) {

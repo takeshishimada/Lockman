@@ -1,11 +1,12 @@
 import Foundation
 
-// MARK: - LockmanError
+// MARK: - LockmanRegistrationError
 
-/// Errors that can occur within the Lockman framework.
+/// Errors that can occur during strategy registration and resolution.
 ///
-/// Provides structured error reporting for strategy registration and resolution.
-public enum LockmanError: Error, LocalizedError {
+/// This error type specifically handles issues related to registering and resolving
+/// strategies within the Lockman container.
+public enum LockmanRegistrationError: LockmanError {
   /// Indicates that a strategy type is already registered in the container.
   ///
   /// Each strategy type can only be registered once to ensure deterministic behavior.
@@ -20,10 +21,10 @@ public enum LockmanError: Error, LocalizedError {
   public var errorDescription: String? {
     switch self {
     case let .strategyAlreadyRegistered(strategyType):
-      return "Strategy '\(strategyType)' is already registered in the LockmanStrategyContainer. Each strategy type can only be registered once."
+      return "Strategy '\(strategyType)' is already registered. Each strategy type can only be registered once."
 
     case let .strategyNotRegistered(strategyType):
-      return "Strategy '\(strategyType)' is not registered in the LockmanStrategyContainer. Please register the strategy before attempting to resolve it."
+      return "Strategy '\(strategyType)' is not registered. Please register the strategy before attempting to resolve it."
     }
   }
 

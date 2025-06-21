@@ -97,7 +97,7 @@ final class LockmanDynamicConditionStrategyTests: XCTestCase {
         currentCount.value < 2
       }
     )
-    XCTAssertEqual(strategy.canLock(id: boundary, info: info3), .failure())
+    XCTAssertLockFailure(strategy.canLock(id: boundary, info: info3))
   }
 
   // MARK: - Business Logic Tests
@@ -126,7 +126,7 @@ final class LockmanDynamicConditionStrategyTests: XCTestCase {
       }
     )
 
-    XCTAssertEqual(strategy.canLock(id: boundary, info: lowPriorityInfo), .failure())
+    XCTAssertLockFailure(strategy.canLock(id: boundary, info: lowPriorityInfo))
   }
 
   func testtimeBasedCondition() {
@@ -154,7 +154,7 @@ final class LockmanDynamicConditionStrategyTests: XCTestCase {
       }
     )
 
-    XCTAssertEqual(strategy.canLock(id: boundary, info: afterHoursInfo), .failure())
+    XCTAssertLockFailure(strategy.canLock(id: boundary, info: afterHoursInfo))
   }
 
   // MARK: - Lock/Unlock Tests
@@ -184,7 +184,7 @@ final class LockmanDynamicConditionStrategyTests: XCTestCase {
         !isLocked.value
       }
     )
-    XCTAssertEqual(strategy.canLock(id: boundary, info: info2), .failure())
+    XCTAssertLockFailure(strategy.canLock(id: boundary, info: info2))
 
     // Unlock
     strategy.unlock(id: boundary, info: info)
@@ -287,7 +287,7 @@ final class LockmanDynamicConditionStrategyTests: XCTestCase {
 
     // Next request fails
     let failInfo = makeInfo()
-    XCTAssertEqual(strategy.canLock(id: boundary, info: failInfo), .failure())
+    XCTAssertLockFailure(strategy.canLock(id: boundary, info: failInfo))
   }
 
   func testfailureWithCustomReason() {
@@ -302,7 +302,7 @@ final class LockmanDynamicConditionStrategyTests: XCTestCase {
     )
 
     let result = strategy.canLock(id: boundary, info: info)
-    XCTAssertEqual(result, .failure())
+    XCTAssertLockFailure(result)
   }
 
   // MARK: - Boundary Isolation Tests
@@ -346,7 +346,7 @@ final class LockmanDynamicConditionStrategyTests: XCTestCase {
         user1Count.value < 1
       }
     )
-    XCTAssertEqual(strategy.canLock(id: boundary1, info: user1Info2), .failure())
+    XCTAssertLockFailure(strategy.canLock(id: boundary1, info: user1Info2))
   }
 
   // MARK: - Thread Safety Tests
