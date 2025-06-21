@@ -3,7 +3,7 @@
 /// This enum represents the possible outcomes when a strategy attempts
 /// to acquire a lock for a given boundary and lock information. The result
 /// determines how the calling code should proceed with the requested operation.
-public enum LockResult: Sendable {
+public enum LockmanResult: Sendable {
   /// Lock acquisition succeeded without conflicts.
   ///
   /// The requested lock was successfully acquired and no existing locks
@@ -41,8 +41,8 @@ public enum LockResult: Sendable {
 
 // MARK: - Equatable Conformance
 
-extension LockResult: Equatable {
-  public static func == (lhs: LockResult, rhs: LockResult) -> Bool {
+extension LockmanResult: Equatable {
+  public static func == (lhs: LockmanResult, rhs: LockmanResult) -> Bool {
     switch (lhs, rhs) {
     case (.success, .success):
       return true
@@ -83,7 +83,7 @@ extension LockResult: Equatable {
 /// final class MyStrategy: LockmanStrategy {
 ///   typealias I = MyLockInfo
 ///
-///   func canLock<B: LockmanBoundaryId>(id: B, info: I) -> LockResult {
+///   func canLock<B: LockmanBoundaryId>(id: B, info: I) -> LockmanResult {
 ///     // Check if lock can be acquired
 ///     return .success
 ///   }
@@ -184,10 +184,10 @@ public protocol LockmanStrategy<I>: Sendable {
   /// - Parameters:
   ///   - id: A unique boundary identifier conforming to `LockmanBoundaryId`
   ///   - info: Lock information of type `I` containing action details
-  /// - Returns: A `LockResult` indicating whether the lock can be acquired,
+  /// - Returns: A `LockmanResult` indicating whether the lock can be acquired,
   ///   any required actions (such as canceling existing operations), and
   ///   detailed error information if the lock cannot be acquired
-  func canLock<B: LockmanBoundaryId>(id: B, info: I) -> LockResult
+  func canLock<B: LockmanBoundaryId>(id: B, info: I) -> LockmanResult
 
   /// Attempts to acquire a lock for the given boundary and information.
   ///

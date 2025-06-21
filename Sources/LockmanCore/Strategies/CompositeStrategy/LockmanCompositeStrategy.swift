@@ -64,11 +64,11 @@ public final class LockmanCompositeStrategy2<
   public func canLock<B: LockmanBoundaryId>(
     id: B,
     info: LockmanCompositeInfo2<I1, I2>
-  ) -> LockResult {
+  ) -> LockmanResult {
     // Early return pattern for performance optimization
     let result1 = strategy1.canLock(id: id, info: info.lockmanInfoForStrategy1)
     if case .failure(let error) = result1 {
-      let result = LockResult.failure(error)
+      let result = LockmanResult.failure(error)
       LockmanLogger.shared.logCanLock(
         result: result,
         strategy: "Composite",
@@ -81,7 +81,7 @@ public final class LockmanCompositeStrategy2<
 
     let result2 = strategy2.canLock(id: id, info: info.lockmanInfoForStrategy2)
     if case .failure(let error) = result2 {
-      let result = LockResult.failure(error)
+      let result = LockmanResult.failure(error)
       LockmanLogger.shared.logCanLock(
         result: result,
         strategy: "Composite",
@@ -163,9 +163,9 @@ public final class LockmanCompositeStrategy2<
   /// Coordinates the results from multiple strategies according to composite logic.
   ///
   /// - Parameters:
-  ///   - results: Variable number of `LockResult` values from component strategies
+  ///   - results: Variable number of `LockmanResult` values from component strategies
   /// - Returns: The coordinated result following composite strategy rules
-  private func coordinateResults(_ results: LockResult...) -> LockResult {
+  private func coordinateResults(_ results: LockmanResult...) -> LockmanResult {
     // If any strategy failed, the entire operation fails
     // Return the first failure with its error
     for result in results {
@@ -235,11 +235,11 @@ public final class LockmanCompositeStrategy3<
   public func canLock<B: LockmanBoundaryId>(
     id: B,
     info: LockmanCompositeInfo3<I1, I2, I3>
-  ) -> LockResult {
+  ) -> LockmanResult {
     // Early return pattern for performance optimization
     let result1 = strategy1.canLock(id: id, info: info.lockmanInfoForStrategy1)
     if case .failure(let error) = result1 {
-      let result = LockResult.failure(error)
+      let result = LockmanResult.failure(error)
       LockmanLogger.shared.logCanLock(
         result: result,
         strategy: "Composite",
@@ -252,7 +252,7 @@ public final class LockmanCompositeStrategy3<
 
     let result2 = strategy2.canLock(id: id, info: info.lockmanInfoForStrategy2)
     if case .failure(let error) = result2 {
-      let result = LockResult.failure(error)
+      let result = LockmanResult.failure(error)
       LockmanLogger.shared.logCanLock(
         result: result,
         strategy: "Composite",
@@ -265,7 +265,7 @@ public final class LockmanCompositeStrategy3<
 
     let result3 = strategy3.canLock(id: id, info: info.lockmanInfoForStrategy3)
     if case .failure(let error) = result3 {
-      let result = LockResult.failure(error)
+      let result = LockmanResult.failure(error)
       LockmanLogger.shared.logCanLock(
         result: result,
         strategy: "Composite",
@@ -347,7 +347,7 @@ public final class LockmanCompositeStrategy3<
 
   // MARK: - Private Helpers
 
-  private func coordinateResults(_ results: LockResult...) -> LockResult {
+  private func coordinateResults(_ results: LockmanResult...) -> LockmanResult {
     // If any strategy failed, return the first failure with its error
     for result in results {
       if case .failure(let error) = result {
@@ -408,11 +408,11 @@ public final class LockmanCompositeStrategy4<
   public func canLock<B: LockmanBoundaryId>(
     id: B,
     info: LockmanCompositeInfo4<I1, I2, I3, I4>
-  ) -> LockResult {
+  ) -> LockmanResult {
     // Early return pattern for performance optimization
     let result1 = strategy1.canLock(id: id, info: info.lockmanInfoForStrategy1)
     if case .failure(let error) = result1 {
-      let result = LockResult.failure(error)
+      let result = LockmanResult.failure(error)
       LockmanLogger.shared.logCanLock(
         result: result,
         strategy: "Composite",
@@ -425,7 +425,7 @@ public final class LockmanCompositeStrategy4<
 
     let result2 = strategy2.canLock(id: id, info: info.lockmanInfoForStrategy2)
     if case .failure(let error) = result2 {
-      let result = LockResult.failure(error)
+      let result = LockmanResult.failure(error)
       LockmanLogger.shared.logCanLock(
         result: result,
         strategy: "Composite",
@@ -438,7 +438,7 @@ public final class LockmanCompositeStrategy4<
 
     let result3 = strategy3.canLock(id: id, info: info.lockmanInfoForStrategy3)
     if case .failure(let error) = result3 {
-      let result = LockResult.failure(error)
+      let result = LockmanResult.failure(error)
       LockmanLogger.shared.logCanLock(
         result: result,
         strategy: "Composite",
@@ -451,7 +451,7 @@ public final class LockmanCompositeStrategy4<
 
     let result4 = strategy4.canLock(id: id, info: info.lockmanInfoForStrategy4)
     if case .failure(let error) = result4 {
-      let result = LockResult.failure(error)
+      let result = LockmanResult.failure(error)
       LockmanLogger.shared.logCanLock(
         result: result,
         strategy: "Composite",
@@ -541,7 +541,7 @@ public final class LockmanCompositeStrategy4<
 
   // MARK: - Private Helpers
 
-  private func coordinateResults(_ results: LockResult...) -> LockResult {
+  private func coordinateResults(_ results: LockmanResult...) -> LockmanResult {
     // If any strategy failed, return the first failure with its error
     for result in results {
       if case .failure(let error) = result {
@@ -611,11 +611,11 @@ public final class LockmanCompositeStrategy5<
   public func canLock<B: LockmanBoundaryId>(
     id: B,
     info: LockmanCompositeInfo5<I1, I2, I3, I4, I5>
-  ) -> LockResult {
+  ) -> LockmanResult {
     // Early return pattern for performance optimization
     let result1 = strategy1.canLock(id: id, info: info.lockmanInfoForStrategy1)
     if case .failure(let error) = result1 {
-      let result = LockResult.failure(error)
+      let result = LockmanResult.failure(error)
       LockmanLogger.shared.logCanLock(
         result: result,
         strategy: "Composite",
@@ -628,7 +628,7 @@ public final class LockmanCompositeStrategy5<
 
     let result2 = strategy2.canLock(id: id, info: info.lockmanInfoForStrategy2)
     if case .failure(let error) = result2 {
-      let result = LockResult.failure(error)
+      let result = LockmanResult.failure(error)
       LockmanLogger.shared.logCanLock(
         result: result,
         strategy: "Composite",
@@ -641,7 +641,7 @@ public final class LockmanCompositeStrategy5<
 
     let result3 = strategy3.canLock(id: id, info: info.lockmanInfoForStrategy3)
     if case .failure(let error) = result3 {
-      let result = LockResult.failure(error)
+      let result = LockmanResult.failure(error)
       LockmanLogger.shared.logCanLock(
         result: result,
         strategy: "Composite",
@@ -654,7 +654,7 @@ public final class LockmanCompositeStrategy5<
 
     let result4 = strategy4.canLock(id: id, info: info.lockmanInfoForStrategy4)
     if case .failure(let error) = result4 {
-      let result = LockResult.failure(error)
+      let result = LockmanResult.failure(error)
       LockmanLogger.shared.logCanLock(
         result: result,
         strategy: "Composite",
@@ -667,7 +667,7 @@ public final class LockmanCompositeStrategy5<
 
     let result5 = strategy5.canLock(id: id, info: info.lockmanInfoForStrategy5)
     if case .failure(let error) = result5 {
-      let result = LockResult.failure(error)
+      let result = LockmanResult.failure(error)
       LockmanLogger.shared.logCanLock(
         result: result,
         strategy: "Composite",
@@ -766,7 +766,7 @@ public final class LockmanCompositeStrategy5<
 
   // MARK: - Private Helpers
 
-  private func coordinateResults(_ results: LockResult...) -> LockResult {
+  private func coordinateResults(_ results: LockmanResult...) -> LockmanResult {
     // If any strategy failed, return the first failure with its error
     for result in results {
       if case .failure(let error) = result {

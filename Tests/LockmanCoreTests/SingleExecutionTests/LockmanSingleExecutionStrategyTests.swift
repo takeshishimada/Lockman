@@ -409,7 +409,7 @@ final class LockmanSingleExecutionStrategyTests: XCTestCase {
     let strategy  = LockmanSingleExecutionStrategy()
     let id = TestBoundaryId("concurrent")
 
-    let results = await withTaskGroup(of: LockResult.self, returning: [LockResult].self) { group in
+    let results = await withTaskGroup(of: LockmanResult.self, returning: [LockmanResult].self) { group in
       // Launch 5 concurrent lock attempts on same boundary with same action
       for _ in 0 ..< 5 {
         group.addTask {
@@ -418,7 +418,7 @@ final class LockmanSingleExecutionStrategyTests: XCTestCase {
         }
       }
 
-      var results: [LockResult] = []
+      var results: [LockmanResult] = []
       for await result in group {
         results.append(result)
       }
@@ -439,7 +439,7 @@ final class LockmanSingleExecutionStrategyTests: XCTestCase {
     let strategy = LockmanSingleExecutionStrategy()
     let id = TestBoundaryId("concurrent_different")
 
-    let results = await withTaskGroup(of: (String, LockResult).self, returning: [(String, LockResult)].self) { group in
+    let results = await withTaskGroup(of: (String, LockmanResult).self, returning: [(String, LockmanResult)].self) { group in
       // Launch concurrent lock attempts with different actions
       for i in 0 ..< 5 {
         group.addTask {
@@ -449,7 +449,7 @@ final class LockmanSingleExecutionStrategyTests: XCTestCase {
         }
       }
 
-      var results: [(String, LockResult)] = []
+      var results: [(String, LockmanResult)] = []
       for await result in group {
         results.append(result)
       }

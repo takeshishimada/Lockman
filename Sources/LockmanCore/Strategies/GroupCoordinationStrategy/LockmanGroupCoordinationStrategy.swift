@@ -98,8 +98,8 @@ public final class LockmanGroupCoordinationStrategy: LockmanStrategy, @unchecked
   public func canLock<B: LockmanBoundaryId>(
     id: B,
     info: LockmanGroupCoordinatedInfo
-  ) -> LockResult {
-    let result: LockResult
+  ) -> LockmanResult {
+    let result: LockmanResult
     var failureReason: String?
 
     result = storage.withCriticalRegion { storage in
