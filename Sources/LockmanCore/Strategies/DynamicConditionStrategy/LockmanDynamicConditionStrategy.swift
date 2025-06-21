@@ -57,14 +57,14 @@ public final class LockmanDynamicConditionStrategy: LockmanStrategy, @unchecked 
   /// - Parameters:
   ///   - id: The boundary identifier
   ///   - info: The lock information containing the dynamic condition
-  /// - Returns: The result from the condition closure
+  /// - Returns: `.success` if condition is true, `.failure(error)` if false
   public func canLock<B: LockmanBoundaryId>(
     id: B,
     info: LockmanDynamicConditionInfo
   ) -> LockResult {
     // Convert Bool to LockResult
-    let result: LockResult = info.condition() ? .success : .failure()
-    let failureReason = result == .failure() ? "Dynamic condition returned false" : nil
+    let result: LockResult = info.condition() ? .success : .failure(LockmanDynamicConditionError.conditionNotMet(actionId: info.actionId))
+    let failureReason: String? = if case .failure = result { "Dynamic condition returned false" } else { nil }
 
     LockmanLogger.shared.logCanLock(
       result: result,

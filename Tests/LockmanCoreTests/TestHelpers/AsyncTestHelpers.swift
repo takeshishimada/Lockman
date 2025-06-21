@@ -143,7 +143,12 @@ enum LockTestHelpers {
     strategy.lock(id: boundaryId, info: info)
 
     let lockedResult = strategy.canLock(id: boundaryId, info: info)
-    XCTAssertEqual(lockedResult, .failure(), "Should not be able to acquire locked resource")
+    // Check if it's a failure (with or without error)
+    if case .failure = lockedResult {
+      // Success - it's a failure as expected
+    } else {
+      XCTFail("Should not be able to acquire locked resource")
+    }
 
     strategy.unlock(id: boundaryId, info: info)
 
@@ -162,8 +167,18 @@ enum LockTestHelpers {
       strategy.canLock(id: boundaryId, info: info)
     }
 
-    let successful = results.filter { $0 != .failure() }.count
-    let failed = results.filter { $0 == .failure() }.count
+    let successful = results.filter { 
+      if case .failure = $0 {
+        return false
+      }
+      return true
+    }.count
+    let failed = results.filter { 
+      if case .failure = $0 {
+        return true
+      }
+      return false
+    }.count
 
     return (successful, failed)
   }
@@ -178,7 +193,12 @@ enum LockTestHelpers {
     let result = strategy.canLock(id: boundaryId, info: info)
 
     if expectedLocked {
-      XCTAssertEqual(result, .failure(), "Resource should be locked")
+      // Check if it's a failure (with or without error)
+      if case .failure = result {
+        // Success - it's locked as expected
+      } else {
+        XCTFail("Resource should be locked")
+      }
     } else {
       XCTAssertEqual(result, .success, "Resource should be unlocked")
     }
@@ -196,6 +216,34 @@ func XCTAssertTrue<E: Error>(throws errorType: E.Type, _ block: () throws -> Voi
         // Expected error type was thrown
     } catch {
         XCTFail("Expected to throw \(errorType) but threw \(type(of: error)): \(error)", file: file, line: line)
+    }
+}
+
+/// Custom assertion to check if LockResult is a failure (with or without error)
+func XCTAssertLockFailure(_ result: LockResult, _ message: String = "", file: StaticString = #file, line: UInt = #line) {
+    if case .failure = result {
+        // Success - it's a failure as expected
+    } else {
+        let failMessage = message.isEmpty ? "Expected lock failure but got \(result)" : message
+        XCTFail(failMessage, file: file, line: line)
+    }
+}
+
+/// Custom assertion to check if LockResult equals the expected result
+func XCTAssertLockResult(_ actual: LockResult, _ expected: LockResult, _ message: String = "", file: StaticString = #file, line: UInt = #line) {
+    switch (actual, expected) {
+    case (.success, .success):
+        // Both success
+        return
+    case (.successWithPrecedingCancellation, .successWithPrecedingCancellation):
+        // Both successWithPrecedingCancellation
+        return
+    case (.failure, .failure):
+        // Both failure (ignore error details)
+        return
+    default:
+        let failMessage = message.isEmpty ? "Expected \(expected) but got \(actual)" : message
+        XCTFail(failMessage, file: file, line: line)
     }
 }
 

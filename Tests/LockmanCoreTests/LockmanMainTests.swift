@@ -91,7 +91,7 @@ final class LockmanMainTests: XCTestCase {
         do {
           _ = try Lockman.container.resolve(LockmanSingleExecutionStrategy.self)
           XCTFail("Should have thrown error for unregistered strategy")
-        } catch let LockmanError.strategyNotRegistered(type) {
+        } catch let LockmanRegistrationError.strategyNotRegistered(type) {
           XCTAssertTrue(type.contains("LockmanSingleExecutionStrategy"))
         } catch {
           XCTFail("Unexpected error type: \(error)")
@@ -254,7 +254,7 @@ final class LockmanMainTests: XCTestCase {
         do {
           _ = try Lockman.container.resolve(LockmanSingleExecutionStrategy.self)
           XCTFail("Should throw for unregistered strategy")
-        } catch let error as LockmanError {
+        } catch let error as LockmanRegistrationError {
           switch error {
           case let .strategyNotRegistered(type):
             XCTAssertTrue(type.contains("LockmanSingleExecutionStrategy"))
@@ -262,7 +262,7 @@ final class LockmanMainTests: XCTestCase {
             XCTFail("Wrong error type")
           }
         } catch {
-          XCTFail("Should throw LockmanError")
+          XCTFail("Should throw LockmanRegistrationError")
         }
       }
     }
@@ -278,7 +278,7 @@ final class LockmanMainTests: XCTestCase {
       do {
         try container.register(strategy)
         XCTFail("Should throw for duplicate registration")
-      } catch let error as LockmanError {
+      } catch let error as LockmanRegistrationError {
         switch error {
         case let .strategyAlreadyRegistered(type):
           XCTAssertTrue(type.contains("LockmanSingleExecutionStrategy"))
@@ -286,7 +286,7 @@ final class LockmanMainTests: XCTestCase {
           XCTFail("Wrong error type")
         }
       } catch {
-        XCTFail("Should throw LockmanError")
+        XCTFail("Should throw LockmanRegistrationError")
       }
     }
   // MARK: - Integration Tests
@@ -313,7 +313,7 @@ final class LockmanMainTests: XCTestCase {
 
           singleStrategy.lock(id: singleBoundary, info: singleInfo)
           let canLockAgain  = singleStrategy.canLock(id: singleBoundary, info: singleInfo)
-          XCTAssertEqual(canLockAgain, .failure())
+          XCTAssertLockFailure(canLockAgain)
 
           singleStrategy.unlock(id: singleBoundary, info: singleInfo)
 

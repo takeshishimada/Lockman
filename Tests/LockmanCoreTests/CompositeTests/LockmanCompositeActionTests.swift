@@ -153,7 +153,7 @@ final class LockmanCompositeActionTests: XCTestCase {
 
     XCTAssertEqual(compositeStrategy.canLock(id: boundaryId, info: info), .success)
     compositeStrategy.lock(id: boundaryId, info: info)
-    XCTAssertEqual(compositeStrategy.canLock(id: boundaryId, info: info), .failure())
+    XCTAssertLockFailure(compositeStrategy.canLock(id: boundaryId, info: info))
     compositeStrategy.unlock(id: boundaryId, info: info)
     XCTAssertEqual(compositeStrategy.canLock(id: boundaryId, info: info), .success)
   }

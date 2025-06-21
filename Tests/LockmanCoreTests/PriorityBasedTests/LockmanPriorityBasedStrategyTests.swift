@@ -137,7 +137,7 @@ final class LockmanPriorityBasedStrategyTests: XCTestCase {
     let info2 = TestInfoFactory.highExclusive("duplicate") // Same action ID
 
     strategy.lock(id: id, info: info1)
-    XCTAssertEqual(strategy.canLock(id: id, info: info2), .failure())
+    XCTAssertLockFailure(strategy.canLock(id: id, info: info2))
 
     strategy.unlock(id: id, info: info1)
   }
@@ -171,7 +171,7 @@ final class LockmanPriorityBasedStrategyTests: XCTestCase {
 
     for (higherInfo, lowerInfo) in testCases {
       strategy.lock(id: id, info: higherInfo)
-      XCTAssertEqual(strategy.canLock(id: id, info: lowerInfo), .failure())
+      XCTAssertLockFailure(strategy.canLock(id: id, info: lowerInfo))
       strategy.cleanUp()
     }
   }
@@ -190,7 +190,7 @@ final class LockmanPriorityBasedStrategyTests: XCTestCase {
     for (firstInfo, secondInfo) in testCases {
       strategy.lock(id: id, info: firstInfo)
       // Second action follows first action's exclusive behavior
-      XCTAssertEqual(strategy.canLock(id: id, info: secondInfo), .failure())
+      XCTAssertLockFailure(strategy.canLock(id: id, info: secondInfo))
       strategy.cleanUp()
     }
   }
@@ -221,7 +221,7 @@ final class LockmanPriorityBasedStrategyTests: XCTestCase {
 
     XCTAssertEqual(strategy.canLock(id: id, info: info), .success)
     strategy.lock(id: id, info: info)
-    XCTAssertEqual(strategy.canLock(id: id, info: info), .failure())
+    XCTAssertLockFailure(strategy.canLock(id: id, info: info))
 
     strategy.unlock(id: id, info: info)
     XCTAssertEqual(strategy.canLock(id: id, info: info), .success)
@@ -236,7 +236,7 @@ final class LockmanPriorityBasedStrategyTests: XCTestCase {
     strategy.lock(id: id, info: highInfo)
     strategy.unlock(id: id, info: noneInfo) // Should not affect state
 
-    XCTAssertEqual(strategy.canLock(id: id, info: highInfo), .failure())
+    XCTAssertLockFailure(strategy.canLock(id: id, info: highInfo))
 
     strategy.unlock(id: id, info: highInfo)
   }
@@ -257,7 +257,7 @@ final class LockmanPriorityBasedStrategyTests: XCTestCase {
     // Unlock only affects specific boundary
     strategy.unlock(id: id1, info: info)
     XCTAssertEqual(strategy.canLock(id: id1, info: info), .success)
-    XCTAssertEqual(strategy.canLock(id: id2, info: info), .failure())
+    XCTAssertLockFailure(strategy.canLock(id: id2, info: info))
 
     strategy.cleanUp()
   }
@@ -291,7 +291,7 @@ final class LockmanPriorityBasedStrategyTests: XCTestCase {
     strategy.cleanUp(id: id1)
 
     XCTAssertEqual(strategy.canLock(id: id1, info: info), .success)
-    XCTAssertEqual(strategy.canLock(id: id2, info: info), .failure())
+    XCTAssertLockFailure(strategy.canLock(id: id2, info: info))
 
     strategy.cleanUp()
   }
@@ -316,7 +316,7 @@ final class LockmanPriorityBasedStrategyTests: XCTestCase {
     strategy.lock(id: id, info: highInfo)
 
     // Low priority now fails against high priority
-    XCTAssertEqual(strategy.canLock(id: id, info: lowInfo), .failure())
+    XCTAssertLockFailure(strategy.canLock(id: id, info: lowInfo))
 
     strategy.cleanUp()
   }
@@ -432,7 +432,7 @@ final class LockmanPriorityBasedStrategyTests: XCTestCase {
     strategy.lock(id: id, info: lowExclusive)
 
     // Now replaceable cannot replace exclusive
-    XCTAssertEqual(strategy.canLock(id: id, info: lowReplaceable), .failure())
+    XCTAssertLockFailure(strategy.canLock(id: id, info: lowReplaceable))
 
     strategy.cleanUp()
   }
@@ -451,15 +451,15 @@ final class LockmanPriorityBasedStrategyTests: XCTestCase {
 
     // Second action with same actionId should fail regardless of priority
     let info2 = TestInfoFactory.highReplaceable(actionId)
-    XCTAssertEqual(strategy.canLock(id: id, info: info2), .failure())
+    XCTAssertLockFailure(strategy.canLock(id: id, info: info2))
 
     // Even with lower priority, should fail
     let info3 = TestInfoFactory.lowExclusive(actionId)
-    XCTAssertEqual(strategy.canLock(id: id, info: info3), .failure())
+    XCTAssertLockFailure(strategy.canLock(id: id, info: info3))
 
     // Different actionId should work normally
     let info4 = TestInfoFactory.highExclusive("different")
-    XCTAssertEqual(strategy.canLock(id: id, info: info4), .failure()) // Normal priority rule applies
+    XCTAssertLockFailure(strategy.canLock(id: id, info: info4)) // Normal priority rule applies
 
     strategy.cleanUp()
   }
@@ -475,7 +475,7 @@ final class LockmanPriorityBasedStrategyTests: XCTestCase {
 
     // Second action with blocksSameAction = true and same actionId should fail
     let info2 = TestInfoFactory.highExclusive(actionId, blocksSameAction: true)
-    XCTAssertEqual(strategy.canLock(id: id, info: info2), .failure())
+    XCTAssertLockFailure(strategy.canLock(id: id, info: info2))
 
     strategy.cleanUp()
   }
@@ -513,8 +513,8 @@ final class LockmanPriorityBasedStrategyTests: XCTestCase {
     strategy.lock(id: id2, info: info2)
 
     // But same actionId on same boundary should fail
-    XCTAssertEqual(strategy.canLock(id: id1, info: info2), .failure())
-    XCTAssertEqual(strategy.canLock(id: id2, info: info1), .failure())
+    XCTAssertLockFailure(strategy.canLock(id: id1, info: info2))
+    XCTAssertLockFailure(strategy.canLock(id: id2, info: info1))
 
     strategy.cleanUp()
   }
@@ -530,7 +530,7 @@ final class LockmanPriorityBasedStrategyTests: XCTestCase {
 
     // High priority with same actionId should fail despite higher priority
     let highNormal = TestInfoFactory.highReplaceable(actionId)
-    XCTAssertEqual(strategy.canLock(id: id, info: highNormal), .failure())
+    XCTAssertLockFailure(strategy.canLock(id: id, info: highNormal))
 
     // Unlock the blocking action
     strategy.unlock(id: id, info: lowBlocking)
@@ -540,7 +540,7 @@ final class LockmanPriorityBasedStrategyTests: XCTestCase {
     strategy.lock(id: id, info: highNormal)
 
     // Low priority blocking should now fail (normal priority rules)
-    XCTAssertEqual(strategy.canLock(id: id, info: lowBlocking), .failure())
+    XCTAssertLockFailure(strategy.canLock(id: id, info: lowBlocking))
 
     strategy.cleanUp()
   }
@@ -560,13 +560,13 @@ final class LockmanPriorityBasedStrategyTests: XCTestCase {
     strategy.lock(id: id, info: payment1)
 
     // Payment2 should fail
-    XCTAssertEqual(strategy.canLock(id: id, info: payment2), .failure())
+    XCTAssertLockFailure(strategy.canLock(id: id, info: payment2))
 
     // Search1 should succeed (different actionId)
-    XCTAssertEqual(strategy.canLock(id: id, info: search1), .failure()) // Normal priority rule (same high priority, exclusive behavior)
+    XCTAssertLockFailure(strategy.canLock(id: id, info: search1)) // Normal priority rule (same high priority, exclusive behavior)
 
     // Update1 should succeed (different actionId, despite blocksSameAction)
-    XCTAssertEqual(strategy.canLock(id: id, info: update1), .failure()) // Normal priority rule (lower priority)
+    XCTAssertLockFailure(strategy.canLock(id: id, info: update1)) // Normal priority rule (lower priority)
 
     strategy.unlock(id: id, info: payment1)
 
@@ -574,7 +574,7 @@ final class LockmanPriorityBasedStrategyTests: XCTestCase {
     strategy.lock(id: id, info: search1)
 
     // Search2 with blocksSameAction should fail
-    XCTAssertEqual(strategy.canLock(id: id, info: search2), .failure())
+    XCTAssertLockFailure(strategy.canLock(id: id, info: search2))
 
     strategy.cleanUp()
   }

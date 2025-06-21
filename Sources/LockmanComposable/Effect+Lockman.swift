@@ -20,6 +20,14 @@ public extension Effect {
   ///   - cancelID: Unique identifier for effect cancellation and lock boundary
   ///   - fileID, filePath, line, column: Source location for debugging (auto-populated)
   /// - Returns: Effect that executes under lock protection, or `.none` if lock acquisition fails
+  ///
+  /// ## Error Handling
+  /// If lock acquisition fails and a catch handler is provided, the handler will receive
+  /// the lock acquisition error. Error types include:
+  /// - `LockmanSingleExecutionError`: Single execution conflicts
+  /// - `LockmanPriorityBasedError`: Priority-based conflicts
+  /// - `LockmanDynamicConditionError`: Dynamic condition failures
+  /// - `LockmanGroupCoordinationError`: Group coordination conflicts
   static func withLock<B: LockmanBoundaryId, A: LockmanAction>(
     priority: TaskPriority? = nil,
     unlockOption: UnlockOption? = nil,
@@ -41,7 +49,8 @@ public extension Effect {
       fileID: fileID,
       filePath: filePath,
       line: line,
-      column: column
+      column: column,
+      handler: handler
     ) { unlockToken in
       .run(
         priority: priority,
@@ -92,10 +101,16 @@ public extension Effect {
   ///   - unlockOption: Controls when the unlock operation is executed (default: configuration value)
   ///   - operation: Async closure receiving `send` and `unlock` functions
   ///   - handler: Optional error handler receiving error, send, and unlock functions
+  ///   - lockFailure: Optional handler for lock acquisition failures
   ///   - action: LockmanAction providing lock information and strategy type
   ///   - cancelID: Unique identifier for effect cancellation and lock boundary
   ///   - fileID, filePath, line, column: Source location for debugging (auto-populated)
   /// - Returns: Effect that executes under lock protection, or `.none` if lock acquisition fails
+  ///
+  /// ## Error Handling
+  /// This method supports two types of error handlers:
+  /// - `catch handler`: For errors that occur during operation execution (has unlock token)
+  /// - `lockFailure`: For lock acquisition failures (no unlock token needed)
   static func withLock<B: LockmanBoundaryId, A: LockmanAction>(
     priority: TaskPriority? = nil,
     unlockOption: UnlockOption? = nil,
@@ -108,6 +123,9 @@ public extension Effect {
         _ unlock: LockmanUnlock<B, A.I>
       ) async -> Void
     )? = nil,
+    lockFailure: (
+      @Sendable (_ error: any Error, _ send: Send<Action>) async -> Void
+    )? = nil,
     action: A,
     cancelID: B,
     fileID: StaticString = #fileID,
@@ -115,6 +133,7 @@ public extension Effect {
     line: UInt = #line,
     column: UInt = #column
   ) -> Self {
+    // Pass the lockFailure handler to withLockCommon for lock acquisition errors
     withLockCommon(
       action: action,
       cancelID: cancelID,
@@ -122,7 +141,8 @@ public extension Effect {
       fileID: fileID,
       filePath: filePath,
       line: line,
-      column: column
+      column: column,
+      handler: lockFailure  // Use the dedicated lock failure handler
     ) { unlockToken in
       .run(
         priority: priority,
@@ -177,6 +197,7 @@ public extension Effect {
   /// - Parameters:
   ///   - unlockOption: Controls when the unlock operation is executed (default: configuration value)
   ///   - operations: Array of effects to execute sequentially while lock is held
+  ///   - lockFailure: Optional handler for lock acquisition failures
   ///   - action: LockmanAction providing lock information and strategy type
   ///   - cancelID: Unique identifier for effect cancellation and lock boundary
   ///   - fileID, filePath, line, column: Source location for debugging (auto-populated)
@@ -184,6 +205,7 @@ public extension Effect {
   static func concatenateWithLock<B: LockmanBoundaryId, A: LockmanAction>(
     unlockOption: UnlockOption? = nil,
     operations: [Effect<Action>],
+    lockFailure: (@Sendable (_ error: any Error, _ send: Send<Action>) async -> Void)? = nil,
     action: A,
     cancelID: B,
     fileID: StaticString = #fileID,
@@ -224,7 +246,8 @@ public extension Effect {
         lockmanInfo: lockmanInfo,
         strategy: strategy,
         cancelID: cancelID,
-        effect: builtEffect
+        effect: builtEffect,
+        catchHandler: lockFailure
       )
 
     } catch {
@@ -287,6 +310,7 @@ internal extension Effect {
     filePath: StaticString,
     line: UInt,
     column: UInt,
+    handler: (@Sendable (_ error: any Error, _ send: Send<Action>) async -> Void)? = nil,
     effectBuilder: @escaping (LockmanUnlock<B, A.I>) -> Effect<Action>
   ) -> Effect<Action> {
     do {
@@ -310,7 +334,8 @@ internal extension Effect {
         lockmanInfo: lockmanInfo,
         strategy: strategy,
         cancelID: cancelID,
-        effect: effectBuilder(unlockToken)
+        effect: effectBuilder(unlockToken),
+        catchHandler: handler
       )
 
     } catch {
@@ -365,7 +390,8 @@ internal extension Effect {
     lockmanInfo: I,
     strategy: AnyLockmanStrategy<I>,
     cancelID: B,
-    effect: Effect<Action>
+    effect: Effect<Action>,
+    catchHandler: (@Sendable (_ error: any Error, _ send: Send<Action>) async -> Void)? = nil
   ) -> Effect<Action> {
     Lockman.withBoundaryLock(for: cancelID) {
       // Check if lock can be acquired
@@ -375,7 +401,14 @@ internal extension Effect {
       )
 
       // Early exit if lock cannot be acquired
-      guard result != .failure() else {
+      if case .failure(let error) = result {
+        // If there's a catch handler, run it with the error
+        if let handler = catchHandler {
+          return .run { send in
+            await handler(error, send)
+          }
+        }
+        // Otherwise return .none
         return .none
       }
 
@@ -437,8 +470,8 @@ internal extension Effect {
     line: UInt,
     column: UInt
   ) {
-    // Check if the error is a known LockmanError type
-    if let error = error as? LockmanError {
+    // Check if the error is a known LockmanRegistrationError type
+    if let error = error as? LockmanRegistrationError {
       switch error {
       case let .strategyNotRegistered(strategyType):
         reportIssue(

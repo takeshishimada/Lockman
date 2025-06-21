@@ -257,7 +257,7 @@ final class LockmanPriorityBasedActionTests: XCTestCase {
       do {
         _ = try emptyContainer.resolve(action.strategyType)
         XCTFail("Expected error to be thrown")
-      } catch is LockmanError {
+      } catch is LockmanRegistrationError {
         // Expected error
       } catch {
         XCTFail("Unexpected error type: \(error)")
@@ -274,7 +274,7 @@ final class LockmanPriorityBasedActionTests: XCTestCase {
       do {
         _ = try emptyContainer.resolve(action.strategyType)
         XCTFail("Should have thrown an error")
-      } catch let error as LockmanError {
+      } catch let error as LockmanRegistrationError {
         if case let .strategyNotRegistered(strategyName) = error {
           XCTAssertTrue(strategyName.contains("LockmanPriorityBasedStrategy"))
         } else {

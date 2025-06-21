@@ -265,7 +265,7 @@ final class LockmanSingleExecutionInfoIntegrationTests: XCTestCase {
     strategy.lock(id: boundaryId, info: info1)
 
     // Different action should fail (boundary is locked)
-    XCTAssertEqual(strategy.canLock(id: boundaryId, info: info2), .failure())
+    XCTAssertLockFailure(strategy.canLock(id: boundaryId, info: info2))
 
     // Unlock first
     strategy.unlock(id: boundaryId, info: info1)
@@ -293,7 +293,7 @@ final class LockmanSingleExecutionInfoIntegrationTests: XCTestCase {
     XCTAssertEqual(strategy.canLock(id: boundaryId2, info: stringInfo), .success)
 
     // Any action on same boundary should fail
-    XCTAssertEqual(strategy.canLock(id: boundaryId1, info: stringInfo), .failure())
+    XCTAssertLockFailure(strategy.canLock(id: boundaryId1, info: stringInfo))
 
     // Cleanup one boundary
     strategy.cleanUp(id: boundaryId1)

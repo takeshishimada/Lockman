@@ -114,7 +114,7 @@ public final class LockmanGroupCoordinationStrategy: LockmanStrategy, @unchecked
         if groupState?.activeMembers[info.actionId] != nil {
           // Same action ID cannot be executed twice in the same group
           failureReason = "Action '\(info.actionId)' is already active in group '\(groupId)'"
-          return .failure()
+          return .failure(LockmanGroupCoordinationError.actionAlreadyInGroup(actionId: info.actionId, groupIds: Set([groupId])))
         }
 
         // Apply role-based rules
@@ -123,14 +123,14 @@ public final class LockmanGroupCoordinationStrategy: LockmanStrategy, @unchecked
           // Leaders can only start when group is empty
           if groupState != nil, !groupState!.isEmpty {
             failureReason = "Leader cannot start: group '\(groupId)' already has active members"
-            return .failure()
+            return .failure(LockmanGroupCoordinationError.leaderCannotJoinNonEmptyGroup(groupIds: Set([groupId])))
           }
 
         case .member:
           // Members can only join when group has active participants
           if groupState == nil || groupState!.isEmpty {
             failureReason = "Member cannot join: group '\(groupId)' has no active participants"
-            return .failure()
+            return .failure(LockmanGroupCoordinationError.memberCannotJoinEmptyGroup(groupIds: Set([groupId])))
           }
         }
       }

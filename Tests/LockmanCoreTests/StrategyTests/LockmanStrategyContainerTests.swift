@@ -215,7 +215,7 @@ final class LockmanStrategyContainerTests: XCTestCase {
   func testResolveUnregisteredStrategyThrowsError() {
     let container = LockmanStrategyContainer()
 
-    XCTAssertTrue(throws: LockmanError.self) {
+    XCTAssertTrue(throws: LockmanRegistrationError.self) {
       _ = try container.resolve(MockLockmanStrategy.self)
     }
   }
@@ -226,7 +226,7 @@ final class LockmanStrategyContainerTests: XCTestCase {
     do {
       _ = try container.resolve(MockLockmanStrategy.self)
       XCTFail("Should have thrown an error")
-    } catch let error as LockmanError {
+    } catch let error as LockmanRegistrationError {
       switch error {
       case let .strategyNotRegistered(strategyType):
         XCTAssertTrue(strategyType.contains("MockLockmanStrategy"))
@@ -234,7 +234,7 @@ final class LockmanStrategyContainerTests: XCTestCase {
         XCTFail("Wrong error type")
       }
     } catch {
-      XCTFail("Should have thrown LockmanError")
+      XCTFail("Should have thrown LockmanRegistrationError")
     }
   }
 
@@ -245,7 +245,7 @@ final class LockmanStrategyContainerTests: XCTestCase {
 
     try container.register(strategy1)
 
-    XCTAssertTrue(throws: LockmanError.self) {
+    XCTAssertTrue(throws: LockmanRegistrationError.self) {
       try container.register(strategy2)
     }
   }
@@ -260,7 +260,7 @@ final class LockmanStrategyContainerTests: XCTestCase {
     do {
       try container.register(strategy2)
       XCTFail("Should have thrown an error")
-    } catch let error as LockmanError {
+    } catch let error as LockmanRegistrationError {
       switch error {
       case let .strategyAlreadyRegistered(strategyType):
         XCTAssertTrue(strategyType.contains("MockLockmanStrategy"))
@@ -268,7 +268,7 @@ final class LockmanStrategyContainerTests: XCTestCase {
         XCTFail("Wrong error type")
       }
     } catch {
-      XCTFail("Should have thrown LockmanError")
+      XCTFail("Should have thrown LockmanRegistrationError")
     }
   }
 
@@ -678,7 +678,7 @@ final class LockmanStrategyContainerPerformanceTests: XCTestCase {
         try container.register(strategy)
       } else {
         // These should all fail
-        XCTAssertTrue(throws: LockmanError.self) {
+        XCTAssertTrue(throws: LockmanRegistrationError.self) {
           try container.register(strategy)
         }
       }

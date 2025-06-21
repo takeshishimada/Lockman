@@ -18,7 +18,7 @@ final class LockmanCompositeBasicTests: XCTestCase {
     // Test basic lock workflow
     XCTAssertEqual(composite.canLock(id: boundaryId, info: info), .success)
     composite.lock(id: boundaryId, info: info)
-    XCTAssertEqual(composite.canLock(id: boundaryId, info: info), .failure())
+    XCTAssertLockFailure(composite.canLock(id: boundaryId, info: info))
     composite.unlock(id: boundaryId, info: info)
     XCTAssertEqual(composite.canLock(id: boundaryId, info: info), .success)
 
@@ -47,7 +47,7 @@ final class LockmanCompositeBasicTests: XCTestCase {
     // Test basic lock workflow
     XCTAssertEqual(composite.canLock(id: boundaryId, info: info), .success)
     composite.lock(id: boundaryId, info: info)
-    XCTAssertEqual(composite.canLock(id: boundaryId, info: info), .failure())
+    XCTAssertLockFailure(composite.canLock(id: boundaryId, info: info))
     composite.unlock(id: boundaryId, info: info)
     XCTAssertEqual(composite.canLock(id: boundaryId, info: info), .success)
 
@@ -122,7 +122,7 @@ final class LockmanCompositeBasicTests: XCTestCase {
 
     // Lock and verify it's active
     composite.lock(id: boundaryId, info: info)
-    XCTAssertEqual(composite.canLock(id: boundaryId, info: info), .failure())
+    XCTAssertLockFailure(composite.canLock(id: boundaryId, info: info))
 
     // Global cleanup
     composite.cleanUp()
