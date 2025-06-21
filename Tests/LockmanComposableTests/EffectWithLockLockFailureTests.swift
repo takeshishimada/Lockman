@@ -37,7 +37,6 @@ final class EffectWithLockLockFailureTests: XCTestCase {
       case unlockCalled
     }
     
-    @Dependency(\.continuousClock) var clock
     
     var body: some ReducerOf<Self> {
       Reduce { state, action in
@@ -76,9 +75,7 @@ final class EffectWithLockLockFailureTests: XCTestCase {
               defer { 
                 unlock()
               }
-              Task {
-                await send(.unlockCalled)
-              }
+              await send(.unlockCalled)
               // Simulate operation error
               struct TestError: Error {}
               throw TestError()
