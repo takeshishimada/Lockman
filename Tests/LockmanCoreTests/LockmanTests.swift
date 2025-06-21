@@ -9,7 +9,7 @@ extension AnyLockmanStrategy {
   func checkAndLock<B: LockmanBoundaryId>(
     id: B,
     info: I
-  ) -> LockResult {
+  ) -> LockmanResult {
     let result = canLock(id: id, info: info)
     switch result {
     case .success:
@@ -56,7 +56,7 @@ private final class MockLockmanStrategy: LockmanStrategy, @unchecked Sendable {
   func canLock<B: LockmanBoundaryId>(
     id _: B,
     info _: MockLockmanInfo
-  ) -> LockResult {
+  ) -> LockmanResult {
     .success
   }
 
@@ -407,8 +407,8 @@ final class LockmanFacadeTests: XCTestCase {
       XCTAssertEqual(result, .success)
 
       // Test individual operations
-      let canLockResult  = resolvedStrategy.canLock(id: boundaryId, info: info)
-      XCTAssertEqual(canLockResult, .success)
+      let canLockmanResult  = resolvedStrategy.canLock(id: boundaryId, info: info)
+      XCTAssertEqual(canLockmanResult, .success)
 
       resolvedStrategy.lock(id: boundaryId, info: info)
       resolvedStrategy.unlock(id: boundaryId, info: info)

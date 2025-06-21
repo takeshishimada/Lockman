@@ -83,8 +83,8 @@ public final class LockmanSingleExecutionStrategy: LockmanStrategy, @unchecked S
   public func canLock<B: LockmanBoundaryId>(
     id: B,
     info: LockmanSingleExecutionInfo
-  ) -> LockResult {
-    let result: LockResult
+  ) -> LockmanResult {
+    let result: LockmanResult
     var failureReason: String?
 
     switch info.mode {

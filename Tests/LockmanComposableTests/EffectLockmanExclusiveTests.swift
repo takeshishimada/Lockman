@@ -172,8 +172,8 @@ final class DeadlockPreventionTests: XCTestCase {
       let info = LockmanSingleExecutionInfo(actionId: "test", mode: .boundary)
 
       // Check if we can acquire lock
-      let canLockResult = strategy.canLock(id: id, info: info)
-      XCTAssertEqual(canLockResult, .success)
+      let canLockmanResult = strategy.canLock(id: id, info: info)
+      XCTAssertEqual(canLockmanResult, .success)
 
       // Acquire lock through strategy
       strategy.lock(id: id, info: info)
@@ -184,8 +184,8 @@ final class DeadlockPreventionTests: XCTestCase {
       unlock()
 
       // Verify that lock can be acquired again after unlock
-      let secondCanLockResult = strategy.canLock(id: id, info: info)
-      XCTAssertEqual(secondCanLockResult, .success)
+      let secondCanLockmanResult = strategy.canLock(id: id, info: info)
+      XCTAssertEqual(secondCanLockmanResult, .success)
 
       // Acquire and cleanup
       strategy.lock(id: id, info: info)

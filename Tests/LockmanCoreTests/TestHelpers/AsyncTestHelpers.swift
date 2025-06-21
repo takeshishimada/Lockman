@@ -219,8 +219,8 @@ func XCTAssertTrue<E: Error>(throws errorType: E.Type, _ block: () throws -> Voi
     }
 }
 
-/// Custom assertion to check if LockResult is a failure (with or without error)
-func XCTAssertLockFailure(_ result: LockResult, _ message: String = "", file: StaticString = #file, line: UInt = #line) {
+/// Custom assertion to check if LockmanResult is a failure (with or without error)
+func XCTAssertLockFailure(_ result: LockmanResult, _ message: String = "", file: StaticString = #file, line: UInt = #line) {
     if case .failure = result {
         // Success - it's a failure as expected
     } else {
@@ -229,8 +229,8 @@ func XCTAssertLockFailure(_ result: LockResult, _ message: String = "", file: St
     }
 }
 
-/// Custom assertion to check if LockResult equals the expected result
-func XCTAssertLockResult(_ actual: LockResult, _ expected: LockResult, _ message: String = "", file: StaticString = #file, line: UInt = #line) {
+/// Custom assertion to check if LockmanResult equals the expected result
+func XCTAssertLockmanResult(_ actual: LockmanResult, _ expected: LockmanResult, _ message: String = "", file: StaticString = #file, line: UInt = #line) {
     switch (actual, expected) {
     case (.success, .success):
         // Both success

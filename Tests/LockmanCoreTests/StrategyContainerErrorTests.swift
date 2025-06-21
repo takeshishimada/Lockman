@@ -10,7 +10,7 @@ final class StrategyContainerErrorTests: XCTestCase {
     typealias I = LockmanSingleExecutionInfo
     var strategyId: LockmanStrategyId { LockmanStrategyId(type: Self.self) }
     static func makeStrategyId() -> LockmanStrategyId { LockmanStrategyId(type: Self.self) }
-    func canLock<B: LockmanBoundaryId>(id _: B, info _: LockmanSingleExecutionInfo) -> LockResult { .success }
+    func canLock<B: LockmanBoundaryId>(id _: B, info _: LockmanSingleExecutionInfo) -> LockmanResult { .success }
     func lock<B: LockmanBoundaryId>(id _: B, info _: LockmanSingleExecutionInfo) {}
     func unlock<B: LockmanBoundaryId>(id _: B, info _: LockmanSingleExecutionInfo) {}
     func cleanUp() {}
@@ -22,7 +22,7 @@ final class StrategyContainerErrorTests: XCTestCase {
     typealias I = LockmanPriorityBasedInfo
     var strategyId: LockmanStrategyId { LockmanStrategyId(type: Self.self) }
     static func makeStrategyId() -> LockmanStrategyId { LockmanStrategyId(type: Self.self) }
-    func canLock<B: LockmanBoundaryId>(id _: B, info _: LockmanPriorityBasedInfo) -> LockResult { .success }
+    func canLock<B: LockmanBoundaryId>(id _: B, info _: LockmanPriorityBasedInfo) -> LockmanResult { .success }
     func lock<B: LockmanBoundaryId>(id _: B, info _: LockmanPriorityBasedInfo) {}
     func unlock<B: LockmanBoundaryId>(id _: B, info _: LockmanPriorityBasedInfo) {}
     func cleanUp() {}
@@ -34,7 +34,7 @@ final class StrategyContainerErrorTests: XCTestCase {
     typealias I = LockmanSingleExecutionInfo
     var strategyId: LockmanStrategyId { LockmanStrategyId(type: Self.self) }
     static func makeStrategyId() -> LockmanStrategyId { LockmanStrategyId(type: Self.self) }
-    func canLock<B: LockmanBoundaryId>(id _: B, info _: LockmanSingleExecutionInfo) -> LockResult { .success }
+    func canLock<B: LockmanBoundaryId>(id _: B, info _: LockmanSingleExecutionInfo) -> LockmanResult { .success }
     func lock<B: LockmanBoundaryId>(id _: B, info _: LockmanSingleExecutionInfo) {}
     func unlock<B: LockmanBoundaryId>(id _: B, info _: LockmanSingleExecutionInfo) {}
     func cleanUp() {}

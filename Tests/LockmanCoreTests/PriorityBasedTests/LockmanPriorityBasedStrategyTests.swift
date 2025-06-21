@@ -353,7 +353,7 @@ final class LockmanPriorityBasedStrategyTests: XCTestCase {
     let strategy = LockmanPriorityBasedStrategy()
     let id = TestBoundaryId.concurrent
 
-    let results = await withTaskGroup(of: LockResult.self, returning: [LockResult].self) { group in
+    let results = await withTaskGroup(of: LockmanResult.self, returning: [LockmanResult].self) { group in
       // Launch 10 concurrent lock attempts with different action IDs
       for i in 0 ..< 10 {
         group.addTask {
@@ -362,7 +362,7 @@ final class LockmanPriorityBasedStrategyTests: XCTestCase {
         }
       }
 
-      var results: [LockResult] = []
+      var results: [LockmanResult] = []
       for await result in group {
         results.append(result)
       }
@@ -380,7 +380,7 @@ final class LockmanPriorityBasedStrategyTests: XCTestCase {
     let strategy = LockmanPriorityBasedStrategy()
     let id = TestBoundaryId.concurrent
 
-    let results = await withTaskGroup(of: (String, LockResult).self, returning: [(String, LockResult)].self) { group in
+    let results = await withTaskGroup(of: (String, LockmanResult).self, returning: [(String, LockmanResult)].self) { group in
       group.addTask {
         let info = TestInfoFactory.lowReplaceable("low")
         return ("low", strategy.canLock(id: id, info: info))
@@ -396,7 +396,7 @@ final class LockmanPriorityBasedStrategyTests: XCTestCase {
         return ("none", strategy.canLock(id: id, info: info))
       }
 
-      var results: [(String, LockResult)] = []
+      var results: [(String, LockmanResult)] = []
       for await result in group {
         results.append(result)
       }
