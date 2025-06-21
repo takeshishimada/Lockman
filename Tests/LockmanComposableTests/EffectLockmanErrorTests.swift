@@ -49,7 +49,7 @@ final class EffectLockmanErrorTests: XCTestCase {
 
     static func makeStrategyId() -> LockmanStrategyId { LockmanStrategyId("MockUnregisteredStrategy") }
 
-    func canLock<B: LockmanBoundaryId>(id _: B, info _: LockmanSingleExecutionInfo) -> LockResult {
+    func canLock<B: LockmanBoundaryId>(id _: B, info _: LockmanSingleExecutionInfo) -> LockmanResult {
       .success
     }
 

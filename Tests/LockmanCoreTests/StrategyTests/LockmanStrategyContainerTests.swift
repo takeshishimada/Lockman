@@ -54,7 +54,7 @@ private class MockLockmanStrategy: LockmanStrategy, @unchecked Sendable {
     self.identifier = identifier
   }
 
-  func canLock<B: LockmanBoundaryId>(id _: B, info _: MockLockmanInfo) -> LockResult {
+  func canLock<B: LockmanBoundaryId>(id _: B, info _: MockLockmanInfo) -> LockmanResult {
     .success
   }
 
@@ -124,7 +124,7 @@ private final class AnotherMockLockmanStrategy: LockmanStrategy, @unchecked Send
     self.identifier = identifier
   }
 
-  func canLock<B: LockmanBoundaryId>(id _: B, info _: AnotherMockLockmanInfo) -> LockResult {
+  func canLock<B: LockmanBoundaryId>(id _: B, info _: AnotherMockLockmanInfo) -> LockmanResult {
     .success
   }
 

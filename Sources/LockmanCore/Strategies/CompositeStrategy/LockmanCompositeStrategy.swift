@@ -64,7 +64,7 @@ public final class LockmanCompositeStrategy2<
   public func canLock<B: LockmanBoundaryId>(
     id: B,
     info: LockmanCompositeInfo2<I1, I2>
-  ) -> LockResult {
+  ) -> LockmanResult {
     let result1 = strategy1.canLock(id: id, info: info.lockmanInfoForStrategy1)
     let result2 = strategy2.canLock(id: id, info: info.lockmanInfoForStrategy2)
 
@@ -153,9 +153,9 @@ public final class LockmanCompositeStrategy2<
   /// Coordinates the results from multiple strategies according to composite logic.
   ///
   /// - Parameters:
-  ///   - results: Variable number of `LockResult` values from component strategies
+  ///   - results: Variable number of `LockmanResult` values from component strategies
   /// - Returns: The coordinated result following composite strategy rules
-  private func coordinateResults(_ results: LockResult...) -> LockResult {
+  private func coordinateResults(_ results: LockmanResult...) -> LockmanResult {
     // If any strategy failed, the entire operation fails
     // Return the first failure with its error
     for result in results {
@@ -225,7 +225,7 @@ public final class LockmanCompositeStrategy3<
   public func canLock<B: LockmanBoundaryId>(
     id: B,
     info: LockmanCompositeInfo3<I1, I2, I3>
-  ) -> LockResult {
+  ) -> LockmanResult {
     let result1 = strategy1.canLock(id: id, info: info.lockmanInfoForStrategy1)
     let result2 = strategy2.canLock(id: id, info: info.lockmanInfoForStrategy2)
     let result3 = strategy3.canLock(id: id, info: info.lockmanInfoForStrategy3)
@@ -318,7 +318,7 @@ public final class LockmanCompositeStrategy3<
 
   // MARK: - Private Helpers
 
-  private func coordinateResults(_ results: LockResult...) -> LockResult {
+  private func coordinateResults(_ results: LockmanResult...) -> LockmanResult {
     // If any strategy failed, return the first failure with its error
     for result in results {
       if case .failure(let error) = result {
@@ -379,7 +379,7 @@ public final class LockmanCompositeStrategy4<
   public func canLock<B: LockmanBoundaryId>(
     id: B,
     info: LockmanCompositeInfo4<I1, I2, I3, I4>
-  ) -> LockResult {
+  ) -> LockmanResult {
     let result1 = strategy1.canLock(id: id, info: info.lockmanInfoForStrategy1)
     let result2 = strategy2.canLock(id: id, info: info.lockmanInfoForStrategy2)
     let result3 = strategy3.canLock(id: id, info: info.lockmanInfoForStrategy3)
@@ -484,7 +484,7 @@ public final class LockmanCompositeStrategy4<
 
   // MARK: - Private Helpers
 
-  private func coordinateResults(_ results: LockResult...) -> LockResult {
+  private func coordinateResults(_ results: LockmanResult...) -> LockmanResult {
     // If any strategy failed, return the first failure with its error
     for result in results {
       if case .failure(let error) = result {
@@ -554,7 +554,7 @@ public final class LockmanCompositeStrategy5<
   public func canLock<B: LockmanBoundaryId>(
     id: B,
     info: LockmanCompositeInfo5<I1, I2, I3, I4, I5>
-  ) -> LockResult {
+  ) -> LockmanResult {
     let result1 = strategy1.canLock(id: id, info: info.lockmanInfoForStrategy1)
     let result2 = strategy2.canLock(id: id, info: info.lockmanInfoForStrategy2)
     let result3 = strategy3.canLock(id: id, info: info.lockmanInfoForStrategy3)
@@ -672,7 +672,7 @@ public final class LockmanCompositeStrategy5<
 
   // MARK: - Private Helpers
 
-  private func coordinateResults(_ results: LockResult...) -> LockResult {
+  private func coordinateResults(_ results: LockmanResult...) -> LockmanResult {
     // If any strategy failed, return the first failure with its error
     for result in results {
       if case .failure(let error) = result {
