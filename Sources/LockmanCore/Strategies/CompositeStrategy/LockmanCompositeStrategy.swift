@@ -65,31 +65,41 @@ public final class LockmanCompositeStrategy2<
     id: B,
     info: LockmanCompositeInfo2<I1, I2>
   ) -> LockResult {
+    // Early return pattern for performance optimization
     let result1 = strategy1.canLock(id: id, info: info.lockmanInfoForStrategy1)
-    let result2 = strategy2.canLock(id: id, info: info.lockmanInfoForStrategy2)
-
-    let result = coordinateResults(result1, result2)
-
-    let failureReason: String?
-    if case .failure = result {
-      var failedStrategies: [String] = []
-      if case .failure = result1 {
-        failedStrategies.append("Strategy1")
-      }
-      if case .failure = result2 {
-        failedStrategies.append("Strategy2")
-      }
-      failureReason = "Failed strategies: \(failedStrategies.joined(separator: ", "))"
-    } else {
-      failureReason = nil
+    if case .failure(let error) = result1 {
+      let result = LockResult.failure(error)
+      LockmanLogger.shared.logCanLock(
+        result: result,
+        strategy: "Composite",
+        boundaryId: String(describing: id),
+        info: info,
+        reason: "Strategy1 failed"
+      )
+      return result
     }
 
+    let result2 = strategy2.canLock(id: id, info: info.lockmanInfoForStrategy2)
+    if case .failure(let error) = result2 {
+      let result = LockResult.failure(error)
+      LockmanLogger.shared.logCanLock(
+        result: result,
+        strategy: "Composite",
+        boundaryId: String(describing: id),
+        info: info,
+        reason: "Strategy2 failed"
+      )
+      return result
+    }
+
+    // Coordinate successful results
+    let result = coordinateResults(result1, result2)
     LockmanLogger.shared.logCanLock(
       result: result,
       strategy: "Composite",
       boundaryId: String(describing: id),
       info: info,
-      reason: failureReason
+      reason: nil
     )
 
     return result
@@ -226,35 +236,54 @@ public final class LockmanCompositeStrategy3<
     id: B,
     info: LockmanCompositeInfo3<I1, I2, I3>
   ) -> LockResult {
+    // Early return pattern for performance optimization
     let result1 = strategy1.canLock(id: id, info: info.lockmanInfoForStrategy1)
-    let result2 = strategy2.canLock(id: id, info: info.lockmanInfoForStrategy2)
-    let result3 = strategy3.canLock(id: id, info: info.lockmanInfoForStrategy3)
-
-    let result = coordinateResults(result1, result2, result3)
-
-    let failureReason: String?
-    if case .failure = result {
-      var failedStrategies: [String] = []
-      if case .failure = result1 {
-        failedStrategies.append("Strategy1")
-      }
-      if case .failure = result2 {
-        failedStrategies.append("Strategy2")
-      }
-      if case .failure = result3 {
-        failedStrategies.append("Strategy3")
-      }
-      failureReason = "Failed strategies: \(failedStrategies.joined(separator: ", "))"
-    } else {
-      failureReason = nil
+    if case .failure(let error) = result1 {
+      let result = LockResult.failure(error)
+      LockmanLogger.shared.logCanLock(
+        result: result,
+        strategy: "Composite",
+        boundaryId: String(describing: id),
+        info: info,
+        reason: "Strategy1 failed"
+      )
+      return result
     }
 
+    let result2 = strategy2.canLock(id: id, info: info.lockmanInfoForStrategy2)
+    if case .failure(let error) = result2 {
+      let result = LockResult.failure(error)
+      LockmanLogger.shared.logCanLock(
+        result: result,
+        strategy: "Composite",
+        boundaryId: String(describing: id),
+        info: info,
+        reason: "Strategy2 failed"
+      )
+      return result
+    }
+
+    let result3 = strategy3.canLock(id: id, info: info.lockmanInfoForStrategy3)
+    if case .failure(let error) = result3 {
+      let result = LockResult.failure(error)
+      LockmanLogger.shared.logCanLock(
+        result: result,
+        strategy: "Composite",
+        boundaryId: String(describing: id),
+        info: info,
+        reason: "Strategy3 failed"
+      )
+      return result
+    }
+
+    // Coordinate successful results
+    let result = coordinateResults(result1, result2, result3)
     LockmanLogger.shared.logCanLock(
       result: result,
       strategy: "Composite",
       boundaryId: String(describing: id),
       info: info,
-      reason: failureReason
+      reason: nil
     )
 
     return result
@@ -380,39 +409,67 @@ public final class LockmanCompositeStrategy4<
     id: B,
     info: LockmanCompositeInfo4<I1, I2, I3, I4>
   ) -> LockResult {
+    // Early return pattern for performance optimization
     let result1 = strategy1.canLock(id: id, info: info.lockmanInfoForStrategy1)
-    let result2 = strategy2.canLock(id: id, info: info.lockmanInfoForStrategy2)
-    let result3 = strategy3.canLock(id: id, info: info.lockmanInfoForStrategy3)
-    let result4 = strategy4.canLock(id: id, info: info.lockmanInfoForStrategy4)
-
-    let result = coordinateResults(result1, result2, result3, result4)
-
-    let failureReason: String?
-    if case .failure = result {
-      var failedStrategies: [String] = []
-      if case .failure = result1 {
-        failedStrategies.append("Strategy1")
-      }
-      if case .failure = result2 {
-        failedStrategies.append("Strategy2")
-      }
-      if case .failure = result3 {
-        failedStrategies.append("Strategy3")
-      }
-      if case .failure = result4 {
-        failedStrategies.append("Strategy4")
-      }
-      failureReason = "Failed strategies: \(failedStrategies.joined(separator: ", "))"
-    } else {
-      failureReason = nil
+    if case .failure(let error) = result1 {
+      let result = LockResult.failure(error)
+      LockmanLogger.shared.logCanLock(
+        result: result,
+        strategy: "Composite",
+        boundaryId: String(describing: id),
+        info: info,
+        reason: "Strategy1 failed"
+      )
+      return result
     }
 
+    let result2 = strategy2.canLock(id: id, info: info.lockmanInfoForStrategy2)
+    if case .failure(let error) = result2 {
+      let result = LockResult.failure(error)
+      LockmanLogger.shared.logCanLock(
+        result: result,
+        strategy: "Composite",
+        boundaryId: String(describing: id),
+        info: info,
+        reason: "Strategy2 failed"
+      )
+      return result
+    }
+
+    let result3 = strategy3.canLock(id: id, info: info.lockmanInfoForStrategy3)
+    if case .failure(let error) = result3 {
+      let result = LockResult.failure(error)
+      LockmanLogger.shared.logCanLock(
+        result: result,
+        strategy: "Composite",
+        boundaryId: String(describing: id),
+        info: info,
+        reason: "Strategy3 failed"
+      )
+      return result
+    }
+
+    let result4 = strategy4.canLock(id: id, info: info.lockmanInfoForStrategy4)
+    if case .failure(let error) = result4 {
+      let result = LockResult.failure(error)
+      LockmanLogger.shared.logCanLock(
+        result: result,
+        strategy: "Composite",
+        boundaryId: String(describing: id),
+        info: info,
+        reason: "Strategy4 failed"
+      )
+      return result
+    }
+
+    // Coordinate successful results
+    let result = coordinateResults(result1, result2, result3, result4)
     LockmanLogger.shared.logCanLock(
       result: result,
       strategy: "Composite",
       boundaryId: String(describing: id),
       info: info,
-      reason: failureReason
+      reason: nil
     )
 
     return result
@@ -555,43 +612,80 @@ public final class LockmanCompositeStrategy5<
     id: B,
     info: LockmanCompositeInfo5<I1, I2, I3, I4, I5>
   ) -> LockResult {
+    // Early return pattern for performance optimization
     let result1 = strategy1.canLock(id: id, info: info.lockmanInfoForStrategy1)
-    let result2 = strategy2.canLock(id: id, info: info.lockmanInfoForStrategy2)
-    let result3 = strategy3.canLock(id: id, info: info.lockmanInfoForStrategy3)
-    let result4 = strategy4.canLock(id: id, info: info.lockmanInfoForStrategy4)
-    let result5 = strategy5.canLock(id: id, info: info.lockmanInfoForStrategy5)
-
-    let result = coordinateResults(result1, result2, result3, result4, result5)
-
-    let failureReason: String?
-    if case .failure = result {
-      var failedStrategies: [String] = []
-      if case .failure = result1 {
-        failedStrategies.append("Strategy1")
-      }
-      if case .failure = result2 {
-        failedStrategies.append("Strategy2")
-      }
-      if case .failure = result3 {
-        failedStrategies.append("Strategy3")
-      }
-      if case .failure = result4 {
-        failedStrategies.append("Strategy4")
-      }
-      if case .failure = result5 {
-        failedStrategies.append("Strategy5")
-      }
-      failureReason = "Failed strategies: \(failedStrategies.joined(separator: ", "))"
-    } else {
-      failureReason = nil
+    if case .failure(let error) = result1 {
+      let result = LockResult.failure(error)
+      LockmanLogger.shared.logCanLock(
+        result: result,
+        strategy: "Composite",
+        boundaryId: String(describing: id),
+        info: info,
+        reason: "Strategy1 failed"
+      )
+      return result
     }
 
+    let result2 = strategy2.canLock(id: id, info: info.lockmanInfoForStrategy2)
+    if case .failure(let error) = result2 {
+      let result = LockResult.failure(error)
+      LockmanLogger.shared.logCanLock(
+        result: result,
+        strategy: "Composite",
+        boundaryId: String(describing: id),
+        info: info,
+        reason: "Strategy2 failed"
+      )
+      return result
+    }
+
+    let result3 = strategy3.canLock(id: id, info: info.lockmanInfoForStrategy3)
+    if case .failure(let error) = result3 {
+      let result = LockResult.failure(error)
+      LockmanLogger.shared.logCanLock(
+        result: result,
+        strategy: "Composite",
+        boundaryId: String(describing: id),
+        info: info,
+        reason: "Strategy3 failed"
+      )
+      return result
+    }
+
+    let result4 = strategy4.canLock(id: id, info: info.lockmanInfoForStrategy4)
+    if case .failure(let error) = result4 {
+      let result = LockResult.failure(error)
+      LockmanLogger.shared.logCanLock(
+        result: result,
+        strategy: "Composite",
+        boundaryId: String(describing: id),
+        info: info,
+        reason: "Strategy4 failed"
+      )
+      return result
+    }
+
+    let result5 = strategy5.canLock(id: id, info: info.lockmanInfoForStrategy5)
+    if case .failure(let error) = result5 {
+      let result = LockResult.failure(error)
+      LockmanLogger.shared.logCanLock(
+        result: result,
+        strategy: "Composite",
+        boundaryId: String(describing: id),
+        info: info,
+        reason: "Strategy5 failed"
+      )
+      return result
+    }
+
+    // Coordinate successful results
+    let result = coordinateResults(result1, result2, result3, result4, result5)
     LockmanLogger.shared.logCanLock(
       result: result,
       strategy: "Composite",
       boundaryId: String(describing: id),
       info: info,
-      reason: failureReason
+      reason: nil
     )
 
     return result
