@@ -14,6 +14,7 @@ public extension Effect {
   /// - Parameters:
   ///   - priority: Task priority for the underlying `.run` effect (optional)
   ///   - unlockOption: Controls when the unlock operation is executed (default: configuration value)
+  ///   - handleCancellationErrors: Whether to pass CancellationError to catch handler (default: global config)
   ///   - operation: Async closure receiving `send` function for dispatching actions
   ///   - handler: Optional error handler receiving error and send function
   ///   - action: LockmanAction providing lock information and strategy type
@@ -31,6 +32,7 @@ public extension Effect {
   static func withLock<B: LockmanBoundaryId, A: LockmanAction>(
     priority: TaskPriority? = nil,
     unlockOption: UnlockOption? = nil,
+    handleCancellationErrors: Bool? = nil,
     operation: @escaping @Sendable (_ send: Send<Action>) async throws -> Void,
     catch handler: (
       @Sendable (_ error: any Error, _ send: Send<Action>) async -> Void
@@ -67,7 +69,10 @@ public extension Effect {
             // Handle cancellation specially to ensure proper cleanup order
             if error is CancellationError {
               defer { unlockToken() }
-              await handler?(error, send)
+              let shouldHandle = handleCancellationErrors ?? Lockman.config.handleCancellationErrors
+              if shouldHandle {
+                await handler?(error, send)
+              }
               return
             }
             // For non-cancellation errors, let the catch block handle it
@@ -99,6 +104,7 @@ public extension Effect {
   /// - Parameters:
   ///   - priority: Task priority for the underlying `.run` effect (optional)
   ///   - unlockOption: Controls when the unlock operation is executed (default: configuration value)
+  ///   - handleCancellationErrors: Whether to pass CancellationError to catch handler (default: global config)
   ///   - operation: Async closure receiving `send` and `unlock` functions
   ///   - handler: Optional error handler receiving error, send, and unlock functions
   ///   - lockFailure: Optional handler for lock acquisition failures
@@ -114,6 +120,7 @@ public extension Effect {
   static func withLock<B: LockmanBoundaryId, A: LockmanAction>(
     priority: TaskPriority? = nil,
     unlockOption: UnlockOption? = nil,
+    handleCancellationErrors: Bool? = nil,
     operation: @escaping @Sendable (
       _ send: Send<Action>, _ unlock: LockmanUnlock<B, A.I>
     ) async throws -> Void,
@@ -155,7 +162,10 @@ public extension Effect {
           } catch {
             // Handle cancellation with unlock token available
             if error is CancellationError {
-              await handler?(error, send, unlockToken)
+              let shouldHandle = handleCancellationErrors ?? Lockman.config.handleCancellationErrors
+              if shouldHandle {
+                await handler?(error, send, unlockToken)
+              }
               return
             }
             // For non-cancellation errors, let the catch block handle it
