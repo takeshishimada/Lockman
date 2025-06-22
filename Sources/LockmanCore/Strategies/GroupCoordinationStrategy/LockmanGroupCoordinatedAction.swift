@@ -11,9 +11,17 @@ import Foundation
 /// // Navigation leader action
 /// struct NavigateToDetailAction: LockmanGroupCoordinatedAction {
 ///   let groupId = "navigation"
-///   let coordinationRole = GroupCoordinationRole.leader
+///   let coordinationRole = GroupCoordinationRole.leader(.none)
 ///
 ///   var actionName: String { "navigateToDetail" }
+/// }
+///
+/// // Exclusive navigation that blocks other actions
+/// struct ExclusiveNavigationAction: LockmanGroupCoordinatedAction {
+///   let groupId = "navigation"
+///   let coordinationRole = GroupCoordinationRole.leader(.all)
+///
+///   var actionName: String { "exclusiveNavigate" }
 /// }
 /// ```
 ///
@@ -47,7 +55,7 @@ import Foundation
 ///   var coordinationRole: GroupCoordinationRole {
 ///     switch self {
 ///     case .startLoading:
-///       return .leader
+///       return .leader(.none)
 ///     case .updateProgress, .showError:
 ///       return .member
 ///     }

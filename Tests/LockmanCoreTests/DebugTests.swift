@@ -75,7 +75,7 @@ final class DebugTests: XCTestCase {
     let groupInfo = LockmanGroupCoordinatedInfo(
       actionId: "groupAction",
       groupIds: ["group1", "group2"],
-      coordinationRole: .leader
+      coordinationRole: .leader(.none)
     )
     XCTAssertTrue(groupInfo.debugDescription.contains("LockmanGroupCoordinatedInfo"))
     XCTAssertTrue(groupInfo.debugDescription.contains("groupAction"))

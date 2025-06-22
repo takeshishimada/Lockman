@@ -20,11 +20,11 @@ import Foundation
 /// let strategy = LockmanGroupCoordinationStrategy()
 /// let boundaryId = "mainScreen"
 ///
-/// // Leader starts the group
+/// // Normal leader starts the group
 /// let leaderInfo = LockmanGroupCoordinatedInfo(
 ///   actionId: "loadData",
 ///   groupId: "dataLoading",
-///   coordinationRole: .leader
+///   coordinationRole: .leader(.none)
 /// )
 ///
 /// // Can lock when group is empty
@@ -35,6 +35,13 @@ import Foundation
 ///   actionId: "showProgress",
 ///   groupId: "dataLoading",
 ///   coordinationRole: .member
+/// )
+///
+/// // Exclusive leader example
+/// let exclusiveNav = LockmanGroupCoordinatedInfo(
+///   actionId: "navigate",
+///   groupId: "navigation",
+///   coordinationRole: .leader(.all)  // Blocks all other actions
 /// )
 /// ```
 public final class LockmanGroupCoordinationStrategy: LockmanStrategy, @unchecked Sendable {
@@ -65,7 +72,12 @@ public final class LockmanGroupCoordinationStrategy: LockmanStrategy, @unchecked
 
     /// Whether the group has an active leader.
     var hasLeader: Bool {
-      activeMembers.values.contains { $0.role == .leader }
+      activeMembers.values.contains { member in
+        if case .leader = member.role {
+          return true
+        }
+        return false
+      }
     }
 
     /// Information about a group member.
@@ -117,6 +129,42 @@ public final class LockmanGroupCoordinationStrategy: LockmanStrategy, @unchecked
           return .failure(LockmanGroupCoordinationError.actionAlreadyInGroup(actionId: info.actionId, groupIds: Set([groupId])))
         }
 
+        // Check for exclusive leader blocking
+        if let groupState = groupState {
+          for (_, member) in groupState.activeMembers {
+            if case .leader(let mode) = member.role {
+              // Skip if it's the same action
+              if member.info.actionId == info.actionId { continue }
+              
+              // Check if this leader blocks the new action
+              let shouldBlock: Bool
+              switch mode {
+              case .none:
+                shouldBlock = false
+              case .all:
+                shouldBlock = true
+              case .membersOnly:
+                shouldBlock = (info.coordinationRole == .member)
+              case .leadersOnly:
+                if case .leader = info.coordinationRole {
+                  shouldBlock = true
+                } else {
+                  shouldBlock = false
+                }
+              }
+              
+              if shouldBlock {
+                failureReason = "Blocked by exclusive leader '\(member.info.actionId)' in group '\(groupId)'"
+                return .failure(LockmanGroupCoordinationError.blockedByExclusiveLeader(
+                  leaderActionId: member.info.actionId,
+                  groupId: groupId,
+                  exclusionMode: mode
+                ))
+              }
+            }
+          }
+        }
+        
         // Apply role-based rules
         switch info.coordinationRole {
         case .leader:

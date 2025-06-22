@@ -3,16 +3,34 @@ import Foundation
 /// Role definition for group coordination strategy.
 ///
 /// Defines how an action participates in a group's lifecycle.
-public enum GroupCoordinationRole: String, Sendable, Hashable, CaseIterable {
+public enum GroupCoordinationRole: Sendable, Hashable {
   /// Leader role - can only execute when the group is empty.
   ///
   /// Acts as the group leader. Only one leader can start a group at a time.
-  case leader
+  /// Can optionally specify exclusion mode to control how the leader blocks other actions.
+  case leader(ExclusionMode)
 
   /// Member role - can only execute when the group has active participants.
   ///
   /// Requires an existing group participant (leader or other members) to be active.
   case member
+  
+  /// Exclusion mode for leader actions.
+  ///
+  /// Determines which actions are blocked while this leader is active.
+  public enum ExclusionMode: String, Sendable, Hashable, CaseIterable {
+    /// No additional exclusion - allows concurrent execution with different action IDs.
+    case none
+    
+    /// Excludes all other actions from executing in the group.
+    case all
+    
+    /// Excludes only member actions from executing in the group.
+    case membersOnly
+    
+    /// Excludes only other leader actions from executing in the group.
+    case leadersOnly
+  }
 }
 
 /// Lock information for group coordination strategy.
@@ -23,11 +41,25 @@ public enum GroupCoordinationRole: String, Sendable, Hashable, CaseIterable {
 ///
 /// ## Usage Example
 /// ```swift
-/// // Single group example
+/// // Normal leader (allows concurrent execution)
 /// let navigationInfo = LockmanGroupCoordinatedInfo(
 ///   actionId: "navigate",
 ///   groupId: "mainNavigation",
-///   coordinationRole: .leader
+///   coordinationRole: .leader(.none)
+/// )
+///
+/// // Exclusive leader (blocks all other actions)
+/// let exclusiveNavigation = LockmanGroupCoordinatedInfo(
+///   actionId: "exclusiveNavigate",
+///   groupId: "mainNavigation",
+///   coordinationRole: .leader(.all)
+/// )
+///
+/// // Member action
+/// let animationInfo = LockmanGroupCoordinatedInfo(
+///   actionId: "animate",
+///   groupId: "mainNavigation",
+///   coordinationRole: .member
 /// )
 ///
 /// // Multiple groups example
