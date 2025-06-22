@@ -68,8 +68,8 @@ extension LockmanSingleExecutionMacro: MemberMacro {
         from: declaration,
         attribute: node,
         in: context
-      ) else
-    {
+      )
+    else {
       return []
     }
 

@@ -126,7 +126,9 @@ public final class LockmanGroupCoordinationStrategy: LockmanStrategy, @unchecked
         if groupState?.activeMembers[info.actionId] != nil {
           // Same action ID cannot be executed twice in the same group
           failureReason = "Action '\(info.actionId)' is already active in group '\(groupId)'"
-          return .failure(LockmanGroupCoordinationError.actionAlreadyInGroup(actionId: info.actionId, groupIds: Set([groupId])))
+          return .failure(
+            LockmanGroupCoordinationError.actionAlreadyInGroup(
+              actionId: info.actionId, groupIds: Set([groupId])))
         }
 
         // Check for exclusive leader blocking
@@ -135,7 +137,7 @@ public final class LockmanGroupCoordinationStrategy: LockmanStrategy, @unchecked
             if case .leader(let mode) = member.role {
               // Skip if it's the same action
               if member.info.actionId == info.actionId { continue }
-              
+
               // Check if this leader blocks the new action
               let shouldBlock: Bool
               switch mode {
@@ -152,33 +154,37 @@ public final class LockmanGroupCoordinationStrategy: LockmanStrategy, @unchecked
                   shouldBlock = false
                 }
               }
-              
+
               if shouldBlock {
-                failureReason = "Blocked by exclusive leader '\(member.info.actionId)' in group '\(groupId)'"
-                return .failure(LockmanGroupCoordinationError.blockedByExclusiveLeader(
-                  leaderActionId: member.info.actionId,
-                  groupId: groupId,
-                  exclusionMode: mode
-                ))
+                failureReason =
+                  "Blocked by exclusive leader '\(member.info.actionId)' in group '\(groupId)'"
+                return .failure(
+                  LockmanGroupCoordinationError.blockedByExclusiveLeader(
+                    leaderActionId: member.info.actionId,
+                    groupId: groupId,
+                    exclusionMode: mode
+                  ))
               }
             }
           }
         }
-        
+
         // Apply role-based rules
         switch info.coordinationRole {
         case .leader:
           // Leaders can only start when group is empty
           if groupState != nil, !groupState!.isEmpty {
             failureReason = "Leader cannot start: group '\(groupId)' already has active members"
-            return .failure(LockmanGroupCoordinationError.leaderCannotJoinNonEmptyGroup(groupIds: Set([groupId])))
+            return .failure(
+              LockmanGroupCoordinationError.leaderCannotJoinNonEmptyGroup(groupIds: Set([groupId])))
           }
 
         case .member:
           // Members can only join when group has active participants
           if groupState == nil || groupState!.isEmpty {
             failureReason = "Member cannot join: group '\(groupId)' has no active participants"
-            return .failure(LockmanGroupCoordinationError.memberCannotJoinEmptyGroup(groupIds: Set([groupId])))
+            return .failure(
+              LockmanGroupCoordinationError.memberCannotJoinEmptyGroup(groupIds: Set([groupId])))
           }
         }
       }

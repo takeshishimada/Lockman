@@ -68,8 +68,8 @@ extension LockmanPriorityBasedMacro: MemberMacro {
         from: declaration,
         attribute: node,
         in: context
-      ) else
-    {
+      )
+    else {
       return []
     }
 

@@ -1,5 +1,6 @@
 import Foundation
 import XCTest
+
 @testable import LockmanCore
 
 // MARK: - Test Helpers
@@ -287,7 +288,7 @@ final class LockmanStrategyContainerTests: XCTestCase {
   }
 
   func testCleanUpWithIdCallsAllStrategies() {
-    let container  = LockmanStrategyContainer()
+    let container = LockmanStrategyContainer()
     let mockStrategy = MockLockmanStrategy()
     let anotherStrategy = AnotherMockLockmanStrategy(identifier: "test")
     let boundaryId = MockBoundaryId(value: "test")
@@ -347,12 +348,13 @@ final class LockmanStrategyContainerTests: XCTestCase {
 
   // MARK: - Concurrent Access Tests
 
-    func testConcurrentRegisterOperationsDifferentTypes() async throws {
+  func testConcurrentRegisterOperationsDifferentTypes() async throws {
     let container = LockmanStrategyContainer()
 
     // Create unique strategy classes to avoid duplicate registration errors
-    let strategies = await withTaskGroup(of: (String, Bool).self, returning: [(String, Bool)].self) { group in
-      for i in 0 ..< 10 {
+    let strategies = await withTaskGroup(of: (String, Bool).self, returning: [(String, Bool)].self)
+    { group in
+      for i in 0..<10 {
         group.addTask {
           let strategy = AnotherMockLockmanStrategy(identifier: "\(i)")
           do {
@@ -377,12 +379,12 @@ final class LockmanStrategyContainerTests: XCTestCase {
   }
 
   func testConcurrentResolveOperations() async throws {
-    let container  = LockmanStrategyContainer()
+    let container = LockmanStrategyContainer()
     let strategy = MockLockmanStrategy()
     try container.register(strategy)
 
     let results = await withTaskGroup(of: Bool.self, returning: [Bool].self) { group in
-      for _ in 0 ..< 100 {
+      for _ in 0..<100 {
         group.addTask {
           do {
             _ = try container.resolve(MockLockmanStrategy.self)
@@ -401,15 +403,15 @@ final class LockmanStrategyContainerTests: XCTestCase {
     }
 
     XCTAssertEqual(results.count, 100)
-    XCTAssertTrue(results.allSatisfy { $0 }) // All should succeed
+    XCTAssertTrue(results.allSatisfy { $0 })  // All should succeed
   }
 
   func testConcurrentRegisterAndResolve() async throws {
-    let container  = LockmanStrategyContainer()
+    let container = LockmanStrategyContainer()
 
     let results = await withTaskGroup(of: String.self, returning: [String].self) { group in
       // Register operation (only first should succeed)
-      for i in 0 ..< 5 {
+      for i in 0..<5 {
         group.addTask {
           let strategy = AnotherMockLockmanStrategy(identifier: "\(i)")
           do {
@@ -422,10 +424,10 @@ final class LockmanStrategyContainerTests: XCTestCase {
       }
 
       // Resolve operations
-      for i in 0 ..< 5 {
+      for i in 0..<5 {
         group.addTask {
           // Wait a bit to let registration potentially complete
-          try? await Task.sleep(nanoseconds: 10_000_000) // 10ms
+          try? await Task.sleep(nanoseconds: 10_000_000)  // 10ms
           do {
             _ = try container.resolve(AnotherMockLockmanStrategy.self)
             return "resolve_success_\(i)"
@@ -445,8 +447,8 @@ final class LockmanStrategyContainerTests: XCTestCase {
     let registerSuccesses = results.filter { $0.contains("register_success") }
     let resolveSuccesses = results.filter { $0.contains("resolve_success") }
 
-    XCTAssertEqual(registerSuccesses.count, 1) // Only one registration should succeed
-    XCTAssertGreaterThanOrEqual(resolveSuccesses.count, 1) // At least some resolves should succeed
+    XCTAssertEqual(registerSuccesses.count, 1)  // Only one registration should succeed
+    XCTAssertGreaterThanOrEqual(resolveSuccesses.count, 1)  // At least some resolves should succeed
   }
 
   func testConcurrentCleanUpOperations() async throws {
@@ -458,13 +460,13 @@ final class LockmanStrategyContainerTests: XCTestCase {
     try container.register(anotherStrategy)
 
     await withTaskGroup(of: Void.self) { group in
-      for _ in 0 ..< 10 {
+      for _ in 0..<10 {
         group.addTask {
           container.cleanUp()
         }
       }
 
-      for i in 0 ..< 10 {
+      for i in 0..<10 {
         group.addTask {
           container.cleanUp(id: MockBoundaryId(value: "\(i)"))
         }
@@ -472,10 +474,10 @@ final class LockmanStrategyContainerTests: XCTestCase {
     }
 
     // Each strategy should have been cleaned up multiple times
-    XCTAssertGreaterThanOrEqual(mockStrategy.cleanUpCallCount , 10)
-    XCTAssertGreaterThanOrEqual(anotherStrategy.cleanUpCallCount , 10)
-    XCTAssertGreaterThanOrEqual(mockStrategy.cleanUpWithIdCallCount , 10)
-    XCTAssertGreaterThanOrEqual(anotherStrategy.cleanUpWithIdCallCount , 10)
+    XCTAssertGreaterThanOrEqual(mockStrategy.cleanUpCallCount, 10)
+    XCTAssertGreaterThanOrEqual(anotherStrategy.cleanUpCallCount, 10)
+    XCTAssertGreaterThanOrEqual(mockStrategy.cleanUpWithIdCallCount, 10)
+    XCTAssertGreaterThanOrEqual(anotherStrategy.cleanUpWithIdCallCount, 10)
   }
 
   // MARK: - Edge Cases
@@ -571,11 +573,11 @@ final class LockmanStrategyContainerMemoryTests: XCTestCase {
       weakStrategy = strategy
 
       try? container.register(strategy)
-      XCTAssertNotNil(weakStrategy )
+      XCTAssertNotNil(weakStrategy)
     }
 
     // Container is released, strategy should also be released
-    XCTAssertNil(weakStrategy )
+    XCTAssertNil(weakStrategy)
   }
 
   func testNoRetainCycles() {
@@ -592,8 +594,8 @@ final class LockmanStrategyContainerMemoryTests: XCTestCase {
       try? container.register(strategy)
     }
 
-    XCTAssertNil(weakContainer )
-    XCTAssertNil(weakStrategy )
+    XCTAssertNil(weakContainer)
+    XCTAssertNil(weakStrategy)
   }
 
   func testMultipleStrategyCleanupAfterDeallocation() {
@@ -611,12 +613,12 @@ final class LockmanStrategyContainerMemoryTests: XCTestCase {
       try? container.register(mockStrategy)
       try? container.register(anotherStrategy)
 
-      XCTAssertNotNil(weakMock )
-      XCTAssertNotNil(weakAnother )
+      XCTAssertNotNil(weakMock)
+      XCTAssertNotNil(weakAnother)
     }
 
-    XCTAssertNil(weakMock )
-    XCTAssertNil(weakAnother )
+    XCTAssertNil(weakMock)
+    XCTAssertNil(weakAnother)
   }
 }
 
@@ -634,7 +636,7 @@ final class LockmanStrategyContainerPerformanceTests: XCTestCase {
     let iterations = 1000
     let startTime = Date()
 
-    for _ in 0 ..< iterations {
+    for _ in 0..<iterations {
       _ = try container.resolve(MockLockmanStrategy.self)
       _ = try container.resolve(AnotherMockLockmanStrategy.self)
     }
@@ -643,7 +645,7 @@ final class LockmanStrategyContainerPerformanceTests: XCTestCase {
     let duration = endTime.timeIntervalSince(startTime)
 
     // Should complete within reasonable time
-    XCTAssertLessThan(duration , 1.0)
+    XCTAssertLessThan(duration, 1.0)
   }
 
   func testPerformanceWithManyConcurrentResolves() async throws {
@@ -654,7 +656,7 @@ final class LockmanStrategyContainerPerformanceTests: XCTestCase {
     let startTime = Date()
 
     await withTaskGroup(of: Void.self) { group in
-      for _ in 0 ..< 1000 {
+      for _ in 0..<1000 {
         group.addTask {
           _ = try? container.resolve(MockLockmanStrategy.self)
         }
@@ -664,7 +666,7 @@ final class LockmanStrategyContainerPerformanceTests: XCTestCase {
     let endTime = Date()
     let duration = endTime.timeIntervalSince(startTime)
 
-    XCTAssertLessThan(duration , 2.0 * 5)
+    XCTAssertLessThan(duration, 2.0 * 5)
   }
 
   func testMemoryEfficiencyWithStrategyTypes() throws {
@@ -672,7 +674,7 @@ final class LockmanStrategyContainerPerformanceTests: XCTestCase {
 
     // Create many different strategy instances of the same type
     // Only the first should be stored due to duplicate registration prevention
-    for i in 0 ..< 100 {
+    for i in 0..<100 {
       let strategy = MockLockmanStrategy(identifier: "strategy_\(i)")
       if i == 0 {
         try container.register(strategy)

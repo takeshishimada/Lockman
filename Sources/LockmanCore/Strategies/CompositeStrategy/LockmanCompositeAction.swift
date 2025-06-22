@@ -167,7 +167,7 @@ public protocol LockmanCompositeAction5: LockmanAction {
 
 // MARK: - Default Implementations
 
-public extension LockmanCompositeAction2 {
+extension LockmanCompositeAction2 {
   /// Creates a type-erased composite strategy instance.
   ///
   /// This helper method constructs a composite strategy from the individual
@@ -177,7 +177,7 @@ public extension LockmanCompositeAction2 {
   ///   - strategy1: The first strategy instance
   ///   - strategy2: The second strategy instance
   /// - Returns: A type-erased composite strategy instance
-  func makeCompositeStrategy(
+  public func makeCompositeStrategy(
     strategy1: S1,
     strategy2: S2
   ) -> AnyLockmanStrategy<LockmanCompositeInfo2<I1, I2>> {
@@ -189,7 +189,7 @@ public extension LockmanCompositeAction2 {
   }
 }
 
-public extension LockmanCompositeAction3 {
+extension LockmanCompositeAction3 {
   /// Creates a type-erased composite strategy instance.
   ///
   /// - Parameters:
@@ -197,7 +197,7 @@ public extension LockmanCompositeAction3 {
   ///   - strategy2: The second strategy instance
   ///   - strategy3: The third strategy instance
   /// - Returns: A type-erased composite strategy instance
-  func makeCompositeStrategy(
+  public func makeCompositeStrategy(
     strategy1: S1,
     strategy2: S2,
     strategy3: S3
@@ -211,7 +211,7 @@ public extension LockmanCompositeAction3 {
   }
 }
 
-public extension LockmanCompositeAction4 {
+extension LockmanCompositeAction4 {
   /// Creates a type-erased composite strategy instance.
   ///
   /// - Parameters:
@@ -220,7 +220,7 @@ public extension LockmanCompositeAction4 {
   ///   - strategy3: The third strategy instance
   ///   - strategy4: The fourth strategy instance
   /// - Returns: A type-erased composite strategy instance
-  func makeCompositeStrategy(
+  public func makeCompositeStrategy(
     strategy1: S1,
     strategy2: S2,
     strategy3: S3,
@@ -236,7 +236,7 @@ public extension LockmanCompositeAction4 {
   }
 }
 
-public extension LockmanCompositeAction5 {
+extension LockmanCompositeAction5 {
   /// Creates a type-erased composite strategy instance.
   ///
   /// - Parameters:
@@ -246,7 +246,7 @@ public extension LockmanCompositeAction5 {
   ///   - strategy4: The fourth strategy instance
   ///   - strategy5: The fifth strategy instance
   /// - Returns: A type-erased composite strategy instance
-  func makeCompositeStrategy(
+  public func makeCompositeStrategy(
     strategy1: S1,
     strategy2: S2,
     strategy3: S3,

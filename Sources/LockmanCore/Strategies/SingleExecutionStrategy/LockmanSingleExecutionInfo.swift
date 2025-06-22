@@ -74,7 +74,10 @@ public struct LockmanSingleExecutionInfo: LockmanInfo, Sendable, Equatable {
   /// even when multiple instances share the same `actionId`. This allows the
   /// system to track individual lock acquisitions while still enforcing
   /// execution semantics based on the mode.
-  public init(actionId: LockmanActionId = LockmanActionId(""), mode: LockmanSingleExecutionStrategy.ExecutionMode) {
+  public init(
+    actionId: LockmanActionId = LockmanActionId(""),
+    mode: LockmanSingleExecutionStrategy.ExecutionMode
+  ) {
     self.actionId = actionId
     self.mode = mode
     self.uniqueId = UUID()

@@ -30,13 +30,16 @@ final class LockmanState<I: LockmanInfo>: Sendable {
   // MARK: - Private Properties
 
   /// Storage using OrderedDictionary for optimal performance and ordering
-  private let storage = ManagedCriticalState<[AnyLockmanBoundaryId: OrderedDictionary<UUID, I>]>([:])
+  private let storage = ManagedCriticalState<[AnyLockmanBoundaryId: OrderedDictionary<UUID, I>]>([:]
+  )
 
   /// Secondary index for O(1) actionId-based lookups.
   /// This index dramatically improves performance for action-based queries,
   /// enabling constant-time contains() and count() operations.
   /// Maps: BoundaryId -> ActionId -> Set of UUIDs
-  private let actionIndex = ManagedCriticalState<[AnyLockmanBoundaryId: [LockmanActionId: Set<UUID>]]>([:])
+  private let actionIndex = ManagedCriticalState<
+    [AnyLockmanBoundaryId: [LockmanActionId: Set<UUID>]]
+  >([:])
 
   // MARK: - Initialization
 
@@ -85,8 +88,8 @@ final class LockmanState<I: LockmanInfo>: Sendable {
     // First, get the info to access actionId for index cleanup
     let removedInfo = storage.withCriticalRegion { storage -> I? in
       guard let boundaryDict = storage[boundaryKey],
-            let info = boundaryDict[info.uniqueId] else
-      {
+        let info = boundaryDict[info.uniqueId]
+      else {
         return nil
       }
       return info
@@ -114,8 +117,8 @@ final class LockmanState<I: LockmanInfo>: Sendable {
     // Update action index
     actionIndex.withCriticalRegion { index in
       guard var boundaryIndex = index[boundaryKey],
-            var actionSet = boundaryIndex[removedInfo.actionId] else
-      {
+        var actionSet = boundaryIndex[removedInfo.actionId]
+      else {
         return
       }
 
@@ -204,7 +207,7 @@ final class LockmanState<I: LockmanInfo>: Sendable {
         boundaryDict[uuid]
       }.sorted { first, second in
         if let firstIndex = boundaryDict.index(forKey: first.uniqueId),
-           let secondIndex = boundaryDict.index(forKey: second.uniqueId)
+          let secondIndex = boundaryDict.index(forKey: second.uniqueId)
         {
           return firstIndex < secondIndex
         }

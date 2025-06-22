@@ -1,8 +1,8 @@
 import Benchmark
 import ComposableArchitecture
 import Foundation
-import LockmanCore
 import LockmanComposable
+import LockmanCore
 
 // MARK: - Store Creation
 
@@ -75,9 +75,9 @@ let benchmarks = { @Sendable in
   // Burst load benchmarks
   Benchmark("Burst: SingleExecution (100 concurrent)") { @MainActor benchmark async in
     let store = singleExecutionBurstStore()
-    
+
     benchmark.startMeasurement()
-    
+
     // Fire 100 concurrent actions with mixed pattern (10 types x 10 instances)
     await withTaskGroup(of: Void.self) { group in
       for i in 0..<100 {
@@ -91,15 +91,15 @@ let benchmarks = { @Sendable in
 
   Benchmark("Burst: PriorityBased (100 concurrent)") { @MainActor benchmark async in
     let store = priorityBasedBurstStore()
-    
+
     benchmark.startMeasurement()
-    
+
     // Fire 100 concurrent actions with priority distribution
     await withTaskGroup(of: Void.self) { group in
       for i in 0..<100 {
         let actionId = i / 10  // 10 instances per action ID
         let priority: PriorityLevel
-        
+
         // Priority distribution: High 20%, Low 50%, None 30%
         if i < 20 {
           priority = .high
@@ -108,7 +108,7 @@ let benchmarks = { @Sendable in
         } else {
           priority = .none
         }
-        
+
         group.addTask {
           await store.send(.burst(id: actionId, priority: priority)).finish()
         }
@@ -221,17 +221,21 @@ private struct CompositeStrategyFeature {
     var isEnabled = true
   }
 
-  @LockmanCompositeStrategy(LockmanSingleExecutionStrategy.self, LockmanDynamicConditionStrategy.self)
+  @LockmanCompositeStrategy(
+    LockmanSingleExecutionStrategy.self, LockmanDynamicConditionStrategy.self)
   enum Action {
     case tap
     case tapWithLock
     case increment
 
-    var lockmanInfo: LockmanCompositeInfo2<LockmanSingleExecutionStrategy.I, LockmanDynamicConditionStrategy.I> {
+    var lockmanInfo:
+      LockmanCompositeInfo2<LockmanSingleExecutionStrategy.I, LockmanDynamicConditionStrategy.I>
+    {
       LockmanCompositeInfo2(
         actionId: actionName,
         lockmanInfoForStrategy1: LockmanSingleExecutionInfo(actionId: actionName, mode: .boundary),
-        lockmanInfoForStrategy2: LockmanDynamicConditionInfo(actionId: actionName, condition: { true })
+        lockmanInfoForStrategy2: LockmanDynamicConditionInfo(
+          actionId: actionName, condition: { true })
       )
     }
   }
@@ -351,7 +355,7 @@ private struct SingleExecutionBurstFeature {
       case let .burst(id):
         state.activeCount += 1
         let startTime = Date()
-        
+
         return .withLock(
           operation: { send in
             await send(.process(id: id, startTime: startTime))
@@ -405,7 +409,7 @@ private struct PriorityBasedBurstFeature {
           lockmanPriority = .none
         }
         return .init(actionId: "action-\(id)", priority: lockmanPriority)
-        
+
       case let .process(id, _), let .complete(id, _):
         // Default to low for internal actions
         return .init(actionId: "action-\(id)", priority: .low(.replaceable))
@@ -423,7 +427,7 @@ private struct PriorityBasedBurstFeature {
       case let .burst(id, _):
         state.activeCount += 1
         let startTime = Date()
-        
+
         return .withLock(
           operation: { send in
             await send(.process(id: id, startTime: startTime))

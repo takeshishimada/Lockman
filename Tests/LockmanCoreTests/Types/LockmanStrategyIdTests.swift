@@ -1,4 +1,5 @@
 import XCTest
+
 @testable import LockmanCore
 
 final class LockmanStrategyIdTests: XCTestCase {
@@ -11,7 +12,7 @@ final class LockmanStrategyIdTests: XCTestCase {
   }
 
   func testInitializeWithType() {
-    let id  = LockmanStrategyId(type: LockmanSingleExecutionStrategy.self)
+    let id = LockmanStrategyId(type: LockmanSingleExecutionStrategy.self)
     XCTAssertTrue(id.value.contains("LockmanSingleExecutionStrategy"))
   }
 
@@ -24,14 +25,14 @@ final class LockmanStrategyIdTests: XCTestCase {
   }
 
   func testInitializeWithName() {
-    let id  = LockmanStrategyId(
+    let id = LockmanStrategyId(
       name: "RateLimitStrategy"
     )
     XCTAssertEqual(id.value, "RateLimitStrategy")
   }
 
   func testInitializeWithNameAndConfiguration() {
-    let id  = LockmanStrategyId(
+    let id = LockmanStrategyId(
       name: "RateLimitStrategy",
       configuration: "limit-100"
     )
@@ -41,7 +42,7 @@ final class LockmanStrategyIdTests: XCTestCase {
   // MARK: - ExpressibleByStringLiteral Tests
 
   func testStringLiteralInitialization() {
-    let id: LockmanStrategyId  = "MyApp.CustomStrategy"
+    let id: LockmanStrategyId = "MyApp.CustomStrategy"
     XCTAssertEqual(id.value, "MyApp.CustomStrategy")
   }
 
@@ -63,7 +64,7 @@ final class LockmanStrategyIdTests: XCTestCase {
   // MARK: - Static Property Tests
 
   func testStaticSingleExecutionProperty() {
-    let id  = LockmanStrategyId.singleExecution
+    let id = LockmanStrategyId.singleExecution
     XCTAssertTrue(id.value.contains("LockmanSingleExecutionStrategy"))
   }
 
@@ -81,7 +82,7 @@ final class LockmanStrategyIdTests: XCTestCase {
   }
 
   func testInequalityWithDifferentValues() {
-    let id1  = LockmanStrategyId("Strategy1")
+    let id1 = LockmanStrategyId("Strategy1")
     let id2 = LockmanStrategyId("Strategy2")
     XCTAssertNotEqual(id1, id2)
   }
@@ -93,7 +94,7 @@ final class LockmanStrategyIdTests: XCTestCase {
   }
 
   func testUseAsDictionaryKey() {
-    var dict: [LockmanStrategyId: String]  = [:]
+    var dict: [LockmanStrategyId: String] = [:]
     let id = LockmanStrategyId("TestStrategy")
     dict[id] = "value"
     XCTAssertEqual(dict[id], "value")
@@ -102,24 +103,24 @@ final class LockmanStrategyIdTests: XCTestCase {
   // MARK: - Edge Case Tests
 
   func testEmptyStringId() {
-    let id  = LockmanStrategyId("")
+    let id = LockmanStrategyId("")
     XCTAssertEqual(id.value, "")
   }
 
   func testUnicodeStringId() {
-    let id  = LockmanStrategyId("策略🎯")
+    let id = LockmanStrategyId("策略🎯")
     XCTAssertEqual(id.value, "策略🎯")
   }
 
   func testVeryLongStringId() {
-    let longString  = String(repeating: "a", count: 1000)
+    let longString = String(repeating: "a", count: 1000)
     let id = LockmanStrategyId(longString)
     XCTAssertEqual(id.value, longString)
     XCTAssertEqual(id.value.count, 1000)
   }
 
   func testSpecialCharactersInNameAndConfiguration() {
-    let id  = LockmanStrategyId(
+    let id = LockmanStrategyId(
       name: "Rate_Limit_Strategy",
       configuration: "limit:100/timeout:30"
     )
@@ -129,10 +130,10 @@ final class LockmanStrategyIdTests: XCTestCase {
   // MARK: - Sendable Conformance Tests
 
   func testSendableAcrossConcurrentContexts() async {
-    let id  = LockmanStrategyId("ConcurrentStrategy")
+    let id = LockmanStrategyId("ConcurrentStrategy")
 
     await withTaskGroup(of: String.self) { group in
-      for _ in 0 ..< 10 {
+      for _ in 0..<10 {
         group.addTask {
           // Access the id from concurrent context
           id.value
@@ -148,7 +149,7 @@ final class LockmanStrategyIdTests: XCTestCase {
   // MARK: - Real-World Usage Pattern Tests
 
   func testConfigurationVariantsOfSameStrategy() {
-    let timeout30  = LockmanStrategyId(
+    let timeout30 = LockmanStrategyId(
       name: "CacheStrategy",
       configuration: "timeout-30"
     )
@@ -163,7 +164,7 @@ final class LockmanStrategyIdTests: XCTestCase {
   }
 
   func testDifferentStrategyNames() {
-    let appStrategy  = LockmanStrategyId(
+    let appStrategy = LockmanStrategyId(
       name: "AppUserStrategy"
     )
     let libraryStrategy = LockmanStrategyId(
@@ -180,10 +181,10 @@ final class LockmanStrategyIdTests: XCTestCase {
 
 final class LockmanStrategyIdPerformanceTests: XCTestCase {
   func testCreationPerformance() async {
-    let iterations  = 10000
+    let iterations = 10000
 
     let start = Date()
-    for i in 0 ..< iterations {
+    for i in 0..<iterations {
       _ = LockmanStrategyId("Strategy\(i)")
     }
     let duration = Date().timeIntervalSince(start)
@@ -199,7 +200,7 @@ final class LockmanStrategyIdPerformanceTests: XCTestCase {
     let iterations = 100000
 
     let start = Date()
-    for _ in 0 ..< iterations {
+    for _ in 0..<iterations {
       _ = id1 == id2
       _ = id1 == id3
     }
@@ -214,7 +215,7 @@ final class LockmanStrategyIdPerformanceTests: XCTestCase {
     let iterations = 1000
 
     // Create IDs
-    let ids = (0 ..< iterations).map { LockmanStrategyId("Strategy\($0)") }
+    let ids = (0..<iterations).map { LockmanStrategyId("Strategy\($0)") }
 
     // Measure insertions
     let insertStart = Date()
@@ -231,7 +232,7 @@ final class LockmanStrategyIdPerformanceTests: XCTestCase {
     let lookupDuration = Date().timeIntervalSince(lookupStart)
 
     // Should be fast (converting milliseconds to seconds)
-    XCTAssertLessThan(insertDuration, 0.01) // 10ms
-    XCTAssertLessThan(lookupDuration, 0.005) // 5ms
+    XCTAssertLessThan(insertDuration, 0.01)  // 10ms
+    XCTAssertLessThan(lookupDuration, 0.005)  // 5ms
   }
 }

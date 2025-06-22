@@ -1,5 +1,6 @@
 import Foundation
 import XCTest
+
 @testable import LockmanCore
 
 // MARK: - Test Helpers
@@ -72,7 +73,7 @@ final class LockmanStateTests: XCTestCase {
   }
 
   func testAddMultipleEntriesToSameBoundary() {
-    let state  = LockmanState<TestLockmanInfo>()
+    let state = LockmanState<TestLockmanInfo>()
     let boundaryId = TestBoundaryId(value: "test")
     let info1 = TestLockmanInfo(id: "1")
     let info2 = TestLockmanInfo(id: "2")
@@ -107,7 +108,7 @@ final class LockmanStateTests: XCTestCase {
   }
 
   func testRemoveLastFromSingleEntry() {
-    let state  = LockmanState<TestLockmanInfo>()
+    let state = LockmanState<TestLockmanInfo>()
     let boundaryId = TestBoundaryId(value: "test")
     let info = TestLockmanInfo(id: "1")
 
@@ -197,12 +198,12 @@ final class LockmanStateTests: XCTestCase {
   // MARK: - Concurrent Access Tests
 
   func testConcurrentAddsToSameBoundary() async {
-    let state  = LockmanState<TestLockmanInfo>()
+    let state = LockmanState<TestLockmanInfo>()
     let boundaryId = TestBoundaryId("test")
     let iterations = 100
 
     await withTaskGroup(of: Void.self) { group in
-      for i in 0 ..< iterations {
+      for i in 0..<iterations {
         group.addTask {
           let info = TestLockmanInfo(id: "\(i)")
           state.add(id: boundaryId, info: info)
@@ -215,12 +216,12 @@ final class LockmanStateTests: XCTestCase {
   }
 
   func testConcurrentAddsToDifferentBoundaries() async {
-    let state  = LockmanState<TestLockmanInfo>()
+    let state = LockmanState<TestLockmanInfo>()
     let iterations = 50
     let boundaryCount = 5
 
     await withTaskGroup(of: Void.self) { group in
-      for i in 0 ..< iterations {
+      for i in 0..<iterations {
         group.addTask {
           let boundaryId = TestBoundaryId("boundary\(i % boundaryCount)")
           let info = TestLockmanInfo(id: "\(i)")
@@ -229,20 +230,21 @@ final class LockmanStateTests: XCTestCase {
       }
     }
 
-    for i in 0 ..< boundaryCount {
+    for i in 0..<boundaryCount {
       let boundaryId = TestBoundaryId("boundary\(i)")
       let currents = state.currents(id: boundaryId)
       let expectedCount = iterations / boundaryCount
-      XCTAssertEqual(currents.count, expectedCount, "Each boundary should have \(expectedCount) entries")
+      XCTAssertEqual(
+        currents.count, expectedCount, "Each boundary should have \(expectedCount) entries")
     }
   }
 
   func testConcurrentAddAndRemoveOperations() async {
-    let state  = LockmanState<TestLockmanInfo>()
+    let state = LockmanState<TestLockmanInfo>()
     let boundaryId = TestBoundaryId(value: "test")
     let iterations = 100
 
-    let infoList = (0 ..< iterations).map { TestLockmanInfo(id: "\($0)") }
+    let infoList = (0..<iterations).map { TestLockmanInfo(id: "\($0)") }
 
     // First, add some entries
     for info in infoList {
@@ -251,7 +253,7 @@ final class LockmanStateTests: XCTestCase {
 
     await withTaskGroup(of: Void.self) { group in
       // Add more entries
-      for i in iterations ..< (iterations * 2) {
+      for i in iterations..<(iterations * 2) {
         group.addTask {
           let info = TestLockmanInfo(id: "\(i)")
           state.add(id: boundaryId, info: info)
@@ -269,16 +271,16 @@ final class LockmanStateTests: XCTestCase {
   }
 
   func testConcurrentReadOperations() async {
-    let state  = LockmanState<TestLockmanInfo>()
+    let state = LockmanState<TestLockmanInfo>()
     let boundaryId = TestBoundaryId(value: "test")
 
     // Add some initial data
-    for i in 0 ..< 10 {
+    for i in 0..<10 {
       state.add(id: boundaryId, info: TestLockmanInfo(id: "\(i)"))
     }
 
     let results = await withTaskGroup(of: Int.self, returning: [Int].self) { group in
-      for _ in 0 ..< 100 {
+      for _ in 0..<100 {
         group.addTask {
           state.currents(id: boundaryId).count
         }
@@ -297,10 +299,10 @@ final class LockmanStateTests: XCTestCase {
   // MARK: - Edge Cases
 
   func testStackLikeBehavior() {
-    let state  = LockmanState<TestLockmanInfo>()
+    let state = LockmanState<TestLockmanInfo>()
     let boundaryId = TestBoundaryId(value: "test")
 
-    let infoList = (1 ... 5).map { TestLockmanInfo(id: "\($0)") }
+    let infoList = (1...5).map { TestLockmanInfo(id: "\($0)") }
     // Add in order
     for info in infoList {
       state.add(id: boundaryId, info: info)
@@ -317,11 +319,11 @@ final class LockmanStateTests: XCTestCase {
   }
 
   func testLargeNumberOfEntries() {
-    let state  = LockmanState<TestLockmanInfo>()
+    let state = LockmanState<TestLockmanInfo>()
     let boundaryId = TestBoundaryId(value: "test")
-    let count = 1000 // Reduced from 10000 for reasonable test time
+    let count = 1000  // Reduced from 10000 for reasonable test time
 
-    for i in 0 ..< count {
+    for i in 0..<count {
       state.add(id: boundaryId, info: TestLockmanInfo(id: "\(i)"))
     }
 
@@ -335,7 +337,7 @@ final class LockmanStateTests: XCTestCase {
   }
 
   func testMultipleCleanUpOperations() {
-    let state  = LockmanState<TestLockmanInfo>()
+    let state = LockmanState<TestLockmanInfo>()
     let boundaryId = TestBoundaryId(value: "test")
 
     state.add(id: boundaryId, info: TestLockmanInfo(id: "1"))
@@ -391,10 +393,10 @@ final class LockmanStateTests: XCTestCase {
     // Complex sequence: add, add, remove, add, remove, remove
     state.add(id: boundaryId, info: TestLockmanInfo(id: "1"))
     state.add(id: boundaryId, info: TestLockmanInfo(id: "2"))
-    state.removeAll(id: boundaryId) // Remove "2"
+    state.removeAll(id: boundaryId)  // Remove "2"
     state.add(id: boundaryId, info: TestLockmanInfo(id: "3"))
-    state.removeAll(id: boundaryId) // Remove "3"
-    state.removeAll(id: boundaryId) // Remove "1"
+    state.removeAll(id: boundaryId)  // Remove "3"
+    state.removeAll(id: boundaryId)  // Remove "1"
 
     XCTAssertTrue(state.currents(id: boundaryId).isEmpty)
   }
@@ -406,12 +408,12 @@ final class LockmanStateTests: XCTestCase {
     let boundaryId = TestBoundaryId(value: "memory_test")
 
     // Add many entries
-    for i in 0 ..< 100 {
+    for i in 0..<100 {
       state.add(id: boundaryId, info: TestLockmanInfo(id: "\(i)"))
     }
 
     // Remove all entries
-    for _ in 0 ..< 100 {
+    for _ in 0..<100 {
       state.removeAll(id: boundaryId)
     }
 
@@ -430,17 +432,17 @@ final class LockmanStateTests: XCTestCase {
     let partialBoundary = TestBoundaryId(value: "partial")
 
     // fullBoundary has entries
-    for i in 0 ..< 5 {
+    for i in 0..<5 {
       state.add(id: fullBoundary, info: TestLockmanInfo(id: "full_\(i)"))
     }
 
     // partialBoundary has entries then some removed
-    for i in 0 ..< 3 {
+    for i in 0..<3 {
       state.add(id: partialBoundary, info: TestLockmanInfo(id: "partial_\(i)"))
     }
 
     // Clean up specific boundaries
-    state.removeAll(id: emptyBoundary) // Should be safe
+    state.removeAll(id: emptyBoundary)  // Should be safe
     state.removeAll(id: fullBoundary)
 
     XCTAssertTrue(state.currents(id: emptyBoundary).isEmpty)
@@ -463,7 +465,7 @@ final class AnyLockmanBoundaryIdTests: XCTestCase {
   }
 
   func testInequalityWithDifferentValues() {
-    let id1  = TestBoundaryId(value: "test1")
+    let id1 = TestBoundaryId(value: "test1")
     let id2 = TestBoundaryId(value: "test2")
 
     let any1 = AnyLockmanBoundaryId(id1)
@@ -481,7 +483,7 @@ final class AnyLockmanBoundaryIdTests: XCTestCase {
   }
 
   func testDifferentTypesWithSameValue() {
-    let id1  = TestBoundaryId(value: "test")
+    let id1 = TestBoundaryId(value: "test")
     let id2 = AnotherBoundaryId(value: "test")
 
     let any1 = AnyLockmanBoundaryId(id1)
@@ -504,17 +506,17 @@ final class AnyLockmanBoundaryIdTests: XCTestCase {
     // and don't affect the correctness of the implementation
 
     // The important thing is that equality works correctly (tested elsewhere)
-    XCTAssertNotEqual(any1, any2) // Different types should never be equal
+    XCTAssertNotEqual(any1, any2)  // Different types should never be equal
 
     // Verify they can both be used as dictionary keys
     var dict: [AnyLockmanBoundaryId: String] = [:]
     dict[any1] = "value1"
     dict[any2] = "value2"
-    XCTAssertEqual(dict.count, 2) // Both should be stored separately
+    XCTAssertEqual(dict.count, 2)  // Both should be stored separately
   }
 
   func testUseAsDictionaryKey() {
-    var dict: [AnyLockmanBoundaryId: String]  = [:]
+    var dict: [AnyLockmanBoundaryId: String] = [:]
 
     let id1 = TestBoundaryId(value: "key1")
     let id2 = TestBoundaryId(value: "key2")
@@ -526,7 +528,7 @@ final class AnyLockmanBoundaryIdTests: XCTestCase {
 
     dict[any1] = "value1"
     dict[any2] = "value2"
-    dict[any1Copy] = "updated_value1" // Should overwrite
+    dict[any1Copy] = "updated_value1"  // Should overwrite
 
     XCTAssertEqual(dict.count, 2)
     XCTAssertEqual(dict[any1], "updated_value1")
@@ -534,11 +536,13 @@ final class AnyLockmanBoundaryIdTests: XCTestCase {
   }
 
   func testSendableComplianceAcrossTasks() async {
-    let id  = TestBoundaryId(value: "concurrent")
+    let id = TestBoundaryId(value: "concurrent")
     let anyId = AnyLockmanBoundaryId(id)
 
-    let results = await withTaskGroup(of: AnyLockmanBoundaryId.self, returning: [AnyLockmanBoundaryId].self) { group in
-      for _ in 0 ..< 5 {
+    let results = await withTaskGroup(
+      of: AnyLockmanBoundaryId.self, returning: [AnyLockmanBoundaryId].self
+    ) { group in
+      for _ in 0..<5 {
         group.addTask {
           anyId
         }
@@ -560,13 +564,13 @@ final class AnyLockmanBoundaryIdTests: XCTestCase {
 
 final class LockmanStatePerformanceTests: XCTestCase {
   func testPerformanceWithFrequentAddsAndRemoves() async throws {
-    let state  = LockmanState<TestLockmanInfo>()
+    let state = LockmanState<TestLockmanInfo>()
     let boundaryId = TestBoundaryId(value: "test")
     let iterations = 1000
 
     let startTime = Date()
 
-    for i in 0 ..< iterations {
+    for i in 0..<iterations {
       let info = TestLockmanInfo(id: "\(i)")
       state.add(id: boundaryId, info: info)
       if i % 2 == 0 {
@@ -578,23 +582,23 @@ final class LockmanStatePerformanceTests: XCTestCase {
     let duration = endTime.timeIntervalSince(startTime)
 
     // Should complete within reasonable time (adjust threshold as needed)
-    XCTAssertLessThan(duration , 1.0)
+    XCTAssertLessThan(duration, 1.0)
 
     // Verify final state
     let finalCount = state.currents(id: boundaryId).count
-    XCTAssertEqual(finalCount, iterations / 2) // Half were removed
+    XCTAssertEqual(finalCount, iterations / 2)  // Half were removed
   }
 
   func testPerformanceWithManyBoundaries() {
-    let state  = LockmanState<TestLockmanInfo>()
+    let state = LockmanState<TestLockmanInfo>()
     let boundaryCount = 100
     let entriesPerBoundary = 10
 
     let startTime = Date()
 
-    for i in 0 ..< boundaryCount {
+    for i in 0..<boundaryCount {
       let boundaryId = TestBoundaryId(value: "boundary_\(i)")
-      for j in 0 ..< entriesPerBoundary {
+      for j in 0..<entriesPerBoundary {
         state.add(id: boundaryId, info: TestLockmanInfo(id: "\(i)_\(j)"))
       }
     }
@@ -602,10 +606,10 @@ final class LockmanStatePerformanceTests: XCTestCase {
     let endTime = Date()
     let duration = endTime.timeIntervalSince(startTime)
 
-    XCTAssertLessThan(duration , 1.0)
+    XCTAssertLessThan(duration, 1.0)
 
     // Verify all boundaries have correct number of entries
-    for i in 0 ..< boundaryCount {
+    for i in 0..<boundaryCount {
       let boundaryId = TestBoundaryId(value: "boundary_\(i)")
       XCTAssertTrue(state.currents(id: boundaryId).count == entriesPerBoundary)
     }
@@ -619,10 +623,10 @@ final class LockmanStatePerformanceTests: XCTestCase {
     let startTime = Date()
 
     await withTaskGroup(of: Void.self) { group in
-      for taskId in 0 ..< taskCount {
+      for taskId in 0..<taskCount {
         group.addTask {
           let boundaryId = TestBoundaryId(value: "task_\(taskId)")
-          for i in 0 ..< operationsPerTask {
+          for i in 0..<operationsPerTask {
             let info = TestLockmanInfo(id: "\(taskId)_\(i)")
             state.add(id: boundaryId, info: info)
             if i % 3 == 0 {
@@ -636,10 +640,10 @@ final class LockmanStatePerformanceTests: XCTestCase {
     let endTime = Date()
     let duration = endTime.timeIntervalSince(startTime)
 
-    XCTAssertLessThan(duration , 2.0)
+    XCTAssertLessThan(duration, 2.0)
 
     // Verify each task's boundary has expected number of entries
-    for taskId in 0 ..< taskCount {
+    for taskId in 0..<taskCount {
       let boundaryId = TestBoundaryId(value: "task_\(taskId)")
       let currents = state.currents(id: boundaryId)
       let currentCount = currents.count

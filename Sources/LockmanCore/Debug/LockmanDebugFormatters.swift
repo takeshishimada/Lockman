@@ -23,7 +23,7 @@ extension Lockman.debug {
     public static let compact = FormatOptions(
       useShortStrategyNames: true,
       simplifyBoundaryIds: true,
-      maxStrategyWidth: 0, // 0 means no limit
+      maxStrategyWidth: 0,  // 0 means no limit
       maxBoundaryWidth: 0,
       maxActionIdWidth: 0,
       maxAdditionalWidth: 0
@@ -90,7 +90,7 @@ extension Lockman.debug {
         // Extract content between AnyHashable( and the last )
         let innerStart = content.index(content.startIndex, offsetBy: 12)
         if let lastParen = content.lastIndex(of: ")") {
-          let innerContent = String(content[innerStart ..< lastParen])
+          let innerContent = String(content[innerStart..<lastParen])
           cleaned = innerContent
           // print("DEBUG after removing AnyHashable: '\(cleaned)'")
         }
@@ -154,11 +154,12 @@ extension Lockman.debug {
           let boundaryIdString = String(describing: boundaryId)
           // Debug: print raw boundary ID
           // print("DEBUG: Raw boundaryId: '\(boundaryIdString)'")
-          allLocks.append((
-            strategy: formatStrategyName(strategyId.value, options: options),
-            boundaryId: formatBoundaryId(boundaryIdString, options: options),
-            info: lockInfo
-          ))
+          allLocks.append(
+            (
+              strategy: formatStrategyName(strategyId.value, options: options),
+              boundaryId: formatBoundaryId(boundaryIdString, options: options),
+              info: lockInfo
+            ))
         }
       }
     }
@@ -181,9 +182,10 @@ extension Lockman.debug {
     let maxBoundaryContentWidth = allLocks.map(\.boundaryId.count).max() ?? 0
     let maxActionIdContentWidth = max(
       allLocks.map(\.info.actionId.count).max() ?? 0,
-      36 // UUID width
+      36  // UUID width
     )
-    let maxAdditionalContentWidth = allLocks.map { extractAdditionalInfo(from: $0.info).count }.max() ?? 0
+    let maxAdditionalContentWidth =
+      allLocks.map { extractAdditionalInfo(from: $0.info).count }.max() ?? 0
 
     // Use the larger of header or content width, with optional max limits
     let strategyWidth: Int
@@ -192,52 +194,62 @@ extension Lockman.debug {
     let additionalWidth: Int
 
     if options.maxStrategyWidth > 0 {
-      strategyWidth = min(options.maxStrategyWidth, max(strategyHeaderWidth, maxStrategyContentWidth))
+      strategyWidth = min(
+        options.maxStrategyWidth, max(strategyHeaderWidth, maxStrategyContentWidth))
     } else {
       strategyWidth = max(strategyHeaderWidth, maxStrategyContentWidth)
     }
 
     if options.maxBoundaryWidth > 0 {
-      boundaryWidth = min(options.maxBoundaryWidth, max(boundaryHeaderWidth, maxBoundaryContentWidth))
+      boundaryWidth = min(
+        options.maxBoundaryWidth, max(boundaryHeaderWidth, maxBoundaryContentWidth))
     } else {
       boundaryWidth = max(boundaryHeaderWidth, maxBoundaryContentWidth)
     }
 
     if options.maxActionIdWidth > 0 {
-      actionIdWidth = min(options.maxActionIdWidth, max(actionIdHeaderWidth, maxActionIdContentWidth))
+      actionIdWidth = min(
+        options.maxActionIdWidth, max(actionIdHeaderWidth, maxActionIdContentWidth))
     } else {
       actionIdWidth = max(actionIdHeaderWidth, maxActionIdContentWidth)
     }
 
     if options.maxAdditionalWidth > 0 {
-      additionalWidth = min(options.maxAdditionalWidth, max(additionalHeaderWidth, maxAdditionalContentWidth))
+      additionalWidth = min(
+        options.maxAdditionalWidth, max(additionalHeaderWidth, maxAdditionalContentWidth))
     } else {
       additionalWidth = max(additionalHeaderWidth, maxAdditionalContentWidth)
     }
 
     // Print table header
-    let horizontalLine = "┌" + String(repeating: "─", count: strategyWidth + 2) +
-      "┬" + String(repeating: "─", count: boundaryWidth + 2) +
-      "┬" + String(repeating: "─", count: actionIdWidth + 2) +
-      "┬" + String(repeating: "─", count: additionalWidth + 2) + "┐"
+    let horizontalLine =
+      "┌" + String(repeating: "─", count: strategyWidth + 2) + "┬"
+      + String(repeating: "─", count: boundaryWidth + 2) + "┬"
+      + String(repeating: "─", count: actionIdWidth + 2) + "┬"
+      + String(repeating: "─", count: additionalWidth + 2) + "┐"
 
-    let headerSeparator = "├" + String(repeating: "─", count: strategyWidth + 2) +
-      "┼" + String(repeating: "─", count: boundaryWidth + 2) +
-      "┼" + String(repeating: "─", count: actionIdWidth + 2) +
-      "┼" + String(repeating: "─", count: additionalWidth + 2) + "┤"
+    let headerSeparator =
+      "├" + String(repeating: "─", count: strategyWidth + 2) + "┼"
+      + String(repeating: "─", count: boundaryWidth + 2) + "┼"
+      + String(repeating: "─", count: actionIdWidth + 2) + "┼"
+      + String(repeating: "─", count: additionalWidth + 2) + "┤"
 
-    let rowSeparator = "├" + String(repeating: "─", count: strategyWidth + 2) +
-      "┼" + String(repeating: "─", count: boundaryWidth + 2) +
-      "┼" + String(repeating: "─", count: actionIdWidth + 2) +
-      "┼" + String(repeating: "─", count: additionalWidth + 2) + "┤"
+    let rowSeparator =
+      "├" + String(repeating: "─", count: strategyWidth + 2) + "┼"
+      + String(repeating: "─", count: boundaryWidth + 2) + "┼"
+      + String(repeating: "─", count: actionIdWidth + 2) + "┼"
+      + String(repeating: "─", count: additionalWidth + 2) + "┤"
 
-    let bottomLine = "└" + String(repeating: "─", count: strategyWidth + 2) +
-      "┴" + String(repeating: "─", count: boundaryWidth + 2) +
-      "┴" + String(repeating: "─", count: actionIdWidth + 2) +
-      "┴" + String(repeating: "─", count: additionalWidth + 2) + "┘"
+    let bottomLine =
+      "└" + String(repeating: "─", count: strategyWidth + 2) + "┴"
+      + String(repeating: "─", count: boundaryWidth + 2) + "┴"
+      + String(repeating: "─", count: actionIdWidth + 2) + "┴"
+      + String(repeating: "─", count: additionalWidth + 2) + "┘"
 
     print(horizontalLine)
-    print("│ \(pad("Strategy", to: strategyWidth)) │ \(pad("BoundaryId", to: boundaryWidth)) │ \(pad("ActionId/UniqueId", to: actionIdWidth)) │ \(pad("Additional Info", to: additionalWidth)) │")
+    print(
+      "│ \(pad("Strategy", to: strategyWidth)) │ \(pad("BoundaryId", to: boundaryWidth)) │ \(pad("ActionId/UniqueId", to: actionIdWidth)) │ \(pad("Additional Info", to: additionalWidth)) │"
+    )
     print(headerSeparator)
 
     // Print each lock
@@ -252,9 +264,13 @@ extension Lockman.debug {
       // Handle composite info display
       if let compositeInfo = info as? any LockmanCompositeInfo {
         // First line: strategy and boundary with action ID
-        print("│ \(pad(lock.strategy, to: strategyWidth)) │ \(pad(lock.boundaryId, to: boundaryWidth)) │ \(pad(actionId, to: actionIdWidth)) │ \(pad("Composite", to: additionalWidth)) │")
+        print(
+          "│ \(pad(lock.strategy, to: strategyWidth)) │ \(pad(lock.boundaryId, to: boundaryWidth)) │ \(pad(actionId, to: actionIdWidth)) │ \(pad("Composite", to: additionalWidth)) │"
+        )
         // Second line: unique ID
-        print("│ \(pad("", to: strategyWidth)) │ \(pad("", to: boundaryWidth)) │ \(pad(uniqueId, to: actionIdWidth)) │ \(pad("", to: additionalWidth)) │")
+        print(
+          "│ \(pad("", to: strategyWidth)) │ \(pad("", to: boundaryWidth)) │ \(pad(uniqueId, to: actionIdWidth)) │ \(pad("", to: additionalWidth)) │"
+        )
 
         // Print sub-strategies info
         let subInfos = compositeInfo.allInfos()
@@ -265,16 +281,24 @@ extension Lockman.debug {
           let subAdditionalInfo = extractAdditionalInfo(from: subInfo)
 
           // Sub-strategy first line with indentation
-          print("│ \(pad("  " + subStrategy, to: strategyWidth)) │ \(pad("", to: boundaryWidth)) │ \(pad(subActionId, to: actionIdWidth)) │ \(pad(subAdditionalInfo, to: additionalWidth)) │")
+          print(
+            "│ \(pad("  " + subStrategy, to: strategyWidth)) │ \(pad("", to: boundaryWidth)) │ \(pad(subActionId, to: actionIdWidth)) │ \(pad(subAdditionalInfo, to: additionalWidth)) │"
+          )
           // Sub-strategy second line
-          print("│ \(pad("", to: strategyWidth)) │ \(pad("", to: boundaryWidth)) │ \(pad(subUniqueId, to: actionIdWidth)) │ \(pad("", to: additionalWidth)) │")
+          print(
+            "│ \(pad("", to: strategyWidth)) │ \(pad("", to: boundaryWidth)) │ \(pad(subUniqueId, to: actionIdWidth)) │ \(pad("", to: additionalWidth)) │"
+          )
         }
       } else {
         // Regular info display
         // First line: strategy and boundary with action ID
-        print("│ \(pad(lock.strategy, to: strategyWidth)) │ \(pad(lock.boundaryId, to: boundaryWidth)) │ \(pad(actionId, to: actionIdWidth)) │ \(pad(additionalInfo, to: additionalWidth)) │")
+        print(
+          "│ \(pad(lock.strategy, to: strategyWidth)) │ \(pad(lock.boundaryId, to: boundaryWidth)) │ \(pad(actionId, to: actionIdWidth)) │ \(pad(additionalInfo, to: additionalWidth)) │"
+        )
         // Second line: unique ID
-        print("│ \(pad("", to: strategyWidth)) │ \(pad("", to: boundaryWidth)) │ \(pad(uniqueId, to: actionIdWidth)) │ \(pad("", to: additionalWidth)) │")
+        print(
+          "│ \(pad("", to: strategyWidth)) │ \(pad("", to: boundaryWidth)) │ \(pad(uniqueId, to: actionIdWidth)) │ \(pad("", to: additionalWidth)) │"
+        )
       }
 
       // Add separator between entries (except for the last one)

@@ -3,9 +3,9 @@ import Foundation
 /// Debug utilities for Lockman.
 ///
 /// Provides methods for debugging lock state and enabling/disabling debug logging.
-public extension Lockman {
+extension Lockman {
   /// Debug utilities namespace.
-  enum debug {
+  public enum debug {
     // MARK: - Logging Control
 
     /// Controls whether debug logging is enabled.
@@ -99,12 +99,18 @@ extension LockmanCompositeInfo3: LockmanCompositeInfo {
 
 extension LockmanCompositeInfo4: LockmanCompositeInfo {
   func allInfos() -> [any LockmanInfo] {
-    [lockmanInfoForStrategy1, lockmanInfoForStrategy2, lockmanInfoForStrategy3, lockmanInfoForStrategy4]
+    [
+      lockmanInfoForStrategy1, lockmanInfoForStrategy2, lockmanInfoForStrategy3,
+      lockmanInfoForStrategy4,
+    ]
   }
 }
 
 extension LockmanCompositeInfo5: LockmanCompositeInfo {
   func allInfos() -> [any LockmanInfo] {
-    [lockmanInfoForStrategy1, lockmanInfoForStrategy2, lockmanInfoForStrategy3, lockmanInfoForStrategy4, lockmanInfoForStrategy5]
+    [
+      lockmanInfoForStrategy1, lockmanInfoForStrategy2, lockmanInfoForStrategy3,
+      lockmanInfoForStrategy4, lockmanInfoForStrategy5,
+    ]
   }
 }

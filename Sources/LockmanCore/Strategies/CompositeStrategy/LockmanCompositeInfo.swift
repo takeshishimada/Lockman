@@ -89,7 +89,9 @@ extension LockmanCompositeInfo2: CustomDebugStringConvertible {
 /// Contains action identifiers and strategy-specific information for coordinated locking
 /// between three different strategies. All strategies must successfully acquire their locks
 /// for the composite operation to proceed.
-public struct LockmanCompositeInfo3<I1: LockmanInfo, I2: LockmanInfo, I3: LockmanInfo>: LockmanInfo, Sendable {
+public struct LockmanCompositeInfo3<I1: LockmanInfo, I2: LockmanInfo, I3: LockmanInfo>: LockmanInfo,
+  Sendable
+{
   // MARK: - LockmanInfo Protocol Properties
 
   /// The action identifier for this composite action.
@@ -147,7 +149,9 @@ extension LockmanCompositeInfo3: CustomDebugStringConvertible {
 /// Contains action identifiers and strategy-specific information for coordinated locking
 /// between four different strategies. All strategies must successfully acquire their locks
 /// for the composite operation to proceed.
-public struct LockmanCompositeInfo4<I1: LockmanInfo, I2: LockmanInfo, I3: LockmanInfo, I4: LockmanInfo>: LockmanInfo, Sendable {
+public struct LockmanCompositeInfo4<
+  I1: LockmanInfo, I2: LockmanInfo, I3: LockmanInfo, I4: LockmanInfo
+>: LockmanInfo, Sendable {
   // MARK: - LockmanInfo Protocol Properties
 
   /// The action identifier for this composite action.
@@ -211,7 +215,9 @@ extension LockmanCompositeInfo4: CustomDebugStringConvertible {
 /// Contains action identifiers and strategy-specific information for coordinated locking
 /// between five different strategies. All strategies must successfully acquire their locks
 /// for the composite operation to proceed.
-public struct LockmanCompositeInfo5<I1: LockmanInfo, I2: LockmanInfo, I3: LockmanInfo, I4: LockmanInfo, I5: LockmanInfo>: LockmanInfo, Sendable {
+public struct LockmanCompositeInfo5<
+  I1: LockmanInfo, I2: LockmanInfo, I3: LockmanInfo, I4: LockmanInfo, I5: LockmanInfo
+>: LockmanInfo, Sendable {
   // MARK: - LockmanInfo Protocol Properties
 
   /// The action identifier for this composite action.

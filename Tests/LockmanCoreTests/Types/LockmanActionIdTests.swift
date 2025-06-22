@@ -1,4 +1,5 @@
 import XCTest
+
 @testable import LockmanCore
 
 // MARK: - LockmanActionId Tests
@@ -20,7 +21,7 @@ final class LockmanActionIdTests: XCTestCase {
     }
 
     func testStringOperationsAvailable() {
-      let actionId: LockmanActionId  = "test-action-123"
+      let actionId: LockmanActionId = "test-action-123"
 
       XCTAssertTrue(actionId.contains("action"))
       XCTAssertTrue(actionId.hasPrefix("test"))
@@ -29,13 +30,13 @@ final class LockmanActionIdTests: XCTestCase {
     }
 
     func testComparisonOperations() {
-      let id1: LockmanActionId  = "action-a"
+      let id1: LockmanActionId = "action-a"
       let id2: LockmanActionId = "action-b"
       let id3: LockmanActionId = "action-a"
 
       XCTAssertEqual(id1, id3)
       XCTAssertNotEqual(id1, id2)
-      XCTAssertLessThan(id1 , id2) // Lexicographic comparison
+      XCTAssertLessThan(id1, id2)  // Lexicographic comparison
     }
   }
 
@@ -78,7 +79,7 @@ final class LockmanActionIdTests: XCTestCase {
 
   final class StringInterpolationTests: XCTestCase {
     func testInterpolationWithVariousTypes() {
-      let intValue  = 42
+      let intValue = 42
       let doubleValue = 3.14
       let boolValue = true
 
@@ -97,8 +98,8 @@ final class LockmanActionIdTests: XCTestCase {
         let name: String
       }
 
-      let user  = User(id: 999, name: "TestUser")
-      let timestamp = 1234567890
+      let user = User(id: 999, name: "TestUser")
+      let timestamp = 1_234_567_890
 
       let complexId: LockmanActionId = "user_\(user.id)_\(user.name)_\(timestamp)"
       XCTAssertEqual(complexId, "user_999_TestUser_1234567890")
@@ -109,7 +110,7 @@ final class LockmanActionIdTests: XCTestCase {
 
   final class CollectionUsageTests: XCTestCase {
     func testArrayOfActionIds() {
-      let actionIds: [LockmanActionId]  = ["action1", "action2", "action3"]
+      let actionIds: [LockmanActionId] = ["action1", "action2", "action3"]
 
       XCTAssertEqual(actionIds.count, 3)
       XCTAssertTrue(actionIds.contains("action2"))
@@ -118,9 +119,9 @@ final class LockmanActionIdTests: XCTestCase {
     }
 
     func testSetOfActionIds() {
-      var actionSet: Set<LockmanActionId>  = ["action1", "action2", "action1"]
+      var actionSet: Set<LockmanActionId> = ["action1", "action2", "action1"]
 
-      XCTAssertEqual(actionSet.count, 2) // Duplicates removed
+      XCTAssertEqual(actionSet.count, 2)  // Duplicates removed
       XCTAssertTrue(actionSet.contains("action1"))
       XCTAssertTrue(actionSet.contains("action2"))
 
@@ -129,7 +130,7 @@ final class LockmanActionIdTests: XCTestCase {
     }
 
     func testDictionaryWithActionIdKeys() {
-      let actionData: [LockmanActionId: Int]  = [
+      let actionData: [LockmanActionId: Int] = [
         "action1": 10,
         "action2": 20,
         "action3": 30,
@@ -152,10 +153,10 @@ final class LockmanActionIdTests: XCTestCase {
     }
 
     func testFrequentStringOperations() {
-      let baseId: LockmanActionId  = "base"
+      let baseId: LockmanActionId = "base"
       var modifiedId = baseId
 
-      for i in 0 ..< 10 {
+      for i in 0..<10 {
         modifiedId += "_\(i)"
       }
 

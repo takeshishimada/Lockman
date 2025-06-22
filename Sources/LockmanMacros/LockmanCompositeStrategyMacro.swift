@@ -58,7 +58,9 @@ struct EnumCaseDefinition {
 /// - Parameter enumDecl: The enum declaration to analyze
 /// - Returns: Array of case definitions extracted from the enum
 /// - Throws: `LockmanMacroError.invalidDeclaration` if enum structure is malformed
-private func extractEnumCaseDefinitions(from enumDecl: EnumDeclSyntax) throws -> [EnumCaseDefinition] {
+private func extractEnumCaseDefinitions(from enumDecl: EnumDeclSyntax) throws
+  -> [EnumCaseDefinition]
+{
   var caseDefinitions: [EnumCaseDefinition] = []
 
   for member in enumDecl.memberBlock.members {
@@ -72,14 +74,17 @@ private func extractEnumCaseDefinitions(from enumDecl: EnumDeclSyntax) throws ->
       let associatedValueCount = element.parameterClause?.parameters.count ?? 0
 
       // Validate case name is a valid Swift identifier
-      guard !caseName.isEmpty, caseName.allSatisfy({ $0.isLetter || $0.isNumber || $0 == "_" }) else {
-        throw LockmanMacroError.invalidCaseName("Invalid case name '\(caseName)'. Case names must be valid Swift identifiers.")
+      guard !caseName.isEmpty, caseName.allSatisfy({ $0.isLetter || $0.isNumber || $0 == "_" })
+      else {
+        throw LockmanMacroError.invalidCaseName(
+          "Invalid case name '\(caseName)'. Case names must be valid Swift identifiers.")
       }
 
-      caseDefinitions.append(EnumCaseDefinition(
-        name: caseName,
-        associatedValueCount: associatedValueCount
-      ))
+      caseDefinitions.append(
+        EnumCaseDefinition(
+          name: caseName,
+          associatedValueCount: associatedValueCount
+        ))
     }
   }
 
@@ -154,9 +159,12 @@ private func determineAccessLevel(from enumDecl: EnumDeclSyntax) -> String {
 /// - Parameter caseDefinitions: Array of case definitions to process
 /// - Returns: Complete switch statement body as a string
 /// - Throws: `LockmanMacroError.invalidCaseName` if any case name is invalid
-private func generateActionNameSwitchBody(from caseDefinitions: [EnumCaseDefinition]) throws -> String {
+private func generateActionNameSwitchBody(from caseDefinitions: [EnumCaseDefinition]) throws
+  -> String
+{
   guard !caseDefinitions.isEmpty else {
-    throw LockmanMacroError.invalidDeclaration("Enum must have at least one case to generate actionName property.")
+    throw LockmanMacroError.invalidDeclaration(
+      "Enum must have at least one case to generate actionName property.")
   }
 
   let switchCases = caseDefinitions.map { caseDefinition in
@@ -226,12 +234,12 @@ private func generateActionNameProperty(
   let switchBody = try generateActionNameSwitchBody(from: caseDefinitions)
 
   return """
-  \(raw: accessLevel) var actionName: String {
-    switch self {
-    \(raw: switchBody)
+    \(raw: accessLevel) var actionName: String {
+      switch self {
+      \(raw: switchBody)
+      }
     }
-  }
-  """
+    """
 }
 
 // MARK: - Strategy Type Parsing
@@ -282,8 +290,8 @@ private func extractStrategyTypeNames(
 
     // Handle Strategy.self format (preferred)
     if let memberAccess = argument.expression.as(MemberAccessExprSyntax.self),
-       let base = memberAccess.base,
-       memberAccess.declName.baseName.text == "self"
+      let base = memberAccess.base,
+      memberAccess.declName.baseName.text == "self"
     {
       strategyName = base.description.trimmingCharacters(in: .whitespacesAndNewlines)
     }
@@ -292,8 +300,8 @@ private func extractStrategyTypeNames(
       strategyName = identifier.baseName.text
     } else {
       throw LockmanMacroError.invalidArguments(
-        "Strategy argument must be in the format 'StrategyName.self'. " +
-          "Found: \(argument.expression.description.trimmingCharacters(in: .whitespacesAndNewlines))"
+        "Strategy argument must be in the format 'StrategyName.self'. "
+          + "Found: \(argument.expression.description.trimmingCharacters(in: .whitespacesAndNewlines))"
       )
     }
 
@@ -307,8 +315,8 @@ private func extractStrategyTypeNames(
 
   guard strategyTypeNames.count == expectedCount else {
     throw LockmanMacroError.invalidArguments(
-      "@LockmanCompositeStrategy requires exactly \(expectedCount) strategy arguments, " +
-        "but \(strategyTypeNames.count) were provided."
+      "@LockmanCompositeStrategy requires exactly \(expectedCount) strategy arguments, "
+        + "but \(strategyTypeNames.count) were provided."
     )
   }
 
@@ -385,12 +393,12 @@ private func generateStrategyIdPropertyMulti(
   }.joined(separator: ",\n")
 
   return """
-  \(raw: accessLevel) var strategyId: LockmanStrategyId {
-    LockmanCompositeStrategy\(raw: strategyCount).makeStrategyId(
-  \(raw: strategyParams)
-    )
-  }
-  """
+    \(raw: accessLevel) var strategyId: LockmanStrategyId {
+      LockmanCompositeStrategy\(raw: strategyCount).makeStrategyId(
+    \(raw: strategyParams)
+      )
+    }
+    """
 }
 
 /// Generates the lockmanInfo property for 2-strategy compositions.
@@ -455,15 +463,15 @@ private func generateLockmanInfoProperty3(
   let strategy3 = strategyNames[2]
 
   return """
-  \(raw: accessLevel) var lockmanInfo: LockmanCompositeInfo3<\(raw: strategy1).I, \(raw: strategy2).I, \(raw: strategy3).I> {
-    return LockmanCompositeInfo3(
-      actionId: actionName,
-      lockmanInfoForStrategy1: lockmanInfoForStrategy1,
-      lockmanInfoForStrategy2: lockmanInfoForStrategy2,
-      lockmanInfoForStrategy3: lockmanInfoForStrategy3
-    )
-  }
-  """
+    \(raw: accessLevel) var lockmanInfo: LockmanCompositeInfo3<\(raw: strategy1).I, \(raw: strategy2).I, \(raw: strategy3).I> {
+      return LockmanCompositeInfo3(
+        actionId: actionName,
+        lockmanInfoForStrategy1: lockmanInfoForStrategy1,
+        lockmanInfoForStrategy2: lockmanInfoForStrategy2,
+        lockmanInfoForStrategy3: lockmanInfoForStrategy3
+      )
+    }
+    """
 }
 
 /// Generates the lockmanInfo property for 4-strategy compositions.
@@ -482,16 +490,16 @@ private func generateLockmanInfoProperty4(
   let strategy4 = strategyNames[3]
 
   return """
-  \(raw: accessLevel) var lockmanInfo: LockmanCompositeInfo4<\(raw: strategy1).I, \(raw: strategy2).I, \(raw: strategy3).I, \(raw: strategy4).I> {
-    return LockmanCompositeInfo4(
-      actionId: actionName,
-      lockmanInfoForStrategy1: lockmanInfoForStrategy1,
-      lockmanInfoForStrategy2: lockmanInfoForStrategy2,
-      lockmanInfoForStrategy3: lockmanInfoForStrategy3,
-      lockmanInfoForStrategy4: lockmanInfoForStrategy4
-    )
-  }
-  """
+    \(raw: accessLevel) var lockmanInfo: LockmanCompositeInfo4<\(raw: strategy1).I, \(raw: strategy2).I, \(raw: strategy3).I, \(raw: strategy4).I> {
+      return LockmanCompositeInfo4(
+        actionId: actionName,
+        lockmanInfoForStrategy1: lockmanInfoForStrategy1,
+        lockmanInfoForStrategy2: lockmanInfoForStrategy2,
+        lockmanInfoForStrategy3: lockmanInfoForStrategy3,
+        lockmanInfoForStrategy4: lockmanInfoForStrategy4
+      )
+    }
+    """
 }
 
 /// Generates the lockmanInfo property for 5-strategy compositions.
@@ -511,17 +519,17 @@ private func generateLockmanInfoProperty5(
   let strategy5 = strategyNames[4]
 
   return """
-  \(raw: accessLevel) var lockmanInfo: LockmanCompositeInfo5<\(raw: strategy1).I, \(raw: strategy2).I, \(raw: strategy3).I, \(raw: strategy4).I, \(raw: strategy5).I> {
-    return LockmanCompositeInfo5(
-      actionId: actionName,
-      lockmanInfoForStrategy1: lockmanInfoForStrategy1,
-      lockmanInfoForStrategy2: lockmanInfoForStrategy2,
-      lockmanInfoForStrategy3: lockmanInfoForStrategy3,
-      lockmanInfoForStrategy4: lockmanInfoForStrategy4,
-      lockmanInfoForStrategy5: lockmanInfoForStrategy5
-    )
-  }
-  """
+    \(raw: accessLevel) var lockmanInfo: LockmanCompositeInfo5<\(raw: strategy1).I, \(raw: strategy2).I, \(raw: strategy3).I, \(raw: strategy4).I, \(raw: strategy5).I> {
+      return LockmanCompositeInfo5(
+        actionId: actionName,
+        lockmanInfoForStrategy1: lockmanInfoForStrategy1,
+        lockmanInfoForStrategy2: lockmanInfoForStrategy2,
+        lockmanInfoForStrategy3: lockmanInfoForStrategy3,
+        lockmanInfoForStrategy4: lockmanInfoForStrategy4,
+        lockmanInfoForStrategy5: lockmanInfoForStrategy5
+      )
+    }
+    """
 }
 
 // MARK: - Macro Implementations

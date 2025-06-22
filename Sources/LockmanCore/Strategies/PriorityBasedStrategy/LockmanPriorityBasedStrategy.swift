@@ -140,15 +140,18 @@ public final class LockmanPriorityBasedStrategy: LockmanStrategy, @unchecked Sen
     // 1. If the requested action has blocksSameAction=true, it cannot execute if any action with the same actionId exists
     // 2. If any existing action with the same actionId has blocksSameAction=true, the requested action cannot execute
     // This ensures bidirectional blocking between actions with the same actionId
-    if requestedInfo.blocksSameAction || currentLocks.contains(where: {
-      $0.actionId == requestedInfo.actionId && $0.blocksSameAction
-    }) {
+    if requestedInfo.blocksSameAction
+      || currentLocks.contains(where: {
+        $0.actionId == requestedInfo.actionId && $0.blocksSameAction
+      })
+    {
       // Check if any action with the same actionId already exists
       let hasSameActionConflict = currentLocks.contains {
         $0.actionId == requestedInfo.actionId
       }
       if hasSameActionConflict {
-        result = .failure(LockmanPriorityBasedError.blockedBySameAction(actionId: requestedInfo.actionId))
+        result = .failure(
+          LockmanPriorityBasedError.blockedBySameAction(actionId: requestedInfo.actionId))
         failureReason = "Same action '\(requestedInfo.actionId)' is blocked by policy"
 
         LockmanLogger.shared.logCanLock(
@@ -184,8 +187,11 @@ public final class LockmanPriorityBasedStrategy: LockmanStrategy, @unchecked Sen
     // Compare priority levels using the Comparable implementation
     if currentPriority > requestedPriority {
       // Current action has higher priority - request fails
-      result = .failure(LockmanPriorityBasedError.higherPriorityExists(requested: requestedPriority, currentHighest: currentPriority))
-      failureReason = "Higher priority action '\(currentHighestPriorityInfo.actionId)' (priority: \(currentPriority)) is currently locked"
+      result = .failure(
+        LockmanPriorityBasedError.higherPriorityExists(
+          requested: requestedPriority, currentHighest: currentPriority))
+      failureReason =
+        "Higher priority action '\(currentHighestPriorityInfo.actionId)' (priority: \(currentPriority)) is currently locked"
     } else if currentPriority == requestedPriority {
       // Same priority level - apply existing action's concurrency behavior
       let behaviorResult = applySamePriorityBehavior(
@@ -195,7 +201,8 @@ public final class LockmanPriorityBasedStrategy: LockmanStrategy, @unchecked Sen
       result = behaviorResult
 
       if case .failure = behaviorResult {
-        failureReason = "Same priority action '\(currentHighestPriorityInfo.actionId)' with exclusive behavior is already running"
+        failureReason =
+          "Same priority action '\(currentHighestPriorityInfo.actionId)' with exclusive behavior is already running"
       } else if behaviorResult == .successWithPrecedingCancellation {
         cancelledInfo = (currentHighestPriorityInfo.actionId, currentHighestPriorityInfo.uniqueId)
       }
@@ -311,7 +318,7 @@ public final class LockmanPriorityBasedStrategy: LockmanStrategy, @unchecked Sen
 
 // MARK: - Private Implementation
 
-private extension LockmanPriorityBasedStrategy {
+extension LockmanPriorityBasedStrategy {
   /// Applies same-priority concurrency behavior between two actions.
   ///
   /// When two actions have the same priority level, this method determines
@@ -344,7 +351,7 @@ private extension LockmanPriorityBasedStrategy {
   ///   - current: The currently active priority-based lock info
   ///   - requested: The requested priority-based lock info (behavior ignored)
   /// - Returns: A `LockmanResult` based on the existing action's concurrency behavior
-  func applySamePriorityBehavior(
+  fileprivate func applySamePriorityBehavior(
     current: LockmanPriorityBasedInfo,
     requested _: LockmanPriorityBasedInfo
   ) -> LockmanResult {

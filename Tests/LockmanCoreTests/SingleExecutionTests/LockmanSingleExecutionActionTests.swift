@@ -1,6 +1,6 @@
-
 import Foundation
 import XCTest
+
 @testable import LockmanCore
 
 /// Tests for LockmanSingleExecutionAction protocol and implementations
@@ -72,7 +72,7 @@ final class LockmanSingleExecutionActionTests: XCTestCase {
     XCTAssertEqual(action.strategyId, .singleExecution)
 
     // Test automatic lockmanInfo
-    let info  = action.lockmanInfo
+    let info = action.lockmanInfo
     XCTAssertEqual(info.actionId, "simpleAction")
     XCTAssertNotEqual(info.uniqueId, UUID())
   }
@@ -103,7 +103,7 @@ final class LockmanSingleExecutionActionTests: XCTestCase {
   }
 
   func testsharedLockActionBehavior() {
-    let saveAction  = SharedLockAction.save(data: "test data")
+    let saveAction = SharedLockAction.save(data: "test data")
     let loadAction = SharedLockAction.load
     let resetAction = SharedLockAction.reset
 
@@ -121,22 +121,22 @@ final class LockmanSingleExecutionActionTests: XCTestCase {
 
   func testsingleExecutionActionIsLockmanAction() {
     // Test that SingleExecutionAction conforms to LockmanAction
-    let action: any LockmanAction  = SimpleAction()
+    let action: any LockmanAction = SimpleAction()
 
     // Verify we can store it as LockmanAction
     let actions: [any LockmanAction] = [action]
     XCTAssertEqual(actions.count, 1)
 
     // Test type constraints are satisfied
-    let info  = action.lockmanInfo as? LockmanSingleExecutionInfo
-    XCTAssertNotNil(info )
+    let info = action.lockmanInfo as? LockmanSingleExecutionInfo
+    XCTAssertNotNil(info)
     XCTAssertEqual(info?.actionId, "simpleAction")
   }
 
   // MARK: - Integration Tests
 
   func testintegrationWithStrategyContainer() async {
-    let container  = LockmanStrategyContainer()
+    let container = LockmanStrategyContainer()
     try? container.register(LockmanSingleExecutionStrategy.shared)
 
     await Lockman.withTestContainer(container) {
@@ -206,7 +206,7 @@ final class LockmanSingleExecutionActionTests: XCTestCase {
 
   func testunicodeActionNameHandling() {
     struct UnicodeAction: LockmanSingleExecutionAction {
-      let actionName  = "🔒アクション🚀"
+      let actionName = "🔒アクション🚀"
 
       var lockmanInfo: LockmanSingleExecutionInfo {
         .init(actionId: actionName, mode: .boundary)
@@ -220,7 +220,7 @@ final class LockmanSingleExecutionActionTests: XCTestCase {
 
   func testveryLongActionNameHandling() {
     struct LongNameAction: LockmanSingleExecutionAction {
-      let actionName  = String(repeating: "VeryLongActionName", count: 100)
+      let actionName = String(repeating: "VeryLongActionName", count: 100)
 
       var lockmanInfo: LockmanSingleExecutionInfo {
         .init(actionId: actionName, mode: .boundary)
@@ -233,7 +233,7 @@ final class LockmanSingleExecutionActionTests: XCTestCase {
   }
 
   func testactionNameConsistencyAcrossInstances() {
-    let action1  = SimpleAction()
+    let action1 = SimpleAction()
     let action2 = SimpleAction()
 
     XCTAssertEqual(action1.actionName, action2.actionName)

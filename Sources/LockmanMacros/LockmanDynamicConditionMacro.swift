@@ -44,8 +44,8 @@ extension LockmanDynamicConditionMacro: MemberMacro {
         from: declaration,
         attribute: node,
         in: context
-      ) else
-    {
+      )
+    else {
       return []
     }
 
@@ -86,12 +86,12 @@ private func generateDefaultLockmanInfo(for enumDecl: EnumDeclSyntax) -> DeclSyn
 
   let propertyDecl = """
 
-  \(accessLevel) var lockmanInfo: LockmanDynamicConditionInfo {
-    LockmanDynamicConditionInfo(
-      actionId: actionName
-    )
-  }
-  """
+    \(accessLevel) var lockmanInfo: LockmanDynamicConditionInfo {
+      LockmanDynamicConditionInfo(
+        actionId: actionName
+      )
+    }
+    """
 
   return DeclSyntax(stringLiteral: propertyDecl)
 }
