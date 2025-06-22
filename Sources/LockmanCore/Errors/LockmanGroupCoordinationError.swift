@@ -22,6 +22,11 @@ public enum LockmanGroupCoordinationError: LockmanError {
   /// Each action ID must be unique within a coordination group.
   case actionAlreadyInGroup(actionId: String, groupIds: Set<String>)
   
+  /// Indicates that an action is blocked by an exclusive leader.
+  ///
+  /// Exclusive leaders can prevent other actions from executing based on their exclusion mode.
+  case blockedByExclusiveLeader(leaderActionId: String, groupId: String, exclusionMode: GroupCoordinationRole.ExclusionMode)
+  
   public var errorDescription: String? {
     switch self {
     case let .leaderCannotJoinNonEmptyGroup(groupIds):
@@ -30,6 +35,8 @@ public enum LockmanGroupCoordinationError: LockmanError {
       return "Cannot acquire lock: member cannot join empty groups \(groupIds.sorted())."
     case let .actionAlreadyInGroup(actionId, groupIds):
       return "Cannot acquire lock: action '\(actionId)' is already in groups \(groupIds.sorted())."
+    case let .blockedByExclusiveLeader(leaderActionId, groupId, exclusionMode):
+      return "Cannot acquire lock: blocked by exclusive leader '\(leaderActionId)' in group '\(groupId)' (mode: \(exclusionMode))."
     }
   }
   
@@ -41,6 +48,17 @@ public enum LockmanGroupCoordinationError: LockmanError {
       return "Members require existing participants in the group for coordination."
     case .actionAlreadyInGroup:
       return "Each action must have a unique ID within its coordination groups."
+    case .blockedByExclusiveLeader(_, _, let exclusionMode):
+      switch exclusionMode {
+      case .all:
+        return "Exclusive leader with 'all' mode blocks all other actions."
+      case .membersOnly:
+        return "Exclusive leader with 'membersOnly' mode blocks member actions."
+      case .leadersOnly:
+        return "Exclusive leader with 'leadersOnly' mode blocks other leader actions."
+      case .none:
+        return "This should not happen with 'none' mode."
+      }
     }
   }
 }

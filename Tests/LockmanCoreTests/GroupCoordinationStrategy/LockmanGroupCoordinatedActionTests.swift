@@ -14,7 +14,7 @@ final class LockmanGroupCoordinatedActionTests: XCTestCase {
       LockmanGroupCoordinatedInfo(
         actionId: actionName,
         groupId: "dataLoading",
-        coordinationRole: .leader
+        coordinationRole: .leader(.none)
       )
     }
   }
@@ -74,7 +74,7 @@ final class LockmanGroupCoordinatedActionTests: XCTestCase {
       let role: GroupCoordinationRole
       switch self {
       case .startNavigation:
-        role = .leader
+        role = .leader(.none)
       case .animateTransition, .completeNavigation:
         role = .member
       }
@@ -123,7 +123,7 @@ final class LockmanGroupCoordinatedActionTests: XCTestCase {
     let info = action.lockmanInfo
     XCTAssertEqual(info.actionId, "startLoading")
     XCTAssertEqual(info.groupIds, ["dataLoading"])
-    XCTAssertEqual(info.coordinationRole, .leader)
+    XCTAssertEqual(info.coordinationRole, .leader(.none))
     XCTAssertNotEqual(info.uniqueId, UUID())
   }
 
@@ -146,7 +146,7 @@ final class LockmanGroupCoordinatedActionTests: XCTestCase {
     
     let startInfo = startNav.lockmanInfo
     XCTAssertEqual(startInfo.groupIds, ["navigation-detail"])
-    XCTAssertEqual(startInfo.coordinationRole, .leader)
+    XCTAssertEqual(startInfo.coordinationRole, .leader(.none))
 
     // Test members
     let animate = NavigationAction.animateTransition(screenId: "detail")
@@ -174,7 +174,7 @@ final class LockmanGroupCoordinatedActionTests: XCTestCase {
     let leader = ConfigurableAction(
       name: "fetchData",
       group: "api-users",
-      role: .leader
+      role: .leader(.none)
     )
 
     let member = ConfigurableAction(
@@ -186,7 +186,7 @@ final class LockmanGroupCoordinatedActionTests: XCTestCase {
     XCTAssertEqual(leader.actionName, "fetchData")
     let leaderInfo = leader.lockmanInfo
     XCTAssertEqual(leaderInfo.groupIds, ["api-users"])
-    XCTAssertEqual(leaderInfo.coordinationRole, .leader)
+    XCTAssertEqual(leaderInfo.coordinationRole, .leader(.none))
 
     XCTAssertEqual(member.actionName, "cacheData")
     let memberInfo = member.lockmanInfo
@@ -210,7 +210,7 @@ final class LockmanGroupCoordinatedActionTests: XCTestCase {
     // Verify properties match action
     XCTAssertEqual(info.actionId, action.actionName)
     XCTAssertEqual(info.groupIds, ["dataLoading"])
-    XCTAssertEqual(info.coordinationRole, .leader)
+    XCTAssertEqual(info.coordinationRole, .leader(.none))
 
     // Each call generates new unique ID
     let info2 = action.lockmanInfo
@@ -315,7 +315,7 @@ final class LockmanGroupCoordinatedActionTests: XCTestCase {
         LockmanGroupCoordinatedInfo(
           actionId: actionName,
           groupId: "singleGroup",
-          coordinationRole: .leader
+          coordinationRole: .leader(.none)
         )
       }
     }
@@ -327,7 +327,7 @@ final class LockmanGroupCoordinatedActionTests: XCTestCase {
         LockmanGroupCoordinatedInfo(
           actionId: actionName,
           groupIds: ["group1", "group2"],
-          coordinationRole: .leader
+          coordinationRole: .leader(.none)
         )
       }
     }
@@ -349,7 +349,7 @@ final class LockmanGroupCoordinatedActionTests: XCTestCase {
     let action = ConfigurableAction(
       name: "",
       group: "",
-      role: .leader
+      role: .leader(.none)
     )
 
     XCTAssertEqual(action.actionName, "")
