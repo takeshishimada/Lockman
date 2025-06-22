@@ -111,6 +111,14 @@ public final class LockmanGroupCoordinationStrategy: LockmanStrategy, @unchecked
     id: B,
     info: LockmanGroupCoordinatedInfo
   ) -> LockmanResult {
+    canLock(id: id, info: info, cancellationOption: nil)
+  }
+  
+  public func canLock<B: LockmanBoundaryId>(
+    id: B,
+    info: LockmanGroupCoordinatedInfo,
+    cancellationOption: CancellationOption?
+  ) -> LockmanResult {
     let result: LockmanResult
     var failureReason: String?
 
@@ -170,8 +178,27 @@ public final class LockmanGroupCoordinationStrategy: LockmanStrategy, @unchecked
         case .leader:
           // Leaders can only start when group is empty
           if groupState != nil, !groupState!.isEmpty {
-            failureReason = "Leader cannot start: group '\(groupId)' already has active members"
-            return .failure(LockmanGroupCoordinationError.leaderCannotJoinNonEmptyGroup(groupIds: Set([groupId])))
+            // Check if we should apply cancellation option
+            if let cancellationOption = cancellationOption {
+              switch cancellationOption {
+              case .cancelExisting:
+                // Allow leader to proceed by cancelling existing members
+                // This will be handled after all groups are checked
+                continue
+              case .blockNew:
+                // Block the new leader
+                failureReason = "Leader cannot start: group '\(groupId)' already has active members"
+                return .failure(LockmanGroupCoordinationError.leaderCannotJoinNonEmptyGroup(groupIds: Set([groupId])))
+              case .useStrategyDefault:
+                // Use default behavior (block)
+                failureReason = "Leader cannot start: group '\(groupId)' already has active members"
+                return .failure(LockmanGroupCoordinationError.leaderCannotJoinNonEmptyGroup(groupIds: Set([groupId])))
+              }
+            } else {
+              // Default behavior - block
+              failureReason = "Leader cannot start: group '\(groupId)' already has active members"
+              return .failure(LockmanGroupCoordinationError.leaderCannotJoinNonEmptyGroup(groupIds: Set([groupId])))
+            }
           }
 
         case .member:
@@ -183,6 +210,20 @@ public final class LockmanGroupCoordinationStrategy: LockmanStrategy, @unchecked
         }
       }
 
+      // Check if we need to return successWithPrecedingCancellation
+      if let cancellationOption = cancellationOption, cancellationOption == .cancelExisting {
+        // Check if any group would have blocked a leader
+        if case .leader = info.coordinationRole {
+          for groupId in info.groupIds {
+            let groupState = boundaryState?.groups[groupId]
+            if groupState != nil, !groupState!.isEmpty {
+              // There are existing members that need to be cancelled
+              return .successWithPrecedingCancellation
+            }
+          }
+        }
+      }
+      
       // All groups satisfied the conditions
       return .success
     }

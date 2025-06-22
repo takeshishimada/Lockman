@@ -35,6 +35,12 @@ public struct AnyLockmanStrategy<I: LockmanInfo>: LockmanStrategy, Sendable {
   /// - Performance: Direct function pointer call with minimal overhead
   /// - Thread Safety: Marked as `@Sendable` to ensure concurrent access safety
   private let _canLock: @Sendable (any LockmanBoundaryId, I) -> LockmanResult
+  
+  /// Type-erased function for lock feasibility checking with cancellation option.
+  ///
+  /// This closure encapsulates the `canLock(id:info:cancellationOption:)` method,
+  /// allowing per-call override of cancellation behavior.
+  private let _canLockWithCancellation: @Sendable (any LockmanBoundaryId, I, CancellationOption?) -> LockmanResult
 
   /// Type-erased function for lock acquisition.
   ///
@@ -98,6 +104,10 @@ public struct AnyLockmanStrategy<I: LockmanInfo>: LockmanStrategy, Sendable {
 
     _canLock = { [strategy] id, info in
       strategy.canLock(id: id, info: info)
+    }
+    
+    _canLockWithCancellation = { [strategy] id, info, cancellationOption in
+      strategy.canLock(id: id, info: info, cancellationOption: cancellationOption)
     }
 
     _lock = { [strategy] id, info in
@@ -164,6 +174,24 @@ public struct AnyLockmanStrategy<I: LockmanInfo>: LockmanStrategy, Sendable {
   /// - Returns: A `LockmanResult` indicating whether the lock can be acquired
   public func canLock<B: LockmanBoundaryId>(id: B, info: I) -> LockmanResult {
     _canLock(id, info)
+  }
+  
+  /// Checks if a lock can be acquired with optional cancellation behavior override.
+  ///
+  /// This method delegates to the concrete strategy's enhanced implementation that
+  /// supports per-call cancellation behavior customization.
+  ///
+  /// - Parameters:
+  ///   - id: A unique boundary identifier conforming to `LockmanBoundaryId`
+  ///   - info: Lock information of type `I`
+  ///   - cancellationOption: Optional override for cancellation behavior
+  /// - Returns: A `LockmanResult` indicating whether the lock can be acquired
+  public func canLock<B: LockmanBoundaryId>(
+    id: B,
+    info: I,
+    cancellationOption: CancellationOption?
+  ) -> LockmanResult {
+    _canLockWithCancellation(id, info, cancellationOption)
   }
 
   /// Attempts to acquire a lock for the given boundary and information.

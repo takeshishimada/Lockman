@@ -115,6 +115,30 @@ public final class LockmanPriorityBasedStrategy: LockmanStrategy, @unchecked Sen
     id: B,
     info: LockmanPriorityBasedInfo
   ) -> LockmanResult {
+    canLock(id: id, info: info, cancellationOption: nil)
+  }
+  
+  /// Evaluates whether a priority-based lock can be acquired with optional cancellation behavior override.
+  ///
+  /// This enhanced version allows callers to override the default priority-based behavior
+  /// when the cancellation option is provided. When cancellation option is `.useStrategyDefault` or `nil`,
+  /// the strategy's default priority-based behavior is used.
+  ///
+  /// ## Cancellation Option Behavior
+  /// - `.cancelExisting`: Override existing action's behavior to allow cancellation
+  /// - `.blockNew`: Override to block new action even if it has higher priority
+  /// - `.useStrategyDefault` or `nil`: Use the default priority-based behavior
+  ///
+  /// - Parameters:
+  ///   - id: A unique boundary identifier conforming to `LockmanBoundaryId`
+  ///   - info: Priority-based lock information containing action ID and priority
+  ///   - cancellationOption: Optional override for cancellation behavior
+  /// - Returns: A `LockmanResult` indicating the outcome of the lock evaluation
+  public func canLock<B: LockmanBoundaryId>(
+    id: B,
+    info: LockmanPriorityBasedInfo,
+    cancellationOption: CancellationOption?
+  ) -> LockmanResult {
     let requestedInfo = info
     let result: LockmanResult
     var failureReason: String?
@@ -181,28 +205,38 @@ public final class LockmanPriorityBasedStrategy: LockmanStrategy, @unchecked Sen
     let currentPriority = currentHighestPriorityInfo.priority
     let requestedPriority = requestedInfo.priority
 
-    // Compare priority levels using the Comparable implementation
-    if currentPriority > requestedPriority {
-      // Current action has higher priority - request fails
-      result = .failure(LockmanPriorityBasedError.higherPriorityExists(requested: requestedPriority, currentHighest: currentPriority))
-      failureReason = "Higher priority action '\(currentHighestPriorityInfo.actionId)' (priority: \(currentPriority)) is currently locked"
-    } else if currentPriority == requestedPriority {
-      // Same priority level - apply existing action's concurrency behavior
-      let behaviorResult = applySamePriorityBehavior(
-        current: currentHighestPriorityInfo,
-        requested: requestedInfo
-      )
-      result = behaviorResult
-
-      if case .failure = behaviorResult {
-        failureReason = "Same priority action '\(currentHighestPriorityInfo.actionId)' with exclusive behavior is already running"
-      } else if behaviorResult == .successWithPrecedingCancellation {
+    // Apply cancellation option override if provided
+    if let cancellationOption = cancellationOption {
+      switch cancellationOption {
+      case .cancelExisting:
+        // Force cancellation of existing action
+        result = .successWithPrecedingCancellation
         cancelledInfo = (currentHighestPriorityInfo.actionId, currentHighestPriorityInfo.uniqueId)
+      case .blockNew:
+        // Force blocking of new action
+        result = .failure(LockmanPriorityBasedError.higherPriorityExists(requested: requestedPriority, currentHighest: currentPriority))
+        failureReason = "Blocked by cancellation option: existing action '\(currentHighestPriorityInfo.actionId)' (priority: \(currentPriority)) continues"
+      case .useStrategyDefault:
+        // Use default priority-based behavior
+        result = applyDefaultPriorityBehavior(
+          current: currentHighestPriorityInfo,
+          currentPriority: currentPriority,
+          requested: requestedInfo,
+          requestedPriority: requestedPriority,
+          failureReason: &failureReason,
+          cancelledInfo: &cancelledInfo
+        )
       }
     } else {
-      // Requested action has higher priority - can preempt current
-      result = .successWithPrecedingCancellation
-      cancelledInfo = (currentHighestPriorityInfo.actionId, currentHighestPriorityInfo.uniqueId)
+      // Use default priority-based behavior
+      result = applyDefaultPriorityBehavior(
+        current: currentHighestPriorityInfo,
+        currentPriority: currentPriority,
+        requested: requestedInfo,
+        requestedPriority: requestedPriority,
+        failureReason: &failureReason,
+        cancelledInfo: &cancelledInfo
+      )
     }
 
     LockmanLogger.shared.logCanLock(
@@ -312,6 +346,54 @@ public final class LockmanPriorityBasedStrategy: LockmanStrategy, @unchecked Sen
 // MARK: - Private Implementation
 
 private extension LockmanPriorityBasedStrategy {
+  /// Applies the default priority-based behavior without cancellation option overrides.
+  ///
+  /// This method contains the original priority comparison logic that was used before
+  /// cancellation options were introduced. It compares priority levels and applies
+  /// the appropriate concurrency behavior.
+  ///
+  /// - Parameters:
+  ///   - current: The currently active priority-based lock info
+  ///   - currentPriority: The priority of the current action
+  ///   - requested: The requested priority-based lock info
+  ///   - requestedPriority: The priority of the requested action
+  ///   - failureReason: Inout parameter for failure reason message
+  ///   - cancelledInfo: Inout parameter for cancelled action information
+  /// - Returns: A `LockmanResult` based on default priority-based behavior
+  func applyDefaultPriorityBehavior(
+    current: LockmanPriorityBasedInfo,
+    currentPriority: LockmanPriorityBasedInfo.Priority,
+    requested: LockmanPriorityBasedInfo,
+    requestedPriority: LockmanPriorityBasedInfo.Priority,
+    failureReason: inout String?,
+    cancelledInfo: inout (actionId: String, uniqueId: UUID)?
+  ) -> LockmanResult {
+    // Compare priority levels using the Comparable implementation
+    if currentPriority > requestedPriority {
+      // Current action has higher priority - request fails
+      failureReason = "Higher priority action '\(current.actionId)' (priority: \(currentPriority)) is currently locked"
+      return .failure(LockmanPriorityBasedError.higherPriorityExists(requested: requestedPriority, currentHighest: currentPriority))
+    } else if currentPriority == requestedPriority {
+      // Same priority level - apply existing action's concurrency behavior
+      let behaviorResult = applySamePriorityBehavior(
+        current: current,
+        requested: requested
+      )
+
+      if case .failure = behaviorResult {
+        failureReason = "Same priority action '\(current.actionId)' with exclusive behavior is already running"
+      } else if behaviorResult == .successWithPrecedingCancellation {
+        cancelledInfo = (current.actionId, current.uniqueId)
+      }
+      
+      return behaviorResult
+    } else {
+      // Requested action has higher priority - can preempt current
+      cancelledInfo = (current.actionId, current.uniqueId)
+      return .successWithPrecedingCancellation
+    }
+  }
+
   /// Applies same-priority concurrency behavior between two actions.
   ///
   /// When two actions have the same priority level, this method determines

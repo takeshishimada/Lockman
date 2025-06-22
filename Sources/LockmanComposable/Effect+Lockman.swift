@@ -14,6 +14,8 @@ public extension Effect {
   /// - Parameters:
   ///   - priority: Task priority for the underlying `.run` effect (optional)
   ///   - unlockOption: Controls when the unlock operation is executed (default: configuration value)
+  ///   - cancellationOption: Controls how lock conflicts are handled (default: use strategy default)
+  ///   - handleCancellationErrors: Whether to pass CancellationError to catch handler (default: global config)
   ///   - operation: Async closure receiving `send` function for dispatching actions
   ///   - handler: Optional error handler receiving error and send function
   ///   - action: LockmanAction providing lock information and strategy type
@@ -31,6 +33,8 @@ public extension Effect {
   static func withLock<B: LockmanBoundaryId, A: LockmanAction>(
     priority: TaskPriority? = nil,
     unlockOption: UnlockOption? = nil,
+    cancellationOption: CancellationOption? = nil,
+    handleCancellationErrors: Bool? = nil,
     operation: @escaping @Sendable (_ send: Send<Action>) async throws -> Void,
     catch handler: (
       @Sendable (_ error: any Error, _ send: Send<Action>) async -> Void
@@ -46,6 +50,8 @@ public extension Effect {
       action: action,
       cancelID: cancelID,
       unlockOption: unlockOption ?? Lockman.config.defaultUnlockOption,
+      cancellationOption: cancellationOption,
+      handleCancellationErrors: handleCancellationErrors,
       fileID: fileID,
       filePath: filePath,
       line: line,
@@ -67,7 +73,10 @@ public extension Effect {
             // Handle cancellation specially to ensure proper cleanup order
             if error is CancellationError {
               defer { unlockToken() }
-              await handler?(error, send)
+              let shouldHandle = handleCancellationErrors ?? Lockman.config.handleCancellationErrors
+              if shouldHandle {
+                await handler?(error, send)
+              }
               return
             }
             // For non-cancellation errors, let the catch block handle it
@@ -99,6 +108,8 @@ public extension Effect {
   /// - Parameters:
   ///   - priority: Task priority for the underlying `.run` effect (optional)
   ///   - unlockOption: Controls when the unlock operation is executed (default: configuration value)
+  ///   - cancellationOption: Controls how lock conflicts are handled (default: use strategy default)
+  ///   - handleCancellationErrors: Whether to pass CancellationError to catch handler (default: global config)
   ///   - operation: Async closure receiving `send` and `unlock` functions
   ///   - handler: Optional error handler receiving error, send, and unlock functions
   ///   - lockFailure: Optional handler for lock acquisition failures
@@ -114,6 +125,8 @@ public extension Effect {
   static func withLock<B: LockmanBoundaryId, A: LockmanAction>(
     priority: TaskPriority? = nil,
     unlockOption: UnlockOption? = nil,
+    cancellationOption: CancellationOption? = nil,
+    handleCancellationErrors: Bool? = nil,
     operation: @escaping @Sendable (
       _ send: Send<Action>, _ unlock: LockmanUnlock<B, A.I>
     ) async throws -> Void,
@@ -138,6 +151,8 @@ public extension Effect {
       action: action,
       cancelID: cancelID,
       unlockOption: unlockOption ?? Lockman.config.defaultUnlockOption,
+      cancellationOption: cancellationOption,
+      handleCancellationErrors: handleCancellationErrors,
       fileID: fileID,
       filePath: filePath,
       line: line,
@@ -155,7 +170,10 @@ public extension Effect {
           } catch {
             // Handle cancellation with unlock token available
             if error is CancellationError {
-              await handler?(error, send, unlockToken)
+              let shouldHandle = handleCancellationErrors ?? Lockman.config.handleCancellationErrors
+              if shouldHandle {
+                await handler?(error, send, unlockToken)
+              }
               return
             }
             // For non-cancellation errors, let the catch block handle it
@@ -196,6 +214,7 @@ public extension Effect {
   ///
   /// - Parameters:
   ///   - unlockOption: Controls when the unlock operation is executed (default: configuration value)
+  ///   - cancellationOption: Controls how lock conflicts are handled (default: use strategy default)
   ///   - operations: Array of effects to execute sequentially while lock is held
   ///   - lockFailure: Optional handler for lock acquisition failures
   ///   - action: LockmanAction providing lock information and strategy type
@@ -204,6 +223,7 @@ public extension Effect {
   /// - Returns: Concatenated effect with automatic lock management, or `.none` if lock acquisition fails
   static func concatenateWithLock<B: LockmanBoundaryId, A: LockmanAction>(
     unlockOption: UnlockOption? = nil,
+    cancellationOption: CancellationOption? = nil,
     operations: [Effect<Action>],
     lockFailure: (@Sendable (_ error: any Error, _ send: Send<Action>) async -> Void)? = nil,
     action: A,
@@ -247,7 +267,8 @@ public extension Effect {
         strategy: strategy,
         cancelID: cancelID,
         effect: builtEffect,
-        catchHandler: lockFailure
+        catchHandler: lockFailure,
+        cancellationOption: cancellationOption
       )
 
     } catch {
@@ -299,6 +320,8 @@ internal extension Effect {
   ///   - action: LockmanAction providing lock information and strategy type
   ///   - cancelID: Unique identifier for cancellation and lock boundary
   ///   - unlockOption: Unlock option configuration for when to execute the unlock
+  ///   - cancellationOption: Cancellation option for handling lock conflicts
+  ///   - handleCancellationErrors: Whether to pass CancellationError to catch handler (default: global config)
   ///   - fileID, filePath, line, column: Source location for error reporting
   ///   - effectBuilder: Closure that receives unlock token and returns built effect
   /// - Returns: Built effect, or `.none` if setup fails
@@ -306,6 +329,8 @@ internal extension Effect {
     action: A,
     cancelID: B,
     unlockOption: UnlockOption,
+    cancellationOption: CancellationOption?,
+    handleCancellationErrors: Bool?,
     fileID: StaticString,
     filePath: StaticString,
     line: UInt,
@@ -335,7 +360,8 @@ internal extension Effect {
         strategy: strategy,
         cancelID: cancelID,
         effect: effectBuilder(unlockToken),
-        catchHandler: handler
+        catchHandler: handler,
+        cancellationOption: cancellationOption
       )
 
     } catch {
@@ -385,19 +411,22 @@ internal extension Effect {
   ///   - strategy: Type-erased strategy to use for lock operations
   ///   - cancelID: Boundary identifier for this lock and cancellation
   ///   - effect: Effect to execute if lock acquisition succeeds
+  ///   - cancellationOption: Option controlling how lock conflicts are handled
   /// - Returns: Effect to execute, or `.none` if lock acquisition fails
   static func lock<B: LockmanBoundaryId, I: LockmanInfo>(
     lockmanInfo: I,
     strategy: AnyLockmanStrategy<I>,
     cancelID: B,
     effect: Effect<Action>,
-    catchHandler: (@Sendable (_ error: any Error, _ send: Send<Action>) async -> Void)? = nil
+    catchHandler: (@Sendable (_ error: any Error, _ send: Send<Action>) async -> Void)? = nil,
+    cancellationOption: CancellationOption? = nil
   ) -> Effect<Action> {
     Lockman.withBoundaryLock(for: cancelID) {
       // Check if lock can be acquired
       let result = strategy.canLock(
         id: cancelID,
-        info: lockmanInfo
+        info: lockmanInfo,
+        cancellationOption: cancellationOption
       )
 
       // Early exit if lock cannot be acquired

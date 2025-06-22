@@ -18,6 +18,14 @@ public enum Lockman {
     ///
     /// Default value is `.transition` to ensure safe coordination with UI transitions.
     var defaultUnlockOption: UnlockOption = .transition
+    
+    /// Controls whether CancellationError should be passed to error handlers in withLock operations.
+    ///
+    /// When `true` (default), CancellationError is passed to the catch handler if provided.
+    /// When `false`, CancellationError is silently ignored and not passed to handlers.
+    ///
+    /// Default value is `true` to maintain backward compatibility.
+    var handleCancellationErrors: Bool = true
 
     /// Creates a new configuration with default values.
     init() {}
@@ -46,6 +54,22 @@ public enum Lockman {
       get { _configuration.withCriticalRegion { $0.defaultUnlockOption } }
       set {
         _configuration.withCriticalRegion { $0.defaultUnlockOption = newValue }
+      }
+    }
+    
+    /// Controls whether CancellationError should be passed to error handlers in withLock operations.
+    ///
+    /// When `true` (default), CancellationError is passed to the catch handler if provided.
+    /// When `false`, CancellationError is silently ignored and not passed to handlers.
+    ///
+    /// ```swift
+    /// // Disable CancellationError handling globally
+    /// Lockman.config.handleCancellationErrors = false
+    /// ```
+    public static var handleCancellationErrors: Bool {
+      get { _configuration.withCriticalRegion { $0.handleCancellationErrors } }
+      set {
+        _configuration.withCriticalRegion { $0.handleCancellationErrors = newValue }
       }
     }
 

@@ -283,3 +283,37 @@ public protocol LockmanStrategy<I>: Sendable {
   /// - Returns: Dictionary mapping boundary IDs to their active lock information
   func getCurrentLocks() -> [AnyLockmanBoundaryId: [any LockmanInfo]]
 }
+
+// MARK: - Default Implementations
+
+public extension LockmanStrategy {
+  /// Checks if a lock can be acquired with optional cancellation behavior override.
+  ///
+  /// This method provides an enhanced version of `canLock` that allows callers to
+  /// specify how lock conflicts should be handled on a per-call basis. When a
+  /// cancellation option is provided, it can override the strategy's default behavior.
+  ///
+  /// ## Default Implementation
+  /// By default, this method calls the standard `canLock` method, ignoring the
+  /// cancellation option. Strategies that support cancellation behavior customization
+  /// should override this method to handle the cancellation option appropriately.
+  ///
+  /// ## Cancellation Option Behavior
+  /// - `.cancelExisting`: Force cancellation of existing action when possible
+  /// - `.blockNew`: Force blocking of new action even if cancellation would be possible
+  /// - `.useStrategyDefault` or `nil`: Use the strategy's default behavior
+  ///
+  /// - Parameters:
+  ///   - id: A unique boundary identifier conforming to `LockmanBoundaryId`
+  ///   - info: Lock information of type `I` containing action details
+  ///   - cancellationOption: Optional override for cancellation behavior
+  /// - Returns: A `LockmanResult` indicating the outcome of the lock check
+  func canLock<B: LockmanBoundaryId>(
+    id: B,
+    info: I,
+    cancellationOption: CancellationOption?
+  ) -> LockmanResult {
+    // Default implementation ignores cancellation option
+    canLock(id: id, info: info)
+  }
+}
