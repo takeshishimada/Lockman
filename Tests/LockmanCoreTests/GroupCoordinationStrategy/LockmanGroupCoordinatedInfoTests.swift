@@ -57,22 +57,20 @@ final class LockmanGroupCoordinatedInfoTests: XCTestCase {
 
   func testGroupCoordinationRoleValues() {
     let leader = GroupCoordinationRole.leader(.none)
-    let exclusiveLeader = GroupCoordinationRole.leader(.all)
+    let _ = GroupCoordinationRole.leader(.all) // Verify we can create exclusive leader
     let member = GroupCoordinationRole.member
 
     // Test pattern matching
-    switch leader {
-    case .leader(let mode):
+    if case .leader(let mode) = leader {
       XCTAssertEqual(mode, .none)
-    case .member:
+    } else {
       XCTFail("Should be leader")
     }
 
-    switch member {
-    case .leader:
+    if case .member = member {
+      // Success
+    } else {
       XCTFail("Should be member")
-    case .member:
-      break // Success
     }
   }
 
