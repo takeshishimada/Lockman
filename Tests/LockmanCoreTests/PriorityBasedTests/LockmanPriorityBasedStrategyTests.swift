@@ -31,23 +31,23 @@ private extension TestBoundaryId {
 
 /// Factory for creating priority-based test info
 private enum TestInfoFactory {
-  static func none(_ actionId: String = "noneAction", blocksSameAction: Bool = false) -> LockmanPriorityBasedInfo {
+  static func none(_ actionId: String = "noneAction", blocksSameAction: Bool = true) -> LockmanPriorityBasedInfo {
     LockmanPriorityBasedInfo(actionId: actionId, priority: .none, blocksSameAction: blocksSameAction)
   }
 
-  static func lowExclusive(_ actionId: String = "lowExclusive", blocksSameAction: Bool = false) -> LockmanPriorityBasedInfo {
+  static func lowExclusive(_ actionId: String = "lowExclusive", blocksSameAction: Bool = true) -> LockmanPriorityBasedInfo {
     LockmanPriorityBasedInfo(actionId: actionId, priority: .low(.exclusive), blocksSameAction: blocksSameAction)
   }
 
-  static func lowReplaceable(_ actionId: String = "lowReplaceable", blocksSameAction: Bool = false) -> LockmanPriorityBasedInfo {
+  static func lowReplaceable(_ actionId: String = "lowReplaceable", blocksSameAction: Bool = true) -> LockmanPriorityBasedInfo {
     LockmanPriorityBasedInfo(actionId: actionId, priority: .low(.replaceable), blocksSameAction: blocksSameAction)
   }
 
-  static func highExclusive(_ actionId: String = "highExclusive", blocksSameAction: Bool = false) -> LockmanPriorityBasedInfo {
+  static func highExclusive(_ actionId: String = "highExclusive", blocksSameAction: Bool = true) -> LockmanPriorityBasedInfo {
     LockmanPriorityBasedInfo(actionId: actionId, priority: .high(.exclusive), blocksSameAction: blocksSameAction)
   }
 
-  static func highReplaceable(_ actionId: String = "highReplaceable", blocksSameAction: Bool = false) -> LockmanPriorityBasedInfo {
+  static func highReplaceable(_ actionId: String = "highReplaceable", blocksSameAction: Bool = true) -> LockmanPriorityBasedInfo {
     LockmanPriorityBasedInfo(actionId: actionId, priority: .high(.replaceable), blocksSameAction: blocksSameAction)
   }
 }

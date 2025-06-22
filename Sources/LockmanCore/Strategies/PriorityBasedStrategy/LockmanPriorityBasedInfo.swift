@@ -70,7 +70,7 @@ public struct LockmanPriorityBasedInfo: LockmanInfo, Sendable, Equatable {
   /// `actionId` from being locked, regardless of priority levels. This is useful
   /// for operations that must be unique per action type.
   ///
-  /// When set to `false` (default), actions with the same `actionId` follow the
+  /// When set to `false`, actions with the same `actionId` follow the
   /// normal priority rules and can coexist based on their priority levels.
   ///
   /// ## Use Cases
@@ -104,7 +104,7 @@ public struct LockmanPriorityBasedInfo: LockmanInfo, Sendable, Equatable {
   /// - Parameters:
   ///   - actionId: A unique identifier for the action
   ///   - priority: The priority level and concurrency behavior for this action
-  ///   - blocksSameAction: Whether to block other actions with the same actionId (default: false)
+  ///   - blocksSameAction: Whether to block other actions with the same actionId (default: true)
   ///
   /// ## Design Note
   /// The `uniqueId` is automatically generated to ensure each instance has
@@ -113,7 +113,7 @@ public struct LockmanPriorityBasedInfo: LockmanInfo, Sendable, Equatable {
   public init(
     actionId: LockmanActionId,
     priority: Priority,
-    blocksSameAction: Bool = false
+    blocksSameAction: Bool = true
   ) {
     self.actionId = actionId
     self.uniqueId = UUID()
