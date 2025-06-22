@@ -15,6 +15,11 @@ Develop a library to implement exclusive control of user actions in application 
 - Documentation is provided through SwiftDoc comments in source code and DocC documentation
 - Update documentation when changing source code
 
+## Code Formatting
+- Run `make format` before committing changes to ensure consistent code style
+- This command uses swift-format to format all Swift files in the project
+- Code formatting is required for all PRs
+
 ## Pull Request
 - Commit messages must follow Semantic Commit Message rules
 - Apply appropriate labels based on the type of change and affected modules
