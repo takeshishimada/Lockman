@@ -116,9 +116,9 @@ final class LockmanEdgeCaseTests: XCTestCase {
     let strategy  = LockmanPriorityBasedStrategy()
     let boundaryId = "priority-test"
 
-    let noneInfo1 = LockmanPriorityBasedInfo(actionId: "none-action", priority: .none)
-    let noneInfo2 = LockmanPriorityBasedInfo(actionId: "none-action", priority: .none)
-    let highInfo = LockmanPriorityBasedInfo(actionId: "none-action", priority: .high(.exclusive))
+    let noneInfo1 = LockmanPriorityBasedInfo(actionId: "none-action", priority: .none, blocksSameAction: false)
+    let noneInfo2 = LockmanPriorityBasedInfo(actionId: "none-action", priority: .none, blocksSameAction: false)
+    let highInfo = LockmanPriorityBasedInfo(actionId: "none-action", priority: .high(.exclusive), blocksSameAction: false)
 
     // First none priority should succeed
     XCTAssertEqual(strategy.canLock(id: boundaryId, info: noneInfo1), .success)
