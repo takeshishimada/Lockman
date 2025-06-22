@@ -68,7 +68,7 @@ final class DebugTests: XCTestCase {
 
     let dynamicInfo = LockmanDynamicConditionInfo(
       actionId: "dynamicAction",
-      condition: { true }
+      condition: { .success }
     )
     XCTAssertTrue(dynamicInfo.debugDescription.contains("LockmanDynamicConditionInfo"))
     XCTAssertTrue(dynamicInfo.debugDescription.contains("dynamicAction"))

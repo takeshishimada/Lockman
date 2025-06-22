@@ -11,7 +11,13 @@ import Foundation
 /// // Business logic condition
 /// let action = MyAction.fetchData(userId: "123", priority: 5)
 /// let conditionalAction = action.with {
-///     return priority > 3
+///     guard priority > 3 else {
+///         return .failure(LockmanDynamicConditionError.conditionNotMet(
+///             actionId: "fetchData",
+///             hint: "Priority too low"
+///         ))
+///     }
+///     return .success
 /// }
 /// ```
 ///
@@ -57,17 +63,19 @@ public final class LockmanDynamicConditionStrategy: LockmanStrategy, @unchecked 
   /// - Parameters:
   ///   - id: The boundary identifier
   ///   - info: The lock information containing the dynamic condition
-  /// - Returns: `.success` if condition is true, `.failure(error)` if false
+  /// - Returns: The result from evaluating the dynamic condition
   public func canLock<B: LockmanBoundaryId>(
     id: B,
     info: LockmanDynamicConditionInfo
   ) -> LockmanResult {
-    // Convert Bool to LockmanResult
-    let result: LockmanResult =
-      info.condition()
-      ? .success : .failure(LockmanDynamicConditionError.conditionNotMet(actionId: info.actionId))
+    // Evaluate the condition and get the result directly
+    let result = info.condition()
     let failureReason: String? =
-      if case .failure = result { "Dynamic condition returned false" } else { nil }
+      if case .failure(let error) = result {
+        "Dynamic condition failed: \(error.localizedDescription)"
+      } else {
+        nil
+      }
 
     LockmanLogger.shared.logCanLock(
       result: result,

@@ -71,7 +71,7 @@ final class LockmanDynamicConditionStrategyTests: XCTestCase {
     let info1 = LockmanDynamicConditionInfo(
       actionId: "fetch",
       condition: {
-        currentCount.value < 2
+        currentCount.value < 2 ? .success : .failure(LockmanDynamicConditionError.conditionNotMet(actionId: "fetch", hint: "Count limit exceeded"))
       }
     )
 
@@ -84,7 +84,7 @@ final class LockmanDynamicConditionStrategyTests: XCTestCase {
     let info2 = LockmanDynamicConditionInfo(
       actionId: "fetch",
       condition: {
-        currentCount.value < 2
+        currentCount.value < 2 ? .success : .failure(LockmanDynamicConditionError.conditionNotMet(actionId: "fetch", hint: "Count limit exceeded"))
       }
     )
     XCTAssertEqual(strategy.canLock(id: boundary, info: info2), .success)
@@ -95,7 +95,7 @@ final class LockmanDynamicConditionStrategyTests: XCTestCase {
     let info3 = LockmanDynamicConditionInfo(
       actionId: "fetch",
       condition: {
-        currentCount.value < 2
+        currentCount.value < 2 ? .success : .failure(LockmanDynamicConditionError.conditionNotMet(actionId: "fetch", hint: "Count limit exceeded"))
       }
     )
     XCTAssertLockFailure(strategy.canLock(id: boundary, info: info3))
@@ -112,7 +112,7 @@ final class LockmanDynamicConditionStrategyTests: XCTestCase {
     let highPriorityInfo = LockmanDynamicConditionInfo(
       actionId: "process",
       condition: {
-        priority > 5
+        priority > 5 ? .success : .failure(LockmanDynamicConditionError.conditionNotMet(actionId: "process", hint: "Priority too low"))
       }
     )
 
@@ -123,7 +123,7 @@ final class LockmanDynamicConditionStrategyTests: XCTestCase {
     let lowPriorityInfo = LockmanDynamicConditionInfo(
       actionId: "process",
       condition: {
-        lowPriority > 5
+        lowPriority > 5 ? .success : .failure(LockmanDynamicConditionError.conditionNotMet(actionId: "process", hint: "Priority too low"))
       }
     )
 
@@ -140,7 +140,7 @@ final class LockmanDynamicConditionStrategyTests: XCTestCase {
     let info = LockmanDynamicConditionInfo(
       actionId: "batch",
       condition: {
-        currentHour >= 9 && currentHour < 17
+        (currentHour >= 9 && currentHour < 17) ? .success : .failure(LockmanDynamicConditionError.conditionNotMet(actionId: "batch", hint: "Outside business hours"))
       }
     )
 
@@ -151,7 +151,7 @@ final class LockmanDynamicConditionStrategyTests: XCTestCase {
     let afterHoursInfo = LockmanDynamicConditionInfo(
       actionId: "batch",
       condition: {
-        afterHour >= 9 && afterHour < 17
+        (afterHour >= 9 && afterHour < 17) ? .success : .failure(LockmanDynamicConditionError.conditionNotMet(actionId: "batch", hint: "Outside business hours"))
       }
     )
 
@@ -169,7 +169,7 @@ final class LockmanDynamicConditionStrategyTests: XCTestCase {
     let info = LockmanDynamicConditionInfo(
       actionId: "exclusive",
       condition: {
-        !isLocked.value
+        !isLocked.value ? .success : .failure(LockmanDynamicConditionError.conditionNotMet(actionId: "exclusive", hint: "Already locked"))
       }
     )
 
@@ -182,7 +182,7 @@ final class LockmanDynamicConditionStrategyTests: XCTestCase {
     let info2 = LockmanDynamicConditionInfo(
       actionId: "exclusive",
       condition: {
-        !isLocked.value
+        !isLocked.value ? .success : .failure(LockmanDynamicConditionError.conditionNotMet(actionId: "exclusive", hint: "Already locked"))
       }
     )
     XCTAssertLockFailure(strategy.canLock(id: boundary, info: info2))
@@ -195,7 +195,7 @@ final class LockmanDynamicConditionStrategyTests: XCTestCase {
     let info3 = LockmanDynamicConditionInfo(
       actionId: "exclusive",
       condition: {
-        !isLocked.value
+        !isLocked.value ? .success : .failure(LockmanDynamicConditionError.conditionNotMet(actionId: "exclusive", hint: "Already locked"))
       }
     )
     XCTAssertEqual(strategy.canLock(id: boundary, info: info3), .success)
@@ -224,7 +224,7 @@ final class LockmanDynamicConditionStrategyTests: XCTestCase {
       condition: {
         // This would fail if locks existed, but we can't check internal state
         // So we just verify the method doesn't crash
-        true
+        .success
       }
     )
 
@@ -273,7 +273,7 @@ final class LockmanDynamicConditionStrategyTests: XCTestCase {
             requestCount.value = 0
           }
 
-          return requestCount.value < quota
+          return requestCount.value < quota ? .success : .failure(LockmanDynamicConditionError.conditionNotMet(actionId: "api-call", hint: "Quota exceeded"))
         }
       )
     }
@@ -298,7 +298,7 @@ final class LockmanDynamicConditionStrategyTests: XCTestCase {
     let info = LockmanDynamicConditionInfo(
       actionId: "restricted",
       condition: {
-        false
+        .failure(LockmanDynamicConditionError.conditionNotMet(actionId: "restricted", hint: "Always fails"))
       }
     )
 
@@ -320,7 +320,7 @@ final class LockmanDynamicConditionStrategyTests: XCTestCase {
     let user1Info = LockmanDynamicConditionInfo(
       actionId: "request",
       condition: {
-        user1Count.value < 1
+        user1Count.value < 1 ? .success : .failure(LockmanDynamicConditionError.conditionNotMet(actionId: "request", hint: "User limit reached"))
       }
     )
 
@@ -333,7 +333,7 @@ final class LockmanDynamicConditionStrategyTests: XCTestCase {
     let user2Info = LockmanDynamicConditionInfo(
       actionId: "request",
       condition: {
-        user2Count.value < 1
+        user2Count.value < 1 ? .success : .failure(LockmanDynamicConditionError.conditionNotMet(actionId: "request", hint: "User limit reached"))
       }
     )
     XCTAssertEqual(strategy.canLock(id: boundary2, info: user2Info), .success)
@@ -344,7 +344,7 @@ final class LockmanDynamicConditionStrategyTests: XCTestCase {
     let user1Info2 = LockmanDynamicConditionInfo(
       actionId: "request",
       condition: {
-        user1Count.value < 1
+        user1Count.value < 1 ? .success : .failure(LockmanDynamicConditionError.conditionNotMet(actionId: "request", hint: "User limit reached"))
       }
     )
     XCTAssertLockFailure(strategy.canLock(id: boundary1, info: user1Info2))
