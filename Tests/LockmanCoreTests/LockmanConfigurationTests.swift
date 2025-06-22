@@ -100,6 +100,55 @@ final class LockmanConfigurationTests: XCTestCase {
       }
     }
   }
+
+  // MARK: - Handle Cancellation Errors Tests
+
+  func testDefaultHandleCancellationErrorsIsTrue() async throws {
+    XCTAssertTrue(Lockman.config.handleCancellationErrors)
+  }
+
+  func testHandleCancellationErrorsCanBeModified() async throws {
+    // Disable
+    Lockman.config.handleCancellationErrors = false
+    XCTAssertFalse(Lockman.config.handleCancellationErrors)
+    
+    // Enable
+    Lockman.config.handleCancellationErrors = true
+    XCTAssertTrue(Lockman.config.handleCancellationErrors)
+  }
+
+  func testHandleCancellationErrorsResetRestoresDefault() async throws {
+    // Modify configuration
+    Lockman.config.handleCancellationErrors = false
+    XCTAssertFalse(Lockman.config.handleCancellationErrors)
+    
+    // Reset to default
+    Lockman.config.reset()
+    XCTAssertTrue(Lockman.config.handleCancellationErrors)
+  }
+
+  func testHandleCancellationErrorsThreadSafe() async throws {
+    let iterations = 100
+    
+    await withTaskGroup(of: Void.self) { group in
+      // Task to toggle handleCancellationErrors
+      for _ in 0 ..< iterations {
+        group.addTask {
+          Lockman.config.handleCancellationErrors = Bool.random()
+        }
+      }
+      
+      // Task to read handleCancellationErrors
+      for _ in 0 ..< iterations {
+        group.addTask {
+          _ = Lockman.config.handleCancellationErrors
+        }
+      }
+    }
+    
+    // Test passes if no crashes occur
+    XCTAssertTrue(true)
+  }
 }
 
 final class LockmanConfigurationIntegrationTests: XCTestCase {
