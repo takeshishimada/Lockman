@@ -13,19 +13,24 @@ public enum ComposableIssueReporter: LockmanCore.LockmanIssueReporter {
 }
 
 /// Backward compatibility typealias.
-@available(*, deprecated, renamed: "ComposableIssueReporter", message: "Use ComposableIssueReporter instead")
+@available(
+  *, deprecated, renamed: "ComposableIssueReporter", message: "Use ComposableIssueReporter instead"
+)
 public typealias TCAIssueReporter = ComposableIssueReporter
 
 /// Configures Lockman to use ComposableArchitecture's issue reporting.
-public extension LockmanIssueReporting {
+extension LockmanIssueReporting {
   /// Configures Lockman to use ComposableArchitecture's reportIssue function.
-  static func configureComposableReporting() {
+  public static func configureComposableReporting() {
     reporter = ComposableIssueReporter.self
   }
-  
+
   /// Backward compatibility method.
-  @available(*, deprecated, renamed: "configureComposableReporting", message: "Use configureComposableReporting() instead")
-  static func configureTCAReporting() {
+  @available(
+    *, deprecated, renamed: "configureComposableReporting",
+    message: "Use configureComposableReporting() instead"
+  )
+  public static func configureTCAReporting() {
     configureComposableReporting()
   }
 }

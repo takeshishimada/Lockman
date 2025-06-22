@@ -1,6 +1,7 @@
 import ComposableArchitecture
 import Foundation
 import XCTest
+
 @testable import LockmanComposable
 @testable import LockmanCore
 
@@ -52,12 +53,12 @@ final class DeadlockPreventionTests: XCTestCase {
   /// This test verifies that the NSLock prevents race conditions by ensuring
   /// that operations on the same boundary are executed sequentially.
   func testConcurrentAccessToSameBoundaryIsSerialized() async {
-    let id  = TestBoundaryId("concurrent")
+    let id = TestBoundaryId("concurrent")
     let iterations = 100
     let counter = ManagedCriticalState(0)
 
     await withTaskGroup(of: Void.self) { group in
-      for _ in 0 ..< iterations {
+      for _ in 0..<iterations {
         group.addTask {
           Lockman.withBoundaryLock(for: id) {
             // This section must be synchronized to prevent race conditions
@@ -77,12 +78,12 @@ final class DeadlockPreventionTests: XCTestCase {
 
   /// Alternative test using atomic operations to verify serialization
   func testConcurrentAccessSerializationWithAtomicCounter() async {
-    let id  = TestBoundaryId("atomic_test")
+    let id = TestBoundaryId("atomic_test")
     let iterations = 50
     let results = ManagedCriticalState<[Int]>([])
 
     await withTaskGroup(of: Void.self) { group in
-      for _ in 0 ..< iterations {
+      for _ in 0..<iterations {
         group.addTask {
           Lockman.withBoundaryLock(for: id) {
             // Simulate work and collect execution order
@@ -91,7 +92,7 @@ final class DeadlockPreventionTests: XCTestCase {
 
             // Brief CPU-intensive work to increase contention
             var sum = 0
-            for j in 0 ..< 1000 {
+            for j in 0..<1000 {
               sum += j
             }
 
@@ -116,7 +117,7 @@ final class DeadlockPreventionTests: XCTestCase {
   /// Verifies that even when exceptions are thrown, subsequent lock operations continue to work.
   func testLockOperationWithThrowingClosure() async {
     struct TestError: Error {}
-    let id  = TestBoundaryId("throwing")
+    let id = TestBoundaryId("throwing")
 
     do {
       try Lockman.withBoundaryLock(for: id) {
@@ -179,8 +180,9 @@ final class DeadlockPreventionTests: XCTestCase {
       strategy.lock(id: id, info: info)
 
       // Unlock using LockmanUnlock (executed under NSLock protection)
-      let anyStrategy  = AnyLockmanStrategy(strategy)
-      let unlock = LockmanUnlock(id: id, info: info, strategy: anyStrategy, unlockOption: .immediate)
+      let anyStrategy = AnyLockmanStrategy(strategy)
+      let unlock = LockmanUnlock(
+        id: id, info: info, strategy: anyStrategy, unlockOption: .immediate)
       unlock()
 
       // Verify that lock can be acquired again after unlock
@@ -196,7 +198,7 @@ final class DeadlockPreventionTests: XCTestCase {
   /// Tests that nested boundary locks with different IDs work correctly.
   /// Verifies the proper execution order when locks are nested.
   func testNestedBoundaryLocksWorkCorrectly() async {
-    let outerID  = TestBoundaryId("outer")
+    let outerID = TestBoundaryId("outer")
     let innerID = TestBoundaryId("inner")
 
     var executionOrder: [String] = []
@@ -217,14 +219,14 @@ final class DeadlockPreventionTests: XCTestCase {
   /// Performance test with many concurrent operations across multiple boundaries.
   /// Verifies that the locking mechanism performs well under high concurrency.
   func testPerformanceWithManyConcurrentOperations() async {
-    let iterations  = 50 // Adjusted for reasonable test execution time
-    let boundaries = (0 ..< 10).map { TestBoundaryId("perf_\($0)") }
+    let iterations = 50  // Adjusted for reasonable test execution time
+    let boundaries = (0..<10).map { TestBoundaryId("perf_\($0)") }
     let completionCount = ManagedCriticalState(0)
 
     let startTime = Date()
 
     await withTaskGroup(of: Void.self) { group in
-      for i in 0 ..< iterations {
+      for i in 0..<iterations {
         group.addTask {
           let boundaryID = boundaries[i % boundaries.count]
           Lockman.withBoundaryLock(for: boundaryID) {
@@ -241,14 +243,14 @@ final class DeadlockPreventionTests: XCTestCase {
 
     let parallesism = 3.0
     XCTAssertEqual(count, iterations)
-    XCTAssertLessThan(totalTime, 5.0 * parallesism) // Should complete within reasonable time
+    XCTAssertLessThan(totalTime, 5.0 * parallesism)  // Should complete within reasonable time
   }
 
   // MARK: - Additional Boundary Lock Tests
 
   /// Tests that the same boundary ID always returns the same lock instance
   func testSameBoundaryIdReturnsConsistentLock() async {
-    let id  = TestBoundaryId("consistent")
+    let id = TestBoundaryId("consistent")
     var firstExecution = false
     var secondExecution = false
 
@@ -282,7 +284,7 @@ final class DeadlockPreventionTests: XCTestCase {
   func testBoundaryLockMemoryManagement() async {
     let iterations = 100
 
-    for i in 0 ..< iterations {
+    for i in 0..<iterations {
       let id = TestBoundaryId("temp_\(i)")
       Lockman.withBoundaryLock(for: id) {
         // Short operation
@@ -301,7 +303,7 @@ final class DeadlockPreventionTests: XCTestCase {
     let iterations = 1000
     var counter = 0
 
-    for _ in 0 ..< iterations {
+    for _ in 0..<iterations {
       Lockman.withBoundaryLock(for: id) {
         counter += 1
       }
@@ -312,11 +314,11 @@ final class DeadlockPreventionTests: XCTestCase {
 
   /// Tests concurrent operations with many different boundaries
   func testManyDifferentBoundariesConcurrently() async {
-    let boundaryCount  = 100
+    let boundaryCount = 100
     let results = ManagedCriticalState<[String: Bool]>([:])
 
     await withTaskGroup(of: Void.self) { group in
-      for i in 0 ..< boundaryCount {
+      for i in 0..<boundaryCount {
         group.addTask {
           let id = TestBoundaryId("boundary_\(i)")
           Lockman.withBoundaryLock(for: id) {
@@ -332,7 +334,7 @@ final class DeadlockPreventionTests: XCTestCase {
     XCTAssertEqual(finalResults.count, boundaryCount)
 
     // Verify all boundaries were processed
-    for i in 0 ..< boundaryCount {
+    for i in 0..<boundaryCount {
       XCTAssertEqual(finalResults["boundary_\(i)"], true)
     }
   }
@@ -345,7 +347,7 @@ private struct TestBoundaryId: LockmanBoundaryId {
   let value: String
 
   init(_ value: String) {
-    self.value  = value
+    self.value = value
   }
 
   func hash(into hasher: inout Hasher) {
@@ -370,9 +372,7 @@ private struct ComplexBoundaryId: LockmanBoundaryId {
   }
 
   static func == (lhs: ComplexBoundaryId, rhs: ComplexBoundaryId) -> Bool {
-    lhs.prefix == rhs.prefix &&
-      lhs.suffix == rhs.suffix &&
-      lhs.number == rhs.number
+    lhs.prefix == rhs.prefix && lhs.suffix == rhs.suffix && lhs.number == rhs.number
   }
 }
 
@@ -482,7 +482,7 @@ final class BoundaryLockErrorResilienceTests: XCTestCase {
     let id = TestBoundaryId("error_resilience")
 
     // Throw multiple errors
-    for _ in 0 ..< 5 {
+    for _ in 0..<5 {
       do {
         try Lockman.withBoundaryLock(for: id) {
           throw TestError()
@@ -549,45 +549,45 @@ final class BoundaryLockErrorResilienceTests: XCTestCase {
     XCTAssertTrue(normalInnerExecuted)
   }
 
-//  func testError handling with deeply nested locks() async throws {
-//  func testErrorHandlingWithDeeplyNestedLocks() async {
-//    struct DeepError: Error {}
-//
-//    let ids = (0..<5).map { TestBoundaryId("nested_\($0)") }
-//    var executionLevels: [Int] = []
-//
-//    do {
-//      try Lockman.withBoundaryLock(for: ids[0]) {
-//        executionLevels.append(0)
-//        try Lockman.withBoundaryLock(for: ids[1]) {
-//          executionLevels.append(1)
-//          try Lockman.withBoundaryLock(for: ids[2]) {
-//            executionLevels.append(2)
-//            try Lockman.withBoundaryLock(for: ids[3]) {
-//              executionLevels.append(3)
-//              try Lockman.withBoundaryLock(for: ids[4]) {
-//                executionLevels.append(4)
-//                throw DeepError()
-//              }
-//            }
-//          }
-//        }
-//      }
-//    } catch is DeepError {
-//      // Expected
-//    }
-//
-//    XCTAssertEqual(executionLevels, [0, 1, 2, 3, 4])
-//
-//    // All locks should work normally after the error
-//    var allExecuted  = true
-//    for id in ids {
-//      var executed = false
-//      Lockman.withBoundaryLock(for: id) {
-//        executed = true
-//      }
-//      allExecuted = allExecuted && executed
-//    }
-//    XCTAssertTrue(allExecuted)
-//  }
+  //  func testError handling with deeply nested locks() async throws {
+  //  func testErrorHandlingWithDeeplyNestedLocks() async {
+  //    struct DeepError: Error {}
+  //
+  //    let ids = (0..<5).map { TestBoundaryId("nested_\($0)") }
+  //    var executionLevels: [Int] = []
+  //
+  //    do {
+  //      try Lockman.withBoundaryLock(for: ids[0]) {
+  //        executionLevels.append(0)
+  //        try Lockman.withBoundaryLock(for: ids[1]) {
+  //          executionLevels.append(1)
+  //          try Lockman.withBoundaryLock(for: ids[2]) {
+  //            executionLevels.append(2)
+  //            try Lockman.withBoundaryLock(for: ids[3]) {
+  //              executionLevels.append(3)
+  //              try Lockman.withBoundaryLock(for: ids[4]) {
+  //                executionLevels.append(4)
+  //                throw DeepError()
+  //              }
+  //            }
+  //          }
+  //        }
+  //      }
+  //    } catch is DeepError {
+  //      // Expected
+  //    }
+  //
+  //    XCTAssertEqual(executionLevels, [0, 1, 2, 3, 4])
+  //
+  //    // All locks should work normally after the error
+  //    var allExecuted  = true
+  //    for id in ids {
+  //      var executed = false
+  //      Lockman.withBoundaryLock(for: id) {
+  //        executed = true
+  //      }
+  //      allExecuted = allExecuted && executed
+  //    }
+  //    XCTAssertTrue(allExecuted)
+  //  }
 }

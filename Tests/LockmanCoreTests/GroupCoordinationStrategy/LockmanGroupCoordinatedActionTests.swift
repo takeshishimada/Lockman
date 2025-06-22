@@ -1,5 +1,6 @@
 import Foundation
 import XCTest
+
 @testable import LockmanCore
 
 /// Tests for LockmanGroupCoordinatedAction protocol
@@ -9,7 +10,7 @@ final class LockmanGroupCoordinatedActionTests: XCTestCase {
   /// Simple leader action (single group)
   private struct StartLoadingAction: LockmanGroupCoordinatedAction {
     let actionName = "startLoading"
-    
+
     var lockmanInfo: LockmanGroupCoordinatedInfo {
       LockmanGroupCoordinatedInfo(
         actionId: actionName,
@@ -22,7 +23,7 @@ final class LockmanGroupCoordinatedActionTests: XCTestCase {
   /// Simple member action (single group)
   private struct UpdateProgressAction: LockmanGroupCoordinatedAction {
     let actionName = "updateProgress"
-    
+
     var lockmanInfo: LockmanGroupCoordinatedInfo {
       LockmanGroupCoordinatedInfo(
         actionId: actionName,
@@ -35,7 +36,7 @@ final class LockmanGroupCoordinatedActionTests: XCTestCase {
   /// Multiple groups action
   private struct MultiGroupAction: LockmanGroupCoordinatedAction {
     let actionName = "multiGroupOperation"
-    
+
     var lockmanInfo: LockmanGroupCoordinatedInfo {
       LockmanGroupCoordinatedInfo(
         actionId: actionName,
@@ -66,11 +67,11 @@ final class LockmanGroupCoordinatedActionTests: XCTestCase {
       let screenId: String
       switch self {
       case .startNavigation(let id),
-           .animateTransition(let id),
-           .completeNavigation(let id):
+        .animateTransition(let id),
+        .completeNavigation(let id):
         screenId = id
       }
-      
+
       let role: GroupCoordinationRole
       switch self {
       case .startNavigation:
@@ -78,7 +79,7 @@ final class LockmanGroupCoordinatedActionTests: XCTestCase {
       case .animateTransition, .completeNavigation:
         role = .member
       }
-      
+
       return LockmanGroupCoordinatedInfo(
         actionId: actionName,
         groupId: "navigation-\(screenId)",
@@ -98,7 +99,7 @@ final class LockmanGroupCoordinatedActionTests: XCTestCase {
       self.groupId = group
       self.coordinationRole = role
     }
-    
+
     var lockmanInfo: LockmanGroupCoordinatedInfo {
       LockmanGroupCoordinatedInfo(
         actionId: actionName,
@@ -143,7 +144,7 @@ final class LockmanGroupCoordinatedActionTests: XCTestCase {
     // Test leader
     let startNav = NavigationAction.startNavigation(screenId: "detail")
     XCTAssertEqual(startNav.actionName, "startNavigation")
-    
+
     let startInfo = startNav.lockmanInfo
     XCTAssertEqual(startInfo.groupIds, ["navigation-detail"])
     XCTAssertEqual(startInfo.coordinationRole, .leader(.none))
@@ -151,14 +152,14 @@ final class LockmanGroupCoordinatedActionTests: XCTestCase {
     // Test members
     let animate = NavigationAction.animateTransition(screenId: "detail")
     XCTAssertEqual(animate.actionName, "animateTransition")
-    
+
     let animateInfo = animate.lockmanInfo
     XCTAssertEqual(animateInfo.groupIds, ["navigation-detail"])
     XCTAssertEqual(animateInfo.coordinationRole, .member)
 
     let complete = NavigationAction.completeNavigation(screenId: "detail")
     XCTAssertEqual(complete.actionName, "completeNavigation")
-    
+
     let completeInfo = complete.lockmanInfo
     XCTAssertEqual(completeInfo.groupIds, ["navigation-detail"])
     XCTAssertEqual(completeInfo.coordinationRole, .member)
@@ -310,7 +311,7 @@ final class LockmanGroupCoordinatedActionTests: XCTestCase {
     // Action that can switch between single and multiple groups
     struct SingleGroupDynamicAction: LockmanGroupCoordinatedAction {
       let actionName = "dynamic"
-      
+
       var lockmanInfo: LockmanGroupCoordinatedInfo {
         LockmanGroupCoordinatedInfo(
           actionId: actionName,
@@ -322,7 +323,7 @@ final class LockmanGroupCoordinatedActionTests: XCTestCase {
 
     struct MultiGroupDynamicAction: LockmanGroupCoordinatedAction {
       let actionName = "dynamic"
-      
+
       var lockmanInfo: LockmanGroupCoordinatedInfo {
         LockmanGroupCoordinatedInfo(
           actionId: actionName,

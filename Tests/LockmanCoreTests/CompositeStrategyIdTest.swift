@@ -1,4 +1,5 @@
 import XCTest
+
 @testable import LockmanCore
 
 final class CompositeStrategyIdTests: XCTestCase {
@@ -19,7 +20,10 @@ final class CompositeStrategyIdTests: XCTestCase {
 
     XCTAssertEqual(composite.strategyId, expectedId)
     // The actual IDs include the module name
-    XCTAssertEqual(composite.strategyId.value, "CompositeStrategy2:LockmanCore.LockmanPriorityBasedStrategy+LockmanCore.LockmanSingleExecutionStrategy")
+    XCTAssertEqual(
+      composite.strategyId.value,
+      "CompositeStrategy2:LockmanCore.LockmanPriorityBasedStrategy+LockmanCore.LockmanSingleExecutionStrategy"
+    )
   }
 
   func testCompositeStrategy3GeneratesCorrectStrategyId() async throws {
@@ -34,14 +38,18 @@ final class CompositeStrategyIdTests: XCTestCase {
     )
 
     // Check that the strategyId is correctly generated
-    let expectedConfig = "\(strategy1.strategyId.value)+\(strategy2.strategyId.value)+\(strategy3.strategyId.value)"
+    let expectedConfig =
+      "\(strategy1.strategyId.value)+\(strategy2.strategyId.value)+\(strategy3.strategyId.value)"
     let expectedId = LockmanStrategyId(
       name: "CompositeStrategy3",
       configuration: expectedConfig
     )
 
     XCTAssertEqual(composite.strategyId, expectedId)
-    XCTAssertEqual(composite.strategyId.value, "CompositeStrategy3:LockmanCore.LockmanPriorityBasedStrategy+LockmanCore.LockmanSingleExecutionStrategy+LockmanCore.LockmanGroupCoordinationStrategy")
+    XCTAssertEqual(
+      composite.strategyId.value,
+      "CompositeStrategy3:LockmanCore.LockmanPriorityBasedStrategy+LockmanCore.LockmanSingleExecutionStrategy+LockmanCore.LockmanGroupCoordinationStrategy"
+    )
   }
 
   func testMakeStrategyIdStaticMethodWorksCorrectly() async throws {
@@ -89,8 +97,17 @@ final class CompositeStrategyIdTests: XCTestCase {
     XCTAssertNotEqual(composite2.strategyId, composite3.strategyId)
 
     // Verify the actual values (include module names)
-    XCTAssertEqual(composite1.strategyId.value, "CompositeStrategy2:LockmanCore.LockmanPriorityBasedStrategy+LockmanCore.LockmanSingleExecutionStrategy")
-    XCTAssertEqual(composite2.strategyId.value, "CompositeStrategy2:LockmanCore.LockmanSingleExecutionStrategy+LockmanCore.LockmanPriorityBasedStrategy")
-    XCTAssertEqual(composite3.strategyId.value, "CompositeStrategy2:LockmanCore.LockmanPriorityBasedStrategy+LockmanCore.LockmanGroupCoordinationStrategy")
+    XCTAssertEqual(
+      composite1.strategyId.value,
+      "CompositeStrategy2:LockmanCore.LockmanPriorityBasedStrategy+LockmanCore.LockmanSingleExecutionStrategy"
+    )
+    XCTAssertEqual(
+      composite2.strategyId.value,
+      "CompositeStrategy2:LockmanCore.LockmanSingleExecutionStrategy+LockmanCore.LockmanPriorityBasedStrategy"
+    )
+    XCTAssertEqual(
+      composite3.strategyId.value,
+      "CompositeStrategy2:LockmanCore.LockmanPriorityBasedStrategy+LockmanCore.LockmanGroupCoordinationStrategy"
+    )
   }
 }

@@ -71,15 +71,15 @@ public struct LockmanUnlock<B: LockmanBoundaryId, I: LockmanInfo>: Sendable {
   /// Returns the platform-specific transition delay duration.
   private var transitionDelay: TimeInterval {
     #if os(iOS)
-      return 0.35 // UINavigationController push/pop animation
+      return 0.35  // UINavigationController push/pop animation
     #elseif os(macOS)
-      return 0.25 // Window and view animations
+      return 0.25  // Window and view animations
     #elseif os(tvOS)
-      return 0.4 // Focus-driven transitions
+      return 0.4  // Focus-driven transitions
     #elseif os(watchOS)
-      return 0.3 // Page-based navigation
+      return 0.3  // Page-based navigation
     #else
-      return 0.35 // Default fallback
+      return 0.35  // Default fallback
     #endif
   }
 
@@ -113,14 +113,14 @@ public actor LockmanAutoUnlock<B: LockmanBoundaryId, I: LockmanInfo>: Sendable {
   /// Automatically unlocks the token when this instance is deallocated.
   deinit {
     if let unlockToken {
-      unlockToken() // Uses the token's configured unlock option
+      unlockToken()  // Uses the token's configured unlock option
     }
   }
 
   /// Manually unlocks the token before deallocation.
   public func manualUnlock() {
     if let unlockToken {
-      unlockToken() // Uses the token's configured unlock option
+      unlockToken()  // Uses the token's configured unlock option
       self.unlockToken = nil
     }
   }

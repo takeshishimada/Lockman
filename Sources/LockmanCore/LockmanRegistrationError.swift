@@ -21,10 +21,12 @@ public enum LockmanRegistrationError: LockmanError {
   public var errorDescription: String? {
     switch self {
     case let .strategyAlreadyRegistered(strategyType):
-      return "Strategy '\(strategyType)' is already registered. Each strategy type can only be registered once."
+      return
+        "Strategy '\(strategyType)' is already registered. Each strategy type can only be registered once."
 
     case let .strategyNotRegistered(strategyType):
-      return "Strategy '\(strategyType)' is not registered. Please register the strategy before attempting to resolve it."
+      return
+        "Strategy '\(strategyType)' is not registered. Please register the strategy before attempting to resolve it."
     }
   }
 
@@ -32,10 +34,12 @@ public enum LockmanRegistrationError: LockmanError {
   public var failureReason: String? {
     switch self {
     case .strategyAlreadyRegistered:
-      return "The container enforces unique strategy type registration to prevent conflicts and ensure deterministic behavior."
+      return
+        "The container enforces unique strategy type registration to prevent conflicts and ensure deterministic behavior."
 
     case .strategyNotRegistered:
-      return "Strategy resolution requires that the strategy type has been previously registered in the container."
+      return
+        "Strategy resolution requires that the strategy type has been previously registered in the container."
     }
   }
 
@@ -43,10 +47,12 @@ public enum LockmanRegistrationError: LockmanError {
   public var recoverySuggestion: String? {
     switch self {
     case let .strategyAlreadyRegistered(strategyType):
-      return "Check if '\(strategyType)' is being registered multiple times. Use container.isRegistered(_:) to check before registration, or ensure registration happens only once during app startup."
+      return
+        "Check if '\(strategyType)' is being registered multiple times. Use container.isRegistered(_:) to check before registration, or ensure registration happens only once during app startup."
 
     case let .strategyNotRegistered(strategyType):
-      return "Add 'try Lockman.container.register(\(strategyType).shared)' to your app startup code, or verify that registration is happening before this resolution attempt."
+      return
+        "Add 'try Lockman.container.register(\(strategyType).shared)' to your app startup code, or verify that registration is happening before this resolution attempt."
     }
   }
 
@@ -54,7 +60,7 @@ public enum LockmanRegistrationError: LockmanError {
   public var helpAnchor: String? {
     switch self {
     case .strategyAlreadyRegistered,
-         .strategyNotRegistered:
+      .strategyNotRegistered:
       return "LockmanStrategyContainer"
     }
   }

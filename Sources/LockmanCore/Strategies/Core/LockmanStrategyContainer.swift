@@ -247,8 +247,8 @@ public final class LockmanStrategyContainer: @unchecked Sendable {
   ) throws -> AnyLockmanStrategy<I> {
     try storage.withCriticalRegion { storage in
       guard let entry = storage[id],
-            let anyStrategy = entry.strategy as? AnyLockmanStrategy<I> else
-      {
+        let anyStrategy = entry.strategy as? AnyLockmanStrategy<I>
+      else {
         throw LockmanRegistrationError.strategyNotRegistered(id.value)
       }
       return anyStrategy
@@ -268,7 +268,8 @@ public final class LockmanStrategyContainer: @unchecked Sendable {
   /// ```swift
   /// let strategy = try container.resolve(LockmanSingleExecutionStrategy.self)
   /// ```
-  public func resolve<S: LockmanStrategy>(_ strategyType: S.Type) throws -> AnyLockmanStrategy<S.I> {
+  public func resolve<S: LockmanStrategy>(_ strategyType: S.Type) throws -> AnyLockmanStrategy<S.I>
+  {
     let id = LockmanStrategyId(type: strategyType)
     return try resolve(id: id, expecting: S.I.self)
   }
@@ -320,7 +321,9 @@ public final class LockmanStrategyContainer: @unchecked Sendable {
   ///
   /// ## Complexity
   /// O(n log n) where n is the number of registered strategies
-  public func registeredStrategyInfo() -> [(id: LockmanStrategyId, typeName: String, registeredAt: Date)] {
+  public func registeredStrategyInfo() -> [(
+    id: LockmanStrategyId, typeName: String, registeredAt: Date
+  )] {
     storage.withCriticalRegion { storage in
       storage.map { id, entry in
         (id: id, typeName: entry.typeName, registeredAt: entry.registeredAt)

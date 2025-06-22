@@ -1,5 +1,6 @@
 import Foundation
 import XCTest
+
 @testable import LockmanCore
 
 /// Tests for LockmanGroupCoordinatedInfo
@@ -21,7 +22,7 @@ final class LockmanGroupCoordinatedInfoTests: XCTestCase {
   }
 
   func testInitializeWithStringActionId() {
-    let info  = LockmanGroupCoordinatedInfo(
+    let info = LockmanGroupCoordinatedInfo(
       actionId: LockmanActionId("testAction"),
       groupId: "testGroup",
       coordinationRole: .member
@@ -34,7 +35,7 @@ final class LockmanGroupCoordinatedInfoTests: XCTestCase {
   }
 
   func testEachInstanceHasUniqueId() {
-    let info1  = LockmanGroupCoordinatedInfo(
+    let info1 = LockmanGroupCoordinatedInfo(
       actionId: LockmanActionId("action"),
       groupId: "group",
       coordinationRole: .leader(.none)
@@ -57,7 +58,7 @@ final class LockmanGroupCoordinatedInfoTests: XCTestCase {
 
   func testGroupCoordinationRoleValues() {
     let leader = GroupCoordinationRole.leader(.none)
-    let _ = GroupCoordinationRole.leader(.all) // Verify we can create exclusive leader
+    let _ = GroupCoordinationRole.leader(.all)  // Verify we can create exclusive leader
     let member = GroupCoordinationRole.member
 
     // Test pattern matching
@@ -79,9 +80,9 @@ final class LockmanGroupCoordinatedInfoTests: XCTestCase {
       .leader(.none),
       .member,
       .leader(.none),
-      .leader(.all)
+      .leader(.all),
     ]
-    XCTAssertEqual(roles.count, 3) // Duplicate .leader(.none) removed
+    XCTAssertEqual(roles.count, 3)  // Duplicate .leader(.none) removed
 
     // Can be used in dictionaries
     let roleMap: [GroupCoordinationRole: String] = [
@@ -97,7 +98,7 @@ final class LockmanGroupCoordinatedInfoTests: XCTestCase {
   // MARK: - Equatable Tests
 
   func testEqualityBasedOnUniqueIdOnly() {
-    let info1  = LockmanGroupCoordinatedInfo(
+    let info1 = LockmanGroupCoordinatedInfo(
       actionId: LockmanActionId("action1"),
       groupId: "group1",
       coordinationRole: .leader(.none)
@@ -107,7 +108,7 @@ final class LockmanGroupCoordinatedInfoTests: XCTestCase {
     XCTAssertEqual(info1, info1)
 
     // Different instance with same properties is not equal
-    let info2  = LockmanGroupCoordinatedInfo(
+    let info2 = LockmanGroupCoordinatedInfo(
       actionId: LockmanActionId("action1"),
       groupId: "group1",
       coordinationRole: .leader(.none)
@@ -147,13 +148,13 @@ final class LockmanGroupCoordinatedInfoTests: XCTestCase {
 
     // Filter
     let filtered = array.filter { $0 == info1 }
-    XCTAssertEqual(filtered.count, 2) // info1 appears twice
+    XCTAssertEqual(filtered.count, 2)  // info1 appears twice
   }
 
   // MARK: - LockmanInfo Protocol Tests
 
   func testConformsToLockmanInfoProtocol() {
-    let info  = LockmanGroupCoordinatedInfo(
+    let info = LockmanGroupCoordinatedInfo(
       actionId: LockmanActionId("test"),
       groupId: "group",
       coordinationRole: .member
@@ -168,7 +169,7 @@ final class LockmanGroupCoordinatedInfoTests: XCTestCase {
   // MARK: - Edge Cases
 
   func testEmptyStrings() {
-    let info  = LockmanGroupCoordinatedInfo(
+    let info = LockmanGroupCoordinatedInfo(
       actionId: LockmanActionId(""),
       groupId: "",
       coordinationRole: .leader(.none)
@@ -180,7 +181,7 @@ final class LockmanGroupCoordinatedInfoTests: XCTestCase {
   }
 
   func testSpecialCharactersInStrings() {
-    let info  = LockmanGroupCoordinatedInfo(
+    let info = LockmanGroupCoordinatedInfo(
       actionId: LockmanActionId("action@#$%^&*()"),
       groupId: "group-with-特殊文字-🔒",
       coordinationRole: .member
@@ -191,7 +192,7 @@ final class LockmanGroupCoordinatedInfoTests: XCTestCase {
   }
 
   func testVeryLongStrings() {
-    let longString  = String(repeating: "x", count: 1000)
+    let longString = String(repeating: "x", count: 1000)
     let info = LockmanGroupCoordinatedInfo(
       actionId: longString,
       groupId: longString,
@@ -205,14 +206,14 @@ final class LockmanGroupCoordinatedInfoTests: XCTestCase {
   // MARK: - Sendable Conformance
 
   func testSendableAcrossConcurrentContexts() async {
-    let info  = LockmanGroupCoordinatedInfo(
+    let info = LockmanGroupCoordinatedInfo(
       actionId: LockmanActionId("concurrent"),
       groupId: "test",
       coordinationRole: .leader(.none)
     )
 
     await withTaskGroup(of: String.self) { group in
-      for i in 0 ..< 10 {
+      for i in 0..<10 {
         group.addTask {
           // Can safely access info properties
           "\(i): \(info.actionId)-\(info.groupIds.first!)"
@@ -232,7 +233,7 @@ final class LockmanGroupCoordinatedInfoTests: XCTestCase {
   // MARK: - Multiple Groups Tests
 
   func testInitializeWithMultipleGroups() {
-    let info  = LockmanGroupCoordinatedInfo(
+    let info = LockmanGroupCoordinatedInfo(
       actionId: LockmanActionId("multi"),
       groupIds: ["group1", "group2", "group3"],
       coordinationRole: .member

@@ -40,8 +40,7 @@ import Foundation
 /// }
 /// ```
 public protocol LockmanSingleExecutionAction: LockmanAction
-  where I == LockmanSingleExecutionInfo
-{
+where I == LockmanSingleExecutionInfo {
   /// The unique name identifying this action for lock conflict detection.
   ///
   /// Actions with the same `actionName` cannot run concurrently on the same boundary.
@@ -52,10 +51,10 @@ public protocol LockmanSingleExecutionAction: LockmanAction
 
 // MARK: - Automatic Implementation
 
-public extension LockmanSingleExecutionAction {
+extension LockmanSingleExecutionAction {
   /// The strategy ID for single-execution locking.
   /// Uses the built-in single execution strategy identifier.
-  var strategyId: LockmanStrategyId {
+  public var strategyId: LockmanStrategyId {
     .singleExecution
   }
 

@@ -1,5 +1,6 @@
 import Foundation
 import XCTest
+
 @testable import LockmanCore
 
 /// Tests for the LockmanGroupCoordinationStrategy
@@ -16,7 +17,7 @@ final class LockmanGroupCoordinationStrategyTests: XCTestCase {
     let instance1 = LockmanGroupCoordinationStrategy.shared
     let instance2 = LockmanGroupCoordinationStrategy.shared
 
-    XCTAssertTrue(instance1  === instance2)
+    XCTAssertTrue(instance1 === instance2)
   }
 
   func testMakeStrategyIdReturnsConsistentIdentifier() {
@@ -28,7 +29,7 @@ final class LockmanGroupCoordinationStrategyTests: XCTestCase {
   }
 
   func testInstanceStrategyIdMatchesMakeStrategyId() {
-    let strategy  = LockmanGroupCoordinationStrategy()
+    let strategy = LockmanGroupCoordinationStrategy()
     let staticId = LockmanGroupCoordinationStrategy.makeStrategyId()
 
     XCTAssertEqual(strategy.strategyId, staticId)
@@ -37,7 +38,7 @@ final class LockmanGroupCoordinationStrategyTests: XCTestCase {
   // MARK: - Basic Functionality Tests
 
   func testLeaderCanLockWhenGroupIsEmpty() {
-    let strategy  = LockmanGroupCoordinationStrategy()
+    let strategy = LockmanGroupCoordinationStrategy()
     let boundaryId = TestBoundaryId(value: "test")
 
     let leaderInfo = LockmanGroupCoordinatedInfo(
@@ -530,7 +531,7 @@ final class LockmanGroupCoordinationStrategyTests: XCTestCase {
   }
 
   func testMultiGroupUnlockRemovesFromAllGroups() {
-    let strategy  = LockmanGroupCoordinationStrategy()
+    let strategy = LockmanGroupCoordinationStrategy()
     let boundaryId = TestBoundaryId(value: "test")
 
     // Lock multiple groups
@@ -665,7 +666,7 @@ final class LockmanGroupCoordinationStrategyTests: XCTestCase {
 
     // Concurrent member attempts
     await withTaskGroup(of: Bool.self) { group in
-      for i in 0 ..< 100 {
+      for i in 0..<100 {
         group.addTask {
           let member = LockmanGroupCoordinatedInfo(
             actionId: LockmanActionId("member\(i)"),
@@ -676,7 +677,7 @@ final class LockmanGroupCoordinationStrategyTests: XCTestCase {
           if strategy.canLock(id: boundaryId, info: member) == .success {
             strategy.lock(id: boundaryId, info: member)
             // Simulate some work
-            try? await Task.sleep(nanoseconds: 1_000_000) // 1ms
+            try? await Task.sleep(nanoseconds: 1_000_000)  // 1ms
             strategy.unlock(id: boundaryId, info: member)
             return true
           }
@@ -890,7 +891,7 @@ final class LockmanGroupCoordinationStrategyTests: XCTestCase {
       groupId: "group1",
       coordinationRole: .leader(.all)
     )
-    
+
     if case .failure(let error) = strategy.canLock(id: boundaryId, info: sameLock) {
       // Should fail due to actionAlreadyInGroup, not blockedByExclusiveLeader
       XCTAssertTrue(error is LockmanGroupCoordinationError)
@@ -930,7 +931,9 @@ final class LockmanGroupCoordinationStrategyTests: XCTestCase {
     if case .failure(let error) = strategy.canLock(id: boundaryId, info: member) {
       XCTAssertTrue(error is LockmanGroupCoordinationError)
       if let coordinationError = error as? LockmanGroupCoordinationError {
-        if case .blockedByExclusiveLeader(let leaderActionId, let groupId, let mode) = coordinationError {
+        if case .blockedByExclusiveLeader(let leaderActionId, let groupId, let mode) =
+          coordinationError
+        {
           XCTAssertEqual(leaderActionId, "exclusive")
           XCTAssertEqual(groupId, "group1")
           XCTAssertEqual(mode, .all)
@@ -943,4 +946,3 @@ final class LockmanGroupCoordinationStrategyTests: XCTestCase {
     }
   }
 }
-

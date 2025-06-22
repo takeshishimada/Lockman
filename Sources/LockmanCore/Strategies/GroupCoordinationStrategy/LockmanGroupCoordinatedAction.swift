@@ -73,13 +73,14 @@ import Foundation
 ///   }
 /// }
 /// ```
-public protocol LockmanGroupCoordinatedAction: LockmanAction where I == LockmanGroupCoordinatedInfo {
+public protocol LockmanGroupCoordinatedAction: LockmanAction
+where I == LockmanGroupCoordinatedInfo {
   /// The name identifier for this action.
   ///
   /// Used as the `actionId` in the lock information.
   /// Actions with the same name within the same group cannot execute concurrently.
   var actionName: String { get }
-  
+
   /// Lock information that provides group coordination details.
   ///
   /// This property must be implemented to specify:
@@ -90,10 +91,9 @@ public protocol LockmanGroupCoordinatedAction: LockmanAction where I == LockmanG
 
 // MARK: - Default Implementations
 
-public extension LockmanGroupCoordinatedAction {
+extension LockmanGroupCoordinatedAction {
   /// The strategy identifier for group coordination.
-  var strategyId: LockmanStrategyId {
+  public var strategyId: LockmanStrategyId {
     .groupCoordination
   }
 }
-

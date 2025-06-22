@@ -63,8 +63,11 @@ public final class LockmanDynamicConditionStrategy: LockmanStrategy, @unchecked 
     info: LockmanDynamicConditionInfo
   ) -> LockmanResult {
     // Convert Bool to LockmanResult
-    let result: LockmanResult = info.condition() ? .success : .failure(LockmanDynamicConditionError.conditionNotMet(actionId: info.actionId))
-    let failureReason: String? = if case .failure = result { "Dynamic condition returned false" } else { nil }
+    let result: LockmanResult =
+      info.condition()
+      ? .success : .failure(LockmanDynamicConditionError.conditionNotMet(actionId: info.actionId))
+    let failureReason: String? =
+      if case .failure = result { "Dynamic condition returned false" } else { nil }
 
     LockmanLogger.shared.logCanLock(
       result: result,

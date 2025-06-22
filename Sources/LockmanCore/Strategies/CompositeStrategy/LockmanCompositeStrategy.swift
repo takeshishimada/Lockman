@@ -10,8 +10,7 @@ public final class LockmanCompositeStrategy2<
   I1: LockmanInfo, S1: LockmanStrategy,
   I2: LockmanInfo, S2: LockmanStrategy
 >: LockmanStrategy, @unchecked Sendable
-  where S1.I == I1, S2.I == I2
-{
+where S1.I == I1, S2.I == I2 {
   public typealias I = LockmanCompositeInfo2<I1, I2>
 
   /// The first strategy in the composite.
@@ -192,8 +191,7 @@ public final class LockmanCompositeStrategy3<
   I2: LockmanInfo, S2: LockmanStrategy,
   I3: LockmanInfo, S3: LockmanStrategy
 >: LockmanStrategy, @unchecked Sendable
-  where S1.I == I1, S2.I == I2, S3.I == I3
-{
+where S1.I == I1, S2.I == I2, S3.I == I3 {
   public typealias I = LockmanCompositeInfo3<I1, I2, I3>
 
   private let strategy1: S1
@@ -208,7 +206,8 @@ public final class LockmanCompositeStrategy3<
     self.strategy1 = strategy1
     self.strategy2 = strategy2
     self.strategy3 = strategy3
-    self.strategyId = Self.makeStrategyId(strategy1: strategy1, strategy2: strategy2, strategy3: strategy3)
+    self.strategyId = Self.makeStrategyId(
+      strategy1: strategy1, strategy2: strategy2, strategy3: strategy3)
   }
 
   /// Creates a strategy identifier for the composite strategy.
@@ -218,10 +217,13 @@ public final class LockmanCompositeStrategy3<
   ///   - strategy2: The second component strategy
   ///   - strategy3: The third component strategy
   /// - Returns: A `LockmanStrategyId` that uniquely identifies this composite configuration
-  public static func makeStrategyId(strategy1: S1, strategy2: S2, strategy3: S3) -> LockmanStrategyId {
+  public static func makeStrategyId(strategy1: S1, strategy2: S2, strategy3: S3)
+    -> LockmanStrategyId
+  {
     LockmanStrategyId(
       name: "CompositeStrategy3",
-      configuration: "\(strategy1.strategyId.value)+\(strategy2.strategyId.value)+\(strategy3.strategyId.value)"
+      configuration:
+        "\(strategy1.strategyId.value)+\(strategy2.strategyId.value)+\(strategy3.strategyId.value)"
     )
   }
 
@@ -372,8 +374,7 @@ public final class LockmanCompositeStrategy4<
   I3: LockmanInfo, S3: LockmanStrategy,
   I4: LockmanInfo, S4: LockmanStrategy
 >: LockmanStrategy, @unchecked Sendable
-  where S1.I == I1, S2.I == I2, S3.I == I3, S4.I == I4
-{
+where S1.I == I1, S2.I == I2, S3.I == I3, S4.I == I4 {
   public typealias I = LockmanCompositeInfo4<I1, I2, I3, I4>
 
   private let strategy1: S1
@@ -389,14 +390,18 @@ public final class LockmanCompositeStrategy4<
     self.strategy2 = strategy2
     self.strategy3 = strategy3
     self.strategy4 = strategy4
-    self.strategyId = Self.makeStrategyId(strategy1: strategy1, strategy2: strategy2, strategy3: strategy3, strategy4: strategy4)
+    self.strategyId = Self.makeStrategyId(
+      strategy1: strategy1, strategy2: strategy2, strategy3: strategy3, strategy4: strategy4)
   }
 
   /// Creates a strategy identifier for the composite strategy.
-  public static func makeStrategyId(strategy1: S1, strategy2: S2, strategy3: S3, strategy4: S4) -> LockmanStrategyId {
+  public static func makeStrategyId(strategy1: S1, strategy2: S2, strategy3: S3, strategy4: S4)
+    -> LockmanStrategyId
+  {
     LockmanStrategyId(
       name: "CompositeStrategy4",
-      configuration: "\(strategy1.strategyId.value)+\(strategy2.strategyId.value)+\(strategy3.strategyId.value)+\(strategy4.strategyId.value)"
+      configuration:
+        "\(strategy1.strategyId.value)+\(strategy2.strategyId.value)+\(strategy3.strategyId.value)+\(strategy4.strategyId.value)"
     )
   }
 
@@ -567,8 +572,7 @@ public final class LockmanCompositeStrategy5<
   I4: LockmanInfo, S4: LockmanStrategy,
   I5: LockmanInfo, S5: LockmanStrategy
 >: LockmanStrategy, @unchecked Sendable
-  where S1.I == I1, S2.I == I2, S3.I == I3, S4.I == I4, S5.I == I5
-{
+where S1.I == I1, S2.I == I2, S3.I == I3, S4.I == I4, S5.I == I5 {
   public typealias I = LockmanCompositeInfo5<I1, I2, I3, I4, I5>
 
   private let strategy1: S1
@@ -592,14 +596,19 @@ public final class LockmanCompositeStrategy5<
     self.strategy3 = strategy3
     self.strategy4 = strategy4
     self.strategy5 = strategy5
-    self.strategyId = Self.makeStrategyId(strategy1: strategy1, strategy2: strategy2, strategy3: strategy3, strategy4: strategy4, strategy5: strategy5)
+    self.strategyId = Self.makeStrategyId(
+      strategy1: strategy1, strategy2: strategy2, strategy3: strategy3, strategy4: strategy4,
+      strategy5: strategy5)
   }
 
   /// Creates a strategy identifier for the composite strategy.
-  public static func makeStrategyId(strategy1: S1, strategy2: S2, strategy3: S3, strategy4: S4, strategy5: S5) -> LockmanStrategyId {
+  public static func makeStrategyId(
+    strategy1: S1, strategy2: S2, strategy3: S3, strategy4: S4, strategy5: S5
+  ) -> LockmanStrategyId {
     LockmanStrategyId(
       name: "CompositeStrategy5",
-      configuration: "\(strategy1.strategyId.value)+\(strategy2.strategyId.value)+\(strategy3.strategyId.value)+\(strategy4.strategyId.value)+\(strategy5.strategyId.value)"
+      configuration:
+        "\(strategy1.strategyId.value)+\(strategy2.strategyId.value)+\(strategy3.strategyId.value)+\(strategy4.strategyId.value)+\(strategy5.strategyId.value)"
     )
   }
 

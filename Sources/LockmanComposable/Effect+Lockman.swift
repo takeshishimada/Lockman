@@ -3,7 +3,7 @@ import LockmanCore
 
 // MARK: - Effect Extensions for Lockman Integration
 
-public extension Effect {
+extension Effect {
   // MARK: - Public Lock Operations
 
   /// Creates an Effect that automatically manages lock lifecycle without requiring manual unlock.
@@ -29,7 +29,7 @@ public extension Effect {
   /// - `LockmanPriorityBasedError`: Priority-based conflicts
   /// - `LockmanDynamicConditionError`: Dynamic condition failures
   /// - `LockmanGroupCoordinationError`: Group coordination conflicts
-  static func withLock<B: LockmanBoundaryId, A: LockmanAction>(
+  public static func withLock<B: LockmanBoundaryId, A: LockmanAction>(
     priority: TaskPriority? = nil,
     unlockOption: UnlockOption? = nil,
     handleCancellationErrors: Bool? = nil,
@@ -117,7 +117,7 @@ public extension Effect {
   /// This method supports two types of error handlers:
   /// - `catch handler`: For errors that occur during operation execution (has unlock token)
   /// - `lockFailure`: For lock acquisition failures (no unlock token needed)
-  static func withLock<B: LockmanBoundaryId, A: LockmanAction>(
+  public static func withLock<B: LockmanBoundaryId, A: LockmanAction>(
     priority: TaskPriority? = nil,
     unlockOption: UnlockOption? = nil,
     handleCancellationErrors: Bool? = nil,
@@ -212,7 +212,7 @@ public extension Effect {
   ///   - cancelID: Unique identifier for effect cancellation and lock boundary
   ///   - fileID, filePath, line, column: Source location for debugging (auto-populated)
   /// - Returns: Concatenated effect with automatic lock management, or `.none` if lock acquisition fails
-  static func concatenateWithLock<B: LockmanBoundaryId, A: LockmanAction>(
+  public static func concatenateWithLock<B: LockmanBoundaryId, A: LockmanAction>(
     unlockOption: UnlockOption? = nil,
     operations: [Effect<Action>],
     lockFailure: (@Sendable (_ error: any Error, _ send: Send<Action>) async -> Void)? = nil,
@@ -242,13 +242,13 @@ public extension Effect {
 
       // Create unlock effect that will be executed last
       let unlockEffect = Effect<Action>.run { _ in
-        await autoUnlock.manualUnlock() // Uses the configured option
+        await autoUnlock.manualUnlock()  // Uses the configured option
       }
 
       // Build the complete effect sequence
       let builtEffect = Effect<Action>.concatenate([
-        .concatenate(operations), // Execute all provided operations
-        unlockEffect, // Ensure unlock happens last (with option)
+        .concatenate(operations),  // Execute all provided operations
+        unlockEffect,  // Ensure unlock happens last (with option)
       ])
 
       // Attempt to acquire lock and execute if successful
@@ -277,7 +277,7 @@ public extension Effect {
 
 // MARK: - Internal Implementation
 
-internal extension Effect {
+extension Effect {
   /// Core logic that attempts to acquire a lock and builds the effect.
   ///
   /// ## Purpose

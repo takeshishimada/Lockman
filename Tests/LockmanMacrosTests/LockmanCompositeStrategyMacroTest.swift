@@ -16,7 +16,7 @@
     /// Tests that the macro generates the correct protocol conformance extension and members.
     func testExtensionMacroGeneratesConformance() {
       withMacroTesting(macros: [
-        "LockmanCompositeStrategy": LockmanCompositeStrategy2Macro.self,
+        "LockmanCompositeStrategy": LockmanCompositeStrategy2Macro.self
       ]) {
         assertMacro {
           """
@@ -71,7 +71,7 @@
     /// Tests public enum handling
     func testPublicEnumHandling() {
       withMacroTesting(macros: [
-        "LockmanCompositeStrategy": LockmanCompositeStrategy2Macro.self,
+        "LockmanCompositeStrategy": LockmanCompositeStrategy2Macro.self
       ]) {
         assertMacro {
           """
@@ -124,7 +124,7 @@
   final class LockmanCompositeStrategy3MacroTest: XCTestCase {
     func testExtensionMacroGeneratesConformance() {
       withMacroTesting(macros: [
-        "LockmanCompositeStrategy": LockmanCompositeStrategy3Macro.self,
+        "LockmanCompositeStrategy": LockmanCompositeStrategy3Macro.self
       ]) {
         assertMacro {
           """
@@ -186,7 +186,7 @@
   final class LockmanCompositeStrategy4MacroTest: XCTestCase {
     func testExtensionMacroGeneratesConformance() {
       withMacroTesting(macros: [
-        "LockmanCompositeStrategy": LockmanCompositeStrategy4Macro.self,
+        "LockmanCompositeStrategy": LockmanCompositeStrategy4Macro.self
       ]) {
         assertMacro {
           """
@@ -249,7 +249,7 @@
   final class LockmanCompositeStrategy5MacroTest: XCTestCase {
     func testExtensionMacroGeneratesConformance() {
       withMacroTesting(macros: [
-        "LockmanCompositeStrategy": LockmanCompositeStrategy5Macro.self,
+        "LockmanCompositeStrategy": LockmanCompositeStrategy5Macro.self
       ]) {
         assertMacro {
           """
@@ -317,7 +317,7 @@
   final class LockmanCompositeStrategyErrorTests: XCTestCase {
     func testInvalidDeclarationTypeError() {
       withMacroTesting(macros: [
-        "LockmanCompositeStrategy": LockmanCompositeStrategy2Macro.self,
+        "LockmanCompositeStrategy": LockmanCompositeStrategy2Macro.self
       ]) {
         assertMacro {
           """
@@ -342,7 +342,7 @@
 
     func testInvalidArgumentCountError() {
       withMacroTesting(macros: [
-        "LockmanCompositeStrategy": LockmanCompositeStrategy2Macro.self,
+        "LockmanCompositeStrategy": LockmanCompositeStrategy2Macro.self
       ]) {
         assertMacro {
           """

@@ -47,7 +47,7 @@ struct PriorityBasedStrategyFeature {
         case .decrementButtonTapped:
           return .withLock(
             operation: { send in
-              try? await Task.sleep(nanoseconds: 2_000_000_000) // 2 seconds
+              try? await Task.sleep(nanoseconds: 2_000_000_000)  // 2 seconds
               await send(.state(.decrement))
             },
             action: viewAction,
@@ -56,7 +56,7 @@ struct PriorityBasedStrategyFeature {
         case .incrementButtonTapped:
           return .withLock(
             operation: { send in
-              try? await Task.sleep(nanoseconds: 2_000_000_000) // 2 seconds
+              try? await Task.sleep(nanoseconds: 2_000_000_000)  // 2 seconds
               await send(.state(.increment))
             },
             action: viewAction,
@@ -90,10 +90,12 @@ struct PriorityBasedStrategyView: View {
           .font(.title2)
           .fontWeight(.bold)
 
-        Text("A strategy that controls action execution based on priority levels.\nHigh-priority actions can replace low-priority ones or execute exclusively.")
-          .font(.caption)
-          .foregroundColor(.secondary)
-          .multilineTextAlignment(.leading)
+        Text(
+          "A strategy that controls action execution based on priority levels.\nHigh-priority actions can replace low-priority ones or execute exclusively."
+        )
+        .font(.caption)
+        .foregroundColor(.secondary)
+        .multilineTextAlignment(.leading)
       }
       .padding()
       .background(Color.gray.opacity(0.1))
@@ -130,10 +132,12 @@ struct PriorityBasedStrategyView: View {
 
         Label("Plus button: Priority .high(.exclusive)", systemImage: "plus.circle")
           .font(.caption)
-        Label("→ Won't accept other operations until processing is complete", systemImage: "arrow.right")
-          .font(.caption)
-          .foregroundColor(.red)
-          .padding(.leading, 20)
+        Label(
+          "→ Won't accept other operations until processing is complete", systemImage: "arrow.right"
+        )
+        .font(.caption)
+        .foregroundColor(.red)
+        .padding(.leading, 20)
 
         Label("Each has a 2-second delay so you can see the difference", systemImage: "info.circle")
           .font(.caption)

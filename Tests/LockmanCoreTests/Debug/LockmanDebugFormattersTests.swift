@@ -1,5 +1,6 @@
 import Foundation
 import XCTest
+
 @testable @_spi(Debugging) import LockmanCore
 
 final class LockmanDebugFormattersTests: XCTestCase {
@@ -54,8 +55,8 @@ final class LockmanDebugFormattersTests: XCTestCase {
     print(output)
 
     // Verify no truncation
-    XCTAssertTrue(output.contains("DynamicCondition")) // Not truncated to "DynamicConditio"
-    XCTAssertTrue(output.contains("condition: <closure")) // Not truncated to "condition: <clo"
+    XCTAssertTrue(output.contains("DynamicCondition"))  // Not truncated to "DynamicConditio"
+    XCTAssertTrue(output.contains("condition: <closure"))  // Not truncated to "condition: <clo"
     XCTAssertTrue(output.contains("SingleExecution"))
     XCTAssertTrue(output.contains("veryLongActionIdForTestingDynamicColumnWidth"))
     XCTAssertTrue(output.contains("VeryLongBoundaryIdForTestingColumnWidth"))
@@ -73,7 +74,7 @@ final class LockmanDebugFormattersTests: XCTestCase {
     XCTAssertEqual(compact.maxAdditionalWidth, 0)
 
     // Test default options
-    let defaultOptions  = Lockman.debug.FormatOptions.default
+    let defaultOptions = Lockman.debug.FormatOptions.default
     XCTAssertEqual(defaultOptions.maxStrategyWidth, 20)
     XCTAssertEqual(defaultOptions.maxBoundaryWidth, 25)
     XCTAssertEqual(defaultOptions.maxActionIdWidth, 36)

@@ -1,6 +1,7 @@
 import ComposableArchitecture
 import Foundation
 import XCTest
+
 @testable import LockmanComposable
 @testable import LockmanCore
 
@@ -67,7 +68,7 @@ final class EffectWithLockSingleExecutionStrategyTests: XCTestCase {
   }
 
   func testActionExecutionAfterLockRelease() async {
-    let container  = LockmanStrategyContainer()
+    let container = LockmanStrategyContainer()
     let strategy = LockmanSingleExecutionStrategy()
     try? container.register(strategy)
 
@@ -100,7 +101,7 @@ final class EffectWithLockSingleExecutionStrategyTests: XCTestCase {
       // When: Second attempt after unlock
       await store.send(.tapIncrement)
       await store.receive(.increment) {
-        $0.count  = 1
+        $0.count = 1
       }
       await store.finish()
     }
@@ -141,7 +142,7 @@ final class EffectWithLockSingleExecutionStrategyTests: XCTestCase {
       // But: tapDecrement should work (different action name)
       await store.send(.tapDecrement)
       await store.receive(.decrement) {
-        $0.count  = -1
+        $0.count = -1
       }
       await store.finish()
     }
@@ -183,7 +184,7 @@ final class EffectWithLockSingleExecutionStrategyTests: XCTestCase {
   // MARK: - Concurrent Execution Tests
 
   func testConcurrentActionsWithDifferentIds() async {
-    let container  = LockmanStrategyContainer()
+    let container = LockmanStrategyContainer()
     let strategy = LockmanSingleExecutionStrategy()
     try? container.register(strategy)
 
@@ -206,27 +207,27 @@ final class EffectWithLockSingleExecutionStrategyTests: XCTestCase {
     }
   }
 
-//  // MARK: - Error Handling Tests
-//
-//  func testwithLock handles strategy not registered error() async throws {
-//  func testWithLockHandlesStrategyNotRegisteredError() async {
-//    let emptyContainer = LockmanStrategyContainer()
-//
-//    await Lockman.withTestContainer(emptyContainer) {
-//      let store = await TestStore(
-//        initialState: TestSingleExecutionFeature.State(count: 0)
-//      ) {
-//        TestSingleExecutionFeature()
-//      }
-//
-//      // When: Action is sent with unregistered strategy
-//      await store.send(.tapIncrement)
-//
-//      // Then: Action should fail gracefully (no increment action received)
-//      await store.finish()
-//      // State remains unchanged (count is still 0)
-//    }
-//  }
+  //  // MARK: - Error Handling Tests
+  //
+  //  func testwithLock handles strategy not registered error() async throws {
+  //  func testWithLockHandlesStrategyNotRegisteredError() async {
+  //    let emptyContainer = LockmanStrategyContainer()
+  //
+  //    await Lockman.withTestContainer(emptyContainer) {
+  //      let store = await TestStore(
+  //        initialState: TestSingleExecutionFeature.State(count: 0)
+  //      ) {
+  //        TestSingleExecutionFeature()
+  //      }
+  //
+  //      // When: Action is sent with unregistered strategy
+  //      await store.send(.tapIncrement)
+  //
+  //      // Then: Action should fail gracefully (no increment action received)
+  //      await store.finish()
+  //      // State remains unchanged (count is still 0)
+  //    }
+  //  }
 
   func testWithLockAutomaticUnlockOnCompletion() async {
     let container = LockmanStrategyContainer()
@@ -360,7 +361,7 @@ final class EffectConcatenateWithLockTests: XCTestCase {
       // Verify that after unlock, action can execute normally
       await store.send(.executeConcatenateWithLock)
       await store.receive(\.increment) {
-        $0.count  = 1
+        $0.count = 1
       }
       await store.receive(\.increment) {
         $0.count = 2
@@ -501,7 +502,7 @@ private struct TestConcatenateWithLockFeature {
         return .concatenateWithLock(
           unlockOption: .immediate,
           operations: [
-            .send(.operationFailed),
+            .send(.operationFailed)
           ],
           action: action,
           cancelID: CancelID.userAction
@@ -511,7 +512,7 @@ private struct TestConcatenateWithLockFeature {
         return .concatenateWithLock(
           unlockOption: .immediate,
           operations: [
-            .send(.operationCanceled),
+            .send(.operationCanceled)
           ],
           action: action,
           cancelID: CancelID.userAction
