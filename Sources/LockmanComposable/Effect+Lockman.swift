@@ -251,14 +251,32 @@ extension Effect {
         unlockEffect,  // Ensure unlock happens last (with option)
       ])
 
-      // Attempt to acquire lock and execute if successful
-      return lock(
+      // Attempt to acquire lock
+      let lockResult = lock(
         lockmanInfo: lockmanInfo,
         strategy: strategy,
-        cancelID: cancelID,
-        effect: builtEffect,
-        catchHandler: lockFailure
+        cancelID: cancelID
       )
+
+      // Handle lock acquisition result
+      switch lockResult {
+      case .success:
+        // Lock acquired successfully, execute effects immediately
+        return builtEffect
+
+      case .successWithPrecedingCancellation:
+        // Lock acquired but need to cancel existing operation first
+        return .concatenate(.cancel(id: cancelID), builtEffect)
+
+      case .failure(let error):
+        // Lock acquisition failed
+        if let lockFailure = lockFailure {
+          return .run { send in
+            await lockFailure(error, send)
+          }
+        }
+        return .none
+      }
 
     } catch {
       // Handle strategy resolution or other setup errors
@@ -339,14 +357,32 @@ extension Effect {
         unlockOption: unlockOption
       )
 
-      // Build and return the effect using the provided builder
-      return lock(
+      // Attempt to acquire lock
+      let lockResult = lock(
         lockmanInfo: lockmanInfo,
         strategy: strategy,
-        cancelID: cancelID,
-        effect: effectBuilder(unlockToken),
-        catchHandler: handler
+        cancelID: cancelID
       )
+
+      // Handle lock acquisition result
+      switch lockResult {
+      case .success:
+        // Lock acquired successfully, execute effect immediately
+        return effectBuilder(unlockToken)
+
+      case .successWithPrecedingCancellation:
+        // Lock acquired but need to cancel existing operation first
+        return .concatenate(.cancel(id: cancelID), effectBuilder(unlockToken))
+
+      case .failure(let error):
+        // Lock acquisition failed
+        if let handler = handler {
+          return .run { send in
+            await handler(error, send)
+          }
+        }
+        return .none
+      }
 
     } catch {
       // Handle and report strategy resolution errors
@@ -399,10 +435,8 @@ extension Effect {
   static func lock<B: LockmanBoundaryId, I: LockmanInfo>(
     lockmanInfo: I,
     strategy: AnyLockmanStrategy<I>,
-    cancelID: B,
-    effect: Effect<Action>,
-    catchHandler: (@Sendable (_ error: any Error, _ send: Send<Action>) async -> Void)? = nil
-  ) -> Effect<Action> {
+    cancelID: B
+  ) -> LockmanResult {
     Lockman.withBoundaryLock(for: cancelID) {
       // Check if lock can be acquired
       let result = strategy.canLock(
@@ -411,15 +445,8 @@ extension Effect {
       )
 
       // Early exit if lock cannot be acquired
-      if case .failure(let error) = result {
-        // If there's a catch handler, run it with the error
-        if let handler = catchHandler {
-          return .run { send in
-            await handler(error, send)
-          }
-        }
-        // Otherwise return .none
-        return .none
+      if case .failure = result {
+        return result
       }
 
       // Actually acquire the lock
@@ -428,14 +455,8 @@ extension Effect {
         info: lockmanInfo
       )
 
-      // Handle the result appropriately
-      if result == .successWithPrecedingCancellation {
-        // Cancel existing operation, then execute new one
-        return .concatenate(.cancel(id: cancelID), effect)
-      } else {
-        // Execute effect immediately
-        return effect
-      }
+      // Return the result
+      return result
     }
   }
 
