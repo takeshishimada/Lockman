@@ -98,7 +98,8 @@ public final class LockmanSingleExecutionStrategy: LockmanStrategy, @unchecked S
       if currentLocks.isEmpty {
         result = .success
       } else {
-        result = .failure(LockmanSingleExecutionError.boundaryAlreadyLocked(boundaryId: String(describing: id)))
+        result = .failure(
+          LockmanSingleExecutionError.boundaryAlreadyLocked(boundaryId: String(describing: id)))
         failureReason = "Boundary '\(id)' already has an active lock"
       }
 

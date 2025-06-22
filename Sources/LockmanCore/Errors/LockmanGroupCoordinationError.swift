@@ -11,22 +11,23 @@ public enum LockmanGroupCoordinationError: LockmanError {
   ///
   /// Leaders must be the first to join a group to establish coordination.
   case leaderCannotJoinNonEmptyGroup(groupIds: Set<String>)
-  
+
   /// Indicates that a member cannot join a group that has no participants.
   ///
   /// Members require an existing leader or other members to coordinate with.
   case memberCannotJoinEmptyGroup(groupIds: Set<String>)
-  
+
   /// Indicates that an action with the same ID is already in the group.
   ///
   /// Each action ID must be unique within a coordination group.
   case actionAlreadyInGroup(actionId: String, groupIds: Set<String>)
-  
+
   /// Indicates that an action is blocked by an exclusive leader.
   ///
   /// Exclusive leaders can prevent other actions from executing based on their exclusion mode.
-  case blockedByExclusiveLeader(leaderActionId: String, groupId: String, exclusionMode: GroupCoordinationRole.ExclusionMode)
-  
+  case blockedByExclusiveLeader(
+    leaderActionId: String, groupId: String, exclusionMode: GroupCoordinationRole.ExclusionMode)
+
   public var errorDescription: String? {
     switch self {
     case let .leaderCannotJoinNonEmptyGroup(groupIds):
@@ -36,10 +37,11 @@ public enum LockmanGroupCoordinationError: LockmanError {
     case let .actionAlreadyInGroup(actionId, groupIds):
       return "Cannot acquire lock: action '\(actionId)' is already in groups \(groupIds.sorted())."
     case let .blockedByExclusiveLeader(leaderActionId, groupId, exclusionMode):
-      return "Cannot acquire lock: blocked by exclusive leader '\(leaderActionId)' in group '\(groupId)' (mode: \(exclusionMode))."
+      return
+        "Cannot acquire lock: blocked by exclusive leader '\(leaderActionId)' in group '\(groupId)' (mode: \(exclusionMode))."
     }
   }
-  
+
   public var failureReason: String? {
     switch self {
     case .leaderCannotJoinNonEmptyGroup:

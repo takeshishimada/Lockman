@@ -18,23 +18,23 @@ import XCTest
         }
         """,
         expandedSource: """
-        enum NavigationAction {
-          case navigate(to: String)
-          case back
+          enum NavigationAction {
+            case navigate(to: String)
+            case back
 
-            internal var actionName: String {
-              switch self {
-              case .navigate(_):
-                  return "navigate"
-              case .back:
-                  return "back"
+              internal var actionName: String {
+                switch self {
+                case .navigate(_):
+                    return "navigate"
+                case .back:
+                    return "back"
+                }
               }
-            }
-        }
+          }
 
-        extension NavigationAction: LockmanGroupCoordinatedAction {
-        }
-        """,
+          extension NavigationAction: LockmanGroupCoordinatedAction {
+          }
+          """,
         macros: testMacros
       )
     }
@@ -48,20 +48,20 @@ import XCTest
         }
         """,
         expandedSource: """
-        enum SimpleAction {
-          case action
+          enum SimpleAction {
+            case action
 
-            internal var actionName: String {
-              switch self {
-              case .action:
-                  return "action"
+              internal var actionName: String {
+                switch self {
+                case .action:
+                    return "action"
+                }
               }
-            }
-        }
+          }
 
-        extension SimpleAction: LockmanGroupCoordinatedAction {
-        }
-        """,
+          extension SimpleAction: LockmanGroupCoordinatedAction {
+          }
+          """,
         macros: testMacros
       )
     }
@@ -79,26 +79,26 @@ import XCTest
         }
         """,
         expandedSource: """
-        enum UIAction {
-          case showAlert(message: String)
-          case updateProgress(value: Double, animated: Bool)
-          case navigate(to: String, animated: Bool = true)
+          enum UIAction {
+            case showAlert(message: String)
+            case updateProgress(value: Double, animated: Bool)
+            case navigate(to: String, animated: Bool = true)
 
-            internal var actionName: String {
-              switch self {
-              case .showAlert(_):
-                  return "showAlert"
-              case .updateProgress(_, _):
-                  return "updateProgress"
-              case .navigate(_, _):
-                  return "navigate"
+              internal var actionName: String {
+                switch self {
+                case .showAlert(_):
+                    return "showAlert"
+                case .updateProgress(_, _):
+                    return "updateProgress"
+                case .navigate(_, _):
+                    return "navigate"
+                }
               }
-            }
-        }
+          }
 
-        extension UIAction: LockmanGroupCoordinatedAction {
-        }
-        """,
+          extension UIAction: LockmanGroupCoordinatedAction {
+          }
+          """,
         macros: testMacros
       )
     }
@@ -114,19 +114,19 @@ import XCTest
         }
         """,
         expandedSource: """
-        struct InvalidAction {
-          let value: String
-        }
+          struct InvalidAction {
+            let value: String
+          }
 
-        extension InvalidAction: LockmanGroupCoordinatedAction {
-        }
-        """,
+          extension InvalidAction: LockmanGroupCoordinatedAction {
+          }
+          """,
         diagnostics: [
           DiagnosticSpec(
             message: "@LockmanGroupCoordination can only be attached to an enum declaration.",
             line: 1,
             column: 1
-          ),
+          )
         ],
         macros: testMacros
       )
@@ -143,20 +143,20 @@ import XCTest
         }
         """,
         expandedSource: """
-        public enum PublicAction {
-          case action
+          public enum PublicAction {
+            case action
 
-            public var actionName: String {
-              switch self {
-              case .action:
-                  return "action"
+              public var actionName: String {
+                switch self {
+                case .action:
+                    return "action"
+                }
               }
-            }
-        }
+          }
 
-        extension PublicAction: LockmanGroupCoordinatedAction {
-        }
-        """,
+          extension PublicAction: LockmanGroupCoordinatedAction {
+          }
+          """,
         macros: testMacros
       )
     }
@@ -170,20 +170,20 @@ import XCTest
         }
         """,
         expandedSource: """
-        internal enum InternalAction {
-          case action
+          internal enum InternalAction {
+            case action
 
-            internal var actionName: String {
-              switch self {
-              case .action:
-                  return "action"
+              internal var actionName: String {
+                switch self {
+                case .action:
+                    return "action"
+                }
               }
-            }
-        }
+          }
 
-        extension InternalAction: LockmanGroupCoordinatedAction {
-        }
-        """,
+          extension InternalAction: LockmanGroupCoordinatedAction {
+          }
+          """,
         macros: testMacros
       )
     }
@@ -192,6 +192,6 @@ import XCTest
   // MARK: - Test Helpers
 
   private let testMacros: [String: any Macro.Type] = [
-    "LockmanGroupCoordination": LockmanGroupCoordinationMacro.self,
+    "LockmanGroupCoordination": LockmanGroupCoordinationMacro.self
   ]
 #endif

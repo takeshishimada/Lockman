@@ -1,5 +1,6 @@
 import Foundation
 import XCTest
+
 @testable import LockmanCore
 
 final class LockmanConfigurationTests: XCTestCase {
@@ -19,7 +20,7 @@ final class LockmanConfigurationTests: XCTestCase {
 
   func testConfigurationCanBeModified() async throws {
     // Change to immediate
-    Lockman.config.defaultUnlockOption  = .immediate
+    Lockman.config.defaultUnlockOption = .immediate
     XCTAssertEqual(Lockman.config.defaultUnlockOption, .immediate)
 
     // Change to mainRunLoop
@@ -27,7 +28,7 @@ final class LockmanConfigurationTests: XCTestCase {
     XCTAssertEqual(Lockman.config.defaultUnlockOption, .mainRunLoop)
 
     // Change to delayed
-    Lockman.config.defaultUnlockOption  = .delayed(0.5)
+    Lockman.config.defaultUnlockOption = .delayed(0.5)
     if case let .delayed(interval) = Lockman.config.defaultUnlockOption {
       XCTAssertEqual(interval, 0.5)
     } else {
@@ -37,7 +38,7 @@ final class LockmanConfigurationTests: XCTestCase {
 
   func testConfigurationCanBeReset() async throws {
     // Modify configuration
-    Lockman.config.defaultUnlockOption  = .immediate
+    Lockman.config.defaultUnlockOption = .immediate
     XCTAssertEqual(Lockman.config.defaultUnlockOption, .immediate)
 
     // Reset to default
@@ -46,18 +47,18 @@ final class LockmanConfigurationTests: XCTestCase {
   }
 
   func testConfigurationIsThreadSafe() async throws {
-    let iterations  = 100
+    let iterations = 100
 
     await withTaskGroup(of: Void.self) { group in
       // Multiple readers
-      for _ in 0 ..< iterations {
+      for _ in 0..<iterations {
         group.addTask {
           _ = Lockman.config.defaultUnlockOption
         }
       }
 
       // Multiple writers
-      for i in 0 ..< iterations {
+      for i in 0..<iterations {
         group.addTask {
           let options: [UnlockOption] = [.immediate, .mainRunLoop, .transition, .delayed(0.1)]
           Lockman.config.defaultUnlockOption = options[i % options.count]
@@ -69,12 +70,14 @@ final class LockmanConfigurationTests: XCTestCase {
 
     // Should not crash and configuration should be valid
     let finalOption = Lockman.config.defaultUnlockOption
-    XCTAssertTrue(finalOption == .immediate || finalOption == .mainRunLoop || finalOption == .transition || {
-      if case .delayed = finalOption {
-        return true
-      }
-      return false
-    }())
+    XCTAssertTrue(
+      finalOption == .immediate || finalOption == .mainRunLoop || finalOption == .transition
+        || {
+          if case .delayed = finalOption {
+            return true
+          }
+          return false
+        }())
   }
 
   func testDefaultUnlockOptionPropertyWorksCorrectly() async throws {
@@ -83,7 +86,7 @@ final class LockmanConfigurationTests: XCTestCase {
     XCTAssertEqual(Lockman.config.defaultUnlockOption, .immediate)
 
     // Change to mainRunLoop
-    Lockman.config.defaultUnlockOption  = .mainRunLoop
+    Lockman.config.defaultUnlockOption = .mainRunLoop
     XCTAssertEqual(Lockman.config.defaultUnlockOption, .mainRunLoop)
   }
 
@@ -92,7 +95,7 @@ final class LockmanConfigurationTests: XCTestCase {
     Lockman.config.defaultUnlockOption = .delayed(1.0)
 
     // Access multiple times
-    for _ in 0 ..< 10 {
+    for _ in 0..<10 {
       if case let .delayed(interval) = Lockman.config.defaultUnlockOption {
         XCTAssertEqual(interval, 1.0)
       } else {
@@ -111,7 +114,7 @@ final class LockmanConfigurationTests: XCTestCase {
     // Disable
     Lockman.config.handleCancellationErrors = false
     XCTAssertFalse(Lockman.config.handleCancellationErrors)
-    
+
     // Enable
     Lockman.config.handleCancellationErrors = true
     XCTAssertTrue(Lockman.config.handleCancellationErrors)
@@ -121,7 +124,7 @@ final class LockmanConfigurationTests: XCTestCase {
     // Modify configuration
     Lockman.config.handleCancellationErrors = false
     XCTAssertFalse(Lockman.config.handleCancellationErrors)
-    
+
     // Reset to default
     Lockman.config.reset()
     XCTAssertTrue(Lockman.config.handleCancellationErrors)
@@ -129,23 +132,23 @@ final class LockmanConfigurationTests: XCTestCase {
 
   func testHandleCancellationErrorsThreadSafe() async throws {
     let iterations = 100
-    
+
     await withTaskGroup(of: Void.self) { group in
       // Task to toggle handleCancellationErrors
-      for _ in 0 ..< iterations {
+      for _ in 0..<iterations {
         group.addTask {
           Lockman.config.handleCancellationErrors = Bool.random()
         }
       }
-      
+
       // Task to read handleCancellationErrors
-      for _ in 0 ..< iterations {
+      for _ in 0..<iterations {
         group.addTask {
           _ = Lockman.config.handleCancellationErrors
         }
       }
     }
-    
+
     // Test passes if no crashes occur
     XCTAssertTrue(true)
   }
@@ -164,7 +167,7 @@ final class LockmanConfigurationIntegrationTests: XCTestCase {
     Lockman.config.reset()
 
     // Test with immediate option
-    Lockman.config.defaultUnlockOption  = .immediate
+    Lockman.config.defaultUnlockOption = .immediate
 
     // Verify configuration is set correctly
     XCTAssertEqual(Lockman.config.defaultUnlockOption, .immediate)
@@ -181,11 +184,11 @@ final class LockmanConfigurationIntegrationTests: XCTestCase {
     XCTAssertLockFailure(strategy.canLock(id: boundaryId, info: anotherInfo))
 
     // Create unlock token with immediate option
-    let unlockToken  = LockmanUnlock(
+    let unlockToken = LockmanUnlock(
       id: boundaryId,
       info: info,
       strategy: AnyLockmanStrategy(strategy),
-      unlockOption: .immediate // Use explicit immediate option
+      unlockOption: .immediate  // Use explicit immediate option
     )
 
     // Unlock should be immediate
@@ -203,7 +206,7 @@ final class LockmanConfigurationIntegrationTests: XCTestCase {
   @MainActor
   func testConfigurationWithTransitionOptionDelaysUnlock() async throws {
     // Use a unique boundary ID to avoid interference from other tests
-    let boundaryId  = TestBoundaryId("test-transition-\(UUID().uuidString)")
+    let boundaryId = TestBoundaryId("test-transition-\(UUID().uuidString)")
 
     // Create a fresh strategy instance
     let strategy = LockmanSingleExecutionStrategy()
@@ -229,19 +232,24 @@ final class LockmanConfigurationIntegrationTests: XCTestCase {
     unlockToken()
 
     // Verify still locked immediately after
-    XCTAssertLockFailure(strategy.canLock(id: boundaryId, info: info), "Lock should not be released immediately")
+    XCTAssertLockFailure(
+      strategy.canLock(id: boundaryId, info: info), "Lock should not be released immediately")
 
     // Wait a small amount to ensure we're testing the delay
-    try await Task.sleep(nanoseconds: 100_000_000) // 100ms
+    try await Task.sleep(nanoseconds: 100_000_000)  // 100ms
 
     // For transition delay, we should still be locked at this point on all platforms
-    XCTAssertLockFailure(strategy.canLock(id: boundaryId, info: info), "Lock should still be held during transition delay")
+    XCTAssertLockFailure(
+      strategy.canLock(id: boundaryId, info: info),
+      "Lock should still be held during transition delay")
 
     // Wait for the maximum possible transition delay across all platforms
-    try await Task.sleep(nanoseconds: 1_000_000_000) // 1 second (well beyond any platform's transition delay)
+    try await Task.sleep(nanoseconds: 1_000_000_000)  // 1 second (well beyond any platform's transition delay)
 
     // Now it should definitely be unlocked
-    XCTAssertEqual(strategy.canLock(id: boundaryId, info: info), .success, "Lock should be released after transition delay")
+    XCTAssertEqual(
+      strategy.canLock(id: boundaryId, info: info), .success,
+      "Lock should be released after transition delay")
   }
 }
 
@@ -251,7 +259,7 @@ private struct TestBoundaryId: LockmanBoundaryId {
   let value: String
 
   init(_ value: String) {
-    self.value  = value
+    self.value = value
   }
 
   func hash(into hasher: inout Hasher) {

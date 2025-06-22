@@ -2,6 +2,7 @@ import ComposableArchitecture
 import LockmanComposable
 import LockmanCore
 import SwiftUI
+import UIKit
 
 @main
 struct StrategiesApp: App {
@@ -17,10 +18,10 @@ struct StrategiesApp: App {
   }
 }
 
-import UIKit
-
 class AppDelegate: NSObject, UIApplicationDelegate {
-  func application(_: UIApplication, didFinishLaunchingWithOptions _: [UIApplication.LaunchOptionsKey: Any]? = nil) -> Bool {
+  func application(
+    _: UIApplication, didFinishLaunchingWithOptions _: [UIApplication.LaunchOptionsKey: Any]? = nil
+  ) -> Bool {
     // Enable debug logging for Lockman
     #if DEBUG
       Lockman.debug.isLoggingEnabled = true

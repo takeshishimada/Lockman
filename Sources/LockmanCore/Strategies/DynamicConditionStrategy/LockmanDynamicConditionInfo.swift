@@ -55,7 +55,7 @@ public struct LockmanDynamicConditionInfo: LockmanInfo, Sendable {
   ) {
     self.actionId = actionId
     self.uniqueId = UUID()
-    self.condition = { true } // Default: always allow
+    self.condition = { true }  // Default: always allow
   }
 
   // MARK: - Equatable

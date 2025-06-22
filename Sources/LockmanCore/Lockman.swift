@@ -18,7 +18,7 @@ public enum Lockman {
     ///
     /// Default value is `.transition` to ensure safe coordination with UI transitions.
     var defaultUnlockOption: UnlockOption = .transition
-    
+
     /// Controls whether CancellationError should be passed to error handlers in withLock operations.
     ///
     /// When `true` (default), CancellationError is passed to the catch handler if provided.
@@ -56,7 +56,7 @@ public enum Lockman {
         _configuration.withCriticalRegion { $0.defaultUnlockOption = newValue }
       }
     }
-    
+
     /// Controls whether CancellationError should be passed to error handlers in withLock operations.
     ///
     /// When `true` (default), CancellationError is passed to the catch handler if provided.
@@ -159,7 +159,8 @@ public enum Lockman {
 
 extension Lockman {
   /// Thread-safe storage for boundary-specific locks.
-  private static let boundaryLocks: ManagedCriticalState<[AnyLockmanBoundaryId: NSLock]> = ManagedCriticalState([:])
+  private static let boundaryLocks: ManagedCriticalState<[AnyLockmanBoundaryId: NSLock]> =
+    ManagedCriticalState([:])
 
   /// Retrieves or creates an NSLock for the specified boundary ID.
   private static func getLock<B: LockmanBoundaryId>(for id: B) -> NSLock {

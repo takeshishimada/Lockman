@@ -1,5 +1,6 @@
 import Foundation
 import XCTest
+
 @testable import LockmanCore
 
 /// Enhanced tests for LockmanError functionality and error handling scenarios
@@ -94,7 +95,7 @@ final class LockmanErrorEnhancedTests: XCTestCase {
   // MARK: - Error Equality Tests
 
   func testErrorEqualitySemantics() async throws {
-    let error1a  = LockmanRegistrationError.strategyNotRegistered("TestStrategy")
+    let error1a = LockmanRegistrationError.strategyNotRegistered("TestStrategy")
     let error1b = LockmanRegistrationError.strategyNotRegistered("TestStrategy")
     let error1c = LockmanRegistrationError.strategyNotRegistered("DifferentStrategy")
     let error2 = LockmanRegistrationError.strategyAlreadyRegistered("TestStrategy")
@@ -118,7 +119,7 @@ final class LockmanErrorEnhancedTests: XCTestCase {
     // Different error types should not be equal
     switch (error1a, error2) {
     case (.strategyNotRegistered, .strategyAlreadyRegistered):
-      break // Expected different types
+      break  // Expected different types
     default:
       XCTFail("Expected different error types")
     }
@@ -127,14 +128,14 @@ final class LockmanErrorEnhancedTests: XCTestCase {
   // MARK: - Strategy Container Error Scenarios
 
   func testMultipleConsecutiveRegistrationAttempts() async throws {
-    let container  = LockmanStrategyContainer()
+    let container = LockmanStrategyContainer()
     let strategy = LockmanSingleExecutionStrategy.shared
 
     // First registration should succeed
     XCTAssertNoThrow(try container.register(strategy))
 
     // Multiple subsequent registrations should all fail with same error
-    for _ in 0 ..< 5 {
+    for _ in 0..<5 {
       XCTAssertThrowsError(try container.register(strategy))
 
       do {
@@ -186,7 +187,7 @@ final class LockmanErrorEnhancedTests: XCTestCase {
       switch error {
       case let .strategyNotRegistered(strategyType):
         XCTAssertTrue(strategyType.contains("LockmanPriorityBasedStrategy"))
-        XCTAssertGreaterThan(strategyType.count, 10) // Should be descriptive
+        XCTAssertGreaterThan(strategyType.count, 10)  // Should be descriptive
       default:
         XCTFail("Expected strategyNotRegistered error")
       }
@@ -206,16 +207,16 @@ final class LockmanErrorEnhancedTests: XCTestCase {
 
     await withTaskGroup(of: Bool.self) { group in
       // Try concurrent registrations
-      for _ in 0 ..< 10 {
+      for _ in 0..<10 {
         group.addTask {
           do {
             let newStrategy = LockmanSingleExecutionStrategy()
             try container.register(newStrategy)
-            return false // Should not succeed
+            return false  // Should not succeed
           } catch is any LockmanError {
-            return true // Expected
+            return true  // Expected
           } catch {
-            return false // Unexpected error type
+            return false  // Unexpected error type
           }
         }
       }
@@ -235,7 +236,7 @@ final class LockmanErrorEnhancedTests: XCTestCase {
   // MARK: - Error Message Edge Cases
 
   func testErrorMessagesWithSpecialCharacters() async throws {
-    let specialStrategyName  = "Strategy<With>Special&Characters@#$%"
+    let specialStrategyName = "Strategy<With>Special&Characters@#$%"
     let error1 = LockmanRegistrationError.strategyNotRegistered(specialStrategyName)
     let error2 = LockmanRegistrationError.strategyAlreadyRegistered(specialStrategyName)
 
@@ -251,7 +252,7 @@ final class LockmanErrorEnhancedTests: XCTestCase {
 
     XCTAssertTrue(error.errorDescription?.contains(longStrategyName) ?? false)
     XCTAssertTrue(error.recoverySuggestion?.contains(longStrategyName) ?? false)
-    XCTAssertGreaterThan(error.errorDescription!.count, 100) // Should still be comprehensive
+    XCTAssertGreaterThan(error.errorDescription!.count, 100)  // Should still be comprehensive
   }
 
   func testErrorMessagesWithEmptyStrategyName() async throws {

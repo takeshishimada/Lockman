@@ -18,8 +18,7 @@
 /// }
 /// ```
 public protocol LockmanPriorityBasedAction: LockmanAction
-  where I == LockmanPriorityBasedInfo
-{
+where I == LockmanPriorityBasedInfo {
   /// Provides lock information, including the priority level, for this action.
   ///
   /// The priority level determines the action's precedence in lock conflict resolution.
@@ -37,17 +36,17 @@ public protocol LockmanPriorityBasedAction: LockmanAction
 
 // MARK: - Default Implementation
 
-public extension LockmanPriorityBasedAction {
+extension LockmanPriorityBasedAction {
   /// The strategy ID for priority-based locking.
   /// Uses the built-in priority-based strategy identifier.
-  var strategyId: LockmanStrategyId {
+  public var strategyId: LockmanStrategyId {
     .priorityBased
   }
 }
 
 // MARK: - Priority Helper Methods
 
-public extension LockmanPriorityBasedAction {
+extension LockmanPriorityBasedAction {
   /// Creates a new `LockmanPriorityBasedInfo` using the action's name and a specified priority.
   ///
   /// This is a convenience method that combines the action name with a priority level
@@ -62,7 +61,7 @@ public extension LockmanPriorityBasedAction {
   ///   priority(.high(.preferLater))
   /// }
   /// ```
-  func priority(_ priority: LockmanPriorityBasedInfo.Priority) -> LockmanPriorityBasedInfo {
+  public func priority(_ priority: LockmanPriorityBasedInfo.Priority) -> LockmanPriorityBasedInfo {
     .init(actionId: actionName, priority: priority)
   }
 
@@ -83,7 +82,7 @@ public extension LockmanPriorityBasedAction {
   ///   priority("_user123", .high(.preferLater))
   /// }
   /// ```
-  func priority(
+  public func priority(
     _ id: String,
     _ priority: LockmanPriorityBasedInfo.Priority
   ) -> LockmanPriorityBasedInfo {

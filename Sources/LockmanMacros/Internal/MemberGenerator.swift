@@ -42,12 +42,14 @@ func makeActionNameMemberDecl(
   providingMembersOf declaration: some DeclGroupSyntax,
   in context: some MacroExpansionContext
 ) -> [DeclSyntax] {
-  guard let enumDecl = extractEnumDeclaration(
-    macroName: macroName,
-    from: declaration,
-    attributeNode: attributeNode,
-    context: context
-  ) else {
+  guard
+    let enumDecl = extractEnumDeclaration(
+      macroName: macroName,
+      from: declaration,
+      attributeNode: attributeNode,
+      context: context
+    )
+  else {
     return []
   }
 
@@ -176,7 +178,8 @@ func extractAccessLevel(from enumDecl: EnumDeclSyntax) -> String {
 func extractAccessLevel(from modifiers: DeclModifierListSyntax) -> String {
   let accessLevelKeywords = ["public", "internal", "fileprivate", "private", "open"]
 
-  return modifiers
+  return
+    modifiers
     .reversed()
     .first { modifier in
       accessLevelKeywords.contains(modifier.name.text)

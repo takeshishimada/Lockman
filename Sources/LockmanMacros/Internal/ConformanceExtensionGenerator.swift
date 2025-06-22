@@ -339,7 +339,7 @@ func isValidSwiftIdentifier(_ name: String) -> Bool {
   let trimmedName = name.trimmingCharacters(in: .whitespacesAndNewlines)
   guard trimmedName == name else {
     return false
-  } // No leading/trailing whitespace
+  }  // No leading/trailing whitespace
 
   // Check first character
   let firstChar = name.first!
@@ -446,19 +446,19 @@ func generateExtensionErrorMessage<T: TypeSyntaxProtocol>(
   let typeName = extractBaseTypeName(from: type)
 
   return """
-  Failed to generate protocol conformance extension.
+    Failed to generate protocol conformance extension.
 
-  Type: \(typeName)
-  Protocol: \(protocolName)
-  Error: \(underlyingError.localizedDescription)
+    Type: \(typeName)
+    Protocol: \(protocolName)
+    Error: \(underlyingError.localizedDescription)
 
-  Common causes:
-  - Invalid protocol name (must be a valid Swift identifier)
-  - Malformed type syntax
-  - SwiftSyntax version compatibility issues
+    Common causes:
+    - Invalid protocol name (must be a valid Swift identifier)
+    - Malformed type syntax
+    - SwiftSyntax version compatibility issues
 
-  Please ensure the protocol name is a valid Swift identifier and try again.
-  """
+    Please ensure the protocol name is a valid Swift identifier and try again.
+    """
 }
 
 // MARK: - Testing Support
@@ -537,7 +537,9 @@ func generateExtensionErrorMessage<T: TypeSyntaxProtocol>(
         )
 
         // Validate the generated extension
-        if !validateExtensionStructure(extensionDecl, expectedType: typeName, expectedProtocol: protocolName) {
+        if !validateExtensionStructure(
+          extensionDecl, expectedType: typeName, expectedProtocol: protocolName)
+        {
           issues.append("Generated extension structure validation failed")
         }
 
@@ -545,7 +547,8 @@ func generateExtensionErrorMessage<T: TypeSyntaxProtocol>(
         let extensionText = extensionDecl.description
         let bodyStart = extensionText.index(after: extensionText.firstIndex(of: "{")!)
         let bodyEnd = extensionText.lastIndex(of: "}")!
-        let body = String(extensionText[bodyStart ..< bodyEnd]).trimmingCharacters(in: .whitespacesAndNewlines)
+        let body = String(extensionText[bodyStart..<bodyEnd]).trimmingCharacters(
+          in: .whitespacesAndNewlines)
 
         if !body.isEmpty {
           issues.append("Extension body should be empty but contains: \(body)")

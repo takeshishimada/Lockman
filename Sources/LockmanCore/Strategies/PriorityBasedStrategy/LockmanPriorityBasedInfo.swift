@@ -150,18 +150,19 @@ public struct LockmanPriorityBasedInfo: LockmanInfo, Sendable, Equatable {
       priorityStr = ".low(.\(behavior))"
     }
 
-    return "LockmanPriorityBasedInfo(actionId: '\(actionId)', uniqueId: \(uniqueId), priority: \(priorityStr), blocksSameAction: \(blocksSameAction))"
+    return
+      "LockmanPriorityBasedInfo(actionId: '\(actionId)', uniqueId: \(uniqueId), priority: \(priorityStr), blocksSameAction: \(blocksSameAction))"
   }
 }
 
 // MARK: - Priority Definition
 
-public extension LockmanPriorityBasedInfo {
+extension LockmanPriorityBasedInfo {
   /// Priority levels with configurable concurrency behavior.
   ///
   /// This enum defines the priority hierarchy and how concurrent execution
   /// of same-priority actions should be handled.
-  enum Priority: Sendable, Equatable {
+  public enum Priority: Sendable, Equatable {
     /// No priority level - exempt from priority-based conflicts.
     ///
     /// Actions with `.none` priority do not participate in priority-based
@@ -209,7 +210,7 @@ public extension LockmanPriorityBasedInfo {
   ///
   /// When two actions have the same priority and compete for the same resource,
   /// this behavior determines how the conflict is resolved.
-  enum ConcurrencyBehavior: Sendable, Equatable {
+  public enum ConcurrencyBehavior: Sendable, Equatable {
     /// Exclusive execution - this action blocks new same-priority actions.
     ///
     /// When this action is running and a new same-priority action is requested,
@@ -258,17 +259,17 @@ public extension LockmanPriorityBasedInfo {
 
 // MARK: - Priority Helpers
 
-public extension LockmanPriorityBasedInfo.Priority {
+extension LockmanPriorityBasedInfo.Priority {
   /// Returns the concurrency behavior for this priority level.
   ///
   /// - Returns: The `ConcurrencyBehavior` if this is a `.high` or `.low` priority,
   ///            or `nil` if this is `.none` priority (which doesn't use behaviors)
-  var behavior: LockmanPriorityBasedInfo.ConcurrencyBehavior? {
+  public var behavior: LockmanPriorityBasedInfo.ConcurrencyBehavior? {
     switch self {
     case .none:
       return nil
     case let .high(behavior),
-         let .low(behavior):
+      let .low(behavior):
       return behavior
     }
   }

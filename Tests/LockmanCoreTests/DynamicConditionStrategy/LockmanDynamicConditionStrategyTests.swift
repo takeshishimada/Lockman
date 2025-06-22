@@ -1,16 +1,17 @@
 import Foundation
 import XCTest
+
 @testable import LockmanCore
 
 // Helper class for thread-safe mutable state in tests
 private final class Atomic<Value>: @unchecked Sendable {
   private var _value: Value
   private let lock = NSLock()
-  
+
   init(_ value: Value) {
     self._value = value
   }
-  
+
   var value: Value {
     get {
       lock.lock()
@@ -134,7 +135,7 @@ final class LockmanDynamicConditionStrategyTests: XCTestCase {
     let boundary = TestBoundaryId(value: "test")
 
     // Simulate business hours (9 AM - 5 PM)
-    let currentHour = 14 // 2 PM
+    let currentHour = 14  // 2 PM
 
     let info = LockmanDynamicConditionInfo(
       actionId: "batch",
@@ -146,7 +147,7 @@ final class LockmanDynamicConditionStrategyTests: XCTestCase {
     XCTAssertEqual(strategy.canLock(id: boundary, info: info), .success)
 
     // After hours
-    let afterHour = 20 // 8 PM
+    let afterHour = 20  // 8 PM
     let afterHoursInfo = LockmanDynamicConditionInfo(
       actionId: "batch",
       condition: {
@@ -261,7 +262,7 @@ final class LockmanDynamicConditionStrategyTests: XCTestCase {
     // Simulate a rate limiter with quota
     let requestCount = Atomic<Int>(0)
     let quota = 3
-    let resetTime = Date().addingTimeInterval(3600) // 1 hour from now
+    let resetTime = Date().addingTimeInterval(3600)  // 1 hour from now
 
     let makeInfo: () -> LockmanDynamicConditionInfo = {
       LockmanDynamicConditionInfo(
@@ -278,7 +279,7 @@ final class LockmanDynamicConditionStrategyTests: XCTestCase {
     }
 
     // First few requests succeed
-    for _ in 0 ..< quota {
+    for _ in 0..<quota {
       let info = makeInfo()
       XCTAssertEqual(strategy.canLock(id: boundary, info: info), .success)
       strategy.lock(id: boundary, info: info)
@@ -308,7 +309,7 @@ final class LockmanDynamicConditionStrategyTests: XCTestCase {
   // MARK: - Boundary Isolation Tests
 
   func testdifferentBoundariesAreIsolated() {
-    let strategy  = LockmanDynamicConditionStrategy()
+    let strategy = LockmanDynamicConditionStrategy()
     let boundary1 = TestBoundaryId(value: "user1")
     let boundary2 = TestBoundaryId(value: "user2")
 
@@ -357,7 +358,7 @@ final class LockmanDynamicConditionStrategyTests: XCTestCase {
 
     // Run multiple concurrent operations
     await withTaskGroup(of: Void.self) { group in
-      for i in 0 ..< 10 {
+      for i in 0..<10 {
         group.addTask {
           let info = LockmanDynamicConditionInfo(
             actionId: "concurrent-\(i)"

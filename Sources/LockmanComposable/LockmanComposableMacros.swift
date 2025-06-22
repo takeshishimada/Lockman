@@ -54,7 +54,8 @@
 /// ```
 @attached(extension, conformances: LockmanSingleExecutionAction)
 @attached(member, names: named(actionName))
-public macro LockmanSingleExecution() = #externalMacro(module: "LockmanMacros", type: "LockmanSingleExecutionMacro")
+public macro LockmanSingleExecution() =
+  #externalMacro(module: "LockmanMacros", type: "LockmanSingleExecutionMacro")
 
 /// A macro that generates protocol conformance and required members for priority-based locking behavior.
 ///
@@ -102,7 +103,8 @@ public macro LockmanSingleExecution() = #externalMacro(module: "LockmanMacros", 
 /// ```
 @attached(extension, conformances: LockmanPriorityBasedAction)
 @attached(member, names: named(actionName))
-public macro LockmanPriorityBased() = #externalMacro(module: "LockmanMacros", type: "LockmanPriorityBasedMacro")
+public macro LockmanPriorityBased() =
+  #externalMacro(module: "LockmanMacros", type: "LockmanPriorityBasedMacro")
 
 /// A macro that generates protocol conformance and required members for group coordination locking behavior.
 ///
@@ -123,7 +125,7 @@ public macro LockmanPriorityBased() = #externalMacro(module: "LockmanMacros", ty
 ///   enum Action {
 ///     case navigate(to: String)
 ///     case back
-///     
+///
 ///     var lockmanInfo: LockmanGroupCoordinatedInfo {
 ///       switch self {
 ///       case .navigate:
@@ -161,7 +163,8 @@ public macro LockmanPriorityBased() = #externalMacro(module: "LockmanMacros", ty
 /// ```
 @attached(extension, conformances: LockmanGroupCoordinatedAction)
 @attached(member, names: named(actionName))
-public macro LockmanGroupCoordination() = #externalMacro(module: "LockmanMacros", type: "LockmanGroupCoordinationMacro")
+public macro LockmanGroupCoordination() =
+  #externalMacro(module: "LockmanMacros", type: "LockmanGroupCoordinationMacro")
 
 /// A macro that generates protocol conformance and required members for composite locking behavior with 2 strategies.
 ///
@@ -210,7 +213,8 @@ public macro LockmanGroupCoordination() = #externalMacro(module: "LockmanMacros"
 ///   - strategy1: The first strategy type (must be a type that conforms to `LockmanStrategy`)
 ///   - strategy2: The second strategy type (must be a type that conforms to `LockmanStrategy`)
 @attached(extension, conformances: LockmanCompositeAction2)
-@attached(member, names: named(actionName), named(strategyId), named(I1), named(S1), named(I2), named(S2))
+@attached(
+  member, names: named(actionName), named(strategyId), named(I1), named(S1), named(I2), named(S2))
 public macro LockmanCompositeStrategy<S1: LockmanStrategy, S2: LockmanStrategy>(
   _ strategy1: S1.Type,
   _ strategy2: S2.Type
@@ -223,8 +227,12 @@ public macro LockmanCompositeStrategy<S1: LockmanStrategy, S2: LockmanStrategy>(
 ///   - strategy2: The second strategy type (must be a type that conforms to `LockmanStrategy`)
 ///   - strategy3: The third strategy type (must be a type that conforms to `LockmanStrategy`)
 @attached(extension, conformances: LockmanCompositeAction3)
-@attached(member, names: named(actionName), named(strategyId), named(I1), named(S1), named(I2), named(S2), named(I3), named(S3))
-public macro LockmanCompositeStrategy<S1: LockmanStrategy, S2: LockmanStrategy, S3: LockmanStrategy>(
+@attached(
+  member, names: named(actionName), named(strategyId), named(I1), named(S1), named(I2), named(S2),
+  named(I3), named(S3))
+public macro LockmanCompositeStrategy<
+  S1: LockmanStrategy, S2: LockmanStrategy, S3: LockmanStrategy
+>(
   _ strategy1: S1.Type,
   _ strategy2: S2.Type,
   _ strategy3: S3.Type
@@ -238,8 +246,12 @@ public macro LockmanCompositeStrategy<S1: LockmanStrategy, S2: LockmanStrategy, 
 ///   - strategy3: The third strategy type (must be a type that conforms to `LockmanStrategy`)
 ///   - strategy4: The fourth strategy type (must be a type that conforms to `LockmanStrategy`)
 @attached(extension, conformances: LockmanCompositeAction4)
-@attached(member, names: named(actionName), named(strategyId), named(I1), named(S1), named(I2), named(S2), named(I3), named(S3), named(I4), named(S4))
-public macro LockmanCompositeStrategy<S1: LockmanStrategy, S2: LockmanStrategy, S3: LockmanStrategy, S4: LockmanStrategy>(
+@attached(
+  member, names: named(actionName), named(strategyId), named(I1), named(S1), named(I2), named(S2),
+  named(I3), named(S3), named(I4), named(S4))
+public macro LockmanCompositeStrategy<
+  S1: LockmanStrategy, S2: LockmanStrategy, S3: LockmanStrategy, S4: LockmanStrategy
+>(
   _ strategy1: S1.Type,
   _ strategy2: S2.Type,
   _ strategy3: S3.Type,
@@ -255,8 +267,13 @@ public macro LockmanCompositeStrategy<S1: LockmanStrategy, S2: LockmanStrategy, 
 ///   - strategy4: The fourth strategy type (must be a type that conforms to `LockmanStrategy`)
 ///   - strategy5: The fifth strategy type (must be a type that conforms to `LockmanStrategy`)
 @attached(extension, conformances: LockmanCompositeAction5)
-@attached(member, names: named(actionName), named(strategyId), named(I1), named(S1), named(I2), named(S2), named(I3), named(S3), named(I4), named(S4), named(I5), named(S5))
-public macro LockmanCompositeStrategy<S1: LockmanStrategy, S2: LockmanStrategy, S3: LockmanStrategy, S4: LockmanStrategy, S5: LockmanStrategy>(
+@attached(
+  member, names: named(actionName), named(strategyId), named(I1), named(S1), named(I2), named(S2),
+  named(I3), named(S3), named(I4), named(S4), named(I5), named(S5))
+public macro LockmanCompositeStrategy<
+  S1: LockmanStrategy, S2: LockmanStrategy, S3: LockmanStrategy, S4: LockmanStrategy,
+  S5: LockmanStrategy
+>(
   _ strategy1: S1.Type,
   _ strategy2: S2.Type,
   _ strategy3: S3.Type,
@@ -334,7 +351,8 @@ public macro LockmanCompositeStrategy<S1: LockmanStrategy, S2: LockmanStrategy, 
 /// ```
 @attached(extension, conformances: LockmanDynamicConditionAction)
 @attached(member, names: named(actionName), named(extractMetadata), named(lockmanInfo))
-public macro LockmanDynamicCondition() = #externalMacro(
-  module: "LockmanMacros",
-  type: "LockmanDynamicConditionMacro"
-)
+public macro LockmanDynamicCondition() =
+  #externalMacro(
+    module: "LockmanMacros",
+    type: "LockmanDynamicConditionMacro"
+  )

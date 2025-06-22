@@ -42,7 +42,7 @@ struct SingleExecutionStrategyFeature {
         case .decrementButtonTapped:
           return .withLock(
             operation: { send in
-              try? await Task.sleep(nanoseconds: 2_000_000_000) // 2 seconds
+              try? await Task.sleep(nanoseconds: 2_000_000_000)  // 2 seconds
               await send(.state(.decrement))
             },
             action: viewAction,
@@ -51,7 +51,7 @@ struct SingleExecutionStrategyFeature {
         case .incrementButtonTapped:
           return .withLock(
             operation: { send in
-              try? await Task.sleep(nanoseconds: 2_000_000_000) // 2 seconds
+              try? await Task.sleep(nanoseconds: 2_000_000_000)  // 2 seconds
               await send(.state(.increment))
             },
             action: viewAction,
@@ -85,10 +85,12 @@ struct SingleExecutionStrategyView: View {
           .font(.title2)
           .fontWeight(.bold)
 
-        Text("A strategy that prevents duplicate execution of the same action.\nWhile processing, tapping the same button again will be ignored.")
-          .font(.caption)
-          .foregroundColor(.secondary)
-          .multilineTextAlignment(.leading)
+        Text(
+          "A strategy that prevents duplicate execution of the same action.\nWhile processing, tapping the same button again will be ignored."
+        )
+        .font(.caption)
+        .foregroundColor(.secondary)
+        .multilineTextAlignment(.leading)
       }
       .padding()
       .background(Color.gray.opacity(0.1))
@@ -120,9 +122,11 @@ struct SingleExecutionStrategyView: View {
           .font(.caption)
         Label("Plus button: Increases count after 2 seconds", systemImage: "plus.circle")
           .font(.caption)
-        Label("Rapid taps on the same button are disabled while processing", systemImage: "info.circle")
-          .font(.caption)
-          .foregroundColor(.blue)
+        Label(
+          "Rapid taps on the same button are disabled while processing", systemImage: "info.circle"
+        )
+        .font(.caption)
+        .foregroundColor(.blue)
       }
       .padding()
       .background(Color.blue.opacity(0.05))

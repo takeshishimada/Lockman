@@ -25,7 +25,8 @@ struct CompositeStrategyFeature {
     case view(ViewAction)
     case state(StateAction)
 
-    @LockmanCompositeStrategy(LockmanSingleExecutionStrategy.self, LockmanDynamicConditionStrategy.self)
+    @LockmanCompositeStrategy(
+      LockmanSingleExecutionStrategy.self, LockmanDynamicConditionStrategy.self)
     enum ViewAction {
       case decrementButtonTapped
       case incrementButtonTapped
@@ -34,18 +35,23 @@ struct CompositeStrategyFeature {
         actionName
       }
 
-      var lockmanInfo: LockmanCompositeInfo2<LockmanSingleExecutionStrategy.I, LockmanDynamicConditionStrategy.I> {
+      var lockmanInfo:
+        LockmanCompositeInfo2<LockmanSingleExecutionStrategy.I, LockmanDynamicConditionStrategy.I>
+      {
         LockmanCompositeInfo2<LockmanSingleExecutionStrategy.I, LockmanDynamicConditionStrategy.I>(
           actionId: actionId,
-          lockmanInfoForStrategy1: LockmanSingleExecutionInfo(actionId: actionName, mode: .boundary),
-          lockmanInfoForStrategy2: LockmanDynamicConditionInfo(actionId: actionName, condition: {
-            @Shared(.appStorage("isLoggined")) var isLoggined = false
-            if isLoggined {
-              return true
-            } else {
-              return false
-            }
-          })
+          lockmanInfoForStrategy1: LockmanSingleExecutionInfo(
+            actionId: actionName, mode: .boundary),
+          lockmanInfoForStrategy2: LockmanDynamicConditionInfo(
+            actionId: actionName,
+            condition: {
+              @Shared(.appStorage("isLoggined")) var isLoggined = false
+              if isLoggined {
+                return true
+              } else {
+                return false
+              }
+            })
         )
       }
     }
@@ -68,7 +74,7 @@ struct CompositeStrategyFeature {
         case .decrementButtonTapped:
           return .withLock(
             operation: { send in
-              try? await Task.sleep(nanoseconds: 2_000_000_000) // 2 seconds
+              try? await Task.sleep(nanoseconds: 2_000_000_000)  // 2 seconds
               await send(.state(.decrement))
             },
             action: viewAction,
@@ -78,7 +84,7 @@ struct CompositeStrategyFeature {
           state.$isLoggined.withLock { $0 = true }
           return .withLock(
             operation: { send in
-              try? await Task.sleep(nanoseconds: 2_000_000_000) // 2 seconds
+              try? await Task.sleep(nanoseconds: 2_000_000_000)  // 2 seconds
               await send(.state(.increment))
             },
             action: viewAction,
@@ -112,10 +118,12 @@ struct CompositeStrategyView: View {
           .font(.title2)
           .fontWeight(.bold)
 
-        Text("A composite strategy that combines multiple strategies.\nCombines SingleExecutionStrategy and DynamicConditionStrategy.")
-          .font(.caption)
-          .foregroundColor(.secondary)
-          .multilineTextAlignment(.leading)
+        Text(
+          "A composite strategy that combines multiple strategies.\nCombines SingleExecutionStrategy and DynamicConditionStrategy."
+        )
+        .font(.caption)
+        .foregroundColor(.secondary)
+        .multilineTextAlignment(.leading)
       }
       .padding()
       .background(Color.gray.opacity(0.1))
@@ -161,10 +169,13 @@ struct CompositeStrategyView: View {
         Label("Both buttons: SingleExecutionStrategy", systemImage: "lock.circle")
           .font(.caption)
           .fontWeight(.medium)
-        Label("→ Rapid taps on the same button are disabled while processing", systemImage: "arrow.right")
-          .font(.caption)
-          .foregroundColor(.blue)
-          .padding(.leading, 20)
+        Label(
+          "→ Rapid taps on the same button are disabled while processing",
+          systemImage: "arrow.right"
+        )
+        .font(.caption)
+        .foregroundColor(.blue)
+        .padding(.leading, 20)
 
         Divider()
 

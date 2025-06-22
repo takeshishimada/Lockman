@@ -1,6 +1,6 @@
 import Foundation
 import XCTest
-import XCTest
+
 @testable import LockmanCore
 
 // MARK: - Async Test Helpers
@@ -13,7 +13,7 @@ enum AsyncTestHelpers {
     operation: @escaping @Sendable (Int) async throws -> T
   ) async throws -> [T] {
     try await withThrowingTaskGroup(of: T.self) { group in
-      for i in 0 ..< count {
+      for i in 0..<count {
         group.addTask {
           try await operation(i)
         }
@@ -33,7 +33,7 @@ enum AsyncTestHelpers {
     operation: @escaping @Sendable (Int) async throws -> Void
   ) async throws {
     try await withThrowingTaskGroup(of: Void.self) { group in
-      for i in 0 ..< count {
+      for i in 0..<count {
         group.addTask {
           try await operation(i)
         }
@@ -167,13 +167,13 @@ enum LockTestHelpers {
       strategy.canLock(id: boundaryId, info: info)
     }
 
-    let successful = results.filter { 
+    let successful = results.filter {
       if case .failure = $0 {
         return false
       }
       return true
     }.count
-    let failed = results.filter { 
+    let failed = results.filter {
       if case .failure = $0 {
         return true
       }
@@ -208,53 +208,66 @@ enum LockTestHelpers {
 // MARK: - XCTest Assertion Helpers
 
 /// Custom assertion to check if a block throws a specific error type
-func XCTAssertTrue<E: Error>(throws errorType: E.Type, _ block: () throws -> Void, file: StaticString = #file, line: UInt = #line) {
-    do {
-        try block()
-        XCTFail("Expected to throw \(errorType) but no error was thrown", file: file, line: line)
-    } catch is E {
-        // Expected error type was thrown
-    } catch {
-        XCTFail("Expected to throw \(errorType) but threw \(type(of: error)): \(error)", file: file, line: line)
-    }
+func XCTAssertTrue<E: Error>(
+  throws errorType: E.Type, _ block: () throws -> Void, file: StaticString = #file,
+  line: UInt = #line
+) {
+  do {
+    try block()
+    XCTFail("Expected to throw \(errorType) but no error was thrown", file: file, line: line)
+  } catch is E {
+    // Expected error type was thrown
+  } catch {
+    XCTFail(
+      "Expected to throw \(errorType) but threw \(type(of: error)): \(error)", file: file,
+      line: line)
+  }
 }
 
 /// Custom assertion to check if LockmanResult is a failure (with or without error)
-func XCTAssertLockFailure(_ result: LockmanResult, _ message: String = "", file: StaticString = #file, line: UInt = #line) {
-    if case .failure = result {
-        // Success - it's a failure as expected
-    } else {
-        let failMessage = message.isEmpty ? "Expected lock failure but got \(result)" : message
-        XCTFail(failMessage, file: file, line: line)
-    }
+func XCTAssertLockFailure(
+  _ result: LockmanResult, _ message: String = "", file: StaticString = #file, line: UInt = #line
+) {
+  if case .failure = result {
+    // Success - it's a failure as expected
+  } else {
+    let failMessage = message.isEmpty ? "Expected lock failure but got \(result)" : message
+    XCTFail(failMessage, file: file, line: line)
+  }
 }
 
 /// Custom assertion to check if LockmanResult equals the expected result
-func XCTAssertLockResult(_ actual: LockmanResult, _ expected: LockmanResult, _ message: String = "", file: StaticString = #file, line: UInt = #line) {
-    switch (actual, expected) {
-    case (.success, .success):
-        // Both success
-        return
-    case (.successWithPrecedingCancellation, .successWithPrecedingCancellation):
-        // Both successWithPrecedingCancellation
-        return
-    case (.failure, .failure):
-        // Both failure (ignore error details)
-        return
-    default:
-        let failMessage = message.isEmpty ? "Expected \(expected) but got \(actual)" : message
-        XCTFail(failMessage, file: file, line: line)
-    }
+func XCTAssertLockResult(
+  _ actual: LockmanResult, _ expected: LockmanResult, _ message: String = "",
+  file: StaticString = #file, line: UInt = #line
+) {
+  switch (actual, expected) {
+  case (.success, .success):
+    // Both success
+    return
+  case (.successWithPrecedingCancellation, .successWithPrecedingCancellation):
+    // Both successWithPrecedingCancellation
+    return
+  case (.failure, .failure):
+    // Both failure (ignore error details)
+    return
+  default:
+    let failMessage = message.isEmpty ? "Expected \(expected) but got \(actual)" : message
+    XCTFail(failMessage, file: file, line: line)
+  }
 }
 
 /// Custom assertion for blocks that should not throw
-func XCTAssertEqual(throws errorType: Never.Type, _ block: () throws -> Void, file: StaticString = #file, line: UInt = #line) {
-    do {
-        try block()
-        // Success - no error thrown
-    } catch {
-        XCTFail("Expected no error but threw \(type(of: error)): \(error)", file: file, line: line)
-    }
+func XCTAssertEqual(
+  throws errorType: Never.Type, _ block: () throws -> Void, file: StaticString = #file,
+  line: UInt = #line
+) {
+  do {
+    try block()
+    // Success - no error thrown
+  } catch {
+    XCTFail("Expected no error but threw \(type(of: error)): \(error)", file: file, line: line)
+  }
 }
 
 // MARK: - Performance Test Helpers
@@ -277,7 +290,7 @@ enum PerformanceTestHelpers {
     var durations: [TimeInterval] = []
     let totalStart = Date()
 
-    for _ in 0 ..< iterations {
+    for _ in 0..<iterations {
       let (_, duration) = try await AsyncTestHelpers.measureAsyncPerformance {
         try await operation()
       }
@@ -307,21 +320,21 @@ enum PerformanceTestHelpers {
   ) {
     if let averageThreshold = averageUnder {
       XCTAssertLessThan(
-        result.averageDuration , averageThreshold,
+        result.averageDuration, averageThreshold,
         "Average duration \(result.averageDuration) should be under \(averageThreshold)"
       )
     }
 
     if let totalThreshold = totalUnder {
       XCTAssertLessThan(
-        result.totalDuration , totalThreshold,
+        result.totalDuration, totalThreshold,
         "Total duration \(result.totalDuration) should be under \(totalThreshold)"
       )
     }
 
     if let maxThreshold = maxUnder {
       XCTAssertLessThan(
-        result.maxDuration , maxThreshold,
+        result.maxDuration, maxThreshold,
         "Max duration \(result.maxDuration) should be under \(maxThreshold)"
       )
     }

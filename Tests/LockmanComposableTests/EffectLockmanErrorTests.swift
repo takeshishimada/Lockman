@@ -2,6 +2,7 @@ import ComposableArchitecture
 import ConcurrencyExtras
 import Foundation
 import XCTest
+
 @testable import LockmanComposable
 @testable @_spi(Logging) import LockmanCore
 
@@ -47,9 +48,12 @@ final class EffectLockmanErrorTests: XCTestCase {
 
     var strategyId: LockmanStrategyId { LockmanStrategyId("MockUnregisteredStrategy") }
 
-    static func makeStrategyId() -> LockmanStrategyId { LockmanStrategyId("MockUnregisteredStrategy") }
+    static func makeStrategyId() -> LockmanStrategyId {
+      LockmanStrategyId("MockUnregisteredStrategy")
+    }
 
-    func canLock<B: LockmanBoundaryId>(id _: B, info _: LockmanSingleExecutionInfo) -> LockmanResult {
+    func canLock<B: LockmanBoundaryId>(id _: B, info _: LockmanSingleExecutionInfo) -> LockmanResult
+    {
       .success
     }
 
@@ -72,7 +76,9 @@ final class EffectLockmanErrorTests: XCTestCase {
       let errorReported = LockIsolated(false)
 
       // XCTExpectFailure to handle the reportIssue call
-      XCTExpectFailure("Effect.withLock strategy 'MockUnregisteredStrategy' not registered. Register before use.") {
+      XCTExpectFailure(
+        "Effect.withLock strategy 'MockUnregisteredStrategy' not registered. Register before use."
+      ) {
         // This should return a valid effect but the operation should not execute
         let effect = Effect<Never>.withLock(
           operation: { _ in
@@ -88,13 +94,14 @@ final class EffectLockmanErrorTests: XCTestCase {
       }
 
       // Verify expectations
-      XCTAssertEqual(operationExecuted.value, false, "Operation should not execute with unregistered strategy")
+      XCTAssertEqual(
+        operationExecuted.value, false, "Operation should not execute with unregistered strategy")
       XCTAssertEqual(errorReported.value, true, "Error should have been reported")
     }
   }
 
   func testWithLockWorksCorrectlyWithRegisteredStrategy() async {
-    let testContainer  = LockmanStrategyContainer()
+    let testContainer = LockmanStrategyContainer()
     try? testContainer.register(LockmanSingleExecutionStrategy.shared)
 
     await Lockman.withTestContainer(testContainer) {
@@ -137,14 +144,14 @@ final class EffectLockmanErrorTests: XCTestCase {
 
         XCTAssertNotNil(effect)
       }
-      
+
       XCTAssertEqual(operationExecuted.value, false)
       XCTAssertEqual(unlockProvided.value, false)
     }
   }
 
   func testConcatenateWithLockHandlesUnregisteredStrategy() async {
-    let testContainer  = LockmanStrategyContainer()
+    let testContainer = LockmanStrategyContainer()
 
     await Lockman.withTestContainer(testContainer) {
       let action = MockErrorAction.unregisteredStrategy
@@ -153,7 +160,7 @@ final class EffectLockmanErrorTests: XCTestCase {
       let operations = [
         Effect<Never>.run { _ in
           XCTFail("Operations should not execute with unregistered strategy")
-        },
+        }
       ]
 
       XCTExpectFailure("Effect.withLock strategy 'MockUnregisteredStrategy' not registered") {
@@ -196,7 +203,8 @@ final class EffectLockmanErrorTests: XCTestCase {
     let action = MockValidAction.testAction
     let error = LockmanRegistrationError.strategyAlreadyRegistered("LockmanSingleExecutionStrategy")
 
-    XCTExpectFailure("Effect.withLock strategy 'LockmanSingleExecutionStrategy' already registered") {
+    XCTExpectFailure("Effect.withLock strategy 'LockmanSingleExecutionStrategy' already registered")
+    {
       Effect<Never>.handleError(
         action: action,
         error: error,
@@ -238,7 +246,7 @@ final class EffectLockmanErrorTests: XCTestCase {
     try? testContainer.register(LockmanPriorityBasedStrategy.shared)
 
     await Lockman.withTestContainer(testContainer) {
-      let action = MockValidAction.testAction // Requires LockmanSingleExecutionStrategy
+      let action = MockValidAction.testAction  // Requires LockmanSingleExecutionStrategy
       let cancelID = "integration-test"
 
       XCTExpectFailure("Effect.withLock strategy 'LockmanSingleExecutionStrategy' not registered") {
@@ -374,7 +382,7 @@ final class EffectLockmanErrorTests: XCTestCase {
       )
     }
 
-    XCTAssertTrue(Bool(true)) // Success if no crash
+    XCTAssertTrue(Bool(true))  // Success if no crash
   }
 
   // MARK: - Edge Cases

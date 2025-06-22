@@ -34,7 +34,9 @@ import Foundation
 ///     configuration: "timeout-60"
 /// )
 /// ```
-public struct LockmanStrategyId: Hashable, Sendable, CustomStringConvertible, ExpressibleByStringLiteral {
+public struct LockmanStrategyId: Hashable, Sendable, CustomStringConvertible,
+  ExpressibleByStringLiteral
+{
   /// The unique identifier string for the strategy.
   ///
   /// This value is used as the key when registering and resolving strategies
@@ -154,16 +156,17 @@ public struct LockmanStrategyId: Hashable, Sendable, CustomStringConvertible, Ex
 
 // MARK: - Common Strategy IDs
 
-public extension LockmanStrategyId {
+extension LockmanStrategyId {
   /// The default strategy ID for single execution strategy.
-  static let singleExecution = LockmanStrategyId(type: LockmanSingleExecutionStrategy.self)
+  public static let singleExecution = LockmanStrategyId(type: LockmanSingleExecutionStrategy.self)
 
   /// The default strategy ID for priority-based strategy.
-  static let priorityBased = LockmanStrategyId(type: LockmanPriorityBasedStrategy.self)
+  public static let priorityBased = LockmanStrategyId(type: LockmanPriorityBasedStrategy.self)
 
   /// The default strategy ID for group coordination strategy.
-  static let groupCoordination = LockmanStrategyId(type: LockmanGroupCoordinationStrategy.self)
+  public static let groupCoordination = LockmanStrategyId(
+    type: LockmanGroupCoordinationStrategy.self)
 
   /// The default strategy ID for dynamic condition strategy.
-  static let dynamicCondition = LockmanStrategyId(type: LockmanDynamicConditionStrategy.self)
+  public static let dynamicCondition = LockmanStrategyId(type: LockmanDynamicConditionStrategy.self)
 }

@@ -1,23 +1,24 @@
 import ComposableArchitecture
 import XCTest
+
 @testable import LockmanComposable
 @testable import LockmanCore
 
 /// Tests for the lockFailure handler in withLock manual unlock variant
 final class EffectWithLockLockFailureTests: XCTestCase {
-  
+
   struct TestAction: LockmanSingleExecutionAction, Equatable {
     var actionName: LockmanActionId = "test-action"
-    
+
     var lockmanInfo: LockmanSingleExecutionInfo {
       LockmanSingleExecutionInfo(actionId: actionName, mode: .boundary)
     }
-    
+
     var strategyId: LockmanStrategyId {
       .singleExecution
     }
   }
-  
+
   @Reducer
   struct TestReducer {
     @ObservableState
@@ -27,7 +28,7 @@ final class EffectWithLockLockFailureTests: XCTestCase {
       var operationCompleted = false
       var unlockCalled = false
     }
-    
+
     enum Action: Equatable {
       case testManualUnlockWithLockFailure
       case testManualUnlockWithOperationError
@@ -36,8 +37,7 @@ final class EffectWithLockLockFailureTests: XCTestCase {
       case operationCompleted
       case unlockCalled
     }
-    
-    
+
     var body: some ReducerOf<Self> {
       Reduce { state, action in
         switch action {
@@ -46,10 +46,10 @@ final class EffectWithLockLockFailureTests: XCTestCase {
           let lockAction = TestAction()
           let lockInfo = lockAction.lockmanInfo
           let strategy = LockmanSingleExecutionStrategy.shared
-          
+
           // Manually lock it first to cause failure on second attempt
           strategy.lock(id: TestBoundaryId.testBoundary, info: lockInfo)
-          
+
           return .withLock(
             operation: { send, unlock in
               // This should never be called
@@ -68,11 +68,11 @@ final class EffectWithLockLockFailureTests: XCTestCase {
             action: lockAction,
             cancelID: TestBoundaryId.testBoundary
           )
-          
+
         case .testManualUnlockWithOperationError:
           return .withLock(
             operation: { send, unlock in
-              defer { 
+              defer {
                 unlock()
               }
               await send(.unlockCalled)
@@ -91,19 +91,19 @@ final class EffectWithLockLockFailureTests: XCTestCase {
             action: TestAction(),
             cancelID: TestBoundaryId.testBoundary2
           )
-          
+
         case let .lockFailureOccurred(errorMessage):
           state.lockFailureErrorMessage = errorMessage
           return .none
-          
+
         case let .operationErrorOccurred(errorMessage):
           state.operationErrorMessage = errorMessage
           return .none
-          
+
         case .operationCompleted:
           state.operationCompleted = true
           return .none
-          
+
         case .unlockCalled:
           state.unlockCalled = true
           return .none
@@ -111,17 +111,17 @@ final class EffectWithLockLockFailureTests: XCTestCase {
       }
     }
   }
-  
+
   private struct TestError: Error, LocalizedError {
     let message: String
     var errorDescription: String? { message }
   }
-  
+
   private enum TestBoundaryId: LockmanBoundaryId {
     case testBoundary
     case testBoundary2
   }
-  
+
   @MainActor
   func testLockFailureHandlerIsCalledWhenLockAcquisitionFails() async throws {
     // Register strategy if not already registered
@@ -129,29 +129,33 @@ final class EffectWithLockLockFailureTests: XCTestCase {
       try Lockman.container.register(LockmanSingleExecutionStrategy.shared)
     }
     defer { Lockman.container.cleanUp() }
-    
+
     let store = TestStore(initialState: TestReducer.State()) {
       TestReducer()
     }
-    
+
     await store.send(.testManualUnlockWithLockFailure)
-    
+
     // Wait for async handler
-    try await Task.sleep(nanoseconds: 100_000_000) // 100ms
-    
-    await store.receive(.lockFailureOccurred("Cannot acquire lock: boundary 'testBoundary' already has an active lock.")) {
-      $0.lockFailureErrorMessage = "Cannot acquire lock: boundary 'testBoundary' already has an active lock."
+    try await Task.sleep(nanoseconds: 100_000_000)  // 100ms
+
+    await store.receive(
+      .lockFailureOccurred(
+        "Cannot acquire lock: boundary 'testBoundary' already has an active lock.")
+    ) {
+      $0.lockFailureErrorMessage =
+        "Cannot acquire lock: boundary 'testBoundary' already has an active lock."
     }
-    
+
     // Verify operation was not called
     XCTAssertFalse(store.state.operationCompleted)
     XCTAssertNil(store.state.operationErrorMessage)
-    
+
     // Clean up
     let strategy = LockmanSingleExecutionStrategy.shared
     strategy.cleanUp()
   }
-  
+
   @MainActor
   func testCatchHandlerIsCalledForOperationErrors() async throws {
     // Register strategy if not already registered
@@ -159,39 +163,39 @@ final class EffectWithLockLockFailureTests: XCTestCase {
       try Lockman.container.register(LockmanSingleExecutionStrategy.shared)
     }
     defer { Lockman.container.cleanUp() }
-    
+
     let store = TestStore(initialState: TestReducer.State()) {
       TestReducer()
     }
-    
+
     await store.send(.testManualUnlockWithOperationError)
-    
+
     // Wait for async operation
-    try await Task.sleep(nanoseconds: 100_000_000) // 100ms
-    
+    try await Task.sleep(nanoseconds: 100_000_000)  // 100ms
+
     await store.receive(.unlockCalled) {
       $0.unlockCalled = true
     }
-    
+
     await store.receive(.operationErrorOccurred("TestError()")) {
       $0.operationErrorMessage = "TestError()"
     }
-    
+
     // Verify lock failure handler was not called
     XCTAssertNil(store.state.lockFailureErrorMessage)
   }
-  
+
   @Reducer
   struct SimpleReducer {
     struct State: Equatable {
       var completed = false
     }
-    
+
     enum Action: Equatable {
       case runWithoutHandlers
       case completed
     }
-    
+
     var body: some ReducerOf<Self> {
       Reduce { state, action in
         switch action {
@@ -206,7 +210,7 @@ final class EffectWithLockLockFailureTests: XCTestCase {
             action: EffectWithLockLockFailureTests.TestAction(),
             cancelID: EffectWithLockLockFailureTests.TestBoundaryId.testBoundary
           )
-          
+
         case .completed:
           state.completed = true
           return .none
@@ -214,7 +218,7 @@ final class EffectWithLockLockFailureTests: XCTestCase {
       }
     }
   }
-  
+
   @MainActor
   func testBothHandlersAreOptional() async throws {
     // Register strategy if not already registered
@@ -222,16 +226,16 @@ final class EffectWithLockLockFailureTests: XCTestCase {
       try Lockman.container.register(LockmanSingleExecutionStrategy.shared)
     }
     defer { Lockman.container.cleanUp() }
-    
+
     let store = TestStore(initialState: SimpleReducer.State()) {
       SimpleReducer()
     }
-    
+
     await store.send(.runWithoutHandlers)
-    
+
     // Wait for async operation
-    try await Task.sleep(nanoseconds: 100_000_000) // 100ms
-    
+    try await Task.sleep(nanoseconds: 100_000_000)  // 100ms
+
     await store.receive(.completed) {
       $0.completed = true
     }

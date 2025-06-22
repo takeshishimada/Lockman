@@ -44,7 +44,7 @@ struct SimpleDiagnosticMessage: DiagnosticMessage, Error {
 /// @LockmanGroupCoordination
 /// enum NavigationAction {
 ///   case navigate(to: String)
-///   
+///
 ///   var lockmanInfo: LockmanGroupCoordinatedInfo {
 ///     switch self {
 ///     case .navigate:
@@ -105,8 +105,8 @@ extension LockmanGroupCoordinationMacro: MemberMacro {
         from: declaration,
         attribute: node,
         in: context
-      ) else
-    {
+      )
+    else {
       return []
     }
 

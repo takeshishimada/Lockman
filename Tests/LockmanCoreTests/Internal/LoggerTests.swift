@@ -1,17 +1,18 @@
 import Foundation
 import OSLog
 import XCTest
+
 @testable @_spi(Logging) import LockmanCore
 
 // Helper class for thread-safe mutable state in tests
 private final class Atomic<Value>: @unchecked Sendable {
   private var _value: Value
   private let lock = NSLock()
-  
+
   init(_ value: Value) {
     self._value = value
   }
-  
+
   var value: Value {
     get {
       lock.lock()
@@ -29,14 +30,16 @@ private final class Atomic<Value>: @unchecked Sendable {
 /// Tests for the Logger class (Internal/Logger.swift)
 final class LoggerTests: XCTestCase {
   // MARK: - Helper Methods
-  
+
   /// Execute a closure on the MainActor and return the result
-  private func onMainActor<T: Sendable>(_ closure: @MainActor @Sendable () throws -> T) async rethrows -> T {
+  private func onMainActor<T: Sendable>(_ closure: @MainActor @Sendable () throws -> T)
+    async rethrows -> T
+  {
     try await MainActor.run {
       try closure()
     }
   }
-  
+
   // MARK: - Test Setup
 
   override func setUp() async throws {
@@ -230,7 +233,7 @@ final class LoggerTests: XCTestCase {
         Logger.shared.clear()
       }
 
-      // Create a @Sendable function that returns a string  
+      // Create a @Sendable function that returns a string
       let getMessage: @Sendable () -> String = { [evaluationCount] in
         evaluationCount.value += 1
         return "Message \(evaluationCount.value)"
@@ -260,8 +263,8 @@ final class LoggerTests: XCTestCase {
       let logCountAfter = await onMainActor {
         Logger.shared.logs.count
       }
-      XCTAssertEqual(evaluationCount.value, 1) // Function was NOT evaluated (autoclosure)
-      XCTAssertEqual(logCountAfter, logCountBefore) // Not logged
+      XCTAssertEqual(evaluationCount.value, 1)  // Function was NOT evaluated (autoclosure)
+      XCTAssertEqual(logCountAfter, logCountBefore)  // Not logged
 
       // Test 3: Autoclosure prevents evaluation when disabled
       await onMainActor {
@@ -280,14 +283,14 @@ final class LoggerTests: XCTestCase {
         Logger.shared.log(getSideEffectMessage())
       }
 
-      XCTAssertEqual(sideEffectCount.value, 0) // No side effect (autoclosure prevents evaluation)
+      XCTAssertEqual(sideEffectCount.value, 0)  // No side effect (autoclosure prevents evaluation)
 
       // Test 4: Direct string literals
       await onMainActor {
         Logger.shared.isEnabled = true
         Logger.shared.log("Direct message")
       }
-      
+
       let lastLog = await onMainActor {
         Logger.shared.logs.last
       }
@@ -383,7 +386,7 @@ final class LoggerTests: XCTestCase {
       let iterations = 100
 
       // Use sequential approach to avoid Swift 6 concurrency warnings
-      for i in 0 ..< iterations {
+      for i in 0..<iterations {
         await MainActor.run {
           Logger.shared.log("Message \(i)")
         }
@@ -398,7 +401,7 @@ final class LoggerTests: XCTestCase {
       // Clear logs at the end and reset isEnabled
       await MainActor.run {
         Logger.shared.clear()
-        Logger.shared.isEnabled  = false
+        Logger.shared.isEnabled = false
       }
     }
 
@@ -414,7 +417,7 @@ final class LoggerTests: XCTestCase {
         Logger.shared.clear()
         Logger.shared.isEnabled = true
 
-        for i in 0 ..< 10 {
+        for i in 0..<10 {
           Logger.shared.log("Message \(i)")
         }
       }
@@ -423,7 +426,7 @@ final class LoggerTests: XCTestCase {
         Logger.shared.logs
       }
       XCTAssertEqual(logs.count, 10)
-      for i in 0 ..< 10 {
+      for i in 0..<10 {
         XCTAssertEqual(logs[i], "Message \(i)")
       }
 
@@ -550,12 +553,14 @@ final class LoggerTests: XCTestCase {
 // MARK: - Performance Tests
 
 final class LoggerPerformanceTests: XCTestCase {
-  private func onMainActor<T: Sendable>(_ closure: @MainActor @Sendable () throws -> T) async rethrows -> T {
+  private func onMainActor<T: Sendable>(_ closure: @MainActor @Sendable () throws -> T)
+    async rethrows -> T
+  {
     try await MainActor.run {
       try closure()
     }
   }
-  
+
   func testloggerPerformanceHighVolume() async {
     // Clear logs at the beginning
     await onMainActor {
@@ -566,7 +571,7 @@ final class LoggerPerformanceTests: XCTestCase {
     let startTime = Date()
 
     await onMainActor {
-      for i in 0 ..< 1000 {
+      for i in 0..<1000 {
         Logger.shared.log("Performance test message \(i)")
       }
     }
@@ -578,9 +583,9 @@ final class LoggerPerformanceTests: XCTestCase {
         Logger.shared.logs.count
       }
       XCTAssertEqual(logCount, 1000)
-      XCTAssertLessThan(elapsed , 1.0) // Should complete within 1 second
+      XCTAssertLessThan(elapsed, 1.0)  // Should complete within 1 second
     #else
-      XCTAssertLessThan(elapsed , 0.1) // Should be very fast in release mode
+      XCTAssertLessThan(elapsed, 0.1)  // Should be very fast in release mode
     #endif
 
     // Clear logs at the end and reset isEnabled
@@ -600,7 +605,7 @@ final class LoggerPerformanceTests: XCTestCase {
     let startTime = Date()
 
     await onMainActor {
-      for i in 0 ..< 10000 {
+      for i in 0..<10000 {
         Logger.shared.log("This should not be logged \(i)")
       }
     }
@@ -611,7 +616,7 @@ final class LoggerPerformanceTests: XCTestCase {
       Logger.shared.logs.isEmpty
     }
     XCTAssertTrue(logsEmpty)
-    XCTAssertLessThan(elapsed , 0.1) // Should be very fast when disabled
+    XCTAssertLessThan(elapsed, 0.1)  // Should be very fast when disabled
 
     // Clear logs at the end (already empty, but for consistency)
     await onMainActor {

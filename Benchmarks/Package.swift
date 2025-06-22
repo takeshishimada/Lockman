@@ -5,7 +5,7 @@ import PackageDescription
 let package = Package(
   name: "benchmarks",
   platforms: [
-    .macOS("14"),
+    .macOS("14")
   ],
   dependencies: [
     .package(path: ".."),
@@ -23,8 +23,8 @@ let package = Package(
       ],
       path: "Benchmarks/Lockman",
       plugins: [
-        .plugin(name: "BenchmarkPlugin", package: "package-benchmark"),
+        .plugin(name: "BenchmarkPlugin", package: "package-benchmark")
       ]
-    ),
+    )
   ]
 )

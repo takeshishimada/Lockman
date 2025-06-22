@@ -14,20 +14,20 @@ public enum GroupCoordinationRole: Sendable, Hashable {
   ///
   /// Requires an existing group participant (leader or other members) to be active.
   case member
-  
+
   /// Exclusion mode for leader actions.
   ///
   /// Determines which actions are blocked while this leader is active.
   public enum ExclusionMode: String, Sendable, Hashable, CaseIterable {
     /// No additional exclusion - allows concurrent execution with different action IDs.
     case none
-    
+
     /// Excludes all other actions from executing in the group.
     case all
-    
+
     /// Excludes only member actions from executing in the group.
     case membersOnly
-    
+
     /// Excludes only other leader actions from executing in the group.
     case leadersOnly
   }
@@ -130,7 +130,8 @@ public struct LockmanGroupCoordinatedInfo: LockmanInfo, Sendable {
 // MARK: - Equatable
 
 extension LockmanGroupCoordinatedInfo: Equatable {
-  public static func == (lhs: LockmanGroupCoordinatedInfo, rhs: LockmanGroupCoordinatedInfo) -> Bool {
+  public static func == (lhs: LockmanGroupCoordinatedInfo, rhs: LockmanGroupCoordinatedInfo) -> Bool
+  {
     // Equality is based on unique ID, not action ID or group ID
     lhs.uniqueId == rhs.uniqueId
   }
@@ -141,6 +142,7 @@ extension LockmanGroupCoordinatedInfo: Equatable {
 extension LockmanGroupCoordinatedInfo: CustomDebugStringConvertible {
   public var debugDescription: String {
     let groupIdsStr = groupIds.sorted().joined(separator: ", ")
-    return "LockmanGroupCoordinatedInfo(actionId: '\(actionId)', uniqueId: \(uniqueId), groupIds: [\(groupIdsStr)], coordinationRole: .\(coordinationRole))"
+    return
+      "LockmanGroupCoordinatedInfo(actionId: '\(actionId)', uniqueId: \(uniqueId), groupIds: [\(groupIdsStr)], coordinationRole: .\(coordinationRole))"
   }
 }

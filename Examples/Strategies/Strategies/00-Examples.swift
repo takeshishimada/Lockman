@@ -93,9 +93,11 @@ struct ExamplesView: View {
           VStack(alignment: .leading, spacing: 10) {
             Text("Lockman Strategy Examples")
               .font(.headline)
-            Text("Lockman is a Swift library for controlling concurrent action execution. These examples demonstrate how to manage action execution using different strategy patterns.")
-              .font(.caption)
-              .foregroundColor(.secondary)
+            Text(
+              "Lockman is a Swift library for controlling concurrent action execution. These examples demonstrate how to manage action execution using different strategy patterns."
+            )
+            .font(.caption)
+            .foregroundColor(.secondary)
           }
           .padding(.vertical, 8)
         }
@@ -172,11 +174,14 @@ struct ExamplesView: View {
           CompositeStrategyView(store: store)
         }
       case .priorityBasedStrategy:
-        if let store = store.scope(state: \.priorityBasedStrategy, action: \.priorityBasedStrategy) {
+        if let store = store.scope(state: \.priorityBasedStrategy, action: \.priorityBasedStrategy)
+        {
           PriorityBasedStrategyView(store: store)
         }
       case .singleExecutionStrategy:
-        if let store = store.scope(state: \.singleExecutionStrategy, action: \.singleExecutionStrategy) {
+        if let store = store.scope(
+          state: \.singleExecutionStrategy, action: \.singleExecutionStrategy)
+        {
           SingleExecutionStrategyView(store: store)
         }
       }

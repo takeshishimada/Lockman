@@ -20,7 +20,7 @@ public final class LockmanLogger: @unchecked Sendable {
   /// Public accessor for logging state
   public var isEnabled: Bool {
     get { _isEnabled.withCriticalRegion { $0 } }
-    set { 
+    set {
       _isEnabled.withCriticalRegion { $0 = newValue }
       // Also update the internal Logger state
       Task { @MainActor in
@@ -60,15 +60,19 @@ public final class LockmanLogger: @unchecked Sendable {
       let message: String
       switch result {
       case .success:
-        message = "✅ [Lockman] canLock succeeded - Strategy: \(strategy), BoundaryId: \(boundaryId), Info: \(info.debugDescription)"
+        message =
+          "✅ [Lockman] canLock succeeded - Strategy: \(strategy), BoundaryId: \(boundaryId), Info: \(info.debugDescription)"
 
       case .failure(_):
         let reasonStr = reason.map { ", Reason: \($0)" } ?? ""
-        message = "❌ [Lockman] canLock failed - Strategy: \(strategy), BoundaryId: \(boundaryId), Info: \(info.debugDescription)\(reasonStr)"
+        message =
+          "❌ [Lockman] canLock failed - Strategy: \(strategy), BoundaryId: \(boundaryId), Info: \(info.debugDescription)\(reasonStr)"
 
       case .successWithPrecedingCancellation:
-        let cancelledStr = cancelledInfo.map { ", Cancelled: '\($0.actionId)' (uniqueId: \($0.uniqueId))" } ?? ""
-        message = "⚠️ [Lockman] canLock succeeded with cancellation - Strategy: \(strategy), BoundaryId: \(boundaryId), Info: \(info.debugDescription)\(cancelledStr)"
+        let cancelledStr =
+          cancelledInfo.map { ", Cancelled: '\($0.actionId)' (uniqueId: \($0.uniqueId))" } ?? ""
+        message =
+          "⚠️ [Lockman] canLock succeeded with cancellation - Strategy: \(strategy), BoundaryId: \(boundaryId), Info: \(info.debugDescription)\(cancelledStr)"
       }
 
       // Use Logger from Internal/Logger.swift
@@ -84,7 +88,7 @@ public final class LockmanLogger: @unchecked Sendable {
   public func logLockState(_ message: String) {
     #if DEBUG
       guard isEnabled else {
-        print(message) // Always print lock state when explicitly requested
+        print(message)  // Always print lock state when explicitly requested
         return
       }
       Task { @MainActor in

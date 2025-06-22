@@ -11,7 +11,7 @@ public enum LockmanDynamicConditionError: LockmanError {
   /// The optional hint provides additional context about why the condition failed,
   /// which can be useful for debugging.
   case conditionNotMet(actionId: String, hint: String? = nil)
-  
+
   public var errorDescription: String? {
     switch self {
     case let .conditionNotMet(actionId, hint):
@@ -22,7 +22,7 @@ public enum LockmanDynamicConditionError: LockmanError {
       }
     }
   }
-  
+
   public var failureReason: String? {
     switch self {
     case .conditionNotMet:
