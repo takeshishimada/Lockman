@@ -76,9 +76,9 @@ public macro LockmanSingleExecution() = #externalMacro(module: "LockmanMacros", 
 ///     var lockmanInfo: LockmanPriorityBasedInfo {
 ///       switch self {
 ///       case .highPriorityTask:
-///         return .init(priority: 100, perBoundary: false, blocksSameAction: false)
+///         return .init(priority: 100, perBoundary: false, blocksSameAction: true)
 ///       case .lowPriorityTask:
-///         return .init(priority: 10, perBoundary: false, blocksSameAction: false)
+///         return .init(priority: 10, perBoundary: false, blocksSameAction: true)
 ///       }
 ///     }
 ///   }
