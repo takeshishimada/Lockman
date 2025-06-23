@@ -1,0 +1,86 @@
+name: Release
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+
+jobs:
+  validate-release:
+    name: Validate Release
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      
+      - name: Validate tag format
+        run: |
+          if [[ ! "${{ github.event.release.tag_name }}" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "Error: Tag must be in semantic version format (e.g., 1.0.0)"
+            exit 1
+          fi
+
+  build-and-test:
+    name: Build and Test
+    needs: validate-release
+    runs-on: macos-14
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      
+      - name: Select Xcode 16.0
+        run: sudo xcode-select -s /Applications/Xcode_16.0.app
+      
+      - name: Build for release
+        run: swift build -c release
+      
+      - name: Run tests
+        run: swift test
+
+  notify-release:
+    name: Notify Release
+    needs: build-and-test
+    runs-on: ubuntu-latest
+    if: github.event_name == 'release'
+    steps:
+      - name: Release Summary
+        run: |
+          echo "### Lockman ${{ github.event.release.tag_name }} Released! 🎉"
+          echo ""
+          echo "**Release URL:** ${{ github.event.release.html_url }}"
+          echo ""
+          echo "**Release Notes:**"
+          echo "${{ github.event.release.body }}"
+      
+      # Slack notification can be added here if needed
+      # - name: Slack Notification
+      #   if: success()
+      #   uses: tokorom/action-slack-incoming-webhook@main
+      #   env:
+      #     INCOMING_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+      #   with:
+      #     text: Lockman ${{ github.event.release.tag_name }} has been released.
+      #     blocks: |
+      #       [
+      #         {
+      #           "type": "header",
+      #           "text": {
+      #             "type": "plain_text",
+      #             "text": "Lockman ${{ github.event.release.tag_name}}"
+      #           }
+      #         },
+      #         {
+      #           "type": "section",
+      #           "text": {
+      #             "type": "mrkdwn",
+      #             "text": ${{ toJSON(github.event.release.body) }}
+      #           }
+      #         },
+      #         {
+      #           "type": "section",
+      #           "text": {
+      #             "type": "mrkdwn",
+      #             "text": "${{ github.event.release.html_url }}"
+      #           }
+      #         }
+      #       ]
