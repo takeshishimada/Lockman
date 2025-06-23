@@ -44,31 +44,35 @@ public enum GroupCoordinationRole: Sendable, Hashable {
 ///
 /// ## Usage Example
 /// ```swift
-/// // Non-exclusive participant (participates without blocking)
+/// // Using String as group ID (backward compatible)
 /// let navigationInfo = LockmanGroupCoordinatedInfo(
 ///   actionId: "navigate",
 ///   groupId: "mainNavigation",
 ///   coordinationRole: .none
 /// )
 ///
-/// // Leader that requires empty group
+/// // Using enum as group ID
+/// enum AppGroup: String, LockmanGroupId {
+///   case navigation, dataLoading, animation
+/// }
+///
 /// let exclusiveNavigation = LockmanGroupCoordinatedInfo(
 ///   actionId: "exclusiveNavigate",
-///   groupId: "mainNavigation",
+///   groupId: AppGroup.navigation,
 ///   coordinationRole: .leader(.emptyGroup)
 /// )
 ///
-/// // Member action
+/// // Member action with enum
 /// let animationInfo = LockmanGroupCoordinatedInfo(
 ///   actionId: "animate",
-///   groupId: "mainNavigation",
+///   groupId: AppGroup.navigation,
 ///   coordinationRole: .member
 /// )
 ///
-/// // Multiple groups example
+/// // Multiple groups example with enum
 /// let complexAction = LockmanGroupCoordinatedInfo(
 ///   actionId: "complexOperation",
-///   groupIds: ["navigation", "dataLoading", "animation"],
+///   groupIds: Set([AppGroup.navigation, AppGroup.dataLoading, AppGroup.animation]),
 ///   coordinationRole: .member
 /// )
 /// ```
@@ -83,7 +87,7 @@ public struct LockmanGroupCoordinatedInfo: LockmanInfo, Sendable {
   ///
   /// Can contain one or multiple groups (up to 5).
   /// Actions coordinate their execution within all specified groups.
-  public let groupIds: Set<String>
+  public let groupIds: Set<AnyLockmanGroupId>
 
   /// The coordination role of this action within the group(s).
   ///
@@ -97,14 +101,14 @@ public struct LockmanGroupCoordinatedInfo: LockmanInfo, Sendable {
   ///   - actionId: The identifier for this action
   ///   - groupId: The group identifier for coordination
   ///   - coordinationRole: The role this action plays in the group
-  public init(
+  public init<G: LockmanGroupId>(
     actionId: LockmanActionId,
-    groupId: String,
+    groupId: G,
     coordinationRole: GroupCoordinationRole
   ) {
     self.actionId = actionId
     self.uniqueId = UUID()
-    self.groupIds = [groupId]
+    self.groupIds = [AnyLockmanGroupId(groupId)]
     self.coordinationRole = coordinationRole
   }
 
@@ -114,18 +118,17 @@ public struct LockmanGroupCoordinatedInfo: LockmanInfo, Sendable {
   ///   - actionId: The identifier for this action
   ///   - groupIds: The set of group identifiers for coordination (maximum 5)
   ///   - coordinationRole: The role this action plays in all groups
-  public init(
+  public init<G: LockmanGroupId>(
     actionId: LockmanActionId,
-    groupIds: Set<String>,
+    groupIds: Set<G>,
     coordinationRole: GroupCoordinationRole
   ) {
     precondition(!groupIds.isEmpty, "At least one group ID must be provided")
     precondition(groupIds.count <= 5, "Maximum 5 groups allowed, got \(groupIds.count)")
-    precondition(groupIds.allSatisfy { !$0.isEmpty }, "Group IDs cannot be empty strings")
 
     self.actionId = actionId
     self.uniqueId = UUID()
-    self.groupIds = groupIds
+    self.groupIds = Set(groupIds.map(AnyLockmanGroupId.init))
     self.coordinationRole = coordinationRole
   }
 }
@@ -144,7 +147,7 @@ extension LockmanGroupCoordinatedInfo: Equatable {
 
 extension LockmanGroupCoordinatedInfo: CustomDebugStringConvertible {
   public var debugDescription: String {
-    let groupIdsStr = groupIds.sorted().joined(separator: ", ")
+    let groupIdsStr = groupIds.map { "\($0)" }.sorted().joined(separator: ", ")
     return
       "LockmanGroupCoordinatedInfo(actionId: '\(actionId)', uniqueId: \(uniqueId), groupIds: [\(groupIdsStr)], coordinationRole: .\(coordinationRole))"
   }

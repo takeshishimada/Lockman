@@ -53,7 +53,7 @@ final class LockmanErrorCoverageTests: XCTestCase {
 
   func testGroupCoordinationErrorProperties() {
     let error1 = LockmanGroupCoordinationError.leaderCannotJoinNonEmptyGroup(groupIds: [
-      "group1", "group2",
+      AnyLockmanGroupId("group1"), AnyLockmanGroupId("group2"),
     ])
     XCTAssertNotNil(error1.errorDescription)
     XCTAssertTrue(error1.errorDescription!.contains("leader"))
@@ -61,14 +61,14 @@ final class LockmanErrorCoverageTests: XCTestCase {
     XCTAssertNotNil(error1.failureReason)
     XCTAssertTrue(error1.failureReason!.contains("Leader"))
 
-    let error2 = LockmanGroupCoordinationError.memberCannotJoinEmptyGroup(groupIds: ["group3"])
+    let error2 = LockmanGroupCoordinationError.memberCannotJoinEmptyGroup(groupIds: [AnyLockmanGroupId("group3")])
     XCTAssertNotNil(error2.errorDescription)
     XCTAssertTrue(error2.errorDescription!.contains("member"))
     XCTAssertNotNil(error2.failureReason)
     XCTAssertTrue(error2.failureReason!.contains("Member"))
 
     let error3 = LockmanGroupCoordinationError.actionAlreadyInGroup(
-      actionId: "action1", groupIds: ["group1", "group2"])
+      actionId: "action1", groupIds: [AnyLockmanGroupId("group1"), AnyLockmanGroupId("group2")])
     XCTAssertNotNil(error3.errorDescription)
     XCTAssertTrue(error3.errorDescription!.contains("action1"))
     XCTAssertNotNil(error3.failureReason)
@@ -101,7 +101,7 @@ final class LockmanErrorCoverageTests: XCTestCase {
     XCTAssertNotNil(error1.failureReason)
 
     let error2 = LockmanGroupCoordinationError.actionAlreadyInGroup(
-      actionId: emptyId, groupIds: Set<String>())
+      actionId: emptyId, groupIds: Set<AnyLockmanGroupId>())
     XCTAssertNotNil(error2.errorDescription)
     XCTAssertNotNil(error2.failureReason)
   }

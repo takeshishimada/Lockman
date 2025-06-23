@@ -10,32 +10,32 @@ public enum LockmanGroupCoordinationError: LockmanError {
   /// Indicates that a leader cannot join a group that already has members.
   ///
   /// Leaders must be the first to join a group to establish coordination.
-  case leaderCannotJoinNonEmptyGroup(groupIds: Set<String>)
+  case leaderCannotJoinNonEmptyGroup(groupIds: Set<AnyLockmanGroupId>)
 
   /// Indicates that a member cannot join a group that has no participants.
   ///
   /// Members require an existing leader or other members to coordinate with.
-  case memberCannotJoinEmptyGroup(groupIds: Set<String>)
+  case memberCannotJoinEmptyGroup(groupIds: Set<AnyLockmanGroupId>)
 
   /// Indicates that an action with the same ID is already in the group.
   ///
   /// Each action ID must be unique within a coordination group.
-  case actionAlreadyInGroup(actionId: String, groupIds: Set<String>)
+  case actionAlreadyInGroup(actionId: String, groupIds: Set<AnyLockmanGroupId>)
 
   /// Indicates that an action is blocked by an exclusive leader.
   ///
   /// Exclusive leaders can prevent other actions from executing based on their entry policy.
   case blockedByExclusiveLeader(
-    leaderActionId: String, groupId: String, entryPolicy: GroupCoordinationRole.LeaderEntryPolicy)
+    leaderActionId: String, groupId: AnyLockmanGroupId, entryPolicy: GroupCoordinationRole.LeaderEntryPolicy)
 
   public var errorDescription: String? {
     switch self {
     case let .leaderCannotJoinNonEmptyGroup(groupIds):
-      return "Cannot acquire lock: leader cannot join non-empty groups \(groupIds.sorted())."
+      return "Cannot acquire lock: leader cannot join non-empty groups \(groupIds.map { "\($0)" }.sorted())."
     case let .memberCannotJoinEmptyGroup(groupIds):
-      return "Cannot acquire lock: member cannot join empty groups \(groupIds.sorted())."
+      return "Cannot acquire lock: member cannot join empty groups \(groupIds.map { "\($0)" }.sorted())."
     case let .actionAlreadyInGroup(actionId, groupIds):
-      return "Cannot acquire lock: action '\(actionId)' is already in groups \(groupIds.sorted())."
+      return "Cannot acquire lock: action '\(actionId)' is already in groups \(groupIds.map { "\($0)" }.sorted())."
     case let .blockedByExclusiveLeader(leaderActionId, groupId, entryPolicy):
       return
         "Cannot acquire lock: blocked by exclusive leader '\(leaderActionId)' in group '\(groupId)' (policy: \(entryPolicy))."

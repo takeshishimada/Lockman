@@ -577,7 +577,7 @@ final class LockmanGroupCoordinationStrategyTests: XCTestCase {
       groupIds: ["valid1", "valid2"],
       coordinationRole: .none
     )
-    XCTAssertEqual(validInfo.groupIds, ["valid1", "valid2"])
+    XCTAssertEqual(validInfo.groupIds, [AnyLockmanGroupId("valid1"), AnyLockmanGroupId("valid2")])
   }
 
   func testMultiGroupUnlockRemovesFromAllGroups() {
