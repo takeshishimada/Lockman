@@ -71,6 +71,57 @@ final class LockmanState<I: LockmanInfo>: Sendable {
     }
   }
 
+  /// Removes all locks with a specific actionId from the boundary.
+  ///
+  /// This method removes all locks that have the specified actionId,
+  /// maintaining consistency between both the primary storage and action index.
+  ///
+  /// - Parameters:
+  ///   - id: The boundary identifier
+  ///   - actionId: The action ID whose locks should be removed
+  ///
+  /// ## Complexity
+  /// O(n) - Where n is the total number of locks in the boundary
+  /// However, if k (locks to remove) << n (total locks), this is still efficient
+  /// due to O(1) Set lookup for each item
+  func removeAll<B: LockmanBoundaryId>(id: B, actionId: LockmanActionId) {
+    let boundaryKey = AnyLockmanBoundaryId(id)
+
+    // Get all UUIDs for this actionId
+    let uuidsToRemove = actionIndex.withCriticalRegion { index in
+      index[boundaryKey]?[actionId] ?? []
+    }
+
+    guard !uuidsToRemove.isEmpty else { return }
+
+    // Remove from storage using filter (more efficient for bulk removal)
+    storage.withCriticalRegion { storage in
+      guard var boundaryDict = storage[boundaryKey] else { return }
+
+      // Filter out all UUIDs in one operation
+      boundaryDict = boundaryDict.filter { !uuidsToRemove.contains($0.key) }
+
+      if boundaryDict.isEmpty {
+        storage.removeValue(forKey: boundaryKey)
+      } else {
+        storage[boundaryKey] = boundaryDict
+      }
+    }
+
+    // Remove from action index
+    actionIndex.withCriticalRegion { index in
+      guard var boundaryIndex = index[boundaryKey] else { return }
+
+      boundaryIndex.removeValue(forKey: actionId)
+
+      if boundaryIndex.isEmpty {
+        index.removeValue(forKey: boundaryKey)
+      } else {
+        index[boundaryKey] = boundaryIndex
+      }
+    }
+  }
+
   /// Removes a specific lock by UUID - True O(1) operation.
   ///
   /// This method maintains consistency between both the primary storage and

@@ -15,7 +15,13 @@ import Foundation
 /// // Usage
 /// let action = MyAction.fetchData(userId: "123", priority: 5)
 /// let info = action.with {
-///     return priority > 3
+///     guard priority > 3 else {
+///         return .failure(LockmanDynamicConditionError.conditionNotMet(
+///             actionId: "fetchData",
+///             hint: "Priority too low"
+///         ))
+///     }
+///     return .success
 /// }
 ///
 /// try await withLock(info, in: boundary) {
@@ -28,10 +34,11 @@ public protocol LockmanDynamicConditionAction: LockmanAction {
 
   /// Creates lock info with a custom condition.
   ///
-  /// - Parameter condition: A closure that returns true to allow the lock, false to deny
+  /// - Parameter condition: A closure that returns a `LockmanResult` indicating
+  ///                       whether the lock can be acquired
   /// - Returns: Lock info with the specified condition
   func with(
-    condition: @escaping @Sendable () -> Bool
+    condition: @escaping @Sendable () -> LockmanResult
   ) -> LockmanDynamicConditionInfo
 }
 
@@ -40,7 +47,7 @@ public protocol LockmanDynamicConditionAction: LockmanAction {
 extension LockmanDynamicConditionAction {
   /// Default implementation that creates lock info with the provided condition.
   public func with(
-    condition: @escaping @Sendable () -> Bool
+    condition: @escaping @Sendable () -> LockmanResult
   ) -> LockmanDynamicConditionInfo {
     LockmanDynamicConditionInfo(
       actionId: actionName,

@@ -143,3 +143,15 @@ xcodebuild test -configuration Debug -scheme "Lockman-Package" -destination "pla
 # macOS tests  
 xcodebuild test -configuration Debug -scheme "Lockman-Package" -destination "platform=macOS" -workspace .github/package.xcworkspace
 ```
+
+## Building Examples
+When building example projects, use the following flags to skip macro validation:
+```bash
+# Skip macro validation for Strategies example
+xcodebuild build -scheme Strategies -configuration Debug -destination "platform=iOS Simulator,name=iPhone 16" -skipMacroValidation
+
+# Skip macro validation for GitHubClient example  
+xcodebuild build -scheme GitHubClient -configuration Debug -destination "platform=iOS Simulator,name=iPhone 16" -skipMacroValidation
+```
+
+Note: The `-skipMacroValidation` flag prevents build failures due to macro approval requirements when building from command line.

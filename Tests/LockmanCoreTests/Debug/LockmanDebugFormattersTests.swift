@@ -15,7 +15,7 @@ final class LockmanDebugFormattersTests: XCTestCase {
     // Test with DynamicConditionStrategy (long strategy name)
     let dynamicInfo = LockmanDynamicConditionInfo(
       actionId: "incrementButtonTapped",
-      condition: { true }
+      condition: { .success }
     )
 
     // Test with SingleExecution (short name) but long action ID
