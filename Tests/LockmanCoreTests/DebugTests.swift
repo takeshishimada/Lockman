@@ -76,12 +76,12 @@ final class DebugTests: XCTestCase {
     let groupInfo = LockmanGroupCoordinatedInfo(
       actionId: "groupAction",
       groupIds: ["group1", "group2"],
-      coordinationRole: .leader(.none)
+      coordinationRole: .none
     )
     XCTAssertTrue(groupInfo.debugDescription.contains("LockmanGroupCoordinatedInfo"))
     XCTAssertTrue(groupInfo.debugDescription.contains("groupAction"))
     XCTAssertTrue(groupInfo.debugDescription.contains("group1"))
-    XCTAssertTrue(groupInfo.debugDescription.contains("leader"))
+    XCTAssertTrue(groupInfo.debugDescription.contains("none"))
   }
 
   func testGetCurrentLocksForAllStrategies() {
