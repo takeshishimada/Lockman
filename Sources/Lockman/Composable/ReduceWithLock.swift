@@ -150,7 +150,7 @@ extension ReduceWithLock {
     let strategy: AnyLockmanStrategy<LockmanDynamicConditionInfo>
     let unlockToken: LockmanUnlock<B, LockmanDynamicConditionInfo>
     do {
-      strategy = try Lockman.container.resolve(
+      strategy = try LockmanManager.container.resolve(
         id: .dynamicCondition,
         expecting: LockmanDynamicConditionInfo.self
       )

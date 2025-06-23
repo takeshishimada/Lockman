@@ -6,11 +6,11 @@ import XCTest
 final class LockmanDebugFormattersTests: XCTestCase {
   func testDynamicColumnWidth() throws {
     // Clean up first
-    Lockman.cleanup.all()
+    LockmanManager.cleanup.all()
 
     // Try to register strategies (ignore if already registered)
-    _ = try? Lockman.container.register(LockmanDynamicConditionStrategy.shared)
-    _ = try? Lockman.container.register(LockmanSingleExecutionStrategy.shared)
+    _ = try? LockmanManager.container.register(LockmanDynamicConditionStrategy.shared)
+    _ = try? LockmanManager.container.register(LockmanSingleExecutionStrategy.shared)
 
     // Test with DynamicConditionStrategy (long strategy name)
     let dynamicInfo = LockmanDynamicConditionInfo(
@@ -40,7 +40,7 @@ final class LockmanDebugFormattersTests: XCTestCase {
     dup2(pipe.fileHandleForWriting.fileDescriptor, STDOUT_FILENO)
 
     // Print with compact options
-    Lockman.debug.printCurrentLocks(options: .compact)
+    LockmanManager.debug.printCurrentLocks(options: .compact)
 
     // Restore stdout and read output
     fflush(stdout)
@@ -62,19 +62,19 @@ final class LockmanDebugFormattersTests: XCTestCase {
     XCTAssertTrue(output.contains("VeryLongBoundaryIdForTestingColumnWidth"))
 
     // Clean up
-    Lockman.cleanup.all()
+    LockmanManager.cleanup.all()
   }
 
   func testFormatOptions() {
     // Test compact options
-    let compact = Lockman.debug.FormatOptions.compact
+    let compact = LockmanManager.debug.FormatOptions.compact
     XCTAssertEqual(compact.maxStrategyWidth, 0)
     XCTAssertEqual(compact.maxBoundaryWidth, 0)
     XCTAssertEqual(compact.maxActionIdWidth, 0)
     XCTAssertEqual(compact.maxAdditionalWidth, 0)
 
     // Test default options
-    let defaultOptions = Lockman.debug.FormatOptions.default
+    let defaultOptions = LockmanManager.debug.FormatOptions.default
     XCTAssertEqual(defaultOptions.maxStrategyWidth, 20)
     XCTAssertEqual(defaultOptions.maxBoundaryWidth, 25)
     XCTAssertEqual(defaultOptions.maxActionIdWidth, 36)

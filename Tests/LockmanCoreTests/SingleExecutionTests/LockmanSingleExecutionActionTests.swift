@@ -139,7 +139,7 @@ final class LockmanSingleExecutionActionTests: XCTestCase {
     let container = LockmanStrategyContainer()
     try? container.register(LockmanSingleExecutionStrategy.shared)
 
-    await Lockman.withTestContainer(container) {
+    await LockmanManager.withTestContainer(container) {
       let action = SimpleAction()
 
       // Resolve strategy for the action

@@ -83,7 +83,7 @@ final class LockmanLoggerTests: XCTestCase {
 
   func testDebugAPI() async throws {
     // Test the public API
-    Lockman.debug.isLoggingEnabled = true
+    LockmanManager.debug.isLoggingEnabled = true
 
     // Wait for async task to complete
     try await Task.sleep(nanoseconds: 100_000_000)  // 0.1 seconds
@@ -94,6 +94,6 @@ final class LockmanLoggerTests: XCTestCase {
     }
 
     // Cleanup
-    Lockman.debug.isLoggingEnabled = false
+    LockmanManager.debug.isLoggingEnabled = false
   }
 }

@@ -14,7 +14,7 @@ final class EffectWithLockSingleExecutionStrategyTests: XCTestCase {
     let strategy = LockmanSingleExecutionStrategy()
     try? container.register(strategy)
 
-    await Lockman.withTestContainer(container) {
+    await LockmanManager.withTestContainer(container) {
       let store = await TestStore(
         initialState: TestSingleExecutionFeature.State(count: 0)
       ) {
@@ -35,7 +35,7 @@ final class EffectWithLockSingleExecutionStrategyTests: XCTestCase {
     let strategy = LockmanSingleExecutionStrategy()
     try? container.register(strategy)
 
-    await Lockman.withTestContainer(container) {
+    await LockmanManager.withTestContainer(container) {
       let store = await TestStore(
         initialState: TestSingleExecutionFeature.State(count: 0)
       ) {
@@ -71,7 +71,7 @@ final class EffectWithLockSingleExecutionStrategyTests: XCTestCase {
     let strategy = LockmanSingleExecutionStrategy()
     try? container.register(strategy)
 
-    await Lockman.withTestContainer(container) {
+    await LockmanManager.withTestContainer(container) {
       let store = await TestStore(
         initialState: TestSingleExecutionFeature.State(count: 0)
       ) {
@@ -113,7 +113,7 @@ final class EffectWithLockSingleExecutionStrategyTests: XCTestCase {
     let strategy = LockmanSingleExecutionStrategy()
     try? container.register(strategy)
 
-    await Lockman.withTestContainer(container) {
+    await LockmanManager.withTestContainer(container) {
       let store = await TestStore(
         initialState: TestSingleExecutionFeature.State(count: 0)
       ) {
@@ -154,7 +154,7 @@ final class EffectWithLockSingleExecutionStrategyTests: XCTestCase {
     let strategy = LockmanSingleExecutionStrategy()
     try? container.register(strategy)
 
-    await Lockman.withTestContainer(container) {
+    await LockmanManager.withTestContainer(container) {
       let store = await TestStore(
         initialState: TestSingleExecutionFeature.State(count: 0)
       ) {
@@ -187,7 +187,7 @@ final class EffectWithLockSingleExecutionStrategyTests: XCTestCase {
     let strategy = LockmanSingleExecutionStrategy()
     try? container.register(strategy)
 
-    await Lockman.withTestContainer(container) {
+    await LockmanManager.withTestContainer(container) {
       let store = await TestStore(
         initialState: TestMultiIdFeature.State(count: 0)
       ) {
@@ -212,7 +212,7 @@ final class EffectWithLockSingleExecutionStrategyTests: XCTestCase {
   //  func testWithLockHandlesStrategyNotRegisteredError() async {
   //    let emptyContainer = LockmanStrategyContainer()
   //
-  //    await Lockman.withTestContainer(emptyContainer) {
+  //    await LockmanManager.withTestContainer(emptyContainer) {
   //      let store = await TestStore(
   //        initialState: TestSingleExecutionFeature.State(count: 0)
   //      ) {
@@ -233,7 +233,7 @@ final class EffectWithLockSingleExecutionStrategyTests: XCTestCase {
     let strategy = LockmanSingleExecutionStrategy()
     try? container.register(strategy)
 
-    await Lockman.withTestContainer(container) {
+    await LockmanManager.withTestContainer(container) {
       let store = await TestStore(
         initialState: TestSingleExecutionFeature.State(count: 0)
       ) {
@@ -265,7 +265,7 @@ final class EffectConcatenateWithLockTests: XCTestCase {
     let strategy = LockmanSingleExecutionStrategy()
     try? container.register(strategy)
 
-    await Lockman.withTestContainer(container) {
+    await LockmanManager.withTestContainer(container) {
       let store = await TestStore(
         initialState: TestConcatenateWithLockFeature.State(count: 0, isLocked: false)
       ) {
@@ -299,7 +299,7 @@ final class EffectConcatenateWithLockTests: XCTestCase {
     let strategy = LockmanSingleExecutionStrategy()
     try? container.register(strategy)
 
-    await Lockman.withTestContainer(container) {
+    await LockmanManager.withTestContainer(container) {
       let store = await TestStore(
         initialState: TestConcatenateWithLockFeature.State(count: 0, isLocked: false)
       ) {
@@ -330,7 +330,7 @@ final class EffectConcatenateWithLockTests: XCTestCase {
     let strategy = LockmanSingleExecutionStrategy()
     try? container.register(strategy)
 
-    await Lockman.withTestContainer(container) {
+    await LockmanManager.withTestContainer(container) {
       let store = await TestStore(
         initialState: TestConcatenateWithLockFeature.State(count: 0, isLocked: false)
       ) {
@@ -374,7 +374,7 @@ final class EffectConcatenateWithLockTests: XCTestCase {
     let strategy = LockmanSingleExecutionStrategy()
     try? container.register(strategy)
 
-    await Lockman.withTestContainer(container) {
+    await LockmanManager.withTestContainer(container) {
       let store = await TestStore(
         initialState: TestConcatenateWithLockFeature.State(count: 0, isLocked: false)
       ) {
@@ -408,7 +408,7 @@ final class EffectWithLockManualUnlockTests: XCTestCase {
     let strategy = LockmanSingleExecutionStrategy()
     try? container.register(strategy)
 
-    await Lockman.withTestContainer(container) {
+    await LockmanManager.withTestContainer(container) {
       let store = await TestStore(
         initialState: TestMultiIdFeature.State(count: 0)
       ) {

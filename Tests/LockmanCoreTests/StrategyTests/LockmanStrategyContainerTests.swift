@@ -546,11 +546,11 @@ final class LockmanStrategyContainerTests: XCTestCase {
 
     try testContainer.register(mockStrategy)
 
-    await Lockman.withTestContainer(testContainer) {
+    await LockmanManager.withTestContainer(testContainer) {
       // Should be able to resolve through the facade
       let resolved: AnyLockmanStrategy<MockLockmanInfo>
       do {
-        resolved = try Lockman.container.resolve(MockLockmanStrategy.self)
+        resolved = try LockmanManager.container.resolve(MockLockmanStrategy.self)
       } catch {
         XCTFail("Unexpected error: \(error)")
         return

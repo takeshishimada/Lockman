@@ -124,10 +124,10 @@ final class EffectWithLockLockFailureTests: XCTestCase {
   @MainActor
   func testLockFailureHandlerIsCalledWhenLockAcquisitionFails() async throws {
     // Register strategy if not already registered
-    if !Lockman.container.isRegistered(LockmanSingleExecutionStrategy.self) {
-      try Lockman.container.register(LockmanSingleExecutionStrategy.shared)
+    if !LockmanManager.container.isRegistered(LockmanSingleExecutionStrategy.self) {
+      try LockmanManager.container.register(LockmanSingleExecutionStrategy.shared)
     }
-    defer { Lockman.container.cleanUp() }
+    defer { LockmanManager.container.cleanUp() }
 
     let store = TestStore(initialState: TestReducer.State()) {
       TestReducer()
@@ -158,10 +158,10 @@ final class EffectWithLockLockFailureTests: XCTestCase {
   @MainActor
   func testCatchHandlerIsCalledForOperationErrors() async throws {
     // Register strategy if not already registered
-    if !Lockman.container.isRegistered(LockmanSingleExecutionStrategy.self) {
-      try Lockman.container.register(LockmanSingleExecutionStrategy.shared)
+    if !LockmanManager.container.isRegistered(LockmanSingleExecutionStrategy.self) {
+      try LockmanManager.container.register(LockmanSingleExecutionStrategy.shared)
     }
-    defer { Lockman.container.cleanUp() }
+    defer { LockmanManager.container.cleanUp() }
 
     let store = TestStore(initialState: TestReducer.State()) {
       TestReducer()
@@ -221,10 +221,10 @@ final class EffectWithLockLockFailureTests: XCTestCase {
   @MainActor
   func testBothHandlersAreOptional() async throws {
     // Register strategy if not already registered
-    if !Lockman.container.isRegistered(LockmanSingleExecutionStrategy.self) {
-      try Lockman.container.register(LockmanSingleExecutionStrategy.shared)
+    if !LockmanManager.container.isRegistered(LockmanSingleExecutionStrategy.self) {
+      try LockmanManager.container.register(LockmanSingleExecutionStrategy.shared)
     }
-    defer { Lockman.container.cleanUp() }
+    defer { LockmanManager.container.cleanUp() }
 
     let store = TestStore(initialState: SimpleReducer.State()) {
       SimpleReducer()

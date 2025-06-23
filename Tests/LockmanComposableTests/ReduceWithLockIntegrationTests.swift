@@ -31,9 +31,9 @@ final class ReduceWithLockIntegrationTests: XCTestCase {
   override func setUp() {
     super.setUp()
     // Register strategies
-    _ = Lockman.container
+    _ = LockmanManager.container
     do {
-      try Lockman.container.register(LockmanDynamicConditionStrategy.shared)
+      try LockmanManager.container.register(LockmanDynamicConditionStrategy.shared)
     } catch {
       // Already registered
     }
@@ -42,7 +42,7 @@ final class ReduceWithLockIntegrationTests: XCTestCase {
   override func tearDown() {
     super.tearDown()
     // Clean up all locks
-    Lockman.cleanup.all()
+    LockmanManager.cleanup.all()
   }
 
   // MARK: - Lock Lifecycle Tests
