@@ -14,9 +14,9 @@ DESTINATION = platform="$(PLATFORM_$(PLATFORM))"
 
 PLATFORM_ID = $(shell echo "$(DESTINATION)" | sed -E "s/.+,id=(.+)/\1/")
 
-SCHEME = LockmanComposable
+SCHEME = Lockman-Package
 
-WORKSPACE = LockmanComposable.xcworkspace
+WORKSPACE = Lockman.xcworkspace
 
 XCODEBUILD_ARGUMENT = test
 
@@ -56,7 +56,7 @@ build-for-library-evolution:
 	swift build \
 		-q \
 		-c release \
-		--target LockmanComposable \
+		--target Lockman \
 		-Xswiftc -emit-module-interface \
 		-Xswiftc -enable-library-evolution
 

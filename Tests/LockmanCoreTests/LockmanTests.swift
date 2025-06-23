@@ -1,7 +1,7 @@
 import Foundation
 import XCTest
 
-@testable import LockmanCore
+@testable import Lockman
 
 // MARK: - Helper Extensions
 
@@ -111,7 +111,7 @@ final class LockmanFacadeTests: XCTestCase {
   // MARK: - Container Access Tests
 
   func testDefaultContainerAccess() async throws {
-    let container = Lockman.container
+    let container = LockmanManager.container
 
     // The default container should already have strategies registered
     // Let's verify we can resolve the pre-registered strategies
@@ -124,8 +124,8 @@ final class LockmanFacadeTests: XCTestCase {
   }
 
   func testDefaultContainerIsSingleton() async throws {
-    let container1 = Lockman.container
-    let container2 = Lockman.container
+    let container1 = LockmanManager.container
+    let container2 = LockmanManager.container
 
     XCTAssertTrue(container1 === container2)
   }
@@ -137,8 +137,8 @@ final class LockmanFacadeTests: XCTestCase {
     let mockStrategy = MockLockmanStrategy()
     try? testContainer.register(mockStrategy)
 
-    await Lockman.withTestContainer(testContainer) {
-      Lockman.cleanup.all()
+    await LockmanManager.withTestContainer(testContainer) {
+      LockmanManager.cleanup.all()
 
       XCTAssertEqual(mockStrategy.getCleanUpCallCount(), 1)
       XCTAssertEqual(mockStrategy.getCleanUpWithIdCallCount(), 0)
@@ -151,8 +151,8 @@ final class LockmanFacadeTests: XCTestCase {
     let boundaryId = MockBoundaryId(value: "test")
     try? testContainer.register(mockStrategy)
 
-    await Lockman.withTestContainer(testContainer) {
-      Lockman.cleanup.boundary(boundaryId)
+    await LockmanManager.withTestContainer(testContainer) {
+      LockmanManager.cleanup.boundary(boundaryId)
 
       XCTAssertEqual(mockStrategy.getCleanUpCallCount(), 0)
       XCTAssertEqual(mockStrategy.getCleanUpWithIdCallCount(), 1)
@@ -167,11 +167,11 @@ final class LockmanFacadeTests: XCTestCase {
     let boundaryId2 = MockBoundaryId(value: "test2")
     try? testContainer.register(mockStrategy)
 
-    await Lockman.withTestContainer(testContainer) {
-      Lockman.cleanup.all()
-      Lockman.cleanup.boundary(boundaryId1)
-      Lockman.cleanup.all()
-      Lockman.cleanup.boundary(boundaryId2)
+    await LockmanManager.withTestContainer(testContainer) {
+      LockmanManager.cleanup.all()
+      LockmanManager.cleanup.boundary(boundaryId1)
+      LockmanManager.cleanup.all()
+      LockmanManager.cleanup.boundary(boundaryId2)
 
       XCTAssertEqual(mockStrategy.getCleanUpCallCount(), 2)
       XCTAssertEqual(mockStrategy.getCleanUpWithIdCallCount(), 2)
@@ -187,13 +187,13 @@ final class LockmanFacadeTests: XCTestCase {
     try? testContainer.register(mockStrategy)
 
     // Outside test container scope - should use default container
-    let defaultContainer = Lockman.container
+    let defaultContainer = LockmanManager.container
     let defaultStrategy = try defaultContainer.resolve(LockmanSingleExecutionStrategy.self)
     XCTAssertTrue(type(of: defaultStrategy) == AnyLockmanStrategy<LockmanSingleExecutionInfo>.self)
 
     // Inside test container scope - should use test container
-    await Lockman.withTestContainer(testContainer) {
-      let containerInScope = Lockman.container
+    await LockmanManager.withTestContainer(testContainer) {
+      let containerInScope = LockmanManager.container
       XCTAssertTrue(containerInScope === testContainer)
 
       do {
@@ -205,7 +205,7 @@ final class LockmanFacadeTests: XCTestCase {
     }
 
     // Back outside - should use default container again
-    let containerAfter = Lockman.container
+    let containerAfter = LockmanManager.container
     XCTAssertTrue(containerAfter === defaultContainer)
   }
 
@@ -218,24 +218,24 @@ final class LockmanFacadeTests: XCTestCase {
     try? outerContainer.register(outerStrategy)
     try? innerContainer.register(innerStrategy)
 
-    await Lockman.withTestContainer(outerContainer) {
-      let container1 = Lockman.container
+    await LockmanManager.withTestContainer(outerContainer) {
+      let container1 = LockmanManager.container
       XCTAssertTrue(container1 === outerContainer)
 
-      await Lockman.withTestContainer(innerContainer) {
-        let container2 = Lockman.container
+      await LockmanManager.withTestContainer(innerContainer) {
+        let container2 = LockmanManager.container
         XCTAssertTrue(container2 === innerContainer)
 
-        Lockman.cleanup.all()
+        LockmanManager.cleanup.all()
         XCTAssertEqual(innerStrategy.getCleanUpCallCount(), 1)
         XCTAssertEqual(outerStrategy.getCleanUpCallCount(), 0)
       }
 
       // Back to outer container
-      let container3 = Lockman.container
+      let container3 = LockmanManager.container
       XCTAssertTrue(container3 === outerContainer)
 
-      Lockman.cleanup.all()
+      LockmanManager.cleanup.all()
       XCTAssertEqual(outerStrategy.getCleanUpCallCount(), 1)
       XCTAssertEqual(innerStrategy.getCleanUpCallCount(), 1)  // Should not increase
     }
@@ -249,8 +249,8 @@ final class LockmanFacadeTests: XCTestCase {
     try? testContainer.register(mockStrategy)
 
     do {
-      try await Lockman.withTestContainer(testContainer) {
-        let container = Lockman.container
+      try await LockmanManager.withTestContainer(testContainer) {
+        let container = LockmanManager.container
         XCTAssertTrue(container === testContainer)
 
         throw TestError()
@@ -263,14 +263,14 @@ final class LockmanFacadeTests: XCTestCase {
     }
 
     // Should be back to default container
-    let defaultContainer = Lockman.container
+    let defaultContainer = LockmanManager.container
     XCTAssertFalse(defaultContainer === testContainer)
   }
 
   func testTestContainerWithReturnValue() async throws {
     let testContainer = LockmanStrategyContainer()
 
-    let result = await Lockman.withTestContainer(testContainer) {
+    let result = await LockmanManager.withTestContainer(testContainer) {
       "test result"
     }
 
@@ -283,7 +283,7 @@ final class LockmanFacadeTests: XCTestCase {
     let containers = await withTaskGroup(of: LockmanStrategyContainer.self) { group in
       for _ in 0..<100 {
         group.addTask {
-          Lockman.container
+          LockmanManager.container
         }
       }
 
@@ -307,19 +307,19 @@ final class LockmanFacadeTests: XCTestCase {
     let mockStrategy = MockLockmanStrategy()
     try? testContainer.register(mockStrategy)
 
-    await Lockman.withTestContainer(testContainer) {
+    await LockmanManager.withTestContainer(testContainer) {
       await withTaskGroup(of: Void.self) { group in
         // Global cleanup tasks
         for _ in 0..<50 {
           group.addTask {
-            Lockman.cleanup.all()
+            LockmanManager.cleanup.all()
           }
         }
 
         // Targeted cleanup tasks
         for i in 0..<50 {
           group.addTask {
-            Lockman.cleanup.boundary(MockBoundaryId(value: "boundary\(i)"))
+            LockmanManager.cleanup.boundary(MockBoundaryId(value: "boundary\(i)"))
           }
         }
       }
@@ -339,11 +339,11 @@ final class LockmanFacadeTests: XCTestCase {
           let mockStrategy = MockLockmanStrategy()
           try? testContainer.register(mockStrategy)
 
-          return await Lockman.withTestContainer(testContainer) {
-            let container = Lockman.container
+          return await LockmanManager.withTestContainer(testContainer) {
+            let container = LockmanManager.container
             let isCorrectContainer = container === testContainer
 
-            Lockman.cleanup.all()
+            LockmanManager.cleanup.all()
             let wasCleanedUp = mockStrategy.getCleanUpCallCount() == 1
 
             return isCorrectContainer && wasCleanedUp
@@ -364,7 +364,7 @@ final class LockmanFacadeTests: XCTestCase {
   // MARK: - Default Container Strategy Tests
 
   func testDefaultContainerHasRequiredStrategies() async throws {
-    let container = Lockman.container
+    let container = LockmanManager.container
 
     // Should be able to resolve both default strategies
     let singleStrategy = try container.resolve(LockmanSingleExecutionStrategy.self)
@@ -377,8 +377,8 @@ final class LockmanFacadeTests: XCTestCase {
 
   func testDefaultStrategiesAreFunctional() async throws {
     // Test that default strategies can be used for cleanup without errors
-    Lockman.cleanup.all()
-    Lockman.cleanup.boundary(MockBoundaryId(value: "test"))
+    LockmanManager.cleanup.all()
+    LockmanManager.cleanup.boundary(MockBoundaryId(value: "test"))
 
     // No assertions needed - just verify no crashes occur
   }
@@ -390,7 +390,7 @@ final class LockmanFacadeTests: XCTestCase {
     let mockStrategy = MockLockmanStrategy()
     try? testContainer.register(mockStrategy)
 
-    await Lockman.withTestContainer(testContainer) {
+    await LockmanManager.withTestContainer(testContainer) {
       let resolvedStrategy: AnyLockmanStrategy<MockLockmanInfo>
       do {
         resolvedStrategy = try testContainer.resolve(MockLockmanStrategy.self)
@@ -431,8 +431,8 @@ final class LockmanIntegrationTests: XCTestCase {
     try? testContainer.register(LockmanSingleExecutionStrategy.shared)
     try? testContainer.register(LockmanPriorityBasedStrategy.shared)
 
-    try await Lockman.withTestContainer(testContainer) {
-      let container = Lockman.container
+    try await LockmanManager.withTestContainer(testContainer) {
+      let container = LockmanManager.container
 
       // Should be able to resolve strategies that Effect.withLock would need
       let singleStrategy = try container.resolve(LockmanSingleExecutionStrategy.self)
@@ -451,8 +451,8 @@ final class LockmanIntegrationTests: XCTestCase {
         let strategy = MockLockmanStrategy()
         try? container.register(strategy)
 
-        return await Lockman.withTestContainer(container) {
-          Lockman.cleanup.all()
+        return await LockmanManager.withTestContainer(container) {
+          LockmanManager.cleanup.all()
           return strategy.getCleanUpCallCount() == 1
         }
       }
@@ -463,8 +463,8 @@ final class LockmanIntegrationTests: XCTestCase {
         let strategy = MockLockmanStrategy()
         try? container.register(strategy)
 
-        return await Lockman.withTestContainer(container) {
-          Lockman.cleanup.boundary(MockBoundaryId(value: "test"))
+        return await LockmanManager.withTestContainer(container) {
+          LockmanManager.cleanup.boundary(MockBoundaryId(value: "test"))
           return strategy.getCleanUpWithIdCallCount() == 1
         }
       }
@@ -472,8 +472,8 @@ final class LockmanIntegrationTests: XCTestCase {
       // Scenario 3: Container isolation test
       group.addTask {
         let container = LockmanStrategyContainer()
-        return await Lockman.withTestContainer(container) {
-          Lockman.container === container
+        return await LockmanManager.withTestContainer(container) {
+          LockmanManager.container === container
         }
       }
 
@@ -483,7 +483,7 @@ final class LockmanIntegrationTests: XCTestCase {
         let strategy = MockLockmanStrategy()
         try? container.register(strategy)
 
-        return await Lockman.withTestContainer(container) {
+        return await LockmanManager.withTestContainer(container) {
           do {
             let resolved = try container.resolve(MockLockmanStrategy.self)
             let result = resolved.canLock(

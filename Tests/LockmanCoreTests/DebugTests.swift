@@ -1,37 +1,37 @@
 import XCTest
 
-@testable @_spi(Logging) @_spi(Debugging) import LockmanCore
+@testable @_spi(Logging) @_spi(Debugging) import Lockman
 
 final class DebugTests: XCTestCase {
   override func setUp() {
     super.setUp()
     // Clean up before each test
-    Lockman.cleanup.all()
+    LockmanManager.cleanup.all()
   }
 
   override func tearDown() {
     super.tearDown()
     // Clean up after each test
-    Lockman.cleanup.all()
+    LockmanManager.cleanup.all()
     // Disable logging
-    Lockman.debug.isLoggingEnabled = false
+    LockmanManager.debug.isLoggingEnabled = false
   }
 
   func testDebugLoggingEnableDisable() {
     // Test that logging can be enabled and disabled
-    XCTAssertFalse(Lockman.debug.isLoggingEnabled)
+    XCTAssertFalse(LockmanManager.debug.isLoggingEnabled)
 
-    Lockman.debug.isLoggingEnabled = true
-    XCTAssertTrue(Lockman.debug.isLoggingEnabled)
+    LockmanManager.debug.isLoggingEnabled = true
+    XCTAssertTrue(LockmanManager.debug.isLoggingEnabled)
 
-    Lockman.debug.isLoggingEnabled = false
-    XCTAssertFalse(Lockman.debug.isLoggingEnabled)
+    LockmanManager.debug.isLoggingEnabled = false
+    XCTAssertFalse(LockmanManager.debug.isLoggingEnabled)
   }
 
   func testPrintCurrentLocksWithNoLocks() {
     // Test that printCurrentLocks works with no active locks
     // This should not crash and should print "No active locks"
-    Lockman.debug.printCurrentLocks()
+    LockmanManager.debug.printCurrentLocks()
   }
 
   func testPrintCurrentLocksWithActiveLocks() {
@@ -45,7 +45,7 @@ final class DebugTests: XCTestCase {
     strategy.lock(id: boundaryId, info: info1)
 
     // This should print a table with the active lock
-    Lockman.debug.printCurrentLocks()
+    LockmanManager.debug.printCurrentLocks()
 
     // Clean up
     strategy.unlock(id: boundaryId, info: info1)

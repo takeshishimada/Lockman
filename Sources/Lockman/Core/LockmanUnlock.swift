@@ -85,7 +85,7 @@ public struct LockmanUnlock<B: LockmanBoundaryId, I: LockmanInfo>: Sendable {
 
   /// Performs the actual unlock operation immediately.
   private func performUnlockImmediately() {
-    Lockman.withBoundaryLock(for: id) {
+    LockmanManager.withBoundaryLock(for: id) {
       strategy.unlock(id: id, info: info)
     }
   }

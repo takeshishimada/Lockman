@@ -1,7 +1,7 @@
 import Foundation
 import XCTest
 
-@testable import LockmanCore
+@testable import Lockman
 
 /// Tests for the new actionId-based index functionality in LockmanState
 final class LockmanStateActionIndexTests: XCTestCase {

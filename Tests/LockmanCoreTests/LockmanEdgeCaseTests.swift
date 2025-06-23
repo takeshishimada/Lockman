@@ -1,7 +1,7 @@
 import Foundation
 import XCTest
 
-@testable import LockmanCore
+@testable import Lockman
 
 /// Tests for edge cases, boundary values, and exceptional scenarios
 final class LockmanEdgeCaseTests: XCTestCase {

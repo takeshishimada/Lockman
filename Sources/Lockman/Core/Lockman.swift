@@ -6,7 +6,7 @@ import Foundation
 ///
 /// Provides centralized access to lock management with pre-configured strategies and test isolation support.
 ///
-public enum Lockman {
+public enum LockmanManager {
   // MARK: - Configuration
 
   /// Configuration settings for Lockman behavior.
@@ -48,7 +48,7 @@ public enum Lockman {
     /// ```swift
     /// // In AppDelegate or App initialization
     /// // Change to immediate unlock if UI transitions are not a concern
-    /// Lockman.config.defaultUnlockOption = .immediate
+    /// LockmanManager.config.defaultUnlockOption = .immediate
     /// ```
     public static var defaultUnlockOption: UnlockOption {
       get { _configuration.withCriticalRegion { $0.defaultUnlockOption } }
@@ -64,7 +64,7 @@ public enum Lockman {
     ///
     /// ```swift
     /// // Disable CancellationError handling globally
-    /// Lockman.config.handleCancellationErrors = false
+    /// LockmanManager.config.handleCancellationErrors = false
     /// ```
     public static var handleCancellationErrors: Bool {
       get { _configuration.withCriticalRegion { $0.handleCancellationErrors } }
@@ -120,7 +120,7 @@ public enum Lockman {
     ///
     /// ```swift
     /// // Clean up all locks
-    /// Lockman.cleanup.all()
+    /// LockmanManager.cleanup.all()
     /// ```
     public static func all() {
       container.cleanUp()
@@ -132,10 +132,10 @@ public enum Lockman {
     ///
     /// ```swift
     /// // Clean up locks for a specific boundary
-    /// Lockman.cleanup.boundary(CancelID.userAction)
+    /// LockmanManager.cleanup.boundary(CancelID.userAction)
     /// ```
     public static func boundary<B: LockmanBoundaryId>(_ id: B) {
-      Lockman.withBoundaryLock(for: id) {
+      LockmanManager.withBoundaryLock(for: id) {
         container.cleanUp(id: id)
       }
     }
@@ -157,7 +157,7 @@ public enum Lockman {
 
 // MARK: - Boundary Lock Management
 
-extension Lockman {
+extension LockmanManager {
   /// Thread-safe storage for boundary-specific locks.
   private static let boundaryLocks: ManagedCriticalState<[AnyLockmanBoundaryId: NSLock]> =
     ManagedCriticalState([:])

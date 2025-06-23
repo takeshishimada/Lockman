@@ -7,7 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		3E2B57AF2E0518ED00B241D9 /* LockmanComposable in Frameworks */ = {isa = PBXBuildFile; productRef = 3E2B57AE2E0518ED00B241D9 /* LockmanComposable */; };
+		3E2B57AF2E0518ED00B241D9 /* Lockman in Frameworks */ = {isa = PBXBuildFile; productRef = 3E2B57AE2E0518ED00B241D9 /* Lockman */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -27,7 +27,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				3E2B57AF2E0518ED00B241D9 /* LockmanComposable in Frameworks */,
+				3E2B57AF2E0518ED00B241D9 /* Lockman in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -70,7 +70,7 @@
 			);
 			name = GitHubClient;
 			packageProductDependencies = (
-				3E2B57AE2E0518ED00B241D9 /* LockmanComposable */,
+				3E2B57AE2E0518ED00B241D9 /* Lockman */,
 			);
 			productName = GitHubClient;
 			productReference = 3E2B579C2E0518A000B241D9 /* GitHubClient.app */;
@@ -340,9 +340,9 @@
 /* End XCLocalSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
-		3E2B57AE2E0518ED00B241D9 /* LockmanComposable */ = {
+		3E2B57AE2E0518ED00B241D9 /* Lockman */ = {
 			isa = XCSwiftPackageProductDependency;
-			productName = LockmanComposable;
+			productName = Lockman;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};

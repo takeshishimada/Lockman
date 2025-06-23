@@ -1,6 +1,6 @@
 import XCTest
 
-@testable import LockmanCore
+@testable import Lockman
 
 // MARK: - Test Helpers
 
@@ -27,7 +27,7 @@ final class LockmanMainTests: XCTestCase {
   // MARK: - Container Management Tests
   func testDefaultContainerAvailable() async throws {
     // The container should always be available
-    let container = Lockman.container
+    let container = LockmanManager.container
     XCTAssertNotNil(container)
   }
 
@@ -53,16 +53,16 @@ final class LockmanMainTests: XCTestCase {
     try testContainer2.register(strategy2)
 
     // Test isolation
-    await Lockman.withTestContainer(testContainer1) {
+    await LockmanManager.withTestContainer(testContainer1) {
       do {
-        _ = try Lockman.container.resolve(LockmanSingleExecutionStrategy.self)
+        _ = try LockmanManager.container.resolve(LockmanSingleExecutionStrategy.self)
         // Should succeed
       } catch {
         XCTFail("Should resolve strategy in container 1")
       }
 
       do {
-        _ = try Lockman.container.resolve(LockmanPriorityBasedStrategy.self)
+        _ = try LockmanManager.container.resolve(LockmanPriorityBasedStrategy.self)
         XCTFail("Should not resolve strategy from container 2")
       } catch {
         // Expected to fail
@@ -75,9 +75,9 @@ final class LockmanMainTests: XCTestCase {
     let strategy = LockmanSingleExecutionStrategy()
     try testContainer.register(strategy)
 
-    await Lockman.withTestContainer(testContainer) {
+    await LockmanManager.withTestContainer(testContainer) {
       do {
-        let resolved = try Lockman.container.resolve(LockmanSingleExecutionStrategy.self)
+        let resolved = try LockmanManager.container.resolve(LockmanSingleExecutionStrategy.self)
         XCTAssertTrue(type(of: resolved) == AnyLockmanStrategy<LockmanSingleExecutionInfo>.self)
       } catch {
         XCTFail("Failed to resolve registered strategy: \(error)")
@@ -88,9 +88,9 @@ final class LockmanMainTests: XCTestCase {
   func testResolveFailsForUnregisteredStrategy() async throws {
     let testContainer = LockmanStrategyContainer()
 
-    await Lockman.withTestContainer(testContainer) {
+    await LockmanManager.withTestContainer(testContainer) {
       do {
-        _ = try Lockman.container.resolve(LockmanSingleExecutionStrategy.self)
+        _ = try LockmanManager.container.resolve(LockmanSingleExecutionStrategy.self)
         XCTFail("Should have thrown error for unregistered strategy")
       } catch let LockmanRegistrationError.strategyNotRegistered(type) {
         XCTAssertTrue(type.contains("LockmanSingleExecutionStrategy"))
@@ -105,9 +105,9 @@ final class LockmanMainTests: XCTestCase {
     let strategy = LockmanPriorityBasedStrategy()
     try testContainer.register(strategy)
 
-    await Lockman.withTestContainer(testContainer) {
+    await LockmanManager.withTestContainer(testContainer) {
       func genericResolve<S: LockmanStrategy>(_ type: S.Type) throws -> AnyLockmanStrategy<S.I> {
-        try Lockman.container.resolve(type)
+        try LockmanManager.container.resolve(type)
       }
 
       do {
@@ -120,21 +120,21 @@ final class LockmanMainTests: XCTestCase {
   }
   // MARK: - Test Container Tests
   func testTestContainerIsolation() async throws {
-    let originalContainer = Lockman.container
+    let originalContainer = LockmanManager.container
     let testContainer = LockmanStrategyContainer()
 
     var insideTestContainer = false
     var outsideTestContainer = false
 
     // Before test container
-    outsideTestContainer = Lockman.container === originalContainer
+    outsideTestContainer = LockmanManager.container === originalContainer
 
-    await Lockman.withTestContainer(testContainer) {
-      insideTestContainer = Lockman.container === testContainer
+    await LockmanManager.withTestContainer(testContainer) {
+      insideTestContainer = LockmanManager.container === testContainer
     }
 
     // After test container
-    outsideTestContainer = outsideTestContainer && (Lockman.container === originalContainer)
+    outsideTestContainer = outsideTestContainer && (LockmanManager.container === originalContainer)
 
     XCTAssertTrue(insideTestContainer)
     XCTAssertTrue(outsideTestContainer)
@@ -147,26 +147,26 @@ final class LockmanMainTests: XCTestCase {
     try container1.register(LockmanSingleExecutionStrategy())
     try container2.register(LockmanPriorityBasedStrategy())
 
-    await Lockman.withTestContainer(container1) {
+    await LockmanManager.withTestContainer(container1) {
       // Should be able to resolve from container1
       do {
-        _ = try Lockman.container.resolve(LockmanSingleExecutionStrategy.self)
+        _ = try LockmanManager.container.resolve(LockmanSingleExecutionStrategy.self)
       } catch {
         XCTFail("Should resolve from container 1")
       }
 
       // Nested container
-      await Lockman.withTestContainer(container2) {
+      await LockmanManager.withTestContainer(container2) {
         // Should be able to resolve from container2
         do {
-          _ = try Lockman.container.resolve(LockmanPriorityBasedStrategy.self)
+          _ = try LockmanManager.container.resolve(LockmanPriorityBasedStrategy.self)
         } catch {
           XCTFail("Should resolve from container 2")
         }
 
         // Should NOT be able to resolve from container1
         do {
-          _ = try Lockman.container.resolve(LockmanSingleExecutionStrategy.self)
+          _ = try LockmanManager.container.resolve(LockmanSingleExecutionStrategy.self)
           XCTFail("Should not resolve from container 1 in nested context")
         } catch {
           // Expected
@@ -175,7 +175,7 @@ final class LockmanMainTests: XCTestCase {
 
       // Back to container1 context
       do {
-        _ = try Lockman.container.resolve(LockmanSingleExecutionStrategy.self)
+        _ = try LockmanManager.container.resolve(LockmanSingleExecutionStrategy.self)
       } catch {
         XCTFail("Should resolve from container 1 after nested context")
       }
@@ -186,12 +186,12 @@ final class LockmanMainTests: XCTestCase {
     let testContainer = LockmanStrategyContainer()
     try testContainer.register(LockmanSingleExecutionStrategy())
 
-    await Lockman.withTestContainer(testContainer) {
+    await LockmanManager.withTestContainer(testContainer) {
       await withTaskGroup(of: Bool.self) { group in
         for _ in 0..<5 {
           group.addTask {
             do {
-              _ = try Lockman.container.resolve(LockmanSingleExecutionStrategy.self)
+              _ = try LockmanManager.container.resolve(LockmanSingleExecutionStrategy.self)
               return true
             } catch {
               return false
@@ -216,10 +216,10 @@ final class LockmanMainTests: XCTestCase {
     try parentContainer.register(LockmanSingleExecutionStrategy())
     try childContainer.register(LockmanPriorityBasedStrategy())
 
-    await Lockman.withTestContainer(parentContainer) {
+    await LockmanManager.withTestContainer(parentContainer) {
       // Parent task can resolve its strategy
       do {
-        _ = try Lockman.container.resolve(LockmanSingleExecutionStrategy.self)
+        _ = try LockmanManager.container.resolve(LockmanSingleExecutionStrategy.self)
       } catch {
         XCTFail("Parent should resolve its strategy")
       }
@@ -227,7 +227,7 @@ final class LockmanMainTests: XCTestCase {
       // Child task inherits parent's container by default
       await Task {
         do {
-          _ = try Lockman.container.resolve(LockmanSingleExecutionStrategy.self)
+          _ = try LockmanManager.container.resolve(LockmanSingleExecutionStrategy.self)
         } catch {
           XCTFail("Child task should inherit parent's container")
         }
@@ -238,7 +238,7 @@ final class LockmanMainTests: XCTestCase {
         do {
           // This should succeed because detached tasks use the default container
           // which has LockmanSingleExecutionStrategy pre-registered
-          _ = try Lockman.container.resolve(LockmanSingleExecutionStrategy.self)
+          _ = try LockmanManager.container.resolve(LockmanSingleExecutionStrategy.self)
           // This is expected behavior - detached tasks fall back to default container
         } catch {
           XCTFail("Detached task should be able to use default container")
@@ -250,10 +250,10 @@ final class LockmanMainTests: XCTestCase {
   func testProperErrorTypesForResolutionFailures() async throws {
     let testContainer = LockmanStrategyContainer()
 
-    await Lockman.withTestContainer(testContainer) {
+    await LockmanManager.withTestContainer(testContainer) {
       // Test unregistered strategy error
       do {
-        _ = try Lockman.container.resolve(LockmanSingleExecutionStrategy.self)
+        _ = try LockmanManager.container.resolve(LockmanSingleExecutionStrategy.self)
         XCTFail("Should throw for unregistered strategy")
       } catch let error as LockmanRegistrationError {
         switch error {
@@ -298,7 +298,7 @@ final class LockmanMainTests: XCTestCase {
     try container.register(LockmanSingleExecutionStrategy())
     try container.register(LockmanPriorityBasedStrategy())
 
-    await Lockman.withTestContainer(container) {
+    await LockmanManager.withTestContainer(container) {
       // Test complete workflow
       // 1. Access strategies
       do {
@@ -330,7 +330,7 @@ final class LockmanMainTests: XCTestCase {
         XCTAssertEqual(canLockHigh, .successWithPrecedingCancellation)
 
         // 4. Clean up
-        Lockman.cleanup.all()
+        LockmanManager.cleanup.all()
       } catch {
         XCTFail("Strategy resolution failed: \(error)")
       }

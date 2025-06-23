@@ -1,6 +1,5 @@
 import ComposableArchitecture
-import LockmanComposable
-import LockmanCore
+import Lockman
 import SwiftUI
 
 @Reducer
@@ -151,7 +150,7 @@ struct PriorityBasedStrategyView: View {
       // Debug Button
       Button(action: {
         print("\n📊 Current Lock State (PriorityBasedStrategy):")
-        Lockman.debug.printCurrentLocks(options: .compact)
+        LockmanManager.debug.printCurrentLocks(options: .compact)
         print("")
       }) {
         HStack {

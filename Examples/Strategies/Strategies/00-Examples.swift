@@ -1,5 +1,5 @@
 import ComposableArchitecture
-import LockmanCore
+import Lockman
 import SwiftUI
 
 // MARK: - Examples Feature
@@ -37,7 +37,7 @@ struct ExamplesFeature {
       case .showCurrentLocksTapped:
         // Print current locks to console with compact formatting
         print("\n📊 Current Lock State:")
-        Lockman.debug.printCurrentLocks(options: .compact)
+        LockmanManager.debug.printCurrentLocks(options: .compact)
         print("")
         return .none
 

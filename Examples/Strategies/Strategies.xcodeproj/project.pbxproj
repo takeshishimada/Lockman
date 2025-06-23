@@ -7,7 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		8278B5552E0059D20096EE15 /* LockmanComposable in Frameworks */ = {isa = PBXBuildFile; productRef = 8278B5542E0059D20096EE15 /* LockmanComposable */; };
+		8278B5552E0059D20096EE15 /* Lockman in Frameworks */ = {isa = PBXBuildFile; productRef = 8278B5542E0059D20096EE15 /* Lockman */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -27,7 +27,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				8278B5552E0059D20096EE15 /* LockmanComposable in Frameworks */,
+				8278B5552E0059D20096EE15 /* Lockman in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -78,7 +78,7 @@
 			);
 			name = Strategies;
 			packageProductDependencies = (
-				8278B5542E0059D20096EE15 /* LockmanComposable */,
+				8278B5542E0059D20096EE15 /* Lockman */,
 			);
 			productName = Strategies;
 			productReference = 3E4F83C32DFE6AA5005B5C65 /* Strategies.app */;
@@ -352,9 +352,9 @@
 /* End XCLocalSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
-		8278B5542E0059D20096EE15 /* LockmanComposable */ = {
+		8278B5542E0059D20096EE15 /* Lockman */ = {
 			isa = XCSwiftPackageProductDependency;
-			productName = LockmanComposable;
+			productName = Lockman;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};

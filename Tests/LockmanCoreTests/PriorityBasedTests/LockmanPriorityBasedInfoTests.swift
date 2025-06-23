@@ -1,7 +1,7 @@
 import Foundation
 import XCTest
 
-@testable import LockmanCore
+@testable import Lockman
 
 // MARK: - Test Helpers
 
@@ -451,7 +451,7 @@ final class LockmanPriorityBasedInfoIntegrationTests: XCTestCase {
       XCTFail("Unexpected error: \(error)")
     }
 
-    await Lockman.withTestContainer(container) {
+    await LockmanManager.withTestContainer(container) {
       let boundaryId = TestBoundaryId.default
       let info1 = TestInfoFactory.lowExclusive("action1")
       let info2 = TestInfoFactory.highReplaceable("action2")

@@ -1,6 +1,6 @@
 import XCTest
 
-@testable import LockmanCore
+@testable import Lockman
 
 final class CompositeStrategyIdTests: XCTestCase {
   func testCompositeStrategy2GeneratesCorrectStrategyId() async throws {
@@ -22,7 +22,7 @@ final class CompositeStrategyIdTests: XCTestCase {
     // The actual IDs include the module name
     XCTAssertEqual(
       composite.strategyId.value,
-      "CompositeStrategy2:LockmanCore.LockmanPriorityBasedStrategy+LockmanCore.LockmanSingleExecutionStrategy"
+      "CompositeStrategy2:Lockman.LockmanPriorityBasedStrategy+Lockman.LockmanSingleExecutionStrategy"
     )
   }
 
@@ -48,7 +48,7 @@ final class CompositeStrategyIdTests: XCTestCase {
     XCTAssertEqual(composite.strategyId, expectedId)
     XCTAssertEqual(
       composite.strategyId.value,
-      "CompositeStrategy3:LockmanCore.LockmanPriorityBasedStrategy+LockmanCore.LockmanSingleExecutionStrategy+LockmanCore.LockmanGroupCoordinationStrategy"
+      "CompositeStrategy3:Lockman.LockmanPriorityBasedStrategy+Lockman.LockmanSingleExecutionStrategy+Lockman.LockmanGroupCoordinationStrategy"
     )
   }
 
@@ -99,15 +99,15 @@ final class CompositeStrategyIdTests: XCTestCase {
     // Verify the actual values (include module names)
     XCTAssertEqual(
       composite1.strategyId.value,
-      "CompositeStrategy2:LockmanCore.LockmanPriorityBasedStrategy+LockmanCore.LockmanSingleExecutionStrategy"
+      "CompositeStrategy2:Lockman.LockmanPriorityBasedStrategy+Lockman.LockmanSingleExecutionStrategy"
     )
     XCTAssertEqual(
       composite2.strategyId.value,
-      "CompositeStrategy2:LockmanCore.LockmanSingleExecutionStrategy+LockmanCore.LockmanPriorityBasedStrategy"
+      "CompositeStrategy2:Lockman.LockmanSingleExecutionStrategy+Lockman.LockmanPriorityBasedStrategy"
     )
     XCTAssertEqual(
       composite3.strategyId.value,
-      "CompositeStrategy2:LockmanCore.LockmanPriorityBasedStrategy+LockmanCore.LockmanGroupCoordinationStrategy"
+      "CompositeStrategy2:Lockman.LockmanPriorityBasedStrategy+Lockman.LockmanGroupCoordinationStrategy"
     )
   }
 }

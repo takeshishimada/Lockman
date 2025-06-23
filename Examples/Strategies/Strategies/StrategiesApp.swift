@@ -1,6 +1,5 @@
 import ComposableArchitecture
-import LockmanComposable
-import LockmanCore
+import Lockman
 import SwiftUI
 import UIKit
 
@@ -24,7 +23,7 @@ class AppDelegate: NSObject, UIApplicationDelegate {
   ) -> Bool {
     // Enable debug logging for Lockman
     #if DEBUG
-      Lockman.debug.isLoggingEnabled = true
+      LockmanManager.debug.isLoggingEnabled = true
       print("🔧 Lockman debug logging enabled")
     #endif
 
