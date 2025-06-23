@@ -399,6 +399,8 @@ extension ReduceWithLock {
     column: UInt = #column
   ) -> Effect<Action> {
     let actionId = lockAction.lockmanInfo.actionId
+    // Capture the reducer-level condition to avoid type inference issues
+    let reducerLevelCondition = self.lockCondition
 
     return withLockStep1Step2(
       state: state,
@@ -406,7 +408,7 @@ extension ReduceWithLock {
       actionId: actionId,
       cancelID: cancelID,
       lockCondition: lockCondition,
-      reducerCondition: self.lockCondition,
+      reducerCondition: reducerLevelCondition,
       lockFailure: lockFailure,
       fileID: fileID,
       filePath: filePath,
@@ -491,6 +493,8 @@ extension ReduceWithLock {
     column: UInt = #column
   ) -> Effect<Action> {
     let actionId = lockAction.lockmanInfo.actionId
+    // Capture the reducer-level condition to avoid type inference issues
+    let reducerLevelCondition = self.lockCondition
 
     return withLockStep1Step2(
       state: state,
@@ -498,7 +502,7 @@ extension ReduceWithLock {
       actionId: actionId,
       cancelID: cancelID,
       lockCondition: lockCondition,
-      reducerCondition: self.lockCondition,
+      reducerCondition: reducerLevelCondition,
       lockFailure: lockFailure,
       fileID: fileID,
       filePath: filePath,
