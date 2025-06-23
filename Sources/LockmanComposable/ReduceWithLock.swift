@@ -74,12 +74,12 @@ import LockmanCore
 /// ```
 public struct ReduceWithLock<State: Sendable, Action: Sendable>: Reducer {
   @usableFromInline
-  let base: Reduce<State, Action>
+  var base: Reduce<State, Action>
 
   /// The lock condition that will be evaluated for all actions in this reducer.
   /// This is made internal to allow the extension methods to access it.
   @usableFromInline
-  internal let lockCondition: (@Sendable (_ state: State, _ action: Action) -> LockmanResult)?
+  internal var lockCondition: (@Sendable (_ state: State, _ action: Action) -> LockmanResult)?
 
   /// Initializes a reducer with optional lock condition evaluation.
   ///
@@ -93,10 +93,10 @@ public struct ReduceWithLock<State: Sendable, Action: Sendable>: Reducer {
     _ reduce: @escaping (_ state: inout State, _ action: Action) -> Effect<Action>,
     lockCondition: (@Sendable (_ state: State, _ action: Action) -> LockmanResult)? = nil
   ) {
-    let baseReducer = Reduce { state, action in
+    self.base = Reduce { state, action in
       reduce(&state, action)
     }
-    self.init(base: baseReducer, lockCondition: lockCondition)
+    self.lockCondition = lockCondition
   }
 
   /// Initializes with an existing Reduce instance.
