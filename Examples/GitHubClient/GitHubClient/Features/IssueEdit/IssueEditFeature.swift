@@ -116,28 +116,16 @@ struct IssueEditFeature {
           let title = state.title
           let body = state.body
           let labels = Array(state.selectedLabels)
-          var updatedIssue = state.originalIssue!
-
-          // Update the issue
-          updatedIssue.title = title
-          updatedIssue.body = body.isEmpty ? nil : body
-          updatedIssue.updatedAt = Date()
-          updatedIssue.labels = labels.enumerated().map { index, name in
-            IssueLabel(
-              id: index,
-              name: name,
-              color: ["d73a4a", "0075ca", "cfd3d7", "a2eeef", "7057ff", "008672"].randomElement()!,
-              description: nil
-            )
-          }
-
-          let issueToUpdate = updatedIssue
+          let issueToUpdate = state.originalIssue!
 
           return .run { send in
-            // Mock updating issue
-            try await Task.sleep(nanoseconds: 1_000_000_000)
-
-            await send(.internal(.updateIssueResponse(issueToUpdate)))
+            let updatedIssue = try await gitHubClient.updateIssue(
+              issueToUpdate,
+              title: title,
+              body: body.isEmpty ? nil : body,
+              labels: labels
+            )
+            await send(.internal(.updateIssueResponse(updatedIssue)))
           } catch: { error, send in
             await send(.internal(.handleError(error)))
           }

@@ -78,28 +78,20 @@ struct IssueDetailFeature {
           return .send(.delegate(.editTapped(state.issueId)))
 
         case .closeIssueButtonTapped:
-          guard var issue = state.issue else { return .none }
+          guard let issue = state.issue else { return .none }
           state.isLoading = true
-          issue.state = .closed
-          issue.closedAt = Date()
-          let closedIssue = issue
           return .run { send in
-            // Mock closing issue
-            try await Task.sleep(nanoseconds: 500_000_000)
+            let closedIssue = try await gitHubClient.closeIssue(issue)
             await send(.internal(.updateIssueResponse(closedIssue)))
           } catch: { error, send in
             await send(.internal(.handleError(error)))
           }
 
         case .reopenIssueButtonTapped:
-          guard var issue = state.issue else { return .none }
+          guard let issue = state.issue else { return .none }
           state.isLoading = true
-          issue.state = .open
-          issue.closedAt = nil
-          let reopenedIssue = issue
           return .run { send in
-            // Mock reopening issue
-            try await Task.sleep(nanoseconds: 500_000_000)
+            let reopenedIssue = try await gitHubClient.reopenIssue(issue)
             await send(.internal(.updateIssueResponse(reopenedIssue)))
           } catch: { error, send in
             await send(.internal(.handleError(error)))

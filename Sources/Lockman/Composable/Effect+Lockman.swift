@@ -75,7 +75,8 @@ extension Effect {
             // Handle cancellation specially to ensure proper cleanup order
             if error is CancellationError {
               defer { unlockToken() }
-              let shouldHandle = handleCancellationErrors ?? LockmanManager.config.handleCancellationErrors
+              let shouldHandle =
+                handleCancellationErrors ?? LockmanManager.config.handleCancellationErrors
               if shouldHandle {
                 await handler?(error, send)
               }
@@ -168,7 +169,8 @@ extension Effect {
           } catch {
             // Handle cancellation with unlock token available
             if error is CancellationError {
-              let shouldHandle = handleCancellationErrors ?? LockmanManager.config.handleCancellationErrors
+              let shouldHandle =
+                handleCancellationErrors ?? LockmanManager.config.handleCancellationErrors
               if shouldHandle {
                 await handler?(error, send, unlockToken)
               }

@@ -19,6 +19,10 @@ protocol GitHubClientProtocol {
   func starRepository(owner: String, repo: String) async throws
   func unstarRepository(owner: String, repo: String) async throws
   func getUserRepositories(username: String) async throws -> [Repository]
+  func createIssue(repository: Repository, title: String, body: String?, labels: [String]) async throws -> Issue
+  func updateIssue(_ issue: Issue, title: String, body: String?, labels: [String]) async throws -> Issue
+  func closeIssue(_ issue: Issue) async throws -> Issue
+  func reopenIssue(_ issue: Issue) async throws -> Issue
 }
 
 // MARK: - GitHubClient Errors
@@ -438,5 +442,89 @@ final class MockGitHubClient: GitHubClientProtocol {
         htmlURL: "https://github.com/\(username)/\(username)-experiments"
       ),
     ]
+  }
+
+  func createIssue(repository: Repository, title: String, body: String?, labels: [String]) async throws -> Issue {
+    // Simulate network delay
+    try await Task.sleep(nanoseconds: 1_000_000_000)
+
+    return Issue(
+      id: Int.random(in: 1000...9999),
+      number: Int.random(in: 100...999),
+      title: title,
+      body: body,
+      state: .open,
+      author: IssueAuthor(
+        id: 1,
+        login: "testuser",
+        avatarURL: "https://avatars.githubusercontent.com/u/1?v=4"
+      ),
+      createdAt: Date(),
+      updatedAt: Date(),
+      closedAt: nil,
+      repository: IssueRepository(
+        id: repository.id,
+        name: repository.name,
+        fullName: repository.fullName
+      ),
+      labels: labels.enumerated().map { index, name in
+        IssueLabel(
+          id: index,
+          name: name,
+          color: ["d73a4a", "0075ca", "cfd3d7", "a2eeef", "7057ff", "008672"].randomElement()!,
+          description: nil
+        )
+      },
+      commentsCount: 0
+    )
+  }
+
+  func updateIssue(_ issue: Issue, title: String, body: String?, labels: [String]) async throws -> Issue {
+    // Simulate network delay
+    try await Task.sleep(nanoseconds: 1_000_000_000)
+
+    return Issue(
+      id: issue.id,
+      number: issue.number,
+      title: title,
+      body: body,
+      state: issue.state,
+      author: issue.author,
+      createdAt: issue.createdAt,
+      updatedAt: Date(),
+      closedAt: issue.closedAt,
+      repository: issue.repository,
+      labels: labels.enumerated().map { index, name in
+        IssueLabel(
+          id: index,
+          name: name,
+          color: ["d73a4a", "0075ca", "cfd3d7", "a2eeef", "7057ff", "008672"].randomElement()!,
+          description: nil
+        )
+      },
+      commentsCount: issue.commentsCount
+    )
+  }
+
+  func closeIssue(_ issue: Issue) async throws -> Issue {
+    // Simulate network delay
+    try await Task.sleep(nanoseconds: 500_000_000)
+    
+    var closedIssue = issue
+    closedIssue.state = .closed
+    closedIssue.closedAt = Date()
+    closedIssue.updatedAt = Date()
+    return closedIssue
+  }
+
+  func reopenIssue(_ issue: Issue) async throws -> Issue {
+    // Simulate network delay
+    try await Task.sleep(nanoseconds: 500_000_000)
+    
+    var reopenedIssue = issue
+    reopenedIssue.state = .open
+    reopenedIssue.closedAt = nil
+    reopenedIssue.updatedAt = Date()
+    return reopenedIssue
   }
 }
