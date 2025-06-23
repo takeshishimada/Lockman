@@ -14,7 +14,7 @@
             buildForArchiving = "YES"
             buildForAnalyzing = "YES">
             <TestPlanReference
-               reference = "container:.github/LockmanComposable.xctestplan">
+               reference = "container:.github/Lockman.xctestplan">
             </TestPlanReference>
          </BuildActionEntry>
          <BuildActionEntry
@@ -25,9 +25,9 @@
             buildForAnalyzing = "YES">
             <BuildableReference
                BuildableIdentifier = "primary"
-               BlueprintIdentifier = "LockmanCore"
-               BuildableName = "LockmanCore"
-               BlueprintName = "LockmanCore"
+               BlueprintIdentifier = "Lockman"
+               BuildableName = "Lockman"
+               BlueprintName = "Lockman"
                ReferencedContainer = "container:..">
             </BuildableReference>
          </BuildActionEntry>
@@ -39,9 +39,9 @@
             buildForAnalyzing = "NO">
             <BuildableReference
                BuildableIdentifier = "primary"
-               BlueprintIdentifier = "LockmanComposableTests"
-               BuildableName = "LockmanComposableTests"
-               BlueprintName = "LockmanComposableTests"
+               BlueprintIdentifier = "LockmanTests"
+               BuildableName = "LockmanTests"
+               BlueprintName = "LockmanTests"
                ReferencedContainer = "container:..">
             </BuildableReference>
          </BuildActionEntry>
@@ -67,9 +67,9 @@
             buildForAnalyzing = "NO">
             <BuildableReference
                BuildableIdentifier = "primary"
-               BlueprintIdentifier = "LockmanCoreTests"
-               BuildableName = "LockmanCoreTests"
-               BlueprintName = "LockmanCoreTests"
+               BlueprintIdentifier = "LockmanTests"
+               BuildableName = "LockmanTests"
+               BlueprintName = "LockmanTests"
                ReferencedContainer = "container:..">
             </BuildableReference>
          </BuildActionEntry>
@@ -82,7 +82,7 @@
       shouldUseLaunchSchemeArgsEnv = "YES">
       <TestPlans>
          <TestPlanReference
-            reference = "container:LockmanComposable.xctestplan"
+            reference = "container:Lockman.xctestplan"
             default = "YES">
          </TestPlanReference>
       </TestPlans>
@@ -107,9 +107,9 @@
       <MacroExpansion>
          <BuildableReference
             BuildableIdentifier = "primary"
-            BlueprintIdentifier = "LockmanCore"
-            BuildableName = "LockmanCore"
-            BlueprintName = "LockmanCore"
+            BlueprintIdentifier = "Lockman"
+            BuildableName = "Lockman"
+            BlueprintName = "Lockman"
             ReferencedContainer = "container:..">
          </BuildableReference>
       </MacroExpansion>
