@@ -55,7 +55,7 @@ final class ReduceWithLockIntegrationTests: XCTestCase {
     let cancelID = TestLockAction().lockmanInfo.actionId
 
     // Create a class to track lock states
-    class LockTracker {
+    final class LockTracker: @unchecked Sendable {
       var step1LockAcquired = false
       var step2LockAcquired = false
       var step3LockAcquired = false
@@ -201,7 +201,7 @@ final class ReduceWithLockIntegrationTests: XCTestCase {
     let cancelID = TestLockAction().lockmanInfo.actionId
 
     // Create a class to track operation execution
-    class ExecutionTracker {
+    final class ExecutionTracker: @unchecked Sendable {
       var operationExecuted = false
       var errorHandlerCalled = false
     }
@@ -277,7 +277,7 @@ final class ReduceWithLockIntegrationTests: XCTestCase {
   @MainActor
   func testManualUnlockVersionProvidesUnlockToken() async {
     // Track unlock execution
-    class UnlockTracker {
+    final class UnlockTracker: @unchecked Sendable {
       var unlockTokenReceived = false
       var unlockCalled = false
     }
@@ -334,7 +334,7 @@ final class ReduceWithLockIntegrationTests: XCTestCase {
 
   @MainActor
   func testManualUnlockVersionWithErrorHandler() async {
-    class ErrorTracker {
+    final class ErrorTracker: @unchecked Sendable {
       var errorHandlerCalled = false
       var unlockTokenInHandler = false
     }
@@ -390,7 +390,7 @@ final class ReduceWithLockIntegrationTests: XCTestCase {
 
   @MainActor
   func testManualUnlockWithDynamicConditions() async {
-    class ConditionTracker {
+    final class ConditionTracker: @unchecked Sendable {
       var conditionEvaluated = false
       var operationExecuted = false
       var unlockExecuted = false
@@ -462,7 +462,7 @@ final class ReduceWithLockIntegrationTests: XCTestCase {
     let singleExecutionStrategy = LockmanSingleExecutionStrategy.shared
     let cancelID = TestLockAction().lockmanInfo.actionId
 
-    class EvaluationTracker {
+    final class EvaluationTracker: @unchecked Sendable {
       var step1Evaluated = false
       var step2Evaluated = false
     }
