@@ -283,6 +283,8 @@ extension Effect {
           }
         }
         return .none
+      @unknown default:
+        return .none
       }
 
     } catch {
@@ -387,6 +389,8 @@ extension Effect {
             await handler(error, send)
           }
         }
+        return .none
+      @unknown default:
         return .none
       }
 
@@ -524,6 +528,8 @@ extension Effect {
           line: line,
           column: column
         )
+      @unknown default:
+        break
       }
     }
   }

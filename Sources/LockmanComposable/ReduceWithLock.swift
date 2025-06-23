@@ -93,10 +93,10 @@ public struct ReduceWithLock<State: Sendable, Action: Sendable>: Reducer {
     _ reduce: @escaping (_ state: inout State, _ action: Action) -> Effect<Action>,
     lockCondition: (@Sendable (_ state: State, _ action: Action) -> LockmanResult)? = nil
   ) {
-    self.base = Reduce { state, action in
+    let baseReducer = Reduce { state, action in
       reduce(&state, action)
     }
-    self.lockCondition = lockCondition
+    self.init(base: baseReducer, lockCondition: lockCondition)
   }
 
   /// Initializes with an existing Reduce instance.
@@ -349,6 +349,8 @@ extension ReduceWithLock {
     case .failure(let error):
       return (false, error)
     case .successWithPrecedingCancellation, .success:
+      return (true, nil)
+    @unknown default:
       return (true, nil)
     }
   }
