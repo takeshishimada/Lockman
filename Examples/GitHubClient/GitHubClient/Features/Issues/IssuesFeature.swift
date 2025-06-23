@@ -51,7 +51,8 @@ struct IssuesFeature {
     }
 
     enum InternalAction {
-      case issuesResponse(Result<[Issue], Error>)
+      case issuesResponse([Issue])
+      case handleError(Error)
     }
 
     enum Delegate: Equatable {
@@ -72,11 +73,10 @@ struct IssuesFeature {
           guard state.issues.isEmpty else { return .none }
           state.isLoading = true
           return .run { send in
-            await send(
-              .internal(
-                .issuesResponse(
-                  Result { try await gitHubClient.getMyIssues() }
-                )))
+            let issues = try await gitHubClient.getMyIssues()
+            await send(.internal(.issuesResponse(issues)))
+          } catch: { error, send in
+            await send(.internal(.handleError(error)))
           }
 
         case .filterChanged(let filter):
@@ -86,21 +86,19 @@ struct IssuesFeature {
         case .refreshButtonTapped:
           state.isLoading = true
           return .run { send in
-            await send(
-              .internal(
-                .issuesResponse(
-                  Result { try await gitHubClient.getMyIssues() }
-                )))
+            let issues = try await gitHubClient.getMyIssues()
+            await send(.internal(.issuesResponse(issues)))
+          } catch: { error, send in
+            await send(.internal(.handleError(error)))
           }
 
         case .pullToRefresh:
           state.isRefreshing = true
           return .run { send in
-            await send(
-              .internal(
-                .issuesResponse(
-                  Result { try await gitHubClient.getMyIssues() }
-                )))
+            let issues = try await gitHubClient.getMyIssues()
+            await send(.internal(.issuesResponse(issues)))
+          } catch: { error, send in
+            await send(.internal(.handleError(error)))
           }
 
         case .issueTapped(let issue):
@@ -115,13 +113,13 @@ struct IssuesFeature {
 
       case let .internal(internalAction):
         switch internalAction {
-        case .issuesResponse(.success(let issues)):
+        case let .issuesResponse(issues):
           state.issues = issues
           state.isLoading = false
           state.isRefreshing = false
           return .none
 
-        case .issuesResponse(.failure(let error)):
+        case let .handleError(error):
           state.isLoading = false
           state.isRefreshing = false
 

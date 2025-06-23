@@ -53,8 +53,9 @@ struct IssueEditFeature {
     }
 
     enum InternalAction {
-      case issueResponse(Result<Issue, Error>)
-      case updateIssueResponse(Result<Issue, Error>)
+      case issueResponse(Issue)
+      case updateIssueResponse(Issue)
+      case handleError(Error)
     }
 
     enum Delegate: Equatable {
@@ -76,18 +77,14 @@ struct IssueEditFeature {
           guard state.originalIssue == nil else { return .none }
           state.isLoadingIssue = true
           return .run { [issueId = state.issueId, gitHubClient] send in
-            await send(
-              .internal(
-                .issueResponse(
-                  Result {
-                    // Mock implementation - find issue by ID
-                    let issues = try await gitHubClient.getMyIssues()
-                    guard let issue = issues.first(where: { String($0.id) == issueId }) else {
-                      throw GitHubClientError.invalidResponse
-                    }
-                    return issue
-                  }
-                )))
+            // Mock implementation - find issue by ID
+            let issues = try await gitHubClient.getMyIssues()
+            guard let issue = issues.first(where: { String($0.id) == issueId }) else {
+              throw GitHubClientError.invalidResponse
+            }
+            await send(.internal(.issueResponse(issue)))
+          } catch: { error, send in
+            await send(.internal(.handleError(error)))
           }
 
         case .titleChanged(let title):
@@ -140,7 +137,9 @@ struct IssueEditFeature {
             // Mock updating issue
             try await Task.sleep(nanoseconds: 1_000_000_000)
 
-            await send(.internal(.updateIssueResponse(.success(issueToUpdate))))
+            await send(.internal(.updateIssueResponse(issueToUpdate)))
+          } catch: { error, send in
+            await send(.internal(.handleError(error)))
           }
 
         case .alert:
@@ -149,7 +148,7 @@ struct IssueEditFeature {
 
       case let .internal(internalAction):
         switch internalAction {
-        case .issueResponse(.success(let issue)):
+        case let .issueResponse(issue):
           state.originalIssue = issue
           state.title = issue.title
           state.body = issue.body ?? ""
@@ -157,7 +156,15 @@ struct IssueEditFeature {
           state.isLoadingIssue = false
           return .none
 
-        case .issueResponse(.failure(let error)):
+        case let .updateIssueResponse(issue):
+          state.isLoading = false
+          return .run { [dismiss] send in
+            await send(.delegate(.issueUpdated(issue)))
+            await dismiss()
+          }
+
+        case let .handleError(error):
+          state.isLoading = false
           state.isLoadingIssue = false
 
           if case GitHubClientError.notAuthenticated = error {
@@ -165,23 +172,7 @@ struct IssueEditFeature {
           }
 
           state.alert = AlertState {
-            TextState("Error Loading Issue")
-          } message: {
-            TextState(error.localizedDescription)
-          }
-          return .none
-
-        case .updateIssueResponse(.success(let issue)):
-          state.isLoading = false
-          return .run { [dismiss] send in
-            await send(.delegate(.issueUpdated(issue)))
-            await dismiss()
-          }
-
-        case .updateIssueResponse(.failure(let error)):
-          state.isLoading = false
-          state.alert = AlertState {
-            TextState("Error Updating Issue")
+            TextState("Error")
           } message: {
             TextState(error.localizedDescription)
           }

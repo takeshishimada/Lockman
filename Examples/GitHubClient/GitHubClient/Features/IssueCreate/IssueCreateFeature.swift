@@ -48,8 +48,9 @@ struct IssueCreateFeature {
     }
 
     enum InternalAction {
-      case repositoriesResponse(Result<[Repository], Error>)
-      case createIssueResponse(Result<Issue, Error>)
+      case repositoriesResponse([Repository])
+      case createIssueResponse(Issue)
+      case handleError(Error)
     }
 
     enum Delegate: Equatable {
@@ -71,11 +72,10 @@ struct IssueCreateFeature {
           guard state.repositories.isEmpty else { return .none }
           state.isLoadingRepositories = true
           return .run { [gitHubClient] send in
-            await send(
-              .internal(
-                .repositoriesResponse(
-                  Result { try await gitHubClient.getMyRepositories() }
-                )))
+            let repositories = try await gitHubClient.getMyRepositories()
+            await send(.internal(.repositoriesResponse(repositories)))
+          } catch: { error, send in
+            await send(.internal(.handleError(error)))
           }
 
         case .titleChanged(let title):
@@ -148,7 +148,9 @@ struct IssueCreateFeature {
               commentsCount: 0
             )
 
-            await send(.internal(.createIssueResponse(.success(newIssue))))
+            await send(.internal(.createIssueResponse(newIssue)))
+          } catch: { error, send in
+            await send(.internal(.handleError(error)))
           }
 
         case .alert:
@@ -157,7 +159,7 @@ struct IssueCreateFeature {
 
       case let .internal(internalAction):
         switch internalAction {
-        case .repositoriesResponse(.success(let repositories)):
+        case let .repositoriesResponse(repositories):
           state.repositories = repositories
           state.isLoadingRepositories = false
           // Auto-select first repository if only one
@@ -166,7 +168,15 @@ struct IssueCreateFeature {
           }
           return .none
 
-        case .repositoriesResponse(.failure(let error)):
+        case let .createIssueResponse(issue):
+          state.isLoading = false
+          return .run { [dismiss] send in
+            await send(.delegate(.issueCreated(issue)))
+            await dismiss()
+          }
+
+        case let .handleError(error):
+          state.isLoading = false
           state.isLoadingRepositories = false
 
           if case GitHubClientError.notAuthenticated = error {
@@ -175,22 +185,6 @@ struct IssueCreateFeature {
 
           state.alert = AlertState {
             TextState("Error")
-          } message: {
-            TextState(error.localizedDescription)
-          }
-          return .none
-
-        case .createIssueResponse(.success(let issue)):
-          state.isLoading = false
-          return .run { [dismiss] send in
-            await send(.delegate(.issueCreated(issue)))
-            await dismiss()
-          }
-
-        case .createIssueResponse(.failure(let error)):
-          state.isLoading = false
-          state.alert = AlertState {
-            TextState("Error Creating Issue")
           } message: {
             TextState(error.localizedDescription)
           }

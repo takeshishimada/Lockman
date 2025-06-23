@@ -28,7 +28,8 @@ struct UserRepositoriesFeature {
     }
 
     enum InternalAction {
-      case repositoriesResponse(Result<[Repository], Error>)
+      case repositoriesResponse([Repository])
+      case handleError(Error)
     }
 
     enum Delegate: Equatable {
@@ -48,31 +49,28 @@ struct UserRepositoriesFeature {
           guard state.repositories.isEmpty else { return .none }
           state.isLoading = true
           return .run { send in
-            await send(
-              .internal(
-                .repositoriesResponse(
-                  Result { try await gitHubClient.getMyRepositories() }
-                )))
+            let repositories = try await gitHubClient.getMyRepositories()
+            await send(.internal(.repositoriesResponse(repositories)))
+          } catch: { error, send in
+            await send(.internal(.handleError(error)))
           }
 
         case .refreshButtonTapped:
           state.isLoading = true
           return .run { send in
-            await send(
-              .internal(
-                .repositoriesResponse(
-                  Result { try await gitHubClient.getMyRepositories() }
-                )))
+            let repositories = try await gitHubClient.getMyRepositories()
+            await send(.internal(.repositoriesResponse(repositories)))
+          } catch: { error, send in
+            await send(.internal(.handleError(error)))
           }
 
         case .pullToRefresh:
           state.isRefreshing = true
           return .run { send in
-            await send(
-              .internal(
-                .repositoriesResponse(
-                  Result { try await gitHubClient.getMyRepositories() }
-                )))
+            let repositories = try await gitHubClient.getMyRepositories()
+            await send(.internal(.repositoriesResponse(repositories)))
+          } catch: { error, send in
+            await send(.internal(.handleError(error)))
           }
 
         case .repositoryTapped(let repository):
@@ -84,13 +82,13 @@ struct UserRepositoriesFeature {
 
       case let .internal(internalAction):
         switch internalAction {
-        case .repositoriesResponse(.success(let repositories)):
+        case let .repositoriesResponse(repositories):
           state.repositories = repositories
           state.isLoading = false
           state.isRefreshing = false
           return .none
 
-        case .repositoriesResponse(.failure(let error)):
+        case let .handleError(error):
           state.isLoading = false
           state.isRefreshing = false
 

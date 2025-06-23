@@ -42,10 +42,11 @@ struct RepositoryDetailFeature {
     }
 
     enum InternalAction {
-      case repositoryResponse(Result<Repository, Error>)
-      case starStatusResponse(Result<Bool, Error>)
-      case issuesResponse(Result<[Issue], Error>)
-      case starToggleResponse(Result<Bool, Error>)
+      case repositoryResponse(Repository)
+      case starStatusResponse(Bool)
+      case issuesResponse([Issue])
+      case starToggleResponse(Bool)
+      case handleError(Error)
     }
 
     enum Delegate: Equatable {
@@ -83,25 +84,18 @@ struct RepositoryDetailFeature {
 
           return .run { send in
             // Load repository details
-            await send(
-              .internal(
-                .repositoryResponse(
-                  Result { try await gitHubClient.getRepository(owner: owner, repo: repo) }
-                )))
+            let repository = try await gitHubClient.getRepository(owner: owner, repo: repo)
+            await send(.internal(.repositoryResponse(repository)))
 
             // Check star status
-            await send(
-              .internal(
-                .starStatusResponse(
-                  Result { try await gitHubClient.checkIfStarred(owner: owner, repo: repo) }
-                )))
+            let isStarred = try await gitHubClient.checkIfStarred(owner: owner, repo: repo)
+            await send(.internal(.starStatusResponse(isStarred)))
 
             // Load issues
-            await send(
-              .internal(
-                .issuesResponse(
-                  Result { try await gitHubClient.getRepositoryIssues(owner: owner, repo: repo) }
-                )))
+            let issues = try await gitHubClient.getRepositoryIssues(owner: owner, repo: repo)
+            await send(.internal(.issuesResponse(issues)))
+          } catch: { error, send in
+            await send(.internal(.handleError(error)))
           }
 
         case .refreshButtonTapped:
@@ -111,17 +105,13 @@ struct RepositoryDetailFeature {
 
           state.isLoading = true
           return .run { send in
-            await send(
-              .internal(
-                .repositoryResponse(
-                  Result { try await gitHubClient.getRepository(owner: owner, repo: repo) }
-                )))
+            let repository = try await gitHubClient.getRepository(owner: owner, repo: repo)
+            await send(.internal(.repositoryResponse(repository)))
 
-            await send(
-              .internal(
-                .issuesResponse(
-                  Result { try await gitHubClient.getRepositoryIssues(owner: owner, repo: repo) }
-                )))
+            let issues = try await gitHubClient.getRepositoryIssues(owner: owner, repo: repo)
+            await send(.internal(.issuesResponse(issues)))
+          } catch: { error, send in
+            await send(.internal(.handleError(error)))
           }
 
         case .starButtonTapped:
@@ -133,16 +123,14 @@ struct RepositoryDetailFeature {
           let newStarState = !state.isStarred
 
           return .run { send in
-            do {
-              if newStarState {
-                try await gitHubClient.starRepository(owner: owner, repo: repo)
-              } else {
-                try await gitHubClient.unstarRepository(owner: owner, repo: repo)
-              }
-              await send(.internal(.starToggleResponse(.success(newStarState))))
-            } catch {
-              await send(.internal(.starToggleResponse(.failure(error))))
+            if newStarState {
+              try await gitHubClient.starRepository(owner: owner, repo: repo)
+            } else {
+              try await gitHubClient.unstarRepository(owner: owner, repo: repo)
             }
+            await send(.internal(.starToggleResponse(newStarState)))
+          } catch: { error, send in
+            await send(.internal(.handleError(error)))
           }
 
         case .viewWebButtonTapped:
@@ -164,44 +152,27 @@ struct RepositoryDetailFeature {
 
       case let .internal(internalAction):
         switch internalAction {
-        case .repositoryResponse(.success(let repository)):
+        case let .repositoryResponse(repository):
           state.repository = repository
           state.isLoading = false
           return .none
 
-        case .repositoryResponse(.failure(let error)):
-          state.isLoading = false
-          state.alert = AlertState {
-            TextState("Error Loading Repository")
-          } message: {
-            TextState(error.localizedDescription)
-          }
-          return .none
-
-        case .starStatusResponse(.success(let isStarred)):
+        case let .starStatusResponse(isStarred):
           state.isStarred = isStarred
           state.isLoadingStarStatus = false
           return .none
 
-        case .starStatusResponse(.failure):
-          // Silently fail star status check
-          state.isLoadingStarStatus = false
-          return .none
-
-        case .issuesResponse(.success(let issues)):
+        case let .issuesResponse(issues):
           state.issues = Array(issues.prefix(5))  // Show only first 5 issues
           return .none
 
-        case .issuesResponse(.failure):
-          // Silently fail issues loading
-          return .none
-
-        case .starToggleResponse(.success(let isStarred)):
+        case let .starToggleResponse(isStarred):
           state.isStarred = isStarred
           state.isLoadingStarStatus = false
           return .none
 
-        case .starToggleResponse(.failure(let error)):
+        case let .handleError(error):
+          state.isLoading = false
           state.isLoadingStarStatus = false
           state.alert = AlertState {
             TextState("Error")
