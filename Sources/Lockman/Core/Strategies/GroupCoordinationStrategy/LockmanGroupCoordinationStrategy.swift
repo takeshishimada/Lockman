@@ -60,7 +60,7 @@ public final class LockmanGroupCoordinationStrategy: LockmanStrategy, @unchecked
   /// State for all groups within a boundary.
   private struct GroupBoundaryState {
     /// Group states keyed by group ID.
-    var groups: [String: GroupState] = [:]
+    var groups: [AnyLockmanGroupId: GroupState] = [:]
   }
 
   /// State of a single group.

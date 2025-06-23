@@ -16,7 +16,7 @@ final class LockmanGroupCoordinatedInfoTests: XCTestCase {
     )
 
     XCTAssertEqual(info.actionId, actionId)
-    XCTAssertEqual(info.groupIds, ["testGroup"])
+    XCTAssertEqual(info.groupIds, [AnyLockmanGroupId("testGroup")])
     XCTAssertEqual(info.coordinationRole, .none)
     XCTAssertNotEqual(info.uniqueId, UUID())
   }
@@ -29,7 +29,7 @@ final class LockmanGroupCoordinatedInfoTests: XCTestCase {
     )
 
     XCTAssertEqual(info.actionId, "testAction")
-    XCTAssertEqual(info.groupIds, ["testGroup"])
+    XCTAssertEqual(info.groupIds, [AnyLockmanGroupId("testGroup")])
     XCTAssertEqual(info.coordinationRole, .member)
     XCTAssertNotEqual(info.uniqueId, UUID())
   }
@@ -182,7 +182,7 @@ final class LockmanGroupCoordinatedInfoTests: XCTestCase {
     )
 
     XCTAssertEqual(info.actionId, "")
-    XCTAssertEqual(info.groupIds, [""])
+    XCTAssertEqual(info.groupIds, [AnyLockmanGroupId("")])
     XCTAssertEqual(info.coordinationRole, .none)
   }
 
@@ -194,7 +194,7 @@ final class LockmanGroupCoordinatedInfoTests: XCTestCase {
     )
 
     XCTAssertEqual(info.actionId, "action@#$%^&*()")
-    XCTAssertEqual(info.groupIds, ["group-with-特殊文字-🔒"])
+    XCTAssertEqual(info.groupIds, [AnyLockmanGroupId("group-with-特殊文字-🔒")])
   }
 
   func testVeryLongStrings() {
@@ -206,14 +206,14 @@ final class LockmanGroupCoordinatedInfoTests: XCTestCase {
     )
 
     XCTAssertEqual(info.actionId, longString)
-    XCTAssertEqual(info.groupIds, [longString])
+    XCTAssertEqual(info.groupIds, [AnyLockmanGroupId(longString)])
   }
 
   // MARK: - Sendable Conformance
 
   func testSendableAcrossConcurrentContexts() async {
     let info = LockmanGroupCoordinatedInfo(
-      actionId: LockmanActionId("concurrent"),
+      actionId: LockmanActionId("concurrent-test"),
       groupId: "test",
       coordinationRole: .none
     )
@@ -246,7 +246,7 @@ final class LockmanGroupCoordinatedInfoTests: XCTestCase {
     )
 
     XCTAssertEqual(info.actionId, "multi")
-    XCTAssertEqual(info.groupIds, ["group1", "group2", "group3"])
+    XCTAssertEqual(info.groupIds, [AnyLockmanGroupId("group1"), AnyLockmanGroupId("group2"), AnyLockmanGroupId("group3")])
     XCTAssertEqual(info.coordinationRole, .member)
   }
 }

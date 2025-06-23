@@ -339,7 +339,7 @@ extension LockmanManager.debug {
       return "condition: <closure>"
 
     case let groupCoordinated as LockmanGroupCoordinatedInfo:
-      let groupsStr = groupCoordinated.groupIds.joined(separator: ",")
+      let groupsStr = groupCoordinated.groupIds.map { "\($0)" }.sorted().joined(separator: ",")
       return "groups: \(groupsStr) r: \(groupCoordinated.coordinationRole)"
 
     case is any LockmanCompositeInfo:
