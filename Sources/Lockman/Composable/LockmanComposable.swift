@@ -1,5 +1,5 @@
-// Re-export everything from LockmanCore to make it available through LockmanComposable
-@_exported import LockmanCore
+// This file is now part of the unified Lockman module
+// No need to import LockmanCore as we're in the same module
 
 // This file ensures that when users import LockmanComposable, they get:
 // 1. All LockmanCore functionality (including macros)

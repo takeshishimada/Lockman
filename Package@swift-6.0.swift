@@ -13,14 +13,10 @@ let package = Package(
     .watchOS(.v6),
   ],
   products: [
-    // Core functionality without TCA dependency
+    // Unified Lockman library
     .library(
-      name: "LockmanCore",
-      targets: ["LockmanCore"]),
-    // TCA integration
-    .library(
-      name: "LockmanComposable",
-      targets: ["LockmanComposable"]),
+      name: "Lockman",
+      targets: ["Lockman"])
   ],
   dependencies: [
     .package(url: "https://github.com/pointfreeco/swift-composable-architecture", exact: "1.17.1"),
@@ -30,21 +26,15 @@ let package = Package(
     .package(url: "https://github.com/swiftlang/swift-docc-plugin", exact: "1.0.0"),
   ],
   targets: [
-    // Core target without TCA dependency
+    // Unified Lockman target
     .target(
-      name: "LockmanCore",
+      name: "Lockman",
       dependencies: [
-        .product(name: "OrderedCollections", package: "swift-collections")
-      ]
-    ),
-    // TCA integration target
-    .target(
-      name: "LockmanComposable",
-      dependencies: [
-        "LockmanCore",
         "LockmanMacros",
+        .product(name: "OrderedCollections", package: "swift-collections"),
         .product(name: "ComposableArchitecture", package: "swift-composable-architecture"),
-      ]
+      ],
+      path: "Sources/Lockman"
     ),
     .macro(
       name: "LockmanMacros",
@@ -56,14 +46,13 @@ let package = Package(
     .testTarget(
       name: "LockmanCoreTests",
       dependencies: [
-        "LockmanCore"
+        "Lockman"
       ]
     ),
     .testTarget(
       name: "LockmanComposableTests",
       dependencies: [
-        "LockmanCore",
-        "LockmanComposable",
+        "Lockman"
       ]
     ),
     .testTarget(

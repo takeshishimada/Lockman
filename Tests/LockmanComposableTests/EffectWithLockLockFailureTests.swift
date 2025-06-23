@@ -1,8 +1,7 @@
 import ComposableArchitecture
 import XCTest
 
-@testable import LockmanComposable
-@testable import LockmanCore
+@testable import Lockman
 
 /// Tests for the lockFailure handler in withLock manual unlock variant
 final class EffectWithLockLockFailureTests: XCTestCase {

@@ -1,7 +1,7 @@
 import Foundation
 import XCTest
 
-@testable import LockmanCore
+@testable import Lockman
 
 /// Tests for LockmanSingleExecutionAction protocol and implementations
 final class LockmanSingleExecutionActionTests: XCTestCase {

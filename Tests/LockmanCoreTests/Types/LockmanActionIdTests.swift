@@ -1,6 +1,6 @@
 import XCTest
 
-@testable import LockmanCore
+@testable import Lockman
 
 // MARK: - LockmanActionId Tests
 

@@ -1,7 +1,7 @@
 import Foundation
 import XCTest
 
-@testable import LockmanCore
+@testable import Lockman
 
 // Helper class for thread-safe mutable state in tests
 private final class Atomic<Value>: @unchecked Sendable {

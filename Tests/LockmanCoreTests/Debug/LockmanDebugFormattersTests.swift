@@ -1,7 +1,7 @@
 import Foundation
 import XCTest
 
-@testable @_spi(Debugging) import LockmanCore
+@testable @_spi(Debugging) import Lockman
 
 final class LockmanDebugFormattersTests: XCTestCase {
   func testDynamicColumnWidth() throws {

@@ -1,6 +1,6 @@
 import XCTest
 
-@testable @_spi(Logging) import LockmanCore
+@testable @_spi(Logging) import Lockman
 
 final class LockmanLoggerTests: XCTestCase {
 

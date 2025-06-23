@@ -1,7 +1,7 @@
 import Foundation
 import XCTest
 
-@testable import LockmanCore
+@testable import Lockman
 
 final class LockmanConfigurationTests: XCTestCase {
   // MARK: - Test Setup

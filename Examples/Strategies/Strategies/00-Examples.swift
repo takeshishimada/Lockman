@@ -1,5 +1,5 @@
 import ComposableArchitecture
-import LockmanCore
+import Lockman
 import SwiftUI
 
 // MARK: - Examples Feature

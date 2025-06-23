@@ -1,6 +1,5 @@
 import ComposableArchitecture
-import LockmanComposable
-import LockmanCore
+import Lockman
 import SwiftUI
 
 enum CompositeStrategyInjection {

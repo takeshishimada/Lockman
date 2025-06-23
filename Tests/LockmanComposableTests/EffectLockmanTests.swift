@@ -2,8 +2,7 @@ import ComposableArchitecture
 import Foundation
 import XCTest
 
-@testable import LockmanComposable
-@testable import LockmanCore
+@testable import Lockman
 
 // MARK: - Effect+withLock Tests
 

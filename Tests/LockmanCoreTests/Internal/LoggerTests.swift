@@ -2,7 +2,7 @@ import Foundation
 import OSLog
 import XCTest
 
-@testable @_spi(Logging) import LockmanCore
+@testable @_spi(Logging) import Lockman
 
 // Helper class for thread-safe mutable state in tests
 private final class Atomic<Value>: @unchecked Sendable {

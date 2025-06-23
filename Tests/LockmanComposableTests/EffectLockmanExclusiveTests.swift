@@ -2,8 +2,7 @@ import ComposableArchitecture
 import Foundation
 import XCTest
 
-@testable import LockmanComposable
-@testable import LockmanCore
+@testable import Lockman
 
 /// Test suite for deadlock prevention functionality in Lockman framework.
 ///

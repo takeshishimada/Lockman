@@ -47,7 +47,7 @@ Lockmanは以下の制御戦略を提供し、実際のアプリ開発で頻繁�
 
 ```swift
 import ComposableArchitecture
-import LockmanComposable
+import Lockman
 
 @Reducer
 struct ProfilePhotoFeature {
@@ -163,7 +163,7 @@ dependencies: [
 .target(
   name: "MyApp",
   dependencies: [
-    .product(name: "LockmanComposable", package: "Lockman"),
+    .product(name: "Lockman", package: "Lockman"),
   ]
 )
 ```

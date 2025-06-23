@@ -3,8 +3,7 @@ import ConcurrencyExtras
 import Foundation
 import XCTest
 
-@testable import LockmanComposable
-@testable @_spi(Logging) import LockmanCore
+@testable @_spi(Logging) import Lockman
 
 /// Tests for Effect+Lockman error handling scenarios
 final class EffectLockmanErrorTests: XCTestCase {

@@ -1,8 +1,8 @@
 import ComposableArchitecture
-import LockmanCore
+import Lockman
 import XCTest
 
-@testable import LockmanComposable
+@testable import Lockman
 
 /// Integration tests for ReduceWithLock to ensure proper lock management
 final class ReduceWithLockIntegrationTests: XCTestCase {

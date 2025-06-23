@@ -1,6 +1,6 @@
 import XCTest
 
-@testable @_spi(Logging) @_spi(Debugging) import LockmanCore
+@testable @_spi(Logging) @_spi(Debugging) import Lockman
 
 final class DebugTests: XCTestCase {
   override func setUp() {
