@@ -19,8 +19,10 @@ protocol GitHubClientProtocol {
   func starRepository(owner: String, repo: String) async throws
   func unstarRepository(owner: String, repo: String) async throws
   func getUserRepositories(username: String) async throws -> [Repository]
-  func createIssue(repository: Repository, title: String, body: String?, labels: [String]) async throws -> Issue
-  func updateIssue(_ issue: Issue, title: String, body: String?, labels: [String]) async throws -> Issue
+  func createIssue(repository: Repository, title: String, body: String?, labels: [String])
+    async throws -> Issue
+  func updateIssue(_ issue: Issue, title: String, body: String?, labels: [String]) async throws
+    -> Issue
   func closeIssue(_ issue: Issue) async throws -> Issue
   func reopenIssue(_ issue: Issue) async throws -> Issue
 }
@@ -444,7 +446,9 @@ final class MockGitHubClient: GitHubClientProtocol {
     ]
   }
 
-  func createIssue(repository: Repository, title: String, body: String?, labels: [String]) async throws -> Issue {
+  func createIssue(repository: Repository, title: String, body: String?, labels: [String])
+    async throws -> Issue
+  {
     // Simulate network delay
     try await Task.sleep(nanoseconds: 1_000_000_000)
 
@@ -479,7 +483,9 @@ final class MockGitHubClient: GitHubClientProtocol {
     )
   }
 
-  func updateIssue(_ issue: Issue, title: String, body: String?, labels: [String]) async throws -> Issue {
+  func updateIssue(_ issue: Issue, title: String, body: String?, labels: [String]) async throws
+    -> Issue
+  {
     // Simulate network delay
     try await Task.sleep(nanoseconds: 1_000_000_000)
 
@@ -509,7 +515,7 @@ final class MockGitHubClient: GitHubClientProtocol {
   func closeIssue(_ issue: Issue) async throws -> Issue {
     // Simulate network delay
     try await Task.sleep(nanoseconds: 500_000_000)
-    
+
     var closedIssue = issue
     closedIssue.state = .closed
     closedIssue.closedAt = Date()
@@ -520,7 +526,7 @@ final class MockGitHubClient: GitHubClientProtocol {
   func reopenIssue(_ issue: Issue) async throws -> Issue {
     // Simulate network delay
     try await Task.sleep(nanoseconds: 500_000_000)
-    
+
     var reopenedIssue = issue
     reopenedIssue.state = .open
     reopenedIssue.closedAt = nil
