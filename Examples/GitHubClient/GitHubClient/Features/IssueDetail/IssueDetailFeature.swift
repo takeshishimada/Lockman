@@ -30,8 +30,9 @@ struct IssueDetailFeature {
     }
 
     enum InternalAction {
-      case issueResponse(Result<Issue, Error>)
-      case updateIssueResponse(Result<Issue, Error>)
+      case issueResponse(Issue)
+      case updateIssueResponse(Issue)
+      case handleError(Error)
     }
 
     enum Delegate: Equatable {
@@ -51,61 +52,49 @@ struct IssueDetailFeature {
           guard state.issue == nil else { return .none }
           state.isLoading = true
           return .run { [issueId = state.issueId] send in
-            await send(
-              .internal(
-                .issueResponse(
-                  Result {
-                    // Mock implementation - find issue by ID
-                    let issues = try await gitHubClient.getMyIssues()
-                    guard let issue = issues.first(where: { String($0.id) == issueId }) else {
-                      throw GitHubClientError.invalidResponse
-                    }
-                    return issue
-                  }
-                )))
+            // Mock implementation - find issue by ID
+            let issues = try await gitHubClient.getMyIssues()
+            guard let issue = issues.first(where: { String($0.id) == issueId }) else {
+              throw GitHubClientError.invalidResponse
+            }
+            await send(.internal(.issueResponse(issue)))
+          } catch: { error, send in
+            await send(.internal(.handleError(error)))
           }
 
         case .refreshButtonTapped:
           state.isLoading = true
           return .run { [issueId = state.issueId] send in
-            await send(
-              .internal(
-                .issueResponse(
-                  Result {
-                    let issues = try await gitHubClient.getMyIssues()
-                    guard let issue = issues.first(where: { String($0.id) == issueId }) else {
-                      throw GitHubClientError.invalidResponse
-                    }
-                    return issue
-                  }
-                )))
+            let issues = try await gitHubClient.getMyIssues()
+            guard let issue = issues.first(where: { String($0.id) == issueId }) else {
+              throw GitHubClientError.invalidResponse
+            }
+            await send(.internal(.issueResponse(issue)))
+          } catch: { error, send in
+            await send(.internal(.handleError(error)))
           }
 
         case .editButtonTapped:
           return .send(.delegate(.editTapped(state.issueId)))
 
         case .closeIssueButtonTapped:
-          guard var issue = state.issue else { return .none }
+          guard let issue = state.issue else { return .none }
           state.isLoading = true
-          issue.state = .closed
-          issue.closedAt = Date()
-          let closedIssue = issue
           return .run { send in
-            // Mock closing issue
-            try await Task.sleep(nanoseconds: 500_000_000)
-            await send(.internal(.updateIssueResponse(.success(closedIssue))))
+            let closedIssue = try await gitHubClient.closeIssue(issue)
+            await send(.internal(.updateIssueResponse(closedIssue)))
+          } catch: { error, send in
+            await send(.internal(.handleError(error)))
           }
 
         case .reopenIssueButtonTapped:
-          guard var issue = state.issue else { return .none }
+          guard let issue = state.issue else { return .none }
           state.isLoading = true
-          issue.state = .open
-          issue.closedAt = nil
-          let reopenedIssue = issue
           return .run { send in
-            // Mock reopening issue
-            try await Task.sleep(nanoseconds: 500_000_000)
-            await send(.internal(.updateIssueResponse(.success(reopenedIssue))))
+            let reopenedIssue = try await gitHubClient.reopenIssue(issue)
+            await send(.internal(.updateIssueResponse(reopenedIssue)))
+          } catch: { error, send in
+            await send(.internal(.handleError(error)))
           }
 
         case .alert:
@@ -114,32 +103,23 @@ struct IssueDetailFeature {
 
       case let .internal(internalAction):
         switch internalAction {
-        case .issueResponse(.success(let issue)):
+        case let .issueResponse(issue):
           state.issue = issue
           state.isLoading = false
           return .none
 
-        case .issueResponse(.failure(let error)):
+        case let .updateIssueResponse(issue):
+          state.issue = issue
+          state.isLoading = false
+          return .none
+
+        case let .handleError(error):
           state.isLoading = false
 
           if case GitHubClientError.notAuthenticated = error {
             return .send(.delegate(.authenticationError))
           }
 
-          state.alert = AlertState {
-            TextState("Error")
-          } message: {
-            TextState(error.localizedDescription)
-          }
-          return .none
-
-        case .updateIssueResponse(.success(let issue)):
-          state.issue = issue
-          state.isLoading = false
-          return .none
-
-        case .updateIssueResponse(.failure(let error)):
-          state.isLoading = false
           state.alert = AlertState {
             TextState("Error")
           } message: {

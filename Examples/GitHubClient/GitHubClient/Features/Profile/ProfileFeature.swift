@@ -35,9 +35,10 @@ struct ProfileFeature {
     }
 
     enum InternalAction {
-      case profileResponse(Result<User, Error>)
-      case repositoriesResponse(Result<[Repository], Error>)
+      case profileResponse(User)
+      case repositoriesResponse([Repository])
       case countsResponse(followers: Int, following: Int)
+      case handleError(Error)
     }
 
     enum Delegate: Equatable {
@@ -60,50 +61,38 @@ struct ProfileFeature {
           guard state.user == nil else { return .none }
           state.isLoading = true
           return .run { send in
-            await send(
-              .internal(
-                .profileResponse(
-                  Result { try await gitHubClient.getCurrentUser() }
-                )))
+            let user = try await gitHubClient.getCurrentUser()
+            await send(.internal(.profileResponse(user)))
 
             // Load repositories in parallel
-            await send(
-              .internal(
-                .repositoriesResponse(
-                  Result { try await gitHubClient.getMyRepositories() }
-                )))
+            let repositories = try await gitHubClient.getMyRepositories()
+            await send(.internal(.repositoriesResponse(repositories)))
+          } catch: { error, send in
+            await send(.internal(.handleError(error)))
           }
 
         case .refreshButtonTapped:
           state.isLoading = true
           return .run { send in
-            await send(
-              .internal(
-                .profileResponse(
-                  Result { try await gitHubClient.getCurrentUser() }
-                )))
+            let user = try await gitHubClient.getCurrentUser()
+            await send(.internal(.profileResponse(user)))
 
-            await send(
-              .internal(
-                .repositoriesResponse(
-                  Result { try await gitHubClient.getMyRepositories() }
-                )))
+            let repositories = try await gitHubClient.getMyRepositories()
+            await send(.internal(.repositoriesResponse(repositories)))
+          } catch: { error, send in
+            await send(.internal(.handleError(error)))
           }
 
         case .pullToRefresh:
           state.isRefreshing = true
           return .run { send in
-            await send(
-              .internal(
-                .profileResponse(
-                  Result { try await gitHubClient.getCurrentUser() }
-                )))
+            let user = try await gitHubClient.getCurrentUser()
+            await send(.internal(.profileResponse(user)))
 
-            await send(
-              .internal(
-                .repositoriesResponse(
-                  Result { try await gitHubClient.getMyRepositories() }
-                )))
+            let repositories = try await gitHubClient.getMyRepositories()
+            await send(.internal(.repositoriesResponse(repositories)))
+          } catch: { error, send in
+            await send(.internal(.handleError(error)))
           }
 
         case .settingsButtonTapped:
@@ -126,7 +115,7 @@ struct ProfileFeature {
 
       case let .internal(internalAction):
         switch internalAction {
-        case .profileResponse(.success(let user)):
+        case .profileResponse(let user):
           state.user = user
           state.isLoading = false
           state.isRefreshing = false
@@ -142,9 +131,20 @@ struct ProfileFeature {
                   followers: (try? await followers)?.count ?? 0,
                   following: (try? await following)?.count ?? 0
                 )))
+          } catch: { error, send in
+            await send(.internal(.handleError(error)))
           }
 
-        case .profileResponse(.failure(let error)):
+        case .repositoriesResponse(let repositories):
+          state.repositories = repositories
+          return .none
+
+        case .countsResponse(let followers, let following):
+          state.followersCount = followers
+          state.followingCount = following
+          return .none
+
+        case .handleError(let error):
           state.isLoading = false
           state.isRefreshing = false
 
@@ -154,27 +154,10 @@ struct ProfileFeature {
           }
 
           state.alert = AlertState {
-            TextState("Error Loading Profile")
+            TextState("Error")
           } message: {
             TextState(error.localizedDescription)
           }
-          return .none
-
-        case .repositoriesResponse(.success(let repositories)):
-          state.repositories = repositories
-          return .none
-
-        case .repositoriesResponse(.failure(let error)):
-          // Check if it's an authentication error
-          if case GitHubClientError.notAuthenticated = error {
-            return .send(.delegate(.authenticationError))
-          }
-          // Otherwise silently fail for repositories
-          return .none
-
-        case .countsResponse(let followers, let following):
-          state.followersCount = followers
-          state.followingCount = following
           return .none
         }
 

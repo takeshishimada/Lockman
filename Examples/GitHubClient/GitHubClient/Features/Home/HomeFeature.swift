@@ -42,7 +42,8 @@ struct HomeFeature {
     }
 
     enum InternalAction {
-      case repositoriesResponse(Result<[Repository], Error>)
+      case repositoriesResponse([Repository])
+      case handleError(Error)
     }
 
     enum Delegate: Equatable {
@@ -62,42 +63,38 @@ struct HomeFeature {
           guard state.repositories.isEmpty else { return .none }
           state.isLoading = true
           return .run { [selectedType = state.selectedType] send in
-            await send(
-              .internal(
-                .repositoriesResponse(
-                  Result { try await self.loadRepositories(for: selectedType) }
-                )))
+            let repositories = try await self.loadRepositories(for: selectedType)
+            await send(.internal(.repositoriesResponse(repositories)))
+          } catch: { error, send in
+            await send(.internal(.handleError(error)))
           }
 
         case .segmentChanged(let type):
           state.selectedType = type
           state.isLoading = true
           return .run { send in
-            await send(
-              .internal(
-                .repositoriesResponse(
-                  Result { try await self.loadRepositories(for: type) }
-                )))
+            let repositories = try await self.loadRepositories(for: type)
+            await send(.internal(.repositoriesResponse(repositories)))
+          } catch: { error, send in
+            await send(.internal(.handleError(error)))
           }
 
         case .refreshButtonTapped:
           state.isLoading = true
           return .run { [selectedType = state.selectedType] send in
-            await send(
-              .internal(
-                .repositoriesResponse(
-                  Result { try await self.loadRepositories(for: selectedType) }
-                )))
+            let repositories = try await self.loadRepositories(for: selectedType)
+            await send(.internal(.repositoriesResponse(repositories)))
+          } catch: { error, send in
+            await send(.internal(.handleError(error)))
           }
 
         case .pullToRefresh:
           state.isRefreshing = true
           return .run { [selectedType = state.selectedType] send in
-            await send(
-              .internal(
-                .repositoriesResponse(
-                  Result { try await self.loadRepositories(for: selectedType) }
-                )))
+            let repositories = try await self.loadRepositories(for: selectedType)
+            await send(.internal(.repositoriesResponse(repositories)))
+          } catch: { error, send in
+            await send(.internal(.handleError(error)))
           }
 
         case .repositoryTapped(let repository):
@@ -109,13 +106,13 @@ struct HomeFeature {
 
       case let .internal(internalAction):
         switch internalAction {
-        case .repositoriesResponse(.success(let repositories)):
+        case .repositoriesResponse(let repositories):
           state.repositories = repositories
           state.isLoading = false
           state.isRefreshing = false
           return .none
 
-        case .repositoriesResponse(.failure(let error)):
+        case .handleError(let error):
           state.isLoading = false
           state.isRefreshing = false
 

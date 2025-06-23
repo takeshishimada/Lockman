@@ -29,7 +29,8 @@ struct FollowingListFeature {
     }
 
     enum InternalAction {
-      case followingResponse(Result<[User], Error>)
+      case followingResponse([User])
+      case handleError(Error)
     }
 
     enum Delegate: Equatable {
@@ -49,31 +50,28 @@ struct FollowingListFeature {
           guard state.following.isEmpty else { return .none }
           state.isLoading = true
           return .run { [username = state.username] send in
-            await send(
-              .internal(
-                .followingResponse(
-                  Result { try await gitHubClient.getFollowing(username: username) }
-                )))
+            let following = try await gitHubClient.getFollowing(username: username)
+            await send(.internal(.followingResponse(following)))
+          } catch: { error, send in
+            await send(.internal(.handleError(error)))
           }
 
         case .refreshButtonTapped:
           state.isLoading = true
           return .run { [username = state.username] send in
-            await send(
-              .internal(
-                .followingResponse(
-                  Result { try await gitHubClient.getFollowing(username: username) }
-                )))
+            let following = try await gitHubClient.getFollowing(username: username)
+            await send(.internal(.followingResponse(following)))
+          } catch: { error, send in
+            await send(.internal(.handleError(error)))
           }
 
         case .pullToRefresh:
           state.isRefreshing = true
           return .run { [username = state.username] send in
-            await send(
-              .internal(
-                .followingResponse(
-                  Result { try await gitHubClient.getFollowing(username: username) }
-                )))
+            let following = try await gitHubClient.getFollowing(username: username)
+            await send(.internal(.followingResponse(following)))
+          } catch: { error, send in
+            await send(.internal(.handleError(error)))
           }
 
         case .userTapped(let user):
@@ -85,13 +83,13 @@ struct FollowingListFeature {
 
       case let .internal(internalAction):
         switch internalAction {
-        case .followingResponse(.success(let following)):
+        case let .followingResponse(following):
           state.following = following
           state.isLoading = false
           state.isRefreshing = false
           return .none
 
-        case .followingResponse(.failure(let error)):
+        case let .handleError(error):
           state.isLoading = false
           state.isRefreshing = false
 
