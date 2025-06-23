@@ -2,36 +2,41 @@
 # https://editorconfig.org
 root = true
 
-# 全ファイル共通設定
+# Default settings for all files
 [*]
 charset = utf-8
 end_of_line = lf
 insert_final_newline = true
 trim_trailing_whitespace = true
 
-# Swift/Objective-C ファイル
+# Swift files - aligned with .swift-format settings
 [*.{swift,h,m,mm}]
 indent_style = space
 indent_size = 2
 tab_width = 2
-max_line_length = 120
+max_line_length = 100  # Aligned with .swift-format lineLength
 
-# 設定ファイル
+# Configuration files
 [*.{yml,yaml,json}]
 indent_style = space
 indent_size = 2
 
-# Ruby系ファイル (CocoaPods, Fastlane等)
+# Ruby files (CocoaPods, Fastlane, etc.)
 [{Podfile,Fastfile,Matchfile,*.rb}]
 indent_style = space
 indent_size = 2
 
-# Markdown (trailing whitespace保持)
+# Markdown (preserve trailing whitespace for line breaks)
 [*.md]
 trim_trailing_whitespace = false
 max_line_length = off
 
-# シェルスクリプト
+# Shell scripts
 [*.{sh,bash}]
 indent_style = space
 indent_size = 2
+
+# Makefile (requires tabs)
+[{Makefile,*.mk}]
+indent_style = tab
+indent_size = 4
