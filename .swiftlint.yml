@@ -11,8 +11,7 @@ excluded:
   - .build
   - Package.swift
   - Package@swift-6.0.swift
-  - Sources/Lockman/Internal/Logger.swift  # 複雑な条件付きコンパイル構文のため除外
-  - Sources/LockmanCore/Internal/Logger.swift  # 複雑な条件付きコンパイル構文のため除外
+  - Sources/Lockman/Core/Internal/Logger.swift  # 複雑な条件付きコンパイル構文のため除外
   # - Sources/**/Generated/**              # 自動生成ファイル用（必要に応じて）
   # - Sources/**/External/**               # 外部ライブラリ用（必要に応じて）
 

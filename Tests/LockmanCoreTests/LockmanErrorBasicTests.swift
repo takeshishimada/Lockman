@@ -1,7 +1,7 @@
 import Foundation
 import XCTest
 
-@testable import LockmanCore
+@testable import Lockman
 
 /// Enhanced tests for LockmanError functionality and error handling scenarios
 final class LockmanErrorEnhancedTests: XCTestCase {

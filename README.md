@@ -47,7 +47,7 @@ Example of priority-based action control for profile photo selection:
 
 ```swift
 import ComposableArchitecture
-import LockmanComposable
+import Lockman
 
 @Reducer
 struct ProfilePhotoFeature {
@@ -163,7 +163,7 @@ Add the dependency to your target:
 .target(
   name: "MyApp",
   dependencies: [
-    .product(name: "LockmanComposable", package: "Lockman"),
+    .product(name: "Lockman", package: "Lockman"),
   ]
 )
 ```

@@ -1,6 +1,5 @@
 import ComposableArchitecture
 import Foundation
-import LockmanCore
 
 /// A reducer that wraps another reducer with dynamic lock evaluation capabilities.
 ///
@@ -80,12 +79,14 @@ public struct ReduceWithLock<State: Sendable, Action: Sendable>: Reducer {
   /// This is made internal to allow the extension methods to access it.
   @usableFromInline
   internal let _lockCondition: (@Sendable (_ state: State, _ action: Action) -> LockmanResult)?
-  
+
   @usableFromInline
   var base: Reduce<State, Action> { _base }
-  
+
   @usableFromInline
-  var lockCondition: (@Sendable (_ state: State, _ action: Action) -> LockmanResult)? { _lockCondition }
+  var lockCondition: (@Sendable (_ state: State, _ action: Action) -> LockmanResult)? {
+    _lockCondition
+  }
 
   /// Initializes a reducer with optional lock condition evaluation.
   ///
@@ -149,7 +150,7 @@ extension ReduceWithLock {
     let strategy: AnyLockmanStrategy<LockmanDynamicConditionInfo>
     let unlockToken: LockmanUnlock<B, LockmanDynamicConditionInfo>
     do {
-      strategy = try Lockman.container.resolve(
+      strategy = try LockmanManager.container.resolve(
         id: .dynamicCondition,
         expecting: LockmanDynamicConditionInfo.self
       )

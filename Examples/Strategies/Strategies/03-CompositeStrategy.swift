@@ -1,6 +1,5 @@
 import ComposableArchitecture
-import LockmanComposable
-import LockmanCore
+import Lockman
 import SwiftUI
 
 enum CompositeStrategyInjection {
@@ -9,7 +8,7 @@ enum CompositeStrategyInjection {
       strategy1: LockmanSingleExecutionStrategy(),
       strategy2: LockmanDynamicConditionStrategy()
     )
-    try! Lockman.container.register(strategy)
+    try! LockmanManager.container.register(strategy)
   }
 }
 
@@ -212,7 +211,7 @@ struct CompositeStrategyView: View {
       // Debug Button
       Button(action: {
         print("\n📊 Current Lock State (CompositeStrategy):")
-        Lockman.debug.printCurrentLocks(options: .compact)
+        LockmanManager.debug.printCurrentLocks(options: .compact)
         print("")
       }) {
         HStack {

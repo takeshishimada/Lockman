@@ -1,7 +1,7 @@
 import Foundation
 
 /// Formatters for debug output
-extension Lockman.debug {
+extension LockmanManager.debug {
   /// Options for formatting debug output
   public struct FormatOptions: Sendable {
     /// Whether to use short names for strategies
@@ -143,7 +143,7 @@ extension Lockman.debug {
 
   /// Prints current locks with custom formatting options
   public static func printCurrentLocks(options: FormatOptions = .default) {
-    let container = Lockman.container
+    let container = LockmanManager.container
     var allLocks: [(strategy: String, boundaryId: String, info: any LockmanInfo)] = []
 
     // Collect all locks from all strategies

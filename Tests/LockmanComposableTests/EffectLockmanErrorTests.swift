@@ -3,8 +3,7 @@ import ConcurrencyExtras
 import Foundation
 import XCTest
 
-@testable import LockmanComposable
-@testable @_spi(Logging) import LockmanCore
+@testable @_spi(Logging) import Lockman
 
 /// Tests for Effect+Lockman error handling scenarios
 final class EffectLockmanErrorTests: XCTestCase {
@@ -69,7 +68,7 @@ final class EffectLockmanErrorTests: XCTestCase {
   func testWithLockHandlesUnregisteredStrategyGracefully() async {
     let testContainer = LockmanStrategyContainer()
 
-    await Lockman.withTestContainer(testContainer) {
+    await LockmanManager.withTestContainer(testContainer) {
       let action = MockErrorAction.unregisteredStrategy
       let cancelID = "test-cancel-id"
       let operationExecuted = LockIsolated(false)
@@ -104,7 +103,7 @@ final class EffectLockmanErrorTests: XCTestCase {
     let testContainer = LockmanStrategyContainer()
     try? testContainer.register(LockmanSingleExecutionStrategy.shared)
 
-    await Lockman.withTestContainer(testContainer) {
+    await LockmanManager.withTestContainer(testContainer) {
       let action = MockValidAction.testAction
       let cancelID = "test-cancel-id"
 
@@ -125,7 +124,7 @@ final class EffectLockmanErrorTests: XCTestCase {
   func testWithLockManualUnlockHandlesUnregisteredStrategy() async {
     let testContainer = LockmanStrategyContainer()
 
-    await Lockman.withTestContainer(testContainer) {
+    await LockmanManager.withTestContainer(testContainer) {
       let action = MockErrorAction.unregisteredStrategy
       let cancelID = "test-cancel-id"
       let operationExecuted = LockIsolated(false)
@@ -153,7 +152,7 @@ final class EffectLockmanErrorTests: XCTestCase {
   func testConcatenateWithLockHandlesUnregisteredStrategy() async {
     let testContainer = LockmanStrategyContainer()
 
-    await Lockman.withTestContainer(testContainer) {
+    await LockmanManager.withTestContainer(testContainer) {
       let action = MockErrorAction.unregisteredStrategy
       let cancelID = "test-cancel-id"
 
@@ -239,7 +238,7 @@ final class EffectLockmanErrorTests: XCTestCase {
     // Register some strategies but not the one we need
     try? testContainer.register(LockmanPriorityBasedStrategy.shared)
 
-    await Lockman.withTestContainer(testContainer) {
+    await LockmanManager.withTestContainer(testContainer) {
       let action = MockValidAction.testAction  // Requires LockmanSingleExecutionStrategy
       let cancelID = "integration-test"
 
@@ -263,7 +262,7 @@ final class EffectLockmanErrorTests: XCTestCase {
   func testMultipleStrategyTypesResolutionErrors() async {
     let testContainer = LockmanStrategyContainer()
 
-    await Lockman.withTestContainer(testContainer) {
+    await LockmanManager.withTestContainer(testContainer) {
       let actions = [
         MockErrorAction.unregisteredStrategy,
         MockErrorAction.validStrategy,
@@ -291,7 +290,7 @@ final class EffectLockmanErrorTests: XCTestCase {
     let testContainer = LockmanStrategyContainer()
 
     // First attempt without registration
-    await Lockman.withTestContainer(testContainer) {
+    await LockmanManager.withTestContainer(testContainer) {
       let action = MockValidAction.testAction
       let cancelID = "recovery-test-1"
 
@@ -312,7 +311,7 @@ final class EffectLockmanErrorTests: XCTestCase {
     try? testContainer.register(LockmanSingleExecutionStrategy.shared)
 
     // Second attempt should work
-    await Lockman.withTestContainer(testContainer) {
+    await LockmanManager.withTestContainer(testContainer) {
       let action = MockValidAction.testAction
       let cancelID = "recovery-test-2"
 

@@ -1,8 +1,7 @@
 import ComposableArchitecture
-import LockmanCore
 
 /// Composable Architecture specific implementation of Lockman's LockmanIssueReporter that uses ComposableArchitecture's reportIssue.
-public enum ComposableIssueReporter: LockmanCore.LockmanIssueReporter {
+public enum ComposableIssueReporter: LockmanIssueReporter {
   public static func reportIssue(
     _ message: String,
     file: StaticString = #file,

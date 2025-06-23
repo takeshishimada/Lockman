@@ -1,5 +1,4 @@
 import ComposableArchitecture
-import LockmanCore
 
 // MARK: - Effect Extensions for Lockman Integration
 
@@ -54,7 +53,7 @@ extension Effect {
     withLockCommon(
       action: action,
       cancelID: cancelID,
-      unlockOption: unlockOption ?? Lockman.config.defaultUnlockOption,
+      unlockOption: unlockOption ?? LockmanManager.config.defaultUnlockOption,
       fileID: fileID,
       filePath: filePath,
       line: line,
@@ -76,7 +75,7 @@ extension Effect {
             // Handle cancellation specially to ensure proper cleanup order
             if error is CancellationError {
               defer { unlockToken() }
-              let shouldHandle = handleCancellationErrors ?? Lockman.config.handleCancellationErrors
+              let shouldHandle = handleCancellationErrors ?? LockmanManager.config.handleCancellationErrors
               if shouldHandle {
                 await handler?(error, send)
               }
@@ -151,7 +150,7 @@ extension Effect {
     withLockCommon(
       action: action,
       cancelID: cancelID,
-      unlockOption: unlockOption ?? Lockman.config.defaultUnlockOption,
+      unlockOption: unlockOption ?? LockmanManager.config.defaultUnlockOption,
       fileID: fileID,
       filePath: filePath,
       line: line,
@@ -169,7 +168,7 @@ extension Effect {
           } catch {
             // Handle cancellation with unlock token available
             if error is CancellationError {
-              let shouldHandle = handleCancellationErrors ?? Lockman.config.handleCancellationErrors
+              let shouldHandle = handleCancellationErrors ?? LockmanManager.config.handleCancellationErrors
               if shouldHandle {
                 await handler?(error, send, unlockToken)
               }
@@ -232,7 +231,7 @@ extension Effect {
   ) -> Effect<Action> {
     do {
       // Resolve strategy and prepare unlock mechanism
-      let strategy: AnyLockmanStrategy<A.I> = try Lockman.container.resolve(
+      let strategy: AnyLockmanStrategy<A.I> = try LockmanManager.container.resolve(
         id: action.strategyId,
         expecting: A.I.self
       )
@@ -241,7 +240,7 @@ extension Effect {
         id: cancelID,
         info: lockmanInfo,
         strategy: strategy,
-        unlockOption: unlockOption ?? Lockman.config.defaultUnlockOption
+        unlockOption: unlockOption ?? LockmanManager.config.defaultUnlockOption
       )
 
       // Create auto-unlock manager for guaranteed cleanup
@@ -351,7 +350,7 @@ extension Effect {
   ) -> Effect<Action> {
     do {
       // Resolve the strategy from the container using strategyId
-      let strategy: AnyLockmanStrategy<A.I> = try Lockman.container.resolve(
+      let strategy: AnyLockmanStrategy<A.I> = try LockmanManager.container.resolve(
         id: action.strategyId,
         expecting: A.I.self
       )
@@ -446,7 +445,7 @@ extension Effect {
     strategy: AnyLockmanStrategy<I>,
     cancelID: B
   ) -> LockmanResult {
-    Lockman.withBoundaryLock(for: cancelID) {
+    LockmanManager.withBoundaryLock(for: cancelID) {
       // Check if lock can be acquired
       let result = strategy.canLock(
         id: cancelID,

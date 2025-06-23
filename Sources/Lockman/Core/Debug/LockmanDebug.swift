@@ -1,9 +1,9 @@
 import Foundation
 
-/// Debug utilities for Lockman.
+/// Debug utilities for LockmanManager.
 ///
 /// Provides methods for debugging lock state and enabling/disabling debug logging.
-extension Lockman {
+extension LockmanManager {
   /// Debug utilities namespace.
   public enum debug {
     // MARK: - Logging Control
@@ -16,7 +16,7 @@ extension Lockman {
     /// ## Example
     /// ```swift
     /// // Enable debug logging
-    /// Lockman.debug.isLoggingEnabled = true
+    /// LockmanManager.debug.isLoggingEnabled = true
     ///
     /// // Your lock operations will now be logged
     /// let result = strategy.canLock(id: boundaryId, info: lockInfo)
@@ -58,13 +58,13 @@ extension Lockman {
     /// ## Usage
     /// ```swift
     /// // Print current lock state with default formatting
-    /// Lockman.debug.printCurrentLocks()
+    /// LockmanManager.debug.printCurrentLocks()
     ///
     /// // Print with compact formatting for narrow terminals
-    /// Lockman.debug.printCurrentLocks(options: .compact)
+    /// LockmanManager.debug.printCurrentLocks(options: .compact)
     ///
     /// // Print with detailed formatting
-    /// Lockman.debug.printCurrentLocks(options: .detailed)
+    /// LockmanManager.debug.printCurrentLocks(options: .detailed)
     /// ```
     ///
     /// ## Availability

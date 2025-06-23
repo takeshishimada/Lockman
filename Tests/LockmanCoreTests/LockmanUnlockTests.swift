@@ -1,7 +1,7 @@
 import Foundation
 import XCTest
 
-@testable import LockmanCore
+@testable import Lockman
 
 // MARK: - Test Helpers
 
@@ -100,7 +100,7 @@ final class LockmanUnlockTests: XCTestCase {
     let strategy = MockLockmanStrategy()
     try? container.register(strategy)
 
-    await Lockman.withTestContainer(container) {
+    await LockmanManager.withTestContainer(container) {
       // Create type-erased strategy for LockmanUnlock
       let anyStrategy = AnyLockmanStrategy(strategy)
       let unlock = LockmanUnlock(
@@ -125,7 +125,7 @@ final class LockmanUnlockTests: XCTestCase {
     let strategy = MockLockmanStrategy()
     try? container.register(strategy)
 
-    await Lockman.withTestContainer(container) {
+    await LockmanManager.withTestContainer(container) {
       let anyStrategy = AnyLockmanStrategy(strategy)
       let unlock = LockmanUnlock(
         id: boundaryId, info: info, strategy: anyStrategy, unlockOption: .immediate)
@@ -149,7 +149,7 @@ final class LockmanUnlockTests: XCTestCase {
     try? container.register(priorityStrategy)
     try? container.register(customStrategy)
 
-    await Lockman.withTestContainer(container) {
+    await LockmanManager.withTestContainer(container) {
       // Test with LockmanSingleExecutionInfo
       let boundaryId1 = TestBoundaryId("single")
       let singleInfo = LockmanSingleExecutionInfo(actionId: "single", mode: .boundary)
@@ -196,7 +196,7 @@ final class LockmanUnlockTests: XCTestCase {
     let strategy = MockLockmanStrategy()
     try? container.register(strategy)
 
-    await Lockman.withTestContainer(container) {
+    await LockmanManager.withTestContainer(container) {
       let anyStrategy = AnyLockmanStrategy(strategy)
       let unlock = LockmanUnlock(
         id: boundaryId, info: info, strategy: anyStrategy, unlockOption: .immediate)
@@ -222,7 +222,7 @@ final class LockmanUnlockTests: XCTestCase {
     let strategy = MockLockmanStrategy()
     try? container.register(strategy)
 
-    await Lockman.withTestContainer(container) {
+    await LockmanManager.withTestContainer(container) {
       let anyStrategy = AnyLockmanStrategy(strategy)
       let unlock = LockmanUnlock(
         id: boundaryId, info: info, strategy: anyStrategy, unlockOption: .immediate)
@@ -253,7 +253,7 @@ final class LockmanUnlockTests: XCTestCase {
     let strategy = MockLockmanStrategy()
     try? container.register(strategy)
 
-    await Lockman.withTestContainer(container) {
+    await LockmanManager.withTestContainer(container) {
       let anyStrategy = AnyLockmanStrategy(strategy)
       let unlock1 = LockmanUnlock(
         id: boundaryId1, info: info, strategy: anyStrategy, unlockOption: .immediate)
@@ -280,7 +280,7 @@ final class LockmanUnlockTests: XCTestCase {
     let strategy = MockLockmanStrategy()
     try? container.register(strategy)
 
-    await Lockman.withTestContainer(container) {
+    await LockmanManager.withTestContainer(container) {
       let anyStrategy = AnyLockmanStrategy(strategy)
       let unlock1 = LockmanUnlock(
         id: boundaryId, info: info1, strategy: anyStrategy, unlockOption: .immediate)
@@ -310,7 +310,7 @@ final class LockmanUnlockTests: XCTestCase {
     // This test uses separate strategy instances with type erasure
     try? container.register(strategy1)
 
-    await Lockman.withTestContainer(container) {
+    await LockmanManager.withTestContainer(container) {
       let anyStrategy1 = AnyLockmanStrategy(strategy1)
       let anyStrategy2 = AnyLockmanStrategy(strategy2)
 
@@ -342,7 +342,7 @@ final class LockmanUnlockTests: XCTestCase {
     let strategy = LockmanSingleExecutionStrategy.shared
     try? container.register(strategy)
 
-    await Lockman.withTestContainer(container) {
+    await LockmanManager.withTestContainer(container) {
       let boundaryId = TestBoundaryId("single")
       let info = LockmanSingleExecutionInfo(actionId: "action", mode: .boundary)
 
@@ -364,7 +364,7 @@ final class LockmanUnlockTests: XCTestCase {
     let strategy = LockmanPriorityBasedStrategy.shared
     try? container.register(strategy)
 
-    await Lockman.withTestContainer(container) {
+    await LockmanManager.withTestContainer(container) {
       let boundaryId = TestBoundaryId("priority")
       let info = LockmanPriorityBasedInfo(actionId: "action", priority: .high(.exclusive))
 
@@ -390,7 +390,7 @@ final class LockmanUnlockTests: XCTestCase {
     let strategy = MockLockmanStrategy()
     try? container.register(strategy)
 
-    await Lockman.withTestContainer(container) {
+    await LockmanManager.withTestContainer(container) {
       do {
         let anyStrategy = AnyLockmanStrategy(strategy)
         let unlockToken = LockmanUnlock(
@@ -420,7 +420,7 @@ final class LockmanUnlockTests: XCTestCase {
     let strategy = MockLockmanStrategy()
     try? container.register(strategy)
 
-    await Lockman.withTestContainer(container) {
+    await LockmanManager.withTestContainer(container) {
       let anyStrategy = AnyLockmanStrategy(strategy)
       let unlock = LockmanUnlock(
         id: boundaryId, info: info, strategy: anyStrategy, unlockOption: .immediate)
@@ -445,7 +445,7 @@ final class LockmanUnlockTests: XCTestCase {
     let strategy = MockLockmanStrategy()
     try? container.register(strategy)
 
-    await Lockman.withTestContainer(container) {
+    await LockmanManager.withTestContainer(container) {
       let anyStrategy = AnyLockmanStrategy(strategy)
       let unlock = LockmanUnlock(
         id: boundaryId, info: info, strategy: anyStrategy, unlockOption: .immediate)
@@ -482,7 +482,7 @@ final class LockmanUnlockTests: XCTestCase {
     let strategy = MockLockmanStrategy()
     try? container.register(strategy)
 
-    await Lockman.withTestContainer(container) {
+    await LockmanManager.withTestContainer(container) {
       let anyStrategy = AnyLockmanStrategy(strategy)
       var unlock: LockmanUnlock? = LockmanUnlock(
         id: boundaryId, info: info, strategy: anyStrategy, unlockOption: .immediate)
@@ -506,7 +506,7 @@ final class LockmanUnlockTests: XCTestCase {
     let strategy = MockLockmanStrategy()
     try? container.register(strategy)
 
-    await Lockman.withTestContainer(container) {
+    await LockmanManager.withTestContainer(container) {
       let anyStrategy = AnyLockmanStrategy(strategy)
       let unlock1 = LockmanUnlock(
         id: boundaryId, info: info, strategy: anyStrategy, unlockOption: .immediate)

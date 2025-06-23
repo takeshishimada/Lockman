@@ -7,7 +7,7 @@ Develop a library to implement exclusive control of user actions in application 
 - Swift versions: 6.0, 5.10, 5.9
 - Type-safe implementation
 - Test-driven development
-- Modules are divided into LockmanComposable and LockmanCore, but developed exclusively for TCA
+- Single unified Lockman module, developed exclusively for TCA
 - Based on Composable Architecture 1.17
 - When modifying Package.swift, also update Package@swift-6.0
 
@@ -68,8 +68,7 @@ Apply labels based on the PR title prefix:
 - `breaking:` or `!:` → `breaking change`
 
 **Module Labels (add if changes affect specific modules):**
-- Changes in `Sources/LockmanCore/` → `core`
-- Changes in `Sources/LockmanComposable/` → `composable`
+- Changes in `Sources/Lockman/` → `core`
 - Changes in `Sources/LockmanMacros/` → `macro`
 
 **Example Commands:**
@@ -81,7 +80,7 @@ gh pr create \
   --label "documentation" \
   --body "..."
 
-# Feature affecting LockmanCore
+# Feature affecting Lockman
 gh pr create \
   --title "feat: add new locking strategy" \
   --assignee @me \
@@ -121,8 +120,7 @@ Every PR must have at least one label from each applicable category:
    - `breaking change`: Changes that break backward compatibility
 
 2. **Module** (if applicable):
-   - `core`: Changes to LockmanCore module
-   - `composable`: Changes to LockmanComposable module
+   - `core`: Changes to Lockman module
    - `macro`: Changes to macro implementations
 
 3. **Additional Labels** (optional):

@@ -1,6 +1,6 @@
 import XCTest
 
-@testable import LockmanCore
+@testable import Lockman
 
 /// Tests to improve code coverage for error types
 final class LockmanErrorCoverageTests: XCTestCase {

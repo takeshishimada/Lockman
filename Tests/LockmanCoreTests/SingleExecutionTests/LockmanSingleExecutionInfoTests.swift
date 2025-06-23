@@ -1,7 +1,7 @@
 import Foundation
 import XCTest
 
-@testable import LockmanCore
+@testable import Lockman
 
 // MARK: - Test Helpers
 

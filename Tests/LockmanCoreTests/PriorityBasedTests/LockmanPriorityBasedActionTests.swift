@@ -1,7 +1,7 @@
 import Foundation
 import XCTest
 
-@testable import LockmanCore
+@testable import Lockman
 
 // MARK: - Test Helpers
 
@@ -121,7 +121,7 @@ final class LockmanPriorityBasedActionTests: XCTestCase {
   //    let strategy = LockmanPriorityBasedStrategy()
   //    try container.register(strategy)
   //
-  //    await Lockman.withTestContainer(container) {
+  //    await LockmanManager.withTestContainer(container) {
   //      let action = TestPriorityAction.highExclusive()
   //
   //      let resolvedStrategy = try! container.resolve(action.strategyType)
@@ -222,7 +222,7 @@ final class LockmanPriorityBasedActionTests: XCTestCase {
   //    let strategy = LockmanPriorityBasedStrategy()
   //    try container.register(strategy)
   //
-  //    await Lockman.withTestContainer(container) {
+  //    await LockmanManager.withTestContainer(container) {
   //      let actions = [
   //        TestPriorityAction.lowExclusive("action1"),
   //        TestPriorityAction.highReplaceable("action2")
@@ -254,7 +254,7 @@ final class LockmanPriorityBasedActionTests: XCTestCase {
   func testUnregisteredStrategyThrowsAppropriateError() async throws {
     let emptyContainer = LockmanStrategyContainer()
 
-    await Lockman.withTestContainer(emptyContainer) {
+    await LockmanManager.withTestContainer(emptyContainer) {
       let action = TestPriorityAction.highExclusive()
 
       do {
@@ -271,7 +271,7 @@ final class LockmanPriorityBasedActionTests: XCTestCase {
   func testErrorContainsCorrectStrategyInformation() async throws {
     let emptyContainer = LockmanStrategyContainer()
 
-    await Lockman.withTestContainer(emptyContainer) {
+    await LockmanManager.withTestContainer(emptyContainer) {
       let action = TestPriorityAction.lowReplaceable()
 
       do {

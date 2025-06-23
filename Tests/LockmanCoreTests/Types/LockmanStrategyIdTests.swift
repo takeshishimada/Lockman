@@ -1,6 +1,6 @@
 import XCTest
 
-@testable import LockmanCore
+@testable import Lockman
 
 final class LockmanStrategyIdTests: XCTestCase {
   // MARK: - Basic Initialization Tests

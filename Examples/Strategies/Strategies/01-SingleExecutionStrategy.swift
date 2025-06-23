@@ -1,6 +1,5 @@
 import ComposableArchitecture
-import LockmanComposable
-import LockmanCore
+import Lockman
 import SwiftUI
 
 @Reducer
@@ -135,7 +134,7 @@ struct SingleExecutionStrategyView: View {
       // Debug Button
       Button(action: {
         print("\n📊 Current Lock State (SingleExecutionStrategy):")
-        Lockman.debug.printCurrentLocks(options: .compact)
+        LockmanManager.debug.printCurrentLocks(options: .compact)
         print("")
       }) {
         HStack {

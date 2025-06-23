@@ -2,8 +2,7 @@ import ComposableArchitecture
 import Foundation
 import XCTest
 
-@testable import LockmanComposable
-@testable import LockmanCore
+@testable import Lockman
 
 /// Test suite for deadlock prevention functionality in Lockman framework.
 ///
@@ -18,7 +17,7 @@ final class DeadlockPreventionTests: XCTestCase {
     let id = TestBoundaryId("test")
     var executed = false
 
-    Lockman.withBoundaryLock(for: id) {
+    LockmanManager.withBoundaryLock(for: id) {
       executed = true
     }
 
@@ -34,11 +33,11 @@ final class DeadlockPreventionTests: XCTestCase {
 
     var executions: [String] = []
 
-    Lockman.withBoundaryLock(for: id1) {
+    LockmanManager.withBoundaryLock(for: id1) {
       executions.append("id1")
-      Lockman.withBoundaryLock(for: id2) {
+      LockmanManager.withBoundaryLock(for: id2) {
         executions.append("id2")
-        Lockman.withBoundaryLock(for: id3) {
+        LockmanManager.withBoundaryLock(for: id3) {
           executions.append("id3")
         }
       }
@@ -60,7 +59,7 @@ final class DeadlockPreventionTests: XCTestCase {
     await withTaskGroup(of: Void.self) { group in
       for _ in 0..<iterations {
         group.addTask {
-          Lockman.withBoundaryLock(for: id) {
+          LockmanManager.withBoundaryLock(for: id) {
             // This section must be synchronized to prevent race conditions
             let current = counter.withCriticalRegion { $0 }
             // Simulate small processing time to increase chance of race conditions
@@ -85,7 +84,7 @@ final class DeadlockPreventionTests: XCTestCase {
     await withTaskGroup(of: Void.self) { group in
       for _ in 0..<iterations {
         group.addTask {
-          Lockman.withBoundaryLock(for: id) {
+          LockmanManager.withBoundaryLock(for: id) {
             // Simulate work and collect execution order
             let currentResults = results.withCriticalRegion { $0 }
             let newValue = currentResults.count + 1
@@ -120,7 +119,7 @@ final class DeadlockPreventionTests: XCTestCase {
     let id = TestBoundaryId("throwing")
 
     do {
-      try Lockman.withBoundaryLock(for: id) {
+      try LockmanManager.withBoundaryLock(for: id) {
         throw TestError()
       }
       XCTFail("Should have thrown")
@@ -132,7 +131,7 @@ final class DeadlockPreventionTests: XCTestCase {
 
     // Lock operations should continue to work normally after exception handling
     var executed = false
-    Lockman.withBoundaryLock(for: id) {
+    LockmanManager.withBoundaryLock(for: id) {
       executed = true
     }
     XCTAssertTrue(executed)
@@ -147,7 +146,7 @@ final class DeadlockPreventionTests: XCTestCase {
     let strategy = LockmanSingleExecutionStrategy()
     try container.register(strategy)
 
-    await Lockman.withTestContainer(container) {
+    await LockmanManager.withTestContainer(container) {
       let store = await TestStore(
         initialState: TestFeature.State()
       ) {
@@ -168,7 +167,7 @@ final class DeadlockPreventionTests: XCTestCase {
     let strategy = LockmanSingleExecutionStrategy()
     try container.register(strategy)
 
-    await Lockman.withTestContainer(container) {
+    await LockmanManager.withTestContainer(container) {
       let id = TestBoundaryId("unlock_test")
       let info = LockmanSingleExecutionInfo(actionId: "test", mode: .boundary)
 
@@ -203,10 +202,10 @@ final class DeadlockPreventionTests: XCTestCase {
 
     var executionOrder: [String] = []
 
-    Lockman.withBoundaryLock(for: outerID) {
+    LockmanManager.withBoundaryLock(for: outerID) {
       executionOrder.append("outer_start")
 
-      Lockman.withBoundaryLock(for: innerID) {
+      LockmanManager.withBoundaryLock(for: innerID) {
         executionOrder.append("inner")
       }
 
@@ -229,7 +228,7 @@ final class DeadlockPreventionTests: XCTestCase {
       for i in 0..<iterations {
         group.addTask {
           let boundaryID = boundaries[i % boundaries.count]
-          Lockman.withBoundaryLock(for: boundaryID) {
+          LockmanManager.withBoundaryLock(for: boundaryID) {
             // Simulate short processing time with synchronous operation
             Thread.sleep(forTimeInterval: 0.001)
             completionCount.withCriticalRegion { $0 += 1 }
@@ -255,12 +254,12 @@ final class DeadlockPreventionTests: XCTestCase {
     var secondExecution = false
 
     // First operation
-    Lockman.withBoundaryLock(for: id) {
+    LockmanManager.withBoundaryLock(for: id) {
       firstExecution = true
     }
 
     // Second operation with same ID
-    Lockman.withBoundaryLock(for: id) {
+    LockmanManager.withBoundaryLock(for: id) {
       secondExecution = true
     }
 
@@ -273,7 +272,7 @@ final class DeadlockPreventionTests: XCTestCase {
     let complexId = ComplexBoundaryId(prefix: "complex", suffix: "test", number: 42)
     var executed = false
 
-    Lockman.withBoundaryLock(for: complexId) {
+    LockmanManager.withBoundaryLock(for: complexId) {
       executed = true
     }
 
@@ -286,7 +285,7 @@ final class DeadlockPreventionTests: XCTestCase {
 
     for i in 0..<iterations {
       let id = TestBoundaryId("temp_\(i)")
-      Lockman.withBoundaryLock(for: id) {
+      LockmanManager.withBoundaryLock(for: id) {
         // Short operation
       }
     }
@@ -304,7 +303,7 @@ final class DeadlockPreventionTests: XCTestCase {
     var counter = 0
 
     for _ in 0..<iterations {
-      Lockman.withBoundaryLock(for: id) {
+      LockmanManager.withBoundaryLock(for: id) {
         counter += 1
       }
     }
@@ -321,7 +320,7 @@ final class DeadlockPreventionTests: XCTestCase {
       for i in 0..<boundaryCount {
         group.addTask {
           let id = TestBoundaryId("boundary_\(i)")
-          Lockman.withBoundaryLock(for: id) {
+          LockmanManager.withBoundaryLock(for: id) {
             results.withCriticalRegion { dict in
               dict["boundary_\(i)"] = true
             }
@@ -434,7 +433,7 @@ final class BoundaryLockEdgeCaseTests: XCTestCase {
     let id = TestBoundaryId("")
     var executed = false
 
-    Lockman.withBoundaryLock(for: id) {
+    LockmanManager.withBoundaryLock(for: id) {
       executed = true
     }
 
@@ -445,7 +444,7 @@ final class BoundaryLockEdgeCaseTests: XCTestCase {
     let id = TestBoundaryId("🔒🧵💾")
     var executed = false
 
-    Lockman.withBoundaryLock(for: id) {
+    LockmanManager.withBoundaryLock(for: id) {
       executed = true
     }
 
@@ -457,7 +456,7 @@ final class BoundaryLockEdgeCaseTests: XCTestCase {
     let id = TestBoundaryId(longString)
     var executed = false
 
-    Lockman.withBoundaryLock(for: id) {
+    LockmanManager.withBoundaryLock(for: id) {
       executed = true
     }
 
@@ -468,7 +467,7 @@ final class BoundaryLockEdgeCaseTests: XCTestCase {
     let id = TestBoundaryId("test-boundary_id.with@special#chars!")
     var executed = false
 
-    Lockman.withBoundaryLock(for: id) {
+    LockmanManager.withBoundaryLock(for: id) {
       executed = true
     }
 
@@ -484,7 +483,7 @@ final class BoundaryLockErrorResilienceTests: XCTestCase {
     // Throw multiple errors
     for _ in 0..<5 {
       do {
-        try Lockman.withBoundaryLock(for: id) {
+        try LockmanManager.withBoundaryLock(for: id) {
           throw TestError()
         }
       } catch is TestError {
@@ -496,7 +495,7 @@ final class BoundaryLockErrorResilienceTests: XCTestCase {
 
     // Normal operation should still work
     var executed = false
-    Lockman.withBoundaryLock(for: id) {
+    LockmanManager.withBoundaryLock(for: id) {
       executed = true
     }
     XCTAssertTrue(executed)
@@ -513,10 +512,10 @@ final class BoundaryLockErrorResilienceTests: XCTestCase {
     var innerExecuted = false
 
     do {
-      try Lockman.withBoundaryLock(for: outerID) {
+      try LockmanManager.withBoundaryLock(for: outerID) {
         outerExecuted = true
         do {
-          try Lockman.withBoundaryLock(for: innerID) {
+          try LockmanManager.withBoundaryLock(for: innerID) {
             innerExecuted = true
             throw InnerError()
           }
@@ -538,9 +537,9 @@ final class BoundaryLockErrorResilienceTests: XCTestCase {
     var normalOuterExecuted = false
     var normalInnerExecuted = false
 
-    Lockman.withBoundaryLock(for: outerID) {
+    LockmanManager.withBoundaryLock(for: outerID) {
       normalOuterExecuted = true
-      Lockman.withBoundaryLock(for: innerID) {
+      LockmanManager.withBoundaryLock(for: innerID) {
         normalInnerExecuted = true
       }
     }
@@ -557,15 +556,15 @@ final class BoundaryLockErrorResilienceTests: XCTestCase {
   //    var executionLevels: [Int] = []
   //
   //    do {
-  //      try Lockman.withBoundaryLock(for: ids[0]) {
+  //      try LockmanManager.withBoundaryLock(for: ids[0]) {
   //        executionLevels.append(0)
-  //        try Lockman.withBoundaryLock(for: ids[1]) {
+  //        try LockmanManager.withBoundaryLock(for: ids[1]) {
   //          executionLevels.append(1)
-  //          try Lockman.withBoundaryLock(for: ids[2]) {
+  //          try LockmanManager.withBoundaryLock(for: ids[2]) {
   //            executionLevels.append(2)
-  //            try Lockman.withBoundaryLock(for: ids[3]) {
+  //            try LockmanManager.withBoundaryLock(for: ids[3]) {
   //              executionLevels.append(3)
-  //              try Lockman.withBoundaryLock(for: ids[4]) {
+  //              try LockmanManager.withBoundaryLock(for: ids[4]) {
   //                executionLevels.append(4)
   //                throw DeepError()
   //              }
@@ -583,7 +582,7 @@ final class BoundaryLockErrorResilienceTests: XCTestCase {
   //    var allExecuted  = true
   //    for id in ids {
   //      var executed = false
-  //      Lockman.withBoundaryLock(for: id) {
+  //      LockmanManager.withBoundaryLock(for: id) {
   //        executed = true
   //      }
   //      allExecuted = allExecuted && executed

@@ -1,7 +1,7 @@
 import Foundation
 import XCTest
 
-@testable import LockmanCore
+@testable import Lockman
 
 // MARK: - Async Test Helpers
 
@@ -115,7 +115,7 @@ struct TimeoutError: Error, LocalizedError {
 
 // MARK: - Test Container Helpers
 
-extension Lockman {
+extension LockmanManager {
   /// Execute test with isolated container and automatic cleanup
   static func withIsolatedTestContainer<T>(
     operation: () async throws -> T

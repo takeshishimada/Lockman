@@ -52,7 +52,7 @@ public enum LockmanRegistrationError: LockmanError {
 
     case let .strategyNotRegistered(strategyType):
       return
-        "Add 'try Lockman.container.register(\(strategyType).shared)' to your app startup code, or verify that registration is happening before this resolution attempt."
+        "Add 'try LockmanManager.container.register(\(strategyType).shared)' to your app startup code, or verify that registration is happening before this resolution attempt."
     }
   }
 
