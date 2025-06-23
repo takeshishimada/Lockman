@@ -17,14 +17,18 @@ extension Effect {
   ///   - handleCancellationErrors: Whether to pass CancellationError to catch handler (default: global config)
   ///   - operation: Async closure receiving `send` function for dispatching actions
   ///   - handler: Optional error handler receiving error and send function
+  ///   - lockFailure: Optional handler for lock acquisition failures
   ///   - action: LockmanAction providing lock information and strategy type
   ///   - cancelID: Unique identifier for effect cancellation and lock boundary
   ///   - fileID, filePath, line, column: Source location for debugging (auto-populated)
   /// - Returns: Effect that executes under lock protection, or `.none` if lock acquisition fails
   ///
   /// ## Error Handling
-  /// If lock acquisition fails and a catch handler is provided, the handler will receive
-  /// the lock acquisition error. Error types include:
+  /// This method supports two types of error handlers:
+  /// - `catch handler`: For errors that occur during operation execution
+  /// - `lockFailure`: For lock acquisition failures
+  ///
+  /// Lock acquisition error types include:
   /// - `LockmanSingleExecutionError`: Single execution conflicts
   /// - `LockmanPriorityBasedError`: Priority-based conflicts
   /// - `LockmanDynamicConditionError`: Dynamic condition failures
@@ -35,6 +39,9 @@ extension Effect {
     handleCancellationErrors: Bool? = nil,
     operation: @escaping @Sendable (_ send: Send<Action>) async throws -> Void,
     catch handler: (
+      @Sendable (_ error: any Error, _ send: Send<Action>) async -> Void
+    )? = nil,
+    lockFailure: (
       @Sendable (_ error: any Error, _ send: Send<Action>) async -> Void
     )? = nil,
     action: A,
@@ -52,7 +59,7 @@ extension Effect {
       filePath: filePath,
       line: line,
       column: column,
-      handler: handler
+      handler: lockFailure  // Use lockFailure for lock acquisition errors
     ) { unlockToken in
       .run(
         priority: priority,
@@ -251,19 +258,38 @@ extension Effect {
         unlockEffect,  // Ensure unlock happens last (with option)
       ])
 
-      // Attempt to acquire lock and execute if successful
-      return lock(
+      // Attempt to acquire lock
+      let lockResult = lock(
         lockmanInfo: lockmanInfo,
         strategy: strategy,
-        cancelID: cancelID,
-        effect: builtEffect,
-        catchHandler: lockFailure
+        cancelID: cancelID
       )
+
+      // Handle lock acquisition result
+      switch lockResult {
+      case .success:
+        // Lock acquired successfully, execute effects immediately
+        return builtEffect
+
+      case .successWithPrecedingCancellation:
+        // Lock acquired but need to cancel existing operation first
+        return .concatenate(.cancel(id: cancelID), builtEffect)
+
+      case .failure(let error):
+        // Lock acquisition failed
+        if let lockFailure = lockFailure {
+          return .run { send in
+            await lockFailure(error, send)
+          }
+        }
+        return .none
+      @unknown default:
+        return .none
+      }
 
     } catch {
       // Handle strategy resolution or other setup errors
       handleError(
-        action: action,
         error: error,
         fileID: fileID,
         filePath: filePath,
@@ -339,19 +365,38 @@ extension Effect {
         unlockOption: unlockOption
       )
 
-      // Build and return the effect using the provided builder
-      return lock(
+      // Attempt to acquire lock
+      let lockResult = lock(
         lockmanInfo: lockmanInfo,
         strategy: strategy,
-        cancelID: cancelID,
-        effect: effectBuilder(unlockToken),
-        catchHandler: handler
+        cancelID: cancelID
       )
+
+      // Handle lock acquisition result
+      switch lockResult {
+      case .success:
+        // Lock acquired successfully, execute effect immediately
+        return effectBuilder(unlockToken)
+
+      case .successWithPrecedingCancellation:
+        // Lock acquired but need to cancel existing operation first
+        return .concatenate(.cancel(id: cancelID), effectBuilder(unlockToken))
+
+      case .failure(let error):
+        // Lock acquisition failed
+        if let handler = handler {
+          return .run { send in
+            await handler(error, send)
+          }
+        }
+        return .none
+      @unknown default:
+        return .none
+      }
 
     } catch {
       // Handle and report strategy resolution errors
       handleError(
-        action: action,
         error: error,
         fileID: fileID,
         filePath: filePath,
@@ -399,10 +444,8 @@ extension Effect {
   static func lock<B: LockmanBoundaryId, I: LockmanInfo>(
     lockmanInfo: I,
     strategy: AnyLockmanStrategy<I>,
-    cancelID: B,
-    effect: Effect<Action>,
-    catchHandler: (@Sendable (_ error: any Error, _ send: Send<Action>) async -> Void)? = nil
-  ) -> Effect<Action> {
+    cancelID: B
+  ) -> LockmanResult {
     Lockman.withBoundaryLock(for: cancelID) {
       // Check if lock can be acquired
       let result = strategy.canLock(
@@ -411,15 +454,8 @@ extension Effect {
       )
 
       // Early exit if lock cannot be acquired
-      if case .failure(let error) = result {
-        // If there's a catch handler, run it with the error
-        if let handler = catchHandler {
-          return .run { send in
-            await handler(error, send)
-          }
-        }
-        // Otherwise return .none
-        return .none
+      if case .failure = result {
+        return result
       }
 
       // Actually acquire the lock
@@ -428,14 +464,8 @@ extension Effect {
         info: lockmanInfo
       )
 
-      // Handle the result appropriately
-      if result == .successWithPrecedingCancellation {
-        // Cancel existing operation, then execute new one
-        return .concatenate(.cancel(id: cancelID), effect)
-      } else {
-        // Execute effect immediately
-        return effect
-      }
+      // Return the result
+      return result
     }
   }
 
@@ -466,14 +496,12 @@ extension Effect {
   /// providing clickable error messages that jump directly to the problematic code.
   ///
   /// - Parameters:
-  ///   - action: LockmanAction that was being processed when error occurred
   ///   - error: Error that was thrown during lock operation
   ///   - fileID: File identifier where error originated (auto-populated)
   ///   - filePath: Full file path where error originated (auto-populated)
   ///   - line: Line number where error originated (auto-populated)
   ///   - column: Column number where error originated (auto-populated)
-  static func handleError<A: LockmanAction>(
-    action _: A,
+  static func handleError(
     error: any Error,
     fileID: StaticString,
     filePath: StaticString,
@@ -500,6 +528,8 @@ extension Effect {
           line: line,
           column: column
         )
+      @unknown default:
+        break
       }
     }
   }

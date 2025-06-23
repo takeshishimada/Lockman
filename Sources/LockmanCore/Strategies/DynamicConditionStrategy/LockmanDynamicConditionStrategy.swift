@@ -11,7 +11,13 @@ import Foundation
 /// // Business logic condition
 /// let action = MyAction.fetchData(userId: "123", priority: 5)
 /// let conditionalAction = action.with {
-///     return priority > 3
+///     guard priority > 3 else {
+///         return .failure(LockmanDynamicConditionError.conditionNotMet(
+///             actionId: "fetchData",
+///             hint: "Priority too low"
+///         ))
+///     }
+///     return .success
 /// }
 /// ```
 ///
@@ -57,17 +63,19 @@ public final class LockmanDynamicConditionStrategy: LockmanStrategy, @unchecked 
   /// - Parameters:
   ///   - id: The boundary identifier
   ///   - info: The lock information containing the dynamic condition
-  /// - Returns: `.success` if condition is true, `.failure(error)` if false
+  /// - Returns: The result from evaluating the dynamic condition
   public func canLock<B: LockmanBoundaryId>(
     id: B,
     info: LockmanDynamicConditionInfo
   ) -> LockmanResult {
-    // Convert Bool to LockmanResult
-    let result: LockmanResult =
-      info.condition()
-      ? .success : .failure(LockmanDynamicConditionError.conditionNotMet(actionId: info.actionId))
+    // Evaluate the condition and get the result directly
+    let result = info.condition()
     let failureReason: String? =
-      if case .failure = result { "Dynamic condition returned false" } else { nil }
+      if case .failure(let error) = result {
+        "Dynamic condition failed: \(error.localizedDescription)"
+      } else {
+        nil
+      }
 
     LockmanLogger.shared.logCanLock(
       result: result,
@@ -92,16 +100,21 @@ public final class LockmanDynamicConditionStrategy: LockmanStrategy, @unchecked 
     state.add(id: id, info: info)
   }
 
-  /// Releases a previously acquired lock.
+  /// Releases all locks with the same actionId.
+  ///
+  /// This method removes all locks that have the same actionId as the provided info,
+  /// regardless of their uniqueId. This is useful when multiple locks with the same
+  /// actionId exist (e.g., from ReduceWithLock's multi-step locking).
   ///
   /// - Parameters:
   ///   - id: The boundary identifier
-  ///   - info: The lock information to remove
+  ///   - info: The lock information containing the actionId to remove
   public func unlock<B: LockmanBoundaryId>(
     id: B,
     info: LockmanDynamicConditionInfo
   ) {
-    state.remove(id: id, info: info)
+    // Remove all locks with the same actionId
+    state.removeAll(id: id, actionId: info.actionId)
   }
 
   /// Removes all active locks across all boundaries.

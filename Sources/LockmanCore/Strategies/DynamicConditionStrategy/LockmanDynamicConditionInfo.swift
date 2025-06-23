@@ -11,7 +11,13 @@ import Foundation
 ///     actionId: "fetchData",
 ///     condition: {
 ///         // Custom business logic to determine if lock can be acquired
-///         return userCount < maxUsers
+///         guard userCount < maxUsers else {
+///             return .failure(LockmanDynamicConditionError.conditionNotMet(
+///                 actionId: "fetchData",
+///                 hint: "User limit exceeded"
+///             ))
+///         }
+///         return .success
 ///     }
 /// )
 /// ```
@@ -26,8 +32,9 @@ public struct LockmanDynamicConditionInfo: LockmanInfo, Sendable {
 
   /// The condition that determines whether this lock can be acquired.
   ///
-  /// This closure returns `true` to allow the lock, or `false` to deny it.
-  public let condition: @Sendable () -> Bool
+  /// This closure returns a `LockmanResult` to indicate success, failure with error,
+  /// or success with preceding cancellation needed.
+  public let condition: @Sendable () -> LockmanResult
 
   // MARK: - Initialization
 
@@ -35,10 +42,11 @@ public struct LockmanDynamicConditionInfo: LockmanInfo, Sendable {
   ///
   /// - Parameters:
   ///   - actionId: The identifier for this action
-  ///   - condition: A closure that evaluates whether the lock can be acquired
+  ///   - condition: A closure that evaluates whether the lock can be acquired,
+  ///                returning a `LockmanResult`
   public init(
     actionId: LockmanActionId,
-    condition: @escaping @Sendable () -> Bool
+    condition: @escaping @Sendable () -> LockmanResult
   ) {
     self.actionId = actionId
     self.uniqueId = UUID()
@@ -55,7 +63,7 @@ public struct LockmanDynamicConditionInfo: LockmanInfo, Sendable {
   ) {
     self.actionId = actionId
     self.uniqueId = UUID()
-    self.condition = { true }  // Default: always allow
+    self.condition = { .success }  // Default: always allow
   }
 
   // MARK: - Equatable
