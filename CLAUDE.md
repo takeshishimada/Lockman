@@ -133,23 +133,61 @@ Every PR must have at least one label from each applicable category:
 
 
 ## Testing
-Use the following commands to run tests:
+
+### Using Makefile (Recommended)
+```bash
+# Run tests for iOS (default)
+make xcodebuild
+
+# Run tests for macOS
+make PLATFORM=MACOS xcodebuild
+
+# Run tests with raw output (without xcbeautify)
+make xcodebuild-raw
+
+# Available platforms: IOS, MACOS, MAC_CATALYST, TVOS, VISIONOS, WATCHOS
+```
+
+### Using xcodebuild directly
 ```bash
 # iOS tests
-xcodebuild test -configuration Debug -scheme "Lockman-Package" -destination "platform=iOS Simulator,name=iPhone 16" -workspace .github/package.xcworkspace
+xcodebuild test -configuration Debug -scheme "Lockman-Package" -destination "platform=iOS Simulator,name=iPhone 16" -workspace .github/package.xcworkspace -skipMacroValidation
 
 # macOS tests  
-xcodebuild test -configuration Debug -scheme "Lockman-Package" -destination "platform=macOS" -workspace .github/package.xcworkspace
+xcodebuild test -configuration Debug -scheme "Lockman-Package" -destination "platform=macOS" -workspace .github/package.xcworkspace -skipMacroValidation
 ```
 
 ## Building Examples
 When building example projects, use the following flags to skip macro validation:
 ```bash
 # Skip macro validation for Strategies example
-xcodebuild build -scheme Strategies -configuration Debug -destination "platform=iOS Simulator,name=iPhone 16" -skipMacroValidation
+xcodebuild build -scheme Strategies -configuration Debug -destination "platform=iOS Simulator,name=iPhone 16" -workspace Examples/Strategies/Strategies.xcodeproj/project.xcworkspace -skipMacroValidation
 
 # Skip macro validation for GitHubClient example  
-xcodebuild build -scheme GitHubClient -configuration Debug -destination "platform=iOS Simulator,name=iPhone 16" -skipMacroValidation
+xcodebuild build -scheme GitHubClient -configuration Debug -destination "platform=iOS Simulator,name=iPhone 16" -workspace Examples/GitHubClient/GitHubClient.xcodeproj/project.xcworkspace -skipMacroValidation
 ```
 
 Note: The `-skipMacroValidation` flag prevents build failures due to macro approval requirements when building from command line.
+
+## Makefile Commands
+
+The project includes a Makefile with the following commands:
+
+- `make xcodebuild` - Run tests with formatted output (default: iOS)
+- `make xcodebuild-raw` - Run tests with raw xcodebuild output
+- `make format` - Format all Swift files using swift-format
+- `make build-for-library-evolution` - Build release with library evolution support
+- `make warm-simulator` - Boot and open iOS simulator
+
+### Platform Options
+You can specify the platform using the PLATFORM variable:
+- `make PLATFORM=IOS` (default)
+- `make PLATFORM=MACOS`
+- `make PLATFORM=MAC_CATALYST`
+- `make PLATFORM=TVOS`
+- `make PLATFORM=VISIONOS`
+- `make PLATFORM=WATCHOS`
+
+### Configuration Options
+- `make CONFIG=Debug` (default)
+- `make CONFIG=Release`
