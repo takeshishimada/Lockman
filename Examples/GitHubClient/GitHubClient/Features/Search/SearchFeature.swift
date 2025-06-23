@@ -46,8 +46,9 @@ struct SearchFeature {
     }
 
     enum InternalAction {
-      case searchRepositoriesResponse(Result<[Repository], Error>)
-      case searchUsersResponse(Result<[User], Error>)
+      case searchRepositoriesResponse([Repository])
+      case searchUsersResponse([User])
+      case handleError(Error)
     }
 
     enum Delegate: Equatable {
@@ -94,21 +95,19 @@ struct SearchFeature {
           switch state.selectedType {
           case .repositories:
             return .run { [query = state.searchQuery] send in
-              await send(
-                .internal(
-                  .searchRepositoriesResponse(
-                    Result { try await gitHubClient.searchRepositories(query: query) }
-                  )))
+              let repositories = try await gitHubClient.searchRepositories(query: query)
+              await send(.internal(.searchRepositoriesResponse(repositories)))
+            } catch: { error, send in
+              await send(.internal(.handleError(error)))
             }
             .cancellable(id: CancelID.search)
 
           case .users:
             return .run { [query = state.searchQuery] send in
-              await send(
-                .internal(
-                  .searchUsersResponse(
-                    Result { try await gitHubClient.searchUsers(query: query) }
-                  )))
+              let users = try await gitHubClient.searchUsers(query: query)
+              await send(.internal(.searchUsersResponse(users)))
+            } catch: { error, send in
+              await send(.internal(.handleError(error)))
             }
             .cancellable(id: CancelID.search)
           }
@@ -132,34 +131,19 @@ struct SearchFeature {
 
       case let .internal(internalAction):
         switch internalAction {
-        case .searchRepositoriesResponse(.success(let repositories)):
+        case .searchRepositoriesResponse(let repositories):
           state.repositories = repositories
           state.users = []
           state.isSearching = false
           return .none
 
-        case .searchRepositoriesResponse(.failure(let error)):
-          state.isSearching = false
-
-          // Check if it's an authentication error
-          if case GitHubClientError.notAuthenticated = error {
-            return .send(.delegate(.authenticationError))
-          }
-
-          state.alert = AlertState {
-            TextState("Search Error")
-          } message: {
-            TextState(error.localizedDescription)
-          }
-          return .none
-
-        case .searchUsersResponse(.success(let users)):
+        case .searchUsersResponse(let users):
           state.users = users
           state.repositories = []
           state.isSearching = false
           return .none
 
-        case .searchUsersResponse(.failure(let error)):
+        case .handleError(let error):
           state.isSearching = false
 
           // Check if it's an authentication error
@@ -168,7 +152,7 @@ struct SearchFeature {
           }
 
           state.alert = AlertState {
-            TextState("Search Error")
+            TextState("Error")
           } message: {
             TextState(error.localizedDescription)
           }
