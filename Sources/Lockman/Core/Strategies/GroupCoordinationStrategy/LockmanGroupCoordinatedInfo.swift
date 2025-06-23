@@ -4,32 +4,35 @@ import Foundation
 ///
 /// Defines how an action participates in a group's lifecycle.
 public enum GroupCoordinationRole: Sendable, Hashable {
-  /// Leader role - can only execute when the group is empty.
+  /// No group coordination - participates in the group without exclusion.
   ///
-  /// Acts as the group leader. Only one leader can start a group at a time.
-  /// Can optionally specify exclusion mode to control how the leader blocks other actions.
-  case leader(ExclusionMode)
+  /// Actions with this role can execute concurrently without blocking others.
+  /// They participate in the group for coordination purposes but don't enforce
+  /// any exclusion rules.
+  case none
+
+  /// Leader role - can only execute based on the entry policy.
+  ///
+  /// Acts as the group leader. Entry policy determines when a new leader can join.
+  case leader(LeaderEntryPolicy)
 
   /// Member role - can only execute when the group has active participants.
   ///
   /// Requires an existing group participant (leader or other members) to be active.
   case member
 
-  /// Exclusion mode for leader actions.
+  /// Policy for when a leader can enter a group.
   ///
-  /// Determines which actions are blocked while this leader is active.
-  public enum ExclusionMode: String, Sendable, Hashable, CaseIterable {
-    /// No additional exclusion - allows concurrent execution with different action IDs.
-    case none
+  /// Determines the group state requirements for a new leader to join.
+  public enum LeaderEntryPolicy: String, Sendable, Hashable, CaseIterable {
+    /// Leader can only enter when the group is completely empty.
+    case emptyGroup
 
-    /// Excludes all other actions from executing in the group.
-    case all
+    /// Leader can enter when there are no members (but other leaders are allowed).
+    case withoutMembers
 
-    /// Excludes only member actions from executing in the group.
-    case membersOnly
-
-    /// Excludes only other leader actions from executing in the group.
-    case leadersOnly
+    /// Leader can enter when there are no other leaders (but members are allowed).
+    case withoutLeader
   }
 }
 
@@ -41,18 +44,18 @@ public enum GroupCoordinationRole: Sendable, Hashable {
 ///
 /// ## Usage Example
 /// ```swift
-/// // Normal leader (allows concurrent execution)
+/// // Non-exclusive participant (participates without blocking)
 /// let navigationInfo = LockmanGroupCoordinatedInfo(
 ///   actionId: "navigate",
 ///   groupId: "mainNavigation",
-///   coordinationRole: .leader(.none)
+///   coordinationRole: .none
 /// )
 ///
-/// // Exclusive leader (blocks all other actions)
+/// // Leader that requires empty group
 /// let exclusiveNavigation = LockmanGroupCoordinatedInfo(
 ///   actionId: "exclusiveNavigate",
 ///   groupId: "mainNavigation",
-///   coordinationRole: .leader(.all)
+///   coordinationRole: .leader(.emptyGroup)
 /// )
 ///
 /// // Member action

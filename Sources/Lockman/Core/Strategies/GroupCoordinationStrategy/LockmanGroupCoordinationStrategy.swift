@@ -20,15 +20,19 @@ import Foundation
 /// let strategy = LockmanGroupCoordinationStrategy()
 /// let boundaryId = "mainScreen"
 ///
-/// // Normal leader starts the group
-/// let leaderInfo = LockmanGroupCoordinatedInfo(
+/// // Non-exclusive participant
+/// let nonExclusiveInfo = LockmanGroupCoordinatedInfo(
 ///   actionId: "loadData",
 ///   groupId: "dataLoading",
-///   coordinationRole: .leader(.none)
+///   coordinationRole: .none
 /// )
 ///
-/// // Can lock when group is empty
-/// strategy.canLock(id: boundaryId, info: leaderInfo) // .success
+/// // Leader that requires empty group
+/// let emptyGroupLeader = LockmanGroupCoordinatedInfo(
+///   actionId: "navigate",
+///   groupId: "navigation",
+///   coordinationRole: .leader(.emptyGroup)
+/// )
 ///
 /// // Members can join active group
 /// let memberInfo = LockmanGroupCoordinatedInfo(
@@ -37,11 +41,11 @@ import Foundation
 ///   coordinationRole: .member
 /// )
 ///
-/// // Exclusive leader example
-/// let exclusiveNav = LockmanGroupCoordinatedInfo(
-///   actionId: "navigate",
-///   groupId: "navigation",
-///   coordinationRole: .leader(.all)  // Blocks all other actions
+/// // Leader that allows other leaders
+/// let multiLeaderInfo = LockmanGroupCoordinatedInfo(
+///   actionId: "secondaryLoad",
+///   groupId: "dataLoading",
+///   coordinationRole: .leader(.withoutMembers)
 /// )
 /// ```
 public final class LockmanGroupCoordinationStrategy: LockmanStrategy, @unchecked Sendable {
@@ -131,52 +135,50 @@ public final class LockmanGroupCoordinationStrategy: LockmanStrategy, @unchecked
               actionId: info.actionId, groupIds: Set([groupId])))
         }
 
-        // Check for exclusive leader blocking
-        if let groupState = groupState {
-          for (_, member) in groupState.activeMembers {
-            if case .leader(let mode) = member.role {
-              // Skip if it's the same action
-              if member.info.actionId == info.actionId { continue }
-
-              // Check if this leader blocks the new action
-              let shouldBlock: Bool
-              switch mode {
-              case .none:
-                shouldBlock = false
-              case .all:
-                shouldBlock = true
-              case .membersOnly:
-                shouldBlock = (info.coordinationRole == .member)
-              case .leadersOnly:
-                if case .leader = info.coordinationRole {
-                  shouldBlock = true
-                } else {
-                  shouldBlock = false
-                }
-              }
-
-              if shouldBlock {
-                failureReason =
-                  "Blocked by exclusive leader '\(member.info.actionId)' in group '\(groupId)'"
-                return .failure(
-                  LockmanGroupCoordinationError.blockedByExclusiveLeader(
-                    leaderActionId: member.info.actionId,
-                    groupId: groupId,
-                    exclusionMode: mode
-                  ))
-              }
-            }
-          }
-        }
+        // No additional blocking logic needed here
+        // Leader entry policies are checked in the role-based rules section below
 
         // Apply role-based rules
         switch info.coordinationRole {
-        case .leader:
-          // Leaders can only start when group is empty
-          if groupState != nil, !groupState!.isEmpty {
-            failureReason = "Leader cannot start: group '\(groupId)' already has active members"
-            return .failure(
-              LockmanGroupCoordinationError.leaderCannotJoinNonEmptyGroup(groupIds: Set([groupId])))
+        case .none:
+          // Actions with .none role can always join the group
+          // No additional constraints - they participate without exclusion
+          break
+
+        case .leader(let entryPolicy):
+          // Check if leader can join based on entry policy
+          if let groupState = groupState {
+            let canJoin: Bool
+            switch entryPolicy {
+            case .emptyGroup:
+              // Can only join if group is completely empty
+              canJoin = groupState.isEmpty
+              if !canJoin {
+                failureReason = "Leader cannot join: group '\(groupId)' must be empty"
+              }
+
+            case .withoutMembers:
+              // Can join if there are no members (other leaders are OK)
+              canJoin = !groupState.activeMembers.values.contains { member in
+                member.info.coordinationRole == .member
+              }
+              if !canJoin {
+                failureReason = "Leader cannot join: group '\(groupId)' has active members"
+              }
+
+            case .withoutLeader:
+              // Can join if there are no other leaders
+              canJoin = !groupState.hasLeader
+              if !canJoin {
+                failureReason = "Leader cannot join: group '\(groupId)' already has a leader"
+              }
+            }
+
+            if !canJoin {
+              return .failure(
+                LockmanGroupCoordinationError.leaderCannotJoinNonEmptyGroup(
+                  groupIds: Set([groupId])))
+            }
           }
 
         case .member:
