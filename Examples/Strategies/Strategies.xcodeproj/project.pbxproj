@@ -352,9 +352,9 @@
 /* End XCLocalSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
-		8278B5542E0059D20096EE15 /* LockmanComposable */ = {
+		8278B5542E0059D20096EE15 /* Lockman */ = {
 			isa = XCSwiftPackageProductDependency;
-			productName = LockmanComposable;
+			productName = Lockman;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};
