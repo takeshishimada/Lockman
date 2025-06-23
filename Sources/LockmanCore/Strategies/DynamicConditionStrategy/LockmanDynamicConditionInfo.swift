@@ -66,26 +66,6 @@ public struct LockmanDynamicConditionInfo: LockmanInfo, Sendable {
     self.condition = { .success }  // Default: always allow
   }
 
-  /// Creates a new dynamic condition lock info with a specific unique ID.
-  ///
-  /// This initializer is used when you need to create an instance with
-  /// a predetermined unique ID, such as when wrapping existing lock information.
-  ///
-  /// - Parameters:
-  ///   - actionId: The identifier for this action
-  ///   - uniqueId: The specific unique ID to use
-  ///   - condition: A closure that evaluates whether the lock can be acquired,
-  ///                returning a `LockmanResult`
-  public init(
-    actionId: LockmanActionId,
-    uniqueId: UUID,
-    condition: @escaping @Sendable () -> LockmanResult
-  ) {
-    self.actionId = actionId
-    self.uniqueId = uniqueId
-    self.condition = condition
-  }
-
   // MARK: - Equatable
 
   /// Compares two instances based on their unique identifiers.

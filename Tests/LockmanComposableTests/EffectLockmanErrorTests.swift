@@ -186,7 +186,6 @@ final class EffectLockmanErrorTests: XCTestCase {
     // For testing, we verify that the error handling path is reachable
     XCTExpectFailure("Effect.withLock strategy 'MockUnregisteredStrategy' not registered") {
       Effect<Never>.handleError(
-        action: action,
         error: error,
         fileID: #fileID,
         filePath: #filePath,
@@ -206,7 +205,6 @@ final class EffectLockmanErrorTests: XCTestCase {
     XCTExpectFailure("Effect.withLock strategy 'LockmanSingleExecutionStrategy' already registered")
     {
       Effect<Never>.handleError(
-        action: action,
         error: error,
         fileID: #fileID,
         filePath: #filePath,
@@ -225,7 +223,6 @@ final class EffectLockmanErrorTests: XCTestCase {
 
     // Should not crash or throw when given non-LockmanError
     Effect<Never>.handleError(
-      action: action,
       error: error,
       fileID: #fileID,
       filePath: #filePath,
@@ -343,7 +340,6 @@ final class EffectLockmanErrorTests: XCTestCase {
     // Verify error information is preserved through handleError
     XCTExpectFailure("Effect.withLock strategy 'DetailedStrategyName' not registered") {
       Effect<Never>.handleError(
-        action: action,
         error: originalError,
         fileID: #fileID,
         filePath: #filePath,
@@ -373,7 +369,6 @@ final class EffectLockmanErrorTests: XCTestCase {
     // Verify that source location parameters are accepted
     XCTExpectFailure("Effect.withLock strategy 'TestStrategy' already registered") {
       Effect<Never>.handleError(
-        action: action,
         error: error,
         fileID: testFileID,
         filePath: testFilePath,
@@ -403,7 +398,6 @@ final class EffectLockmanErrorTests: XCTestCase {
 
     XCTExpectFailure("Effect.withLock strategy '' not registered") {
       Effect<Never>.handleError(
-        action: action,
         error: error,
         fileID: #fileID,
         filePath: #filePath,
@@ -430,7 +424,6 @@ final class EffectLockmanErrorTests: XCTestCase {
 
     XCTExpectFailure("Effect.withLock strategy 'UnicodeStrategy🌟' not registered") {
       Effect<Never>.handleError(
-        action: action,
         error: error,
         fileID: #fileID,
         filePath: #filePath,

@@ -17,14 +17,18 @@ extension Effect {
   ///   - handleCancellationErrors: Whether to pass CancellationError to catch handler (default: global config)
   ///   - operation: Async closure receiving `send` function for dispatching actions
   ///   - handler: Optional error handler receiving error and send function
+  ///   - lockFailure: Optional handler for lock acquisition failures
   ///   - action: LockmanAction providing lock information and strategy type
   ///   - cancelID: Unique identifier for effect cancellation and lock boundary
   ///   - fileID, filePath, line, column: Source location for debugging (auto-populated)
   /// - Returns: Effect that executes under lock protection, or `.none` if lock acquisition fails
   ///
   /// ## Error Handling
-  /// If lock acquisition fails and a catch handler is provided, the handler will receive
-  /// the lock acquisition error. Error types include:
+  /// This method supports two types of error handlers:
+  /// - `catch handler`: For errors that occur during operation execution
+  /// - `lockFailure`: For lock acquisition failures
+  ///
+  /// Lock acquisition error types include:
   /// - `LockmanSingleExecutionError`: Single execution conflicts
   /// - `LockmanPriorityBasedError`: Priority-based conflicts
   /// - `LockmanDynamicConditionError`: Dynamic condition failures
@@ -35,6 +39,9 @@ extension Effect {
     handleCancellationErrors: Bool? = nil,
     operation: @escaping @Sendable (_ send: Send<Action>) async throws -> Void,
     catch handler: (
+      @Sendable (_ error: any Error, _ send: Send<Action>) async -> Void
+    )? = nil,
+    lockFailure: (
       @Sendable (_ error: any Error, _ send: Send<Action>) async -> Void
     )? = nil,
     action: A,
@@ -52,7 +59,7 @@ extension Effect {
       filePath: filePath,
       line: line,
       column: column,
-      handler: handler
+      handler: lockFailure  // Use lockFailure for lock acquisition errors
     ) { unlockToken in
       .run(
         priority: priority,
@@ -281,7 +288,6 @@ extension Effect {
     } catch {
       // Handle strategy resolution or other setup errors
       handleError(
-        action: action,
         error: error,
         fileID: fileID,
         filePath: filePath,
@@ -387,7 +393,6 @@ extension Effect {
     } catch {
       // Handle and report strategy resolution errors
       handleError(
-        action: action,
         error: error,
         fileID: fileID,
         filePath: filePath,
@@ -487,14 +492,12 @@ extension Effect {
   /// providing clickable error messages that jump directly to the problematic code.
   ///
   /// - Parameters:
-  ///   - action: LockmanAction that was being processed when error occurred
   ///   - error: Error that was thrown during lock operation
   ///   - fileID: File identifier where error originated (auto-populated)
   ///   - filePath: Full file path where error originated (auto-populated)
   ///   - line: Line number where error originated (auto-populated)
   ///   - column: Column number where error originated (auto-populated)
-  static func handleError<A: LockmanAction>(
-    action _: A,
+  static func handleError(
     error: any Error,
     fileID: StaticString,
     filePath: StaticString,

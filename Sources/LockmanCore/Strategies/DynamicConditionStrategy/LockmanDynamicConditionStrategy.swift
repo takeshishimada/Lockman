@@ -100,16 +100,21 @@ public final class LockmanDynamicConditionStrategy: LockmanStrategy, @unchecked 
     state.add(id: id, info: info)
   }
 
-  /// Releases a previously acquired lock.
+  /// Releases all locks with the same actionId.
+  ///
+  /// This method removes all locks that have the same actionId as the provided info,
+  /// regardless of their uniqueId. This is useful when multiple locks with the same
+  /// actionId exist (e.g., from ReduceWithLock's multi-step locking).
   ///
   /// - Parameters:
   ///   - id: The boundary identifier
-  ///   - info: The lock information to remove
+  ///   - info: The lock information containing the actionId to remove
   public func unlock<B: LockmanBoundaryId>(
     id: B,
     info: LockmanDynamicConditionInfo
   ) {
-    state.remove(id: id, info: info)
+    // Remove all locks with the same actionId
+    state.removeAll(id: id, actionId: info.actionId)
   }
 
   /// Removes all active locks across all boundaries.
