@@ -225,7 +225,7 @@ public final class LockmanStrategyContainer: @unchecked Sendable {
   ///
   /// - Parameters:
   ///   - id: The strategy identifier to look up
-  ///   - infoType: The expected `LockmanInfo` type (for type inference)
+  ///   - expecting: The expected `LockmanInfo` type (for type inference)
   /// - Returns: An `AnyLockmanStrategy<I>` wrapping the registered strategy instance
   /// - Throws: `LockmanError.strategyNotRegistered` if no strategy with this ID is registered
   ///

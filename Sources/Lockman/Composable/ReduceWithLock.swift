@@ -382,7 +382,10 @@ extension ReduceWithLock {
   ///   - lockAction: LockmanAction providing lock information and strategy type
   ///   - cancelID: Unique identifier for effect cancellation and lock boundary
   ///   - lockCondition: Optional action-level condition that supplements the reducer-level condition
-  ///   - fileID, filePath, line, column: Source location for debugging (auto-populated)
+  ///   - fileID: Source file identifier for debugging (auto-populated)
+  ///   - filePath: Source file path for debugging (auto-populated)
+  ///   - line: Source line number for debugging (auto-populated)
+  ///   - column: Source column number for debugging (auto-populated)
   /// - Returns: Effect that executes with appropriate locking based on all conditions
   public func withLock<B: LockmanBoundaryId>(
     state: State,
@@ -471,7 +474,10 @@ extension ReduceWithLock {
   ///   - lockAction: LockmanAction providing lock information and strategy type
   ///   - cancelID: Unique identifier for effect cancellation and lock boundary
   ///   - lockCondition: Optional action-level condition that supplements the reducer-level condition
-  ///   - fileID, filePath, line, column: Source location for debugging (auto-populated)
+  ///   - fileID: Source file identifier for debugging (auto-populated)
+  ///   - filePath: Source file path for debugging (auto-populated)
+  ///   - line: Source line number for debugging (auto-populated)
+  ///   - column: Source column number for debugging (auto-populated)
   /// - Returns: Effect that executes with appropriate locking based on all conditions
   public func withLock<B: LockmanBoundaryId, A: LockmanAction>(
     state: State,
