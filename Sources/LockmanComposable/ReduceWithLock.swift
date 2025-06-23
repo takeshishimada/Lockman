@@ -76,8 +76,10 @@ public struct ReduceWithLock<State: Sendable, Action: Sendable>: Reducer {
   @usableFromInline
   let base: Reduce<State, Action>
 
+  /// The lock condition that will be evaluated for all actions in this reducer.
+  /// This is made internal to allow the extension methods to access it.
   @usableFromInline
-  let lockCondition: (@Sendable (_ state: State, _ action: Action) -> LockmanResult)?
+  internal let lockCondition: (@Sendable (_ state: State, _ action: Action) -> LockmanResult)?
 
   /// Initializes a reducer with optional lock condition evaluation.
   ///
@@ -245,7 +247,7 @@ extension ReduceWithLock {
         await lockFailure(error, send)
       }
     }
-    
+
     let lockAction = action
 
     if automaticUnlock {
