@@ -26,16 +26,20 @@ public enum LockmanGroupCoordinationError: LockmanError {
   ///
   /// Exclusive leaders can prevent other actions from executing based on their entry policy.
   case blockedByExclusiveLeader(
-    leaderActionId: String, groupId: AnyLockmanGroupId, entryPolicy: GroupCoordinationRole.LeaderEntryPolicy)
+    leaderActionId: String, groupId: AnyLockmanGroupId,
+    entryPolicy: GroupCoordinationRole.LeaderEntryPolicy)
 
   public var errorDescription: String? {
     switch self {
     case let .leaderCannotJoinNonEmptyGroup(groupIds):
-      return "Cannot acquire lock: leader cannot join non-empty groups \(groupIds.map { "\($0)" }.sorted())."
+      return
+        "Cannot acquire lock: leader cannot join non-empty groups \(groupIds.map { "\($0)" }.sorted())."
     case let .memberCannotJoinEmptyGroup(groupIds):
-      return "Cannot acquire lock: member cannot join empty groups \(groupIds.map { "\($0)" }.sorted())."
+      return
+        "Cannot acquire lock: member cannot join empty groups \(groupIds.map { "\($0)" }.sorted())."
     case let .actionAlreadyInGroup(actionId, groupIds):
-      return "Cannot acquire lock: action '\(actionId)' is already in groups \(groupIds.map { "\($0)" }.sorted())."
+      return
+        "Cannot acquire lock: action '\(actionId)' is already in groups \(groupIds.map { "\($0)" }.sorted())."
     case let .blockedByExclusiveLeader(leaderActionId, groupId, entryPolicy):
       return
         "Cannot acquire lock: blocked by exclusive leader '\(leaderActionId)' in group '\(groupId)' (policy: \(entryPolicy))."

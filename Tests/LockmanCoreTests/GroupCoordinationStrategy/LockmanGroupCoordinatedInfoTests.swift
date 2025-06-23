@@ -246,7 +246,9 @@ final class LockmanGroupCoordinatedInfoTests: XCTestCase {
     )
 
     XCTAssertEqual(info.actionId, "multi")
-    XCTAssertEqual(info.groupIds, [AnyLockmanGroupId("group1"), AnyLockmanGroupId("group2"), AnyLockmanGroupId("group3")])
+    XCTAssertEqual(
+      info.groupIds,
+      [AnyLockmanGroupId("group1"), AnyLockmanGroupId("group2"), AnyLockmanGroupId("group3")])
     XCTAssertEqual(info.coordinationRole, .member)
   }
 }

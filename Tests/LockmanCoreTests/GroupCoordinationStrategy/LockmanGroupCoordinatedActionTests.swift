@@ -303,7 +303,9 @@ final class LockmanGroupCoordinatedActionTests: XCTestCase {
 
     let info = action.lockmanInfo
     XCTAssertEqual(info.actionId, "multiGroupOperation")
-    XCTAssertEqual(info.groupIds, [AnyLockmanGroupId("navigation"), AnyLockmanGroupId("dataLoading"), AnyLockmanGroupId("ui")])
+    XCTAssertEqual(
+      info.groupIds,
+      [AnyLockmanGroupId("navigation"), AnyLockmanGroupId("dataLoading"), AnyLockmanGroupId("ui")])
     XCTAssertEqual(info.coordinationRole, .member)
   }
 
