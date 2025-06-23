@@ -47,9 +47,14 @@ struct CompositeStrategyFeature {
             condition: {
               @Shared(.appStorage("isLoggined")) var isLoggined = false
               if isLoggined {
-                return true
+                return .success
               } else {
-                return false
+                return .failure(
+                  LockmanDynamicConditionError.conditionNotMet(
+                    actionId: actionName,
+                    hint: "User is not logged in"
+                  )
+                )
               }
             })
         )
