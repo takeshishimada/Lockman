@@ -19,7 +19,10 @@ extension Effect {
   ///   - lockFailure: Optional handler for lock acquisition failures
   ///   - action: LockmanAction providing lock information and strategy type
   ///   - cancelID: Unique identifier for effect cancellation and lock boundary
-  ///   - fileID, filePath, line, column: Source location for debugging (auto-populated)
+  ///   - fileID: Source file ID for debugging (auto-populated)
+  ///   - filePath: Source file path for debugging (auto-populated)
+  ///   - line: Source line number for debugging (auto-populated)
+  ///   - column: Source column number for debugging (auto-populated)
   /// - Returns: Effect that executes under lock protection, or `.none` if lock acquisition fails
   ///
   /// ## Error Handling
@@ -117,7 +120,10 @@ extension Effect {
   ///   - lockFailure: Optional handler for lock acquisition failures
   ///   - action: LockmanAction providing lock information and strategy type
   ///   - cancelID: Unique identifier for effect cancellation and lock boundary
-  ///   - fileID, filePath, line, column: Source location for debugging (auto-populated)
+  ///   - fileID: Source file ID for debugging (auto-populated)
+  ///   - filePath: Source file path for debugging (auto-populated)
+  ///   - line: Source line number for debugging (auto-populated)
+  ///   - column: Source column number for debugging (auto-populated)
   /// - Returns: Effect that executes under lock protection, or `.none` if lock acquisition fails
   ///
   /// ## Error Handling
@@ -218,7 +224,10 @@ extension Effect {
   ///   - lockFailure: Optional handler for lock acquisition failures
   ///   - action: LockmanAction providing lock information and strategy type
   ///   - cancelID: Unique identifier for effect cancellation and lock boundary
-  ///   - fileID, filePath, line, column: Source location for debugging (auto-populated)
+  ///   - fileID: Source file ID for debugging (auto-populated)
+  ///   - filePath: Source file path for debugging (auto-populated)
+  ///   - line: Source line number for debugging (auto-populated)
+  ///   - column: Source column number for debugging (auto-populated)
   /// - Returns: Concatenated effect with automatic lock management, or `.none` if lock acquisition fails
   public static func concatenateWithLock<B: LockmanBoundaryId, A: LockmanAction>(
     unlockOption: UnlockOption? = nil,
