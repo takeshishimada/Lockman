@@ -1,10 +1,10 @@
+#if canImport(LockmanMacros)
+import LockmanMacros
 import MacroTesting
 import SwiftSyntax
 import SwiftSyntaxBuilder
 import SwiftSyntaxMacros
 import XCTest
-
-@testable import LockmanMacros
 
 // MARK: - LockmanConcurrencyLimitedMacro Tests
 
@@ -389,3 +389,4 @@ final class LockmanConcurrencyLimitedMacroTests: XCTestCase {
     }
   }
 }
+#endif
