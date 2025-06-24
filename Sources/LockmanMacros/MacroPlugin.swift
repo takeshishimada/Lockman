@@ -35,5 +35,8 @@ struct LockmanMacroPlugin: CompilerPlugin {
 
     // Dynamic condition strategy macro
     LockmanDynamicConditionMacro.self,
+
+    // Concurrency limited strategy macro
+    LockmanConcurrencyLimitedMacro.self,
   ]
 }

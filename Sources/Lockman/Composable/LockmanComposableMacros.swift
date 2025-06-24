@@ -356,3 +356,87 @@ public macro LockmanDynamicCondition() =
     module: "LockmanMacros",
     type: "LockmanDynamicConditionMacro"
   )
+
+/// A macro that generates protocol conformance and required members for concurrency-limited locking behavior.
+///
+/// Apply this macro to an enum declaration to automatically generate:
+/// - Protocol conformance to `LockmanConcurrencyLimitedAction`
+/// - `actionName` property that returns the enum case name as a String
+/// - Default `strategyId` implementation is provided by the protocol
+///
+/// **Important**: You must implement the `lockmanInfo` property to specify concurrency limits:
+/// - Using a predefined concurrency group: `.init(actionId: actionName, group: MyConcurrencyGroup.apiRequests)`
+/// - Using direct limit: `.init(actionId: actionName, .limited(3))`
+/// - Using unlimited: `.init(actionId: actionName, .unlimited)`
+///
+/// Example usage with TCA:
+/// ```swift
+/// // Define your concurrency groups
+/// enum MyConcurrencyGroup: ConcurrencyGroup {
+///   case apiRequests
+///   case fileOperations
+///   case uiUpdates
+///
+///   var id: String {
+///     switch self {
+///     case .apiRequests: return "api_requests"
+///     case .fileOperations: return "file_operations"
+///     case .uiUpdates: return "ui_updates"
+///     }
+///   }
+///
+///   var limit: ConcurrencyLimit {
+///     switch self {
+///     case .apiRequests: return .limited(3)
+///     case .fileOperations: return .limited(2)
+///     case .uiUpdates: return .unlimited
+///     }
+///   }
+/// }
+///
+/// @Reducer
+/// struct MyFeature {
+///   @LockmanConcurrencyLimited
+///   enum Action {
+///     case fetchUserProfile(User.ID)
+///     case uploadFile(File)
+///     case refreshUI
+///
+///     var lockmanInfo: LockmanConcurrencyLimitedInfo {
+///       switch self {
+///       case .fetchUserProfile:
+///         // Use predefined group
+///         return .init(actionId: actionName, group: MyConcurrencyGroup.apiRequests)
+///       case .uploadFile:
+///         // Use predefined group
+///         return .init(actionId: actionName, group: MyConcurrencyGroup.fileOperations)
+///       case .refreshUI:
+///         // Direct unlimited
+///         return .init(actionId: actionName, .unlimited)
+///       }
+///     }
+///   }
+///
+///   var body: some ReducerOf<Self> {
+///     Reduce { state, action in
+///       switch action {
+///       case .fetchUserProfile(let userId):
+///         return .withLock(
+///           operation: { send in
+///             // Only 3 concurrent API requests allowed
+///             let profile = try await api.fetchProfile(userId)
+///             await send(.profileFetched(profile))
+///           },
+///           action: .fetchUserProfile(userId),
+///           cancelID: "fetch-profile-\(userId)"
+///         )
+///       // ...
+///       }
+///     }
+///   }
+/// }
+/// ```
+@attached(extension, conformances: LockmanConcurrencyLimitedAction)
+@attached(member, names: named(actionName))
+public macro LockmanConcurrencyLimited() =
+  #externalMacro(module: "LockmanMacros", type: "LockmanConcurrencyLimitedMacro")

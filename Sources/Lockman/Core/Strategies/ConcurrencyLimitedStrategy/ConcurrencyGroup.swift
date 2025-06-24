@@ -1,0 +1,7 @@
+/// Protocol for defining concurrency groups with their limits.
+public protocol ConcurrencyGroup: Sendable {
+  /// Unique identifier for this concurrency group.
+  var id: String { get }
+  /// The concurrency limit for this group.
+  var limit: ConcurrencyLimit { get }
+}
