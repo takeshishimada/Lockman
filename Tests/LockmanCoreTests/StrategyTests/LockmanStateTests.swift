@@ -61,7 +61,7 @@ final class LockmanStateTests: XCTestCase {
   // MARK: - Basic Operations
 
   func testAddSingleEntry() {
-    let state = LockmanState<TestLockmanInfo>()
+    let state = LockmanState<TestLockmanInfo, LockmanActionId>()
     let boundaryId = TestBoundaryId(value: "test")
     let info = TestLockmanInfo(id: "1")
 
@@ -73,7 +73,7 @@ final class LockmanStateTests: XCTestCase {
   }
 
   func testAddMultipleEntriesToSameBoundary() {
-    let state = LockmanState<TestLockmanInfo>()
+    let state = LockmanState<TestLockmanInfo, LockmanActionId>()
     let boundaryId = TestBoundaryId(value: "test")
     let info1 = TestLockmanInfo(id: "1")
     let info2 = TestLockmanInfo(id: "2")
@@ -89,7 +89,7 @@ final class LockmanStateTests: XCTestCase {
   }
 
   func testAddEntriesToDifferentBoundaries() {
-    let state = LockmanState<TestLockmanInfo>()
+    let state = LockmanState<TestLockmanInfo, LockmanActionId>()
     let boundary1 = TestBoundaryId(value: "boundary1")
     let boundary2 = TestBoundaryId(value: "boundary2")
     let info1 = TestLockmanInfo(id: "1")
@@ -108,7 +108,7 @@ final class LockmanStateTests: XCTestCase {
   }
 
   func testRemoveLastFromSingleEntry() {
-    let state = LockmanState<TestLockmanInfo>()
+    let state = LockmanState<TestLockmanInfo, LockmanActionId>()
     let boundaryId = TestBoundaryId(value: "test")
     let info = TestLockmanInfo(id: "1")
 
@@ -120,7 +120,7 @@ final class LockmanStateTests: XCTestCase {
   }
 
   func testRemoveLastFromMultipleEntries() {
-    let state = LockmanState<TestLockmanInfo>()
+    let state = LockmanState<TestLockmanInfo, LockmanActionId>()
     let boundaryId = TestBoundaryId(value: "test")
     let info1 = TestLockmanInfo(id: "1")
     let info2 = TestLockmanInfo(id: "2")
@@ -138,7 +138,7 @@ final class LockmanStateTests: XCTestCase {
   }
 
   func testRemoveLastFromNonExistentBoundary() {
-    let state = LockmanState<TestLockmanInfo>()
+    let state = LockmanState<TestLockmanInfo, LockmanActionId>()
     let boundaryId = TestBoundaryId(value: "non-existent")
 
     // Should not crash
@@ -149,7 +149,7 @@ final class LockmanStateTests: XCTestCase {
   }
 
   func testGetCurrentsFromEmptyState() {
-    let state = LockmanState<TestLockmanInfo>()
+    let state = LockmanState<TestLockmanInfo, LockmanActionId>()
     let boundaryId = TestBoundaryId(value: "test")
 
     let currents = state.currents(id: boundaryId)
@@ -157,7 +157,7 @@ final class LockmanStateTests: XCTestCase {
   }
 
   func testCleanUpAllEntries() {
-    let state = LockmanState<TestLockmanInfo>()
+    let state = LockmanState<TestLockmanInfo, LockmanActionId>()
     let boundary1 = TestBoundaryId(value: "boundary1")
     let boundary2 = TestBoundaryId(value: "boundary2")
     let info1 = TestLockmanInfo(id: "1")
@@ -176,7 +176,7 @@ final class LockmanStateTests: XCTestCase {
   }
 
   func testCleanUpSpecificBoundary() {
-    let state = LockmanState<TestLockmanInfo>()
+    let state = LockmanState<TestLockmanInfo, LockmanActionId>()
     let boundary1 = TestBoundaryId(value: "boundary1")
     let boundary2 = TestBoundaryId(value: "boundary2")
     let info1 = TestLockmanInfo(id: "1")
@@ -198,7 +198,7 @@ final class LockmanStateTests: XCTestCase {
   // MARK: - Concurrent Access Tests
 
   func testConcurrentAddsToSameBoundary() async {
-    let state = LockmanState<TestLockmanInfo>()
+    let state = LockmanState<TestLockmanInfo, LockmanActionId>()
     let boundaryId = TestBoundaryId("test")
     let iterations = 100
 
@@ -216,7 +216,7 @@ final class LockmanStateTests: XCTestCase {
   }
 
   func testConcurrentAddsToDifferentBoundaries() async {
-    let state = LockmanState<TestLockmanInfo>()
+    let state = LockmanState<TestLockmanInfo, LockmanActionId>()
     let iterations = 50
     let boundaryCount = 5
 
@@ -240,7 +240,7 @@ final class LockmanStateTests: XCTestCase {
   }
 
   func testConcurrentAddAndRemoveOperations() async {
-    let state = LockmanState<TestLockmanInfo>()
+    let state = LockmanState<TestLockmanInfo, LockmanActionId>()
     let boundaryId = TestBoundaryId(value: "test")
     let iterations = 100
 
@@ -271,7 +271,7 @@ final class LockmanStateTests: XCTestCase {
   }
 
   func testConcurrentReadOperations() async {
-    let state = LockmanState<TestLockmanInfo>()
+    let state = LockmanState<TestLockmanInfo, LockmanActionId>()
     let boundaryId = TestBoundaryId(value: "test")
 
     // Add some initial data
@@ -299,7 +299,7 @@ final class LockmanStateTests: XCTestCase {
   // MARK: - Edge Cases
 
   func testStackLikeBehavior() {
-    let state = LockmanState<TestLockmanInfo>()
+    let state = LockmanState<TestLockmanInfo, LockmanActionId>()
     let boundaryId = TestBoundaryId(value: "test")
 
     let infoList = (1...5).map { TestLockmanInfo(id: "\($0)") }
@@ -319,7 +319,7 @@ final class LockmanStateTests: XCTestCase {
   }
 
   func testLargeNumberOfEntries() {
-    let state = LockmanState<TestLockmanInfo>()
+    let state = LockmanState<TestLockmanInfo, LockmanActionId>()
     let boundaryId = TestBoundaryId(value: "test")
     let count = 1000  // Reduced from 10000 for reasonable test time
 
@@ -337,7 +337,7 @@ final class LockmanStateTests: XCTestCase {
   }
 
   func testMultipleCleanUpOperations() {
-    let state = LockmanState<TestLockmanInfo>()
+    let state = LockmanState<TestLockmanInfo, LockmanActionId>()
     let boundaryId = TestBoundaryId(value: "test")
 
     state.add(id: boundaryId, info: TestLockmanInfo(id: "1"))
@@ -353,7 +353,7 @@ final class LockmanStateTests: XCTestCase {
   // MARK: - Data Integrity Tests
 
   func testOrderPreservation() {
-    let state = LockmanState<TestLockmanInfo>()
+    let state = LockmanState<TestLockmanInfo, LockmanActionId>()
     let boundaryId = TestBoundaryId(value: "order_test")
     let testData = ["first", "second", "third", "fourth", "fifth"]
 
@@ -366,7 +366,7 @@ final class LockmanStateTests: XCTestCase {
   }
 
   func testBoundaryIsolation() {
-    let state = LockmanState<TestLockmanInfo>()
+    let state = LockmanState<TestLockmanInfo, LockmanActionId>()
     let boundary1 = TestBoundaryId(value: "isolated1")
     let boundary2 = TestBoundaryId(value: "isolated2")
     let boundary3 = TestBoundaryId(value: "isolated3")
@@ -387,7 +387,7 @@ final class LockmanStateTests: XCTestCase {
   }
 
   func testComplexSequenceOperations() {
-    let state = LockmanState<TestLockmanInfo>()
+    let state = LockmanState<TestLockmanInfo, LockmanActionId>()
     let boundaryId = TestBoundaryId(value: "complex")
 
     // Complex sequence: add, add, remove, add, remove, remove
@@ -404,7 +404,7 @@ final class LockmanStateTests: XCTestCase {
   // MARK: - Memory Management Tests
 
   func testMemoryCleanupAfterRemovals() {
-    let state = LockmanState<TestLockmanInfo>()
+    let state = LockmanState<TestLockmanInfo, LockmanActionId>()
     let boundaryId = TestBoundaryId(value: "memory_test")
 
     // Add many entries
@@ -426,7 +426,7 @@ final class LockmanStateTests: XCTestCase {
   }
 
   func testCleanupWithMixedBoundaryStates() {
-    let state = LockmanState<TestLockmanInfo>()
+    let state = LockmanState<TestLockmanInfo, LockmanActionId>()
     let emptyBoundary = TestBoundaryId(value: "empty")
     let fullBoundary = TestBoundaryId(value: "full")
     let partialBoundary = TestBoundaryId(value: "partial")
@@ -564,7 +564,7 @@ final class AnyLockmanBoundaryIdTests: XCTestCase {
 
 final class LockmanStatePerformanceTests: XCTestCase {
   func testPerformanceWithFrequentAddsAndRemoves() async throws {
-    let state = LockmanState<TestLockmanInfo>()
+    let state = LockmanState<TestLockmanInfo, LockmanActionId>()
     let boundaryId = TestBoundaryId(value: "test")
     let iterations = 1000
 
@@ -590,7 +590,7 @@ final class LockmanStatePerformanceTests: XCTestCase {
   }
 
   func testPerformanceWithManyBoundaries() {
-    let state = LockmanState<TestLockmanInfo>()
+    let state = LockmanState<TestLockmanInfo, LockmanActionId>()
     let boundaryCount = 100
     let entriesPerBoundary = 10
 
@@ -616,7 +616,7 @@ final class LockmanStatePerformanceTests: XCTestCase {
   }
 
   func testConcurrentPerformance() async {
-    let state = LockmanState<TestLockmanInfo>()
+    let state = LockmanState<TestLockmanInfo, LockmanActionId>()
     let taskCount = 1
     let operationsPerTask = 100
 

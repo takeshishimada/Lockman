@@ -34,7 +34,10 @@ public final class LockmanDynamicConditionStrategy: LockmanStrategy, @unchecked 
   public static let shared = LockmanDynamicConditionStrategy()
 
   /// Thread-safe state container that tracks active locks per boundary.
-  private let state = LockmanState<LockmanDynamicConditionInfo>()
+  /// Uses actionId as the key for indexing locks.
+  private let state = LockmanState<LockmanDynamicConditionInfo, LockmanActionId>(
+    keyExtractor: { $0.actionId }
+  )
 
   /// The unique identifier for this strategy instance.
   public let strategyId: LockmanStrategyId
@@ -114,7 +117,7 @@ public final class LockmanDynamicConditionStrategy: LockmanStrategy, @unchecked 
     info: LockmanDynamicConditionInfo
   ) {
     // Remove all locks with the same actionId
-    state.removeAll(id: id, actionId: info.actionId)
+    state.removeAll(id: id, key: info.actionId)
   }
 
   /// Removes all active locks across all boundaries.

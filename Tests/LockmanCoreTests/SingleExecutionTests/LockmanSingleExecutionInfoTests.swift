@@ -231,7 +231,7 @@ final class LockmanSingleExecutionInfoTests: XCTestCase {
 
 final class LockmanSingleExecutionInfoIntegrationTests: XCTestCase {
   func testWorksWithLockmanState() {
-    let state = LockmanState<LockmanSingleExecutionInfo>()
+    let state = LockmanState<LockmanSingleExecutionInfo, LockmanActionId>()
     let boundaryId = StringBoundaryId(value: "boundary")
 
     let info1 = LockmanSingleExecutionInfo(actionId: "action1", mode: .boundary)
