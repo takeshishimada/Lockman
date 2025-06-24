@@ -29,7 +29,7 @@
 /// // Both can be used as group IDs in the same collection
 /// let featureGroup = AnyLockmanGroupId(FeatureGroup.navigation)
 /// let moduleGroup = AnyLockmanGroupId(ModuleGroup(module: "user", submodule: "profile"))
-/// 
+///
 /// // Can be stored in the same Set
 /// let groupIds: Set<AnyLockmanGroupId> = [featureGroup, moduleGroup]
 /// ```

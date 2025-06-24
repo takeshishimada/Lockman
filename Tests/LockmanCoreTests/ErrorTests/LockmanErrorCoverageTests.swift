@@ -61,7 +61,9 @@ final class LockmanErrorCoverageTests: XCTestCase {
     XCTAssertNotNil(error1.failureReason)
     XCTAssertTrue(error1.failureReason!.contains("Leader"))
 
-    let error2 = LockmanGroupCoordinationError.memberCannotJoinEmptyGroup(groupIds: [AnyLockmanGroupId("group3")])
+    let error2 = LockmanGroupCoordinationError.memberCannotJoinEmptyGroup(groupIds: [
+      AnyLockmanGroupId("group3")
+    ])
     XCTAssertNotNil(error2.errorDescription)
     XCTAssertTrue(error2.errorDescription!.contains("member"))
     XCTAssertNotNil(error2.failureReason)
