@@ -102,6 +102,7 @@ public enum LockmanManager {
       try container.register(LockmanSingleExecutionStrategy.shared)
       try container.register(LockmanPriorityBasedStrategy.shared)
       try container.register(LockmanGroupCoordinationStrategy.shared)
+      try container.register(LockmanConcurrencyLimitedStrategy.shared)
     } catch {
       // Registration failure is silently ignored as it's handled gracefully
     }
