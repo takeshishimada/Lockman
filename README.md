@@ -39,6 +39,7 @@ Lockman provides the following control strategies to address common problems in 
 * **Priority Based**: Action control and cancellation based on priority
 * **Group Coordination**: Group control through leader/member roles
 * **Dynamic Condition**: Dynamic control based on runtime conditions
+* **Concurrency Limited**: Limits the number of concurrent executions per group
 * **Composite Strategy**: Combination of multiple strategies
 
 ## Basic Example
@@ -153,7 +154,7 @@ Add the dependency to your Package.swift file:
 
 ```swift
 dependencies: [
-  .package(url: "https://github.com/takeshishimada/Lockman", from: "0.2.1")
+  .package(url: "https://github.com/takeshishimada/Lockman", from: "0.3.0")
 ]
 ```
 
@@ -181,6 +182,7 @@ Add the dependency to your target:
 
 | Lockman | The Composable Architecture |
 |---------|----------------------------|
+| 0.3.0   | 1.17.1                     |
 | 0.2.1   | 1.17.1                     |
 | 0.2.0   | 1.17.1                     |
 | 0.1.0   | 1.17.1                     |
