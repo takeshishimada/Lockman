@@ -35,7 +35,10 @@ public final class LockmanSingleExecutionStrategy: LockmanStrategy, @unchecked S
   public static let shared = LockmanSingleExecutionStrategy()
 
   /// Thread-safe state container that tracks active locks per boundary ID.
-  private let state = LockmanState<LockmanSingleExecutionInfo>()
+  /// Uses actionId as the key for indexing locks.
+  private let state = LockmanState<LockmanSingleExecutionInfo, LockmanActionId>(
+    keyExtractor: { $0.actionId }
+  )
 
   /// The unique identifier for this strategy instance.
   public let strategyId: LockmanStrategyId
@@ -105,7 +108,7 @@ public final class LockmanSingleExecutionStrategy: LockmanStrategy, @unchecked S
 
     case .action:
       // Exclusive per action - check if same actionId exists
-      if state.contains(id: id, actionId: info.actionId) {
+      if state.contains(id: id, key: info.actionId) {
         result = .failure(LockmanSingleExecutionError.actionAlreadyRunning(actionId: info.actionId))
         failureReason = "Action '\(info.actionId)' is already locked"
       } else {

@@ -28,14 +28,14 @@ final class LockmanStateActionIndexTests: XCTestCase {
   // MARK: - Basic Functionality Tests
 
   func testContainsReturnsFalseForNonExistentAction() async throws {
-    let state = LockmanState<TestInfo>()
+    let state = LockmanState<TestInfo, LockmanActionId>()
     let boundary = TestBoundaryId(value: "test")
 
     XCTAssertFalse(state.contains(id: boundary, actionId: "nonexistent"))
   }
 
   func testContainsReturnsTrueAfterAddingAction() async throws {
-    let state = LockmanState<TestInfo>()
+    let state = LockmanState<TestInfo, LockmanActionId>()
     let boundary = TestBoundaryId(value: "test")
     let info = TestInfo(actionId: "action1")
 

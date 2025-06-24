@@ -17,7 +17,10 @@ public final class LockmanConcurrencyLimitedStrategy: LockmanStrategy, @unchecke
   }
 
   /// Thread-safe state management.
-  private let state = LockmanState<LockmanConcurrencyLimitedInfo>()
+  /// Uses concurrencyId as the key for indexing locks.
+  private let state = LockmanState<LockmanConcurrencyLimitedInfo, String>(
+    keyExtractor: { $0.concurrencyId }
+  )
 
   /// Private initializer to ensure singleton usage.
   private init() {
@@ -29,11 +32,8 @@ public final class LockmanConcurrencyLimitedStrategy: LockmanStrategy, @unchecke
     id: B,
     info: LockmanConcurrencyLimitedInfo
   ) -> LockmanResult {
-    let currentLocks = state.currents(id: id).filter { existingInfo in
-      existingInfo.concurrencyId == info.concurrencyId
-    }
-
-    let currentCount = currentLocks.count
+    // Use the key-based query for efficient lookup
+    let currentCount = state.count(id: id, key: info.concurrencyId)
 
     let result: LockmanResult
     var failureReason: String?

@@ -63,8 +63,10 @@ public final class LockmanPriorityBasedStrategy: LockmanStrategy, @unchecked Sen
   ///
   /// Each boundary maintains an ordered collection of active lock infos, allowing
   /// the strategy to evaluate priority conflicts and determine the highest-priority
-  /// active action for each boundary.
-  private let state = LockmanState<LockmanPriorityBasedInfo>()
+  /// active action for each boundary. Uses actionId as the key for indexing locks.
+  private let state = LockmanState<LockmanPriorityBasedInfo, LockmanActionId>(
+    keyExtractor: { $0.actionId }
+  )
 
   /// The unique identifier for this strategy instance.
   public let strategyId: LockmanStrategyId
