@@ -44,96 +44,27 @@ Lockmanは以下の制御戦略を提供し、実際のアプリ開発で頻繁�
 
 ## 基本例
 
-プロフィール写真選択における優先度ベースのアクション制御の例：
+単一実行アクション制御の例：
 
-```swift
-import ComposableArchitecture
-import Lockman
+![01-SingleExecutionStrategy](https://github.com/user-attachments/assets/3f630c51-94c9-4404-b06a-0f565e1bedd3)
 
-@Reducer
-struct ProfilePhotoFeature {
-  @ObservableState
-  struct State {
-    var photos: [Photo] = []
-    var selectedPhotoId: Photo.ID?
-  }
-  
-  enum Action {
-    case view(ViewAction)
-    case `internal`(InternalAction)
-    
-    @LockmanPriorityBased
-    enum ViewAction {
-      case thumbnailTapped(Photo.ID)
-      case updateProfilePhoto(Photo.ID)
-      
-      var lockmanInfo: LockmanPriorityBasedInfo {
-        switch self {
-        case .thumbnailTapped:
-          .init(actionId: actionName, priority: .low(.replaceable))
-        case .updateProfilePhoto:
-          .init(actionId: actionName, priority: .high(.exclusive))
-        }
-      }
-    }
-    
-    enum InternalAction {
-      case photoPreviewLoaded(Photo.ID, UIImage)
-      case profilePhotoUpdated(Result<Photo, Error>)
-    }
-  }
-  
-  enum CancelID {
-    case userAction
-  }
-  
-  var body: some ReducerOf<Self> {
-    Reduce { state, action in
-      switch action {
-      case let .view(viewAction):
-        switch viewAction {
-        case let .thumbnailTapped(photoId):
-          // 低優先度：選択を即座に表示し、プレビューを読み込み
-          state.selectedPhotoId = photoId
-          return .withLock(
-            operation: { send in
-              let image = try await photoClient.loadPreview(photoId)
-              await send(.internal(.photoPreviewLoaded(photoId, image)))
-            },
-            action: viewAction,
-            cancelID: CancelID.userAction
-          )
-          
-        case let .updateProfilePhoto(photoId):
-          // 高優先度（排他的）：他の全ての操作をブロック
-          return .withLock(
-            operation: { send in
-              let updatedPhoto = try await profileAPI.updatePhoto(photoId)
-              await send(.internal(.profilePhotoUpdated(.success(updatedPhoto))))
-            },
-            action: viewAction,
-            cancelID: CancelID.userAction
-          )
-        }
-        
-      case let .internal(internalAction):
-        switch internalAction {
-        case let .photoPreviewLoaded(photoId, image):
-          // プレビューでUIを更新
-          return .none
-          
-        case let .profilePhotoUpdated(.success(photo)):
-          // 更新成功
-          return .none
-          
-        case .profilePhotoUpdated(.failure):
-          // エラー処理
-          return .none
-        }
-      }
-    }
-  }
-}
+```
+✅ [Lockman] canLock succeeded - Strategy: SingleExecution, BoundaryId: process, Info: LockmanSingleExecutionInfo(actionId: 'startProcessButtonTapped', uniqueId: 7BFC785A-3D25-4722-B9BC-A3A63A7F49FC, mode: boundary)
+❌ [Lockman] canLock failed - Strategy: SingleExecution, BoundaryId: process, Info: LockmanSingleExecutionInfo(actionId: 'startProcessButtonTapped', uniqueId: 1EBA9632-DE39-43B6-BE75-7C754476CD4E, mode: boundary), Reason: Boundary 'process' already has an active lock
+❌ [Lockman] canLock failed - Strategy: SingleExecution, BoundaryId: process, Info: LockmanSingleExecutionInfo(actionId: 'startProcessButtonTapped', uniqueId: 6C5C569F-4534-40D7-98F6-B4F4B0EE1293, mode: boundary), Reason: Boundary 'process' already has an active lock
+✅ [Lockman] canLock succeeded - Strategy: SingleExecution, BoundaryId: process, Info: LockmanSingleExecutionInfo(actionId: 'startProcessButtonTapped', uniqueId: C6779CD1-F8FE-46EB-8605-109F7C8DCEA8, mode: boundary)
+❌ [Lockman] canLock failed - Strategy: SingleExecution, BoundaryId: process, Info: LockmanSingleExecutionInfo(actionId: 'startProcessButtonTapped', uniqueId: A54E7748-A3DE-451A-BF06-56224A5C94DA, mode: boundary), Reason: Boundary 'process' already has an active lock
+❌ [Lockman] canLock failed - Strategy: SingleExecution, BoundaryId: process, Info: LockmanSingleExecutionInfo(actionId: 'startProcessButtonTapped', uniqueId: 7D4D67A7-1A8C-4521-BB16-92E0D551451A, mode: boundary), Reason: Boundary 'process' already has an active lock
+✅ [Lockman] canLock succeeded - Strategy: SingleExecution, BoundaryId: process, Info: LockmanSingleExecutionInfo(actionId: 'startProcessButtonTapped', uniqueId: 08CC1862-136F-4643-A796-F63156D8BF56, mode: boundary)
+❌ [Lockman] canLock failed - Strategy: SingleExecution, BoundaryId: process, Info: LockmanSingleExecutionInfo(actionId: 'startProcessButtonTapped', uniqueId: DED418D1-4A10-4EF8-A5BC-9E93D04188CA, mode: boundary), Reason: Boundary 'process' already has an active lock
+
+📊 Current Lock State (SingleExecutionStrategy):
+┌─────────────────┬──────────────────┬──────────────────────────────────────┬─────────────────┐
+│ Strategy        │ BoundaryId       │ ActionId/UniqueId                    │ Additional Info │
+├─────────────────┼──────────────────┼──────────────────────────────────────┼─────────────────┤
+│ SingleExecution │ CancelID.process │ startProcessButtonTapped             │ mode: boundary  │
+│                 │                  │ 08CC1862-136F-4643-A796-F63156D8BF56 │                 │
+└─────────────────┴──────────────────┴──────────────────────────────────────┴─────────────────┘
 ```
 
 ## インストール
