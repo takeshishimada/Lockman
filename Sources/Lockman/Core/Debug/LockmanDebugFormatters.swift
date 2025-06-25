@@ -59,6 +59,8 @@ extension LockmanManager.debug {
       return "DynamicCondition"
     case "LockmanGroupCoordinatedStrategy":
       return "GroupCoordinated"
+    case "LockmanConcurrencyLimitedStrategy":
+      return "ConcurrencyLimited"
     default:
       // For other strategies, remove "Lockman" prefix and "Strategy" suffix
       var result = withoutModule
@@ -341,6 +343,9 @@ extension LockmanManager.debug {
     case let groupCoordinated as LockmanGroupCoordinatedInfo:
       let groupsStr = groupCoordinated.groupIds.map { "\($0)" }.sorted().joined(separator: ",")
       return "groups: \(groupsStr) r: \(groupCoordinated.coordinationRole)"
+      
+    case let concurrencyLimited as LockmanConcurrencyLimitedInfo:
+      return "concurrency: \(concurrencyLimited.concurrencyId) limit: \(concurrencyLimited.limit)"
 
     case is any LockmanCompositeInfo:
       return "Composite"
@@ -361,6 +366,8 @@ extension LockmanManager.debug {
       return "DynamicCondition"
     case is LockmanGroupCoordinatedInfo:
       return "GroupCoordination"
+    case is LockmanConcurrencyLimitedInfo:
+      return "ConcurrencyLimited"
     default:
       return "Unknown"
     }

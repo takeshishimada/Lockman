@@ -40,10 +40,13 @@ public final class LockmanConcurrencyLimitedStrategy: LockmanStrategy, @unchecke
 
     if info.limit.isExceeded(currentCount: currentCount) {
       if case .limited(let limit) = info.limit {
+        // Get existing infos in the same concurrency group
+        let existingInfos = state.currents(id: id, key: info.concurrencyId)
+        
         result = .failure(
           LockmanConcurrencyLimitedError.concurrencyLimitReached(
-            concurrencyId: info.concurrencyId,
-            limit: limit,
+            requestedInfo: info,
+            existingInfos: existingInfos,
             current: currentCount
           )
         )

@@ -152,8 +152,10 @@ public final class LockmanPriorityBasedStrategy: LockmanStrategy, @unchecked Sen
         $0.actionId == requestedInfo.actionId
       }
       if hasSameActionConflict {
+        // Find the existing info with the same actionId
+        let existingInfo = currentLocks.first { $0.actionId == requestedInfo.actionId }!
         result = .failure(
-          LockmanPriorityBasedError.blockedBySameAction(actionId: requestedInfo.actionId))
+          LockmanPriorityBasedError.blockedBySameAction(existingInfo: existingInfo))
         failureReason = "Same action '\(requestedInfo.actionId)' is blocked by policy"
 
         LockmanLogger.shared.logCanLock(
@@ -212,7 +214,7 @@ public final class LockmanPriorityBasedStrategy: LockmanStrategy, @unchecked Sen
       // Requested action has higher priority - can preempt current
       result = .successWithPrecedingCancellation(
         error: LockmanPriorityBasedError.precedingActionCancelled(
-          actionId: currentHighestPriorityInfo.actionId
+          cancelledInfo: currentHighestPriorityInfo
         )
       )
       cancelledInfo = (currentHighestPriorityInfo.actionId, currentHighestPriorityInfo.uniqueId)
@@ -378,7 +380,7 @@ extension LockmanPriorityBasedStrategy {
       // Existing action: "I am replaceable, allow new same-priority actions to take over"
       // → Existing action gets canceled, new action succeeds
       return .successWithPrecedingCancellation(
-        error: LockmanPriorityBasedError.precedingActionCancelled(actionId: current.actionId)
+        error: LockmanPriorityBasedError.precedingActionCancelled(cancelledInfo: current)
       )
     }
   }

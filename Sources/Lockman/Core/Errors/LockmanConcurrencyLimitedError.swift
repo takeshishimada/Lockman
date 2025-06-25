@@ -3,12 +3,16 @@ import Foundation
 /// Errors specific to concurrency-limited locking.
 public enum LockmanConcurrencyLimitedError: LockmanError {
   /// The concurrency limit has been reached.
-  case concurrencyLimitReached(concurrencyId: String, limit: Int, current: Int)
+  /// - Parameters:
+  ///   - requestedInfo: The info of the action that was blocked
+  ///   - existingInfos: Array of currently active infos in the same concurrency group
+  ///   - current: Current number of active concurrent executions
+  case concurrencyLimitReached(requestedInfo: LockmanConcurrencyLimitedInfo, existingInfos: [LockmanConcurrencyLimitedInfo], current: Int)
 
   public var errorDescription: String? {
     switch self {
-    case let .concurrencyLimitReached(concurrencyId, limit, current):
-      return "Concurrency limit reached for '\(concurrencyId)': \(current)/\(limit)"
+    case let .concurrencyLimitReached(requestedInfo, _, current):
+      return "Concurrency limit reached for '\(requestedInfo.concurrencyId)': \(current)/\(requestedInfo.limit)"
     }
   }
 

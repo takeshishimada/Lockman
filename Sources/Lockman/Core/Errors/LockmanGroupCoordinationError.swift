@@ -20,13 +20,13 @@ public enum LockmanGroupCoordinationError: LockmanError {
   /// Indicates that an action with the same ID is already in the group.
   ///
   /// Each action ID must be unique within a coordination group.
-  case actionAlreadyInGroup(actionId: String, groupIds: Set<AnyLockmanGroupId>)
+  case actionAlreadyInGroup(existingInfo: LockmanGroupCoordinatedInfo, groupIds: Set<AnyLockmanGroupId>)
 
   /// Indicates that an action is blocked by an exclusive leader.
   ///
   /// Exclusive leaders can prevent other actions from executing based on their entry policy.
   case blockedByExclusiveLeader(
-    leaderActionId: String, groupId: AnyLockmanGroupId,
+    leaderInfo: LockmanGroupCoordinatedInfo, groupId: AnyLockmanGroupId,
     entryPolicy: GroupCoordinationRole.LeaderEntryPolicy)
 
   public var errorDescription: String? {
@@ -37,12 +37,12 @@ public enum LockmanGroupCoordinationError: LockmanError {
     case let .memberCannotJoinEmptyGroup(groupIds):
       return
         "Cannot acquire lock: member cannot join empty groups \(groupIds.map { "\($0)" }.sorted())."
-    case let .actionAlreadyInGroup(actionId, groupIds):
+    case let .actionAlreadyInGroup(existingInfo, groupIds):
       return
-        "Cannot acquire lock: action '\(actionId)' is already in groups \(groupIds.map { "\($0)" }.sorted())."
-    case let .blockedByExclusiveLeader(leaderActionId, groupId, entryPolicy):
+        "Cannot acquire lock: action '\(existingInfo.actionId)' is already in groups \(groupIds.map { "\($0)" }.sorted())."
+    case let .blockedByExclusiveLeader(leaderInfo, groupId, entryPolicy):
       return
-        "Cannot acquire lock: blocked by exclusive leader '\(leaderActionId)' in group '\(groupId)' (policy: \(entryPolicy))."
+        "Cannot acquire lock: blocked by exclusive leader '\(leaderInfo.actionId)' in group '\(groupId)' (policy: \(entryPolicy))."
     }
   }
 

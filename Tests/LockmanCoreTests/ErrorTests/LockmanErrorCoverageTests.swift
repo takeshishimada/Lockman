@@ -8,11 +8,13 @@ final class LockmanErrorCoverageTests: XCTestCase {
   // MARK: - LockmanSingleExecutionError Tests
 
   func testSingleExecutionErrorFailureReason() {
-    let error1 = LockmanSingleExecutionError.boundaryAlreadyLocked(boundaryId: "test-boundary")
+    let existingInfo = LockmanSingleExecutionInfo(actionId: "existing-action", mode: .boundary)
+    let error1 = LockmanSingleExecutionError.boundaryAlreadyLocked(boundaryId: "test-boundary", existingInfo: existingInfo)
     XCTAssertNotNil(error1.failureReason)
     XCTAssertTrue(error1.failureReason!.contains("boundary"))
 
-    let error2 = LockmanSingleExecutionError.actionAlreadyRunning(actionId: "test-action")
+    let existingInfo2 = LockmanSingleExecutionInfo(actionId: "test-action", mode: .action)
+    let error2 = LockmanSingleExecutionError.actionAlreadyRunning(existingInfo: existingInfo2)
     XCTAssertNotNil(error2.failureReason)
     XCTAssertTrue(error2.failureReason!.contains("action"))
   }
@@ -31,7 +33,8 @@ final class LockmanErrorCoverageTests: XCTestCase {
     XCTAssertNotNil(error2.failureReason)
     XCTAssertTrue(error2.failureReason!.contains("priority"))
 
-    let error3 = LockmanPriorityBasedError.blockedBySameAction(actionId: "test-action")
+    let existingInfo3 = LockmanPriorityBasedInfo(actionId: "test-action", priority: .high(.exclusive))
+    let error3 = LockmanPriorityBasedError.blockedBySameAction(existingInfo: existingInfo3)
     XCTAssertNotNil(error3.failureReason)
     XCTAssertTrue(error3.failureReason!.contains("action"))
   }
@@ -69,8 +72,10 @@ final class LockmanErrorCoverageTests: XCTestCase {
     XCTAssertNotNil(error2.failureReason)
     XCTAssertTrue(error2.failureReason!.contains("Member"))
 
+    let existingInfo3 = LockmanGroupCoordinatedInfo(
+      actionId: "action1", groupId: "group1", coordinationRole: .member)
     let error3 = LockmanGroupCoordinationError.actionAlreadyInGroup(
-      actionId: "action1", groupIds: [AnyLockmanGroupId("group1"), AnyLockmanGroupId("group2")])
+      existingInfo: existingInfo3, groupIds: [AnyLockmanGroupId("group1"), AnyLockmanGroupId("group2")])
     XCTAssertNotNil(error3.errorDescription)
     XCTAssertTrue(error3.errorDescription!.contains("action1"))
     XCTAssertNotNil(error3.failureReason)
@@ -82,11 +87,13 @@ final class LockmanErrorCoverageTests: XCTestCase {
   func testErrorDescriptionsWithSpecialCharacters() {
     let specialId = "test-<>&\"'123"
 
-    let error1 = LockmanSingleExecutionError.boundaryAlreadyLocked(boundaryId: specialId)
+    let existingInfo1 = LockmanSingleExecutionInfo(actionId: "existing", mode: .boundary)
+    let error1 = LockmanSingleExecutionError.boundaryAlreadyLocked(boundaryId: specialId, existingInfo: existingInfo1)
     XCTAssertNotNil(error1.errorDescription)
     XCTAssertTrue(error1.errorDescription!.contains(specialId))
 
-    let error2 = LockmanPriorityBasedError.blockedBySameAction(actionId: specialId)
+    let existingInfo2 = LockmanPriorityBasedInfo(actionId: specialId, priority: .high(.exclusive))
+    let error2 = LockmanPriorityBasedError.blockedBySameAction(existingInfo: existingInfo2)
     XCTAssertNotNil(error2.errorDescription)
     XCTAssertTrue(error2.errorDescription!.contains(specialId))
 
@@ -98,12 +105,15 @@ final class LockmanErrorCoverageTests: XCTestCase {
   func testErrorDescriptionsWithEmptyStrings() {
     let emptyId = ""
 
-    let error1 = LockmanSingleExecutionError.actionAlreadyRunning(actionId: emptyId)
+    let existingInfo1 = LockmanSingleExecutionInfo(actionId: emptyId, mode: .action)
+    let error1 = LockmanSingleExecutionError.actionAlreadyRunning(existingInfo: existingInfo1)
     XCTAssertNotNil(error1.errorDescription)
     XCTAssertNotNil(error1.failureReason)
 
+    let existingInfo2 = LockmanGroupCoordinatedInfo(
+      actionId: emptyId, groupId: "group1", coordinationRole: .member)
     let error2 = LockmanGroupCoordinationError.actionAlreadyInGroup(
-      actionId: emptyId, groupIds: Set<AnyLockmanGroupId>())
+      existingInfo: existingInfo2, groupIds: Set<AnyLockmanGroupId>())
     XCTAssertNotNil(error2.errorDescription)
     XCTAssertNotNil(error2.failureReason)
   }

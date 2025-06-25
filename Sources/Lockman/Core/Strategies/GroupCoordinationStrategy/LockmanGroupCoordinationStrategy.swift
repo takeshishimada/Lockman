@@ -127,12 +127,12 @@ public final class LockmanGroupCoordinationStrategy: LockmanStrategy, @unchecked
         let groupState = boundaryState?.groups[groupId]
 
         // Check if this specific action is already active in this group
-        if groupState?.activeMembers[info.actionId] != nil {
+        if let existingMember = groupState?.activeMembers[info.actionId] {
           // Same action ID cannot be executed twice in the same group
           failureReason = "Action '\(info.actionId)' is already active in group '\(groupId)'"
           return .failure(
             LockmanGroupCoordinationError.actionAlreadyInGroup(
-              actionId: info.actionId, groupIds: Set([groupId])))
+              existingInfo: existingMember.info, groupIds: Set([groupId])))
         }
 
         // No additional blocking logic needed here

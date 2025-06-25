@@ -24,14 +24,14 @@ public enum LockmanPriorityBasedError: LockmanError {
   ///
   /// This occurs when the strategy is configured to block duplicate actions
   /// regardless of priority.
-  case blockedBySameAction(actionId: String)
+  case blockedBySameAction(existingInfo: LockmanPriorityBasedInfo)
 
   /// Indicates that a preceding action will be cancelled due to preemption.
   ///
   /// This occurs when a higher priority action preempts a lower priority action.
   /// The lower priority action will be cancelled to allow the higher priority
   /// action to proceed.
-  case precedingActionCancelled(actionId: String)
+  case precedingActionCancelled(cancelledInfo: LockmanPriorityBasedInfo)
 
   public var errorDescription: String? {
     switch self {
@@ -40,12 +40,12 @@ public enum LockmanPriorityBasedError: LockmanError {
         "Cannot acquire lock: requested priority \(requested) is lower than current highest priority \(currentHighest)."
     case let .samePriorityConflict(priority):
       return "Cannot acquire lock: another action with priority \(priority) is already running."
-    case let .blockedBySameAction(actionId):
+    case let .blockedBySameAction(existingInfo):
       return
-        "Cannot acquire lock: action '\(actionId)' is already running and duplicates are blocked."
-    case let .precedingActionCancelled(actionId):
+        "Cannot acquire lock: action '\(existingInfo.actionId)' is already running and duplicates are blocked."
+    case let .precedingActionCancelled(cancelledInfo):
       return
-        "Lock acquired, preceding action '\(actionId)' will be cancelled."
+        "Lock acquired, preceding action '\(cancelledInfo.actionId)' will be cancelled."
     }
   }
 

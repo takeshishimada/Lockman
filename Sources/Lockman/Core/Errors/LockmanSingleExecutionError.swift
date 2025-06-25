@@ -11,20 +11,20 @@ public enum LockmanSingleExecutionError: LockmanError {
   ///
   /// This occurs when attempting to acquire a boundary-scoped lock while
   /// another operation is already holding a lock in the same boundary.
-  case boundaryAlreadyLocked(boundaryId: String)
+  case boundaryAlreadyLocked(boundaryId: String, existingInfo: LockmanSingleExecutionInfo)
 
   /// Indicates that an action with the same ID is already running.
   ///
   /// This occurs when attempting to execute an action while another instance
   /// of the same action is already in progress.
-  case actionAlreadyRunning(actionId: String)
+  case actionAlreadyRunning(existingInfo: LockmanSingleExecutionInfo)
 
   public var errorDescription: String? {
     switch self {
-    case let .boundaryAlreadyLocked(boundaryId):
-      return "Cannot acquire lock: boundary '\(boundaryId)' already has an active lock."
-    case let .actionAlreadyRunning(actionId):
-      return "Cannot acquire lock: action '\(actionId)' is already running."
+    case let .boundaryAlreadyLocked(boundaryId, existingInfo):
+      return "Cannot acquire lock: boundary '\(boundaryId)' already has an active lock for action '\(existingInfo.actionId)'."
+    case let .actionAlreadyRunning(existingInfo):
+      return "Cannot acquire lock: action '\(existingInfo.actionId)' is already running."
     }
   }
 
