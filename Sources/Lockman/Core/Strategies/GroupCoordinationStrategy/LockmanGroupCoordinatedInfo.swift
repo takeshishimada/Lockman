@@ -151,4 +151,11 @@ extension LockmanGroupCoordinatedInfo: CustomDebugStringConvertible {
     return
       "LockmanGroupCoordinatedInfo(actionId: '\(actionId)', uniqueId: \(uniqueId), groupIds: [\(groupIdsStr)], coordinationRole: .\(coordinationRole))"
   }
+  
+  // MARK: - Debug Additional Info
+  
+  public var debugAdditionalInfo: String {
+    let groupsStr = groupIds.map { "\($0)" }.sorted().joined(separator: ",")
+    return "groups: \(groupsStr) r: \(coordinationRole)"
+  }
 }

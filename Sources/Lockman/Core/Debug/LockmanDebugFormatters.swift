@@ -59,6 +59,8 @@ extension LockmanManager.debug {
       return "DynamicCondition"
     case "LockmanGroupCoordinatedStrategy":
       return "GroupCoordinated"
+    case "LockmanConcurrencyLimitedStrategy":
+      return "ConcurrencyLimited"
     default:
       // For other strategies, remove "Lockman" prefix and "Strategy" suffix
       var result = withoutModule
@@ -322,32 +324,8 @@ extension LockmanManager.debug {
 
   /// Extracts additional information from lock info based on its type.
   private static func extractAdditionalInfo(from info: any LockmanInfo) -> String {
-    switch info {
-    case let singleExecution as LockmanSingleExecutionInfo:
-      return "mode: \(singleExecution.mode)"
-
-    case let priorityBased as LockmanPriorityBasedInfo:
-      let priority = priorityBased.priority
-      var result = "priority: \(priority)"
-      if let behavior = priority.behavior {
-        let behaviorStr = behavior == .exclusive ? ".exclusive" : ".replaceable"
-        result = String(result.prefix(20 - 13)) + " b: " + behaviorStr
-      }
-      return result
-
-    case is LockmanDynamicConditionInfo:
-      return "condition: <closure>"
-
-    case let groupCoordinated as LockmanGroupCoordinatedInfo:
-      let groupsStr = groupCoordinated.groupIds.map { "\($0)" }.sorted().joined(separator: ",")
-      return "groups: \(groupsStr) r: \(groupCoordinated.coordinationRole)"
-
-    case is any LockmanCompositeInfo:
-      return "Composite"
-
-    default:
-      return ""
-    }
+    // Use the debugAdditionalInfo property defined by each info type
+    return info.debugAdditionalInfo
   }
 
   /// Gets the strategy name for a given lock info type.
@@ -361,6 +339,8 @@ extension LockmanManager.debug {
       return "DynamicCondition"
     case is LockmanGroupCoordinatedInfo:
       return "GroupCoordination"
+    case is LockmanConcurrencyLimitedInfo:
+      return "ConcurrencyLimited"
     default:
       return "Unknown"
     }

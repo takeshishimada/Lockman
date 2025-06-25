@@ -56,4 +56,34 @@ public protocol LockmanInfo: Sendable, CustomDebugStringConvertible {
   /// This is typically a `UUID` that is automatically generated during
   /// initialization to ensure uniqueness across all instances.
   var uniqueId: UUID { get }
+  
+  /// Returns additional debug information specific to this lock info type.
+  ///
+  /// This method provides a formatted string containing strategy-specific
+  /// information that is useful for debugging. The returned string should
+  /// be concise and suitable for display in debug output tables.
+  ///
+  /// ## Default Implementation
+  /// Returns an empty string by default. Concrete types should override
+  /// this to provide meaningful debug information.
+  ///
+  /// ## Examples
+  /// ```swift
+  /// // SingleExecutionInfo
+  /// "mode: boundary"
+  ///
+  /// // PriorityBasedInfo
+  /// "priority: high b: .exclusive"
+  ///
+  /// // ConcurrencyLimitedInfo
+  /// "concurrency: api_requests limit: limited(3)"
+  /// ```
+  var debugAdditionalInfo: String { get }
+}
+
+// MARK: - Default Implementation
+
+extension LockmanInfo {
+  /// Default implementation returns an empty string.
+  public var debugAdditionalInfo: String { "" }
 }

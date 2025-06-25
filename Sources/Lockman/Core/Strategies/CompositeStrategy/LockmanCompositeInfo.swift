@@ -80,6 +80,10 @@ extension LockmanCompositeInfo2: CustomDebugStringConvertible {
   public var debugDescription: String {
     "LockmanCompositeInfo2(actionId: '\(actionId)', uniqueId: \(uniqueId), info1: \(lockmanInfoForStrategy1.debugDescription), info2: \(lockmanInfoForStrategy2.debugDescription))"
   }
+  
+  public var debugAdditionalInfo: String {
+    "Composite"
+  }
 }
 
 // MARK: - LockmanCompositeInfo3
@@ -139,6 +143,10 @@ public struct LockmanCompositeInfo3<I1: LockmanInfo, I2: LockmanInfo, I3: Lockma
 extension LockmanCompositeInfo3: CustomDebugStringConvertible {
   public var debugDescription: String {
     "LockmanCompositeInfo3(actionId: '\(actionId)', uniqueId: \(uniqueId), info1: \(lockmanInfoForStrategy1.debugDescription), info2: \(lockmanInfoForStrategy2.debugDescription), info3: \(lockmanInfoForStrategy3.debugDescription))"
+  }
+  
+  public var debugAdditionalInfo: String {
+    "Composite"
   }
 }
 
@@ -205,6 +213,10 @@ public struct LockmanCompositeInfo4<
 extension LockmanCompositeInfo4: CustomDebugStringConvertible {
   public var debugDescription: String {
     "LockmanCompositeInfo4(actionId: '\(actionId)', uniqueId: \(uniqueId), info1: \(lockmanInfoForStrategy1.debugDescription), info2: \(lockmanInfoForStrategy2.debugDescription), info3: \(lockmanInfoForStrategy3.debugDescription), info4: \(lockmanInfoForStrategy4.debugDescription))"
+  }
+  
+  public var debugAdditionalInfo: String {
+    "Composite"
   }
 }
 
@@ -277,5 +289,9 @@ public struct LockmanCompositeInfo5<
 extension LockmanCompositeInfo5: CustomDebugStringConvertible {
   public var debugDescription: String {
     "LockmanCompositeInfo5(actionId: '\(actionId)', uniqueId: \(uniqueId), info1: \(lockmanInfoForStrategy1.debugDescription), info2: \(lockmanInfoForStrategy2.debugDescription), info3: \(lockmanInfoForStrategy3.debugDescription), info4: \(lockmanInfoForStrategy4.debugDescription), info5: \(lockmanInfoForStrategy5.debugDescription))"
+  }
+  
+  public var debugAdditionalInfo: String {
+    "Composite"
   }
 }

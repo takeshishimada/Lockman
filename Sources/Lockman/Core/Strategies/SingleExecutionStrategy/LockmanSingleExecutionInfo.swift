@@ -104,4 +104,10 @@ public struct LockmanSingleExecutionInfo: LockmanInfo, Sendable, Equatable {
   public var debugDescription: String {
     "LockmanSingleExecutionInfo(actionId: '\(actionId)', uniqueId: \(uniqueId), mode: \(mode))"
   }
+  
+  // MARK: - Debug Additional Info
+  
+  public var debugAdditionalInfo: String {
+    "mode: \(mode)"
+  }
 }
