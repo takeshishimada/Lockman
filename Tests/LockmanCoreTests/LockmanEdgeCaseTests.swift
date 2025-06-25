@@ -135,7 +135,13 @@ final class LockmanEdgeCaseTests: XCTestCase {
 
     // High priority should succeed (may not cancel if none priority doesn't block)
     let result = strategy.canLock(id: boundaryId, info: highInfo)
-    XCTAssertTrue(result == .success || result == .successWithPrecedingCancellation)
+    switch result {
+    case .success, .successWithPrecedingCancellation:
+      // Success - either immediate success or with cancellation
+      break
+    case .failure(let error):
+      XCTFail("Expected success or successWithPrecedingCancellation but got failure: \(error)")
+    }
 
     strategy.cleanUp()
   }

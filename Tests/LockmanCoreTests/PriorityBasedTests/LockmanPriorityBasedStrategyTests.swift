@@ -170,7 +170,11 @@ final class LockmanPriorityBasedStrategyTests: XCTestCase {
 
     for (lowerInfo, higherInfo) in testCases {
       strategy.lock(id: id, info: lowerInfo)
-      XCTAssertEqual(strategy.canLock(id: id, info: higherInfo), .successWithPrecedingCancellation)
+      if case .successWithPrecedingCancellation = strategy.canLock(id: id, info: higherInfo) {
+        // Success - expected behavior
+      } else {
+        XCTFail("Expected successWithPrecedingCancellation")
+      }
       strategy.cleanUp()
     }
   }
@@ -222,7 +226,11 @@ final class LockmanPriorityBasedStrategyTests: XCTestCase {
     for (firstInfo, secondInfo) in testCases {
       strategy.lock(id: id, info: firstInfo)
       // Second action follows first action's replaceable behavior
-      XCTAssertEqual(strategy.canLock(id: id, info: secondInfo), .successWithPrecedingCancellation)
+      if case .successWithPrecedingCancellation = strategy.canLock(id: id, info: secondInfo) {
+        // Success - expected behavior
+      } else {
+        XCTFail("Expected successWithPrecedingCancellation")
+      }
       strategy.cleanUp()
     }
   }
@@ -327,7 +335,11 @@ final class LockmanPriorityBasedStrategyTests: XCTestCase {
     XCTAssertEqual(strategy.canLock(id: id, info: noneInfo), .success)
 
     // High priority preempts low priority
-    XCTAssertEqual(strategy.canLock(id: id, info: highInfo), .successWithPrecedingCancellation)
+    if case .successWithPrecedingCancellation = strategy.canLock(id: id, info: highInfo) {
+      // Success - expected behavior
+    } else {
+      XCTFail("Expected successWithPrecedingCancellation")
+    }
     strategy.lock(id: id, info: highInfo)
 
     // Low priority now fails against high priority
@@ -349,16 +361,27 @@ final class LockmanPriorityBasedStrategyTests: XCTestCase {
     strategy.lock(id: id, info: lowReplaceable)
 
     // Low exclusive can replace low replaceable
-    XCTAssertEqual(strategy.canLock(id: id, info: lowExclusive), .successWithPrecedingCancellation)
+    if case .successWithPrecedingCancellation = strategy.canLock(id: id, info: lowExclusive) {
+      // Success - expected behavior
+    } else {
+      XCTFail("Expected successWithPrecedingCancellation")
+    }
     strategy.lock(id: id, info: lowExclusive)
 
     // High replaceable preempts low exclusive
-    XCTAssertEqual(
-      strategy.canLock(id: id, info: highReplaceable), .successWithPrecedingCancellation)
+    if case .successWithPrecedingCancellation = strategy.canLock(id: id, info: highReplaceable) {
+      // Success - expected behavior
+    } else {
+      XCTFail("Expected successWithPrecedingCancellation")
+    }
     strategy.lock(id: id, info: highReplaceable)
 
     // High exclusive can replace high replaceable
-    XCTAssertEqual(strategy.canLock(id: id, info: highExclusive), .successWithPrecedingCancellation)
+    if case .successWithPrecedingCancellation = strategy.canLock(id: id, info: highExclusive) {
+      // Success - expected behavior
+    } else {
+      XCTFail("Expected successWithPrecedingCancellation")
+    }
 
     strategy.cleanUp()
   }
@@ -429,7 +452,12 @@ final class LockmanPriorityBasedStrategyTests: XCTestCase {
     // At least one priority-based operation should succeed
     let priorityResults = results.filter { $0.0 != "none" }
     let prioritySuccessCount = priorityResults.filter {
-      $0.1 == .success || $0.1 == .successWithPrecedingCancellation
+      switch $0.1 {
+      case .success, .successWithPrecedingCancellation:
+        return true
+      case .failure:
+        return false
+      }
     }.count
     XCTAssertGreaterThanOrEqual(prioritySuccessCount, 1)
 
@@ -449,7 +477,11 @@ final class LockmanPriorityBasedStrategyTests: XCTestCase {
     strategy.lock(id: id, info: lowReplaceable)
 
     // Exclusive can replace replaceable
-    XCTAssertEqual(strategy.canLock(id: id, info: lowExclusive), .successWithPrecedingCancellation)
+    if case .successWithPrecedingCancellation = strategy.canLock(id: id, info: lowExclusive) {
+      // Success - expected behavior
+    } else {
+      XCTFail("Expected successWithPrecedingCancellation")
+    }
     strategy.lock(id: id, info: lowExclusive)
 
     // Now replaceable cannot replace exclusive
@@ -641,11 +673,11 @@ final class LockmanPriorityBasedStrategyTests: XCTestCase {
     let id = TestBoundaryId.default
 
     // Lock a replaceable action
-    let replaceableAction = TestInfoFactory.mediumReplaceable("replaceableAction")
+    let replaceableAction = TestInfoFactory.lowReplaceable("replaceableAction")
     strategy.lock(id: id, info: replaceableAction)
 
-    // Try to lock another medium priority action (should replace the existing one)
-    let newAction = TestInfoFactory.mediumExclusive("newAction")
+    // Try to lock another low priority action (should replace the existing one)
+    let newAction = TestInfoFactory.lowExclusive("newAction")
     let result = strategy.canLock(id: id, info: newAction)
 
     // Should succeed with preceding cancellation

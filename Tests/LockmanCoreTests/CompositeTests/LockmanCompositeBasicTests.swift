@@ -163,7 +163,11 @@ final class LockmanCompositeBasicTests: XCTestCase {
     )
 
     let result = composite.canLock(id: boundaryId, info: info)
-    XCTAssertEqual(result, .successWithPrecedingCancellation)
+    if case .successWithPrecedingCancellation = result {
+      // Success - precedingActionCancelled is expected
+    } else {
+      XCTFail("Expected successWithPrecedingCancellation but got \(result)")
+    }
 
     // Cleanup
     priority.cleanUp(id: boundaryId)

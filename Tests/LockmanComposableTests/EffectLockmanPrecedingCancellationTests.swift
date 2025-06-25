@@ -7,7 +7,7 @@ import XCTest
 // MARK: - Preceding Action Cancellation Error Tests
 
 final class EffectWithLockPrecedingCancellationTests: XCTestCase {
-  @Sendable func testPrecedingCancellationError_CallsLockFailureHandler() async {
+  func testPrecedingCancellationError_CallsLockFailureHandler() async {
     let container = LockmanStrategyContainer()
     let strategy = LockmanPriorityBasedStrategy()
     try? container.register(strategy)
@@ -30,8 +30,8 @@ final class EffectWithLockPrecedingCancellationTests: XCTestCase {
       }
 
       // Should receive the failure handler notification for the cancelled action
-      await store.receive(.lockFailureOccurred("lowPriorityTask")) {
-        $0.lastCancelledActionId = "lowPriorityTask"
+      await store.receive(.lockFailureOccurred("lowPriority")) {
+        $0.lastCancelledActionId = "lowPriority"
         $0.lockFailureCallCount += 1
       }
 
@@ -44,7 +44,7 @@ final class EffectWithLockPrecedingCancellationTests: XCTestCase {
     }
   }
 
-  @Sendable func testReplaceableBehavior_CallsLockFailureHandler() async {
+  func testHighPriorityPreemptsLowPriority_CallsLockFailureHandler() async {
     let container = LockmanStrategyContainer()
     let strategy = LockmanPriorityBasedStrategy()
     try? container.register(strategy)
@@ -56,37 +56,66 @@ final class EffectWithLockPrecedingCancellationTests: XCTestCase {
         TestPriorityFeature()
       }
 
-      // Start a replaceable medium priority action
-      await store.send(.startMediumReplaceable) {
-        $0.mediumPriorityRunning = true
+      // Start a low priority action
+      await store.send(.startLowPriority) {
+        $0.lowPriorityRunning = true
       }
 
-      // Start another medium priority action that should replace the first one
-      await store.send(.startMediumExclusive) {
-        $0.mediumPriorityRunning = true
+      // Start high priority action that should preempt the low priority one
+      await store.send(.startHighPriority) {
+        $0.highPriorityRunning = true
       }
 
-      // Should receive the failure handler notification for the replaced action
-      await store.receive(.lockFailureOccurred("mediumReplaceableTask")) {
-        $0.lastCancelledActionId = "mediumReplaceableTask"
+      // Should receive the failure handler notification for the preempted action
+      await store.receive(.lockFailureOccurred("lowPriority")) {
+        $0.lastCancelledActionId = "lowPriority"
         $0.lockFailureCallCount += 1
       }
 
-      // New medium priority task completes
-      await store.receive(.taskCompleted(.medium)) {
-        $0.mediumPriorityRunning = false
+      // High priority task completes
+      await store.receive(.taskCompleted(.high)) {
+        $0.highPriorityRunning = false
       }
 
       await store.finish()
     }
   }
 
+  // Priority-based action for testing
+  enum PriorityBasedAction: LockmanPriorityBasedAction {
+    case lowPriority
+    case lowReplaceable
+    case highExclusive
+    case highReplaceable
+    
+    var actionName: String {
+      switch self {
+      case .lowPriority: return "lowPriority"
+      case .lowReplaceable: return "lowReplaceable"
+      case .highExclusive: return "highExclusive"
+      case .highReplaceable: return "highReplaceable"
+      }
+    }
+    
+    var lockmanInfo: LockmanPriorityBasedInfo {
+      switch self {
+      case .lowPriority:
+        return LockmanPriorityBasedInfo(actionId: actionName, priority: .low(.exclusive))
+      case .lowReplaceable:
+        return LockmanPriorityBasedInfo(actionId: actionName, priority: .low(.replaceable))
+      case .highExclusive:
+        return LockmanPriorityBasedInfo(actionId: actionName, priority: .high(.exclusive))
+      case .highReplaceable:
+        return LockmanPriorityBasedInfo(actionId: actionName, priority: .high(.replaceable))
+      }
+    }
+  }
+  
   // Test feature for priority-based cancellation
   @Reducer
   struct TestPriorityFeature {
     struct State: Equatable {
       var lowPriorityRunning = false
-      var mediumPriorityRunning = false
       var highPriorityRunning = false
       var lastCancelledActionId: String?
       var lockFailureCallCount = 0
@@ -94,18 +123,16 @@ final class EffectWithLockPrecedingCancellationTests: XCTestCase {
 
     enum Action: Equatable {
       case startLowPriority
-      case startMediumReplaceable
-      case startMediumExclusive
       case startHighPriority
       case taskCompleted(Priority)
       case lockFailureOccurred(String)
     }
 
     enum Priority: Equatable {
-      case low, medium, high
+      case low, high
     }
 
-    enum CancelID: LockmanCancelId {
+    enum CancelID: Hashable {
       case task
     }
 
@@ -114,16 +141,11 @@ final class EffectWithLockPrecedingCancellationTests: XCTestCase {
         switch action {
         case .startLowPriority:
           state.lowPriorityRunning = true
-          return Effect<Action>.run { send in
-            try? await Task.sleep(nanoseconds: 100_000_000)  // 0.1 second
-            await send(.taskCompleted(.low))
-          }
-          .withLock(
-            strategy: LockmanPriorityBasedStrategy.self,
-            info: LockmanPriorityBasedInfo(
-              actionId: "lowPriorityTask",
-              priority: .low(.exclusive)
-            ),
+          return Effect<Action>.withLock(
+            operation: { send, _ in
+              try? await Task.sleep(nanoseconds: 100_000_000)  // 0.1 second
+              await send(.taskCompleted(.low))
+            },
             lockFailure: { error, send in
               if let priorityError = error as? LockmanPriorityBasedError,
                 case .precedingActionCancelled(let actionId) = priorityError
@@ -131,68 +153,17 @@ final class EffectWithLockPrecedingCancellationTests: XCTestCase {
                 await send(.lockFailureOccurred(actionId))
               }
             },
-            action: action,
-            cancelID: CancelID.task
-          )
-
-        case .startMediumReplaceable:
-          state.mediumPriorityRunning = true
-          return Effect<Action>.run { send in
-            try? await Task.sleep(nanoseconds: 100_000_000)  // 0.1 second
-            await send(.taskCompleted(.medium))
-          }
-          .withLock(
-            strategy: LockmanPriorityBasedStrategy.self,
-            info: LockmanPriorityBasedInfo(
-              actionId: "mediumReplaceableTask",
-              priority: .medium(.replaceable)
-            ),
-            lockFailure: { error, send in
-              if let priorityError = error as? LockmanPriorityBasedError,
-                case .precedingActionCancelled(let actionId) = priorityError
-              {
-                await send(.lockFailureOccurred(actionId))
-              }
-            },
-            action: action,
-            cancelID: CancelID.task
-          )
-
-        case .startMediumExclusive:
-          state.mediumPriorityRunning = true
-          return Effect<Action>.run { send in
-            try? await Task.sleep(nanoseconds: 50_000_000)  // 0.05 second
-            await send(.taskCompleted(.medium))
-          }
-          .withLock(
-            strategy: LockmanPriorityBasedStrategy.self,
-            info: LockmanPriorityBasedInfo(
-              actionId: "mediumExclusiveTask",
-              priority: .medium(.exclusive)
-            ),
-            lockFailure: { error, send in
-              if let priorityError = error as? LockmanPriorityBasedError,
-                case .precedingActionCancelled(let actionId) = priorityError
-              {
-                await send(.lockFailureOccurred(actionId))
-              }
-            },
-            action: action,
+            action: PriorityBasedAction.lowPriority,
             cancelID: CancelID.task
           )
 
         case .startHighPriority:
           state.highPriorityRunning = true
-          return Effect<Action>.run { send in
-            try? await Task.sleep(nanoseconds: 50_000_000)  // 0.05 second
-            await send(.taskCompleted(.high))
-          }
-          .withLock(
-            strategy: LockmanPriorityBasedStrategy.self,
-            info: LockmanPriorityBasedInfo(
-              actionId: "highPriorityTask",
-              priority: .high(.exclusive)
-            ),
+          return Effect<Action>.withLock(
+            operation: { send, _ in
+              try? await Task.sleep(nanoseconds: 50_000_000)  // 0.05 second
+              await send(.taskCompleted(.high))
+            },
             lockFailure: { error, send in
               if let priorityError = error as? LockmanPriorityBasedError,
                 case .precedingActionCancelled(let actionId) = priorityError
@@ -200,7 +171,7 @@ final class EffectWithLockPrecedingCancellationTests: XCTestCase {
                 await send(.lockFailureOccurred(actionId))
               }
             },
-            action: action,
+            action: PriorityBasedAction.highExclusive,
             cancelID: CancelID.task
           )
 
@@ -208,8 +179,6 @@ final class EffectWithLockPrecedingCancellationTests: XCTestCase {
           switch priority {
           case .low:
             state.lowPriorityRunning = false
-          case .medium:
-            state.mediumPriorityRunning = false
           case .high:
             state.highPriorityRunning = false
           }

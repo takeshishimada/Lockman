@@ -327,7 +327,11 @@ final class LockmanMainTests: XCTestCase {
 
         priorityStrategy.lock(id: priorityBoundary, info: lowPriorityInfo)
         let canLockHigh = priorityStrategy.canLock(id: priorityBoundary, info: highPriorityInfo)
-        XCTAssertEqual(canLockHigh, .successWithPrecedingCancellation)
+        if case .successWithPrecedingCancellation = canLockHigh {
+          // Success - precedingActionCancelled is expected
+        } else {
+          XCTFail("Expected successWithPrecedingCancellation but got \(canLockHigh)")
+        }
 
         // 4. Clean up
         LockmanManager.cleanup.all()
