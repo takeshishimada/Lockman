@@ -38,4 +38,8 @@ extension LockmanConcurrencyLimitedInfo: CustomDebugStringConvertible {
   public var debugDescription: String {
     "ConcurrencyLimitedInfo(actionId: \(actionId), concurrencyId: \(concurrencyId), limit: \(limit), uniqueId: \(uniqueId))"
   }
+  
+  public var debugAdditionalInfo: String {
+    "concurrency: \(concurrencyId) limit: \(limit)"
+  }
 }

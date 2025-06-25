@@ -153,6 +153,18 @@ public struct LockmanPriorityBasedInfo: LockmanInfo, Sendable, Equatable {
     return
       "LockmanPriorityBasedInfo(actionId: '\(actionId)', uniqueId: \(uniqueId), priority: \(priorityStr), blocksSameAction: \(blocksSameAction))"
   }
+  
+  // MARK: - Debug Additional Info
+  
+  public var debugAdditionalInfo: String {
+    var result = "priority: \(priority)"
+    if let behavior = priority.behavior {
+      let behaviorStr = behavior == .exclusive ? ".exclusive" : ".replaceable"
+      result = String(result.prefix(20 - 13)) + " b: " + behaviorStr
+    }
+    result += " blocksSameAction: \(blocksSameAction)"
+    return result
+  }
 }
 
 // MARK: - Priority Definition

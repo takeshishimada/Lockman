@@ -78,4 +78,10 @@ public struct LockmanDynamicConditionInfo: LockmanInfo, Sendable {
   public var debugDescription: String {
     "LockmanDynamicConditionInfo(actionId: '\(actionId)', uniqueId: \(uniqueId), condition: <closure>)"
   }
+  
+  // MARK: - Debug Additional Info
+  
+  public var debugAdditionalInfo: String {
+    "condition: <closure>"
+  }
 }
