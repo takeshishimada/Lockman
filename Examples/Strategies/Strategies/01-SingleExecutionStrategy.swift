@@ -2,80 +2,126 @@ import ComposableArchitecture
 import Lockman
 import SwiftUI
 
+// MARK: - Errors
+
+enum ProcessError: Error, Equatable {
+  case processFailed
+}
+
+// MARK: - Use Case
+
+struct SampleProcessUseCase {
+  private var executionCount = 0
+  
+  mutating func execute() async throws {
+    // Wait for 5 seconds
+    try await Task.sleep(nanoseconds: 5_000_000_000)
+    
+    // Increment execution count
+    executionCount += 1
+    
+    // Odd number = success, even number = failure
+    if executionCount % 2 == 0 {
+      throw ProcessError.processFailed
+    }
+  }
+}
+
 @Reducer
 struct SingleExecutionStrategyFeature {
   @ObservableState
   struct State: Equatable {
-    var count = 0
+    var isProcessing = false
+    var message: String = ""
+    var messageType: MessageType = .none
+    var previousMessage: String = ""
+    
+    enum MessageType: Equatable {
+      case none
+      case error
+      case success
+    }
   }
-
-  enum Action: ViewAction {
-    case view(ViewAction)
-    case state(StateAction)
-
-    @LockmanSingleExecution
-    enum ViewAction {
-      case decrementButtonTapped
-      case incrementButtonTapped
-
-      var lockmanInfo: LockmanSingleExecutionInfo {
-        .init(actionId: actionName, mode: .boundary)
+  
+  @Dependency(\.sampleProcessUseCase) var useCase
+  
+  @LockmanSingleExecution
+  enum Action {
+    case startProcessButtonTapped
+    case processStart
+    case processCompleted
+    case handleError(Error)
+    
+    var lockmanInfo: LockmanSingleExecutionInfo {
+      switch self {
+      case .startProcessButtonTapped:
+        return .init(actionId: actionName, mode: .boundary)
+      case .processStart, .processCompleted, .handleError:
+        return .init(actionId: actionName, mode: .none)
       }
     }
-
-    enum StateAction {
-      case decrement
-      case increment
-    }
   }
-
+  
   enum CancelID {
-    case userAction
+    case process
   }
-
+  
   var body: some Reducer<State, Action> {
     Reduce { state, action in
       switch action {
-      case let .view(viewAction):
-        switch viewAction {
-        case .decrementButtonTapped:
-          return .withLock(
-            operation: { send in
-              try? await Task.sleep(nanoseconds: 2_000_000_000)  // 2 seconds
-              await send(.state(.decrement))
-            },
-            action: viewAction,
-            cancelID: CancelID.userAction
-          )
-        case .incrementButtonTapped:
-          return .withLock(
-            operation: { send in
-              try? await Task.sleep(nanoseconds: 2_000_000_000)  // 2 seconds
-              await send(.state(.increment))
-            },
-            action: viewAction,
-            cancelID: CancelID.userAction
-          )
+      case .startProcessButtonTapped:
+        return .withLock(
+          operation: { send in
+            await send(.processStart)
+            try await useCase.execute()
+            await send(.processCompleted)
+          },
+          catch: { error, send in
+            await send(.handleError(error))
+          },
+          lockFailure: { error, send in
+            await send(.handleError(error))
+          },
+          action: action,
+          cancelID: CancelID.process
+        )
+        
+      case .processStart:
+        state.isProcessing = true
+        state.message = ""
+        state.messageType = .none
+        return .none
+        
+      case .processCompleted:
+        state.isProcessing = false
+        state.message = "Process completed successfully"
+        state.messageType = .success
+        return .none
+        
+      case .handleError(let error):
+        state.messageType = .error
+        
+        if error is LockmanSingleExecutionError {
+          state.previousMessage = state.message
+          state.message = "Process is already running"
+        } else {
+          state.isProcessing = false
+          if error is ProcessError {
+            state.message = "Process failed"
+          } else {
+            state.message = "Unknown error occurred"
+          }
         }
-
-      case let .state(stateAction):
-        switch stateAction {
-        case .decrement:
-          state.count -= 1
-          return .none
-        case .increment:
-          state.count += 1
-          return .none
-        }
+        
+        return .none
       }
     }
   }
 }
 
-@ViewAction(for: SingleExecutionStrategyFeature.self)
 struct SingleExecutionStrategyView: View {
-  let store: StoreOf<SingleExecutionStrategyFeature>
-
+  @Bindable var store: StoreOf<SingleExecutionStrategyFeature>
+  
   var body: some View {
     VStack(spacing: 30) {
       // Overview
@@ -83,9 +129,9 @@ struct SingleExecutionStrategyView: View {
         Text("SingleExecutionStrategy")
           .font(.title2)
           .fontWeight(.bold)
-
+        
         Text(
-          "A strategy that prevents duplicate execution of the same action.\nWhile processing, tapping the same button again will be ignored."
+          "Example of exclusive control using @LockmanSingleExecution.\nDuplicate executions are blocked while processing."
         )
         .font(.caption)
         .foregroundColor(.secondary)
@@ -94,43 +140,69 @@ struct SingleExecutionStrategyView: View {
       .padding()
       .background(Color.gray.opacity(0.1))
       .cornerRadius(10)
-
-      // Counter Section
-      HStack {
-        Button {
-          send(.decrementButtonTapped)
-        } label: {
-          Image(systemName: "minus")
+      
+      Spacer()
+      
+      // Main content
+      VStack(spacing: 20) {
+        // Process execution button
+        Button(action: {
+          store.send(.startProcessButtonTapped)
+        }) {
+          HStack(spacing: 10) {
+            if store.isProcessing {
+              ProgressView()
+                .progressViewStyle(CircularProgressViewStyle(tint: .white))
+                .scaleEffect(0.9)
+              Text("Processing...")
+                .fontWeight(.medium)
+            } else {
+              Image(systemName: "play.fill")
+                .font(.system(size: 16))
+              Text("Start Process")
+                .fontWeight(.semibold)
+            }
+          }
+          .frame(minWidth: 200)
+          .padding(.horizontal, 24)
+          .padding(.vertical, 14)
+          .background(
+            Group {
+              if store.isProcessing {
+                Color.gray.opacity(0.7)
+              } else {
+                LinearGradient(
+                  gradient: Gradient(colors: [Color.blue, Color.blue.opacity(0.8)]),
+                  startPoint: .top,
+                  endPoint: .bottom
+                )
+              }
+            }
+          )
+          .foregroundColor(.white)
+          .cornerRadius(12)
+          .shadow(color: store.isProcessing ? .clear : .blue.opacity(0.3), radius: 8, x: 0, y: 4)
+          .scaleEffect(store.isProcessing ? 0.98 : 1.0)
+          .animation(.easeInOut(duration: 0.1), value: store.isProcessing)
         }
-
-        Text("\(store.count)")
-          .monospacedDigit()
-          .frame(minWidth: 50)
-
-        Button {
-          send(.incrementButtonTapped)
-        } label: {
-          Image(systemName: "plus")
-        }
+        
+        // Message label
+        Text(store.message)
+          .font(.body)
+          .foregroundColor(messageColor(for: store.messageType))
+          .padding(.horizontal)
+          .frame(height: 20)
+          .opacity(store.message.isEmpty ? 0 : 1)
+          .animation(
+            store.message == "Process is already running" && store.previousMessage == "Process is already running" 
+            ? .none 
+            : .easeInOut(duration: 0.3), 
+            value: store.message
+          )
       }
-      .font(.largeTitle)
-
-      // Button Behavior Description
-      VStack(alignment: .leading, spacing: 8) {
-        Label("Minus button: Decreases count after 2 seconds", systemImage: "minus.circle")
-          .font(.caption)
-        Label("Plus button: Increases count after 2 seconds", systemImage: "plus.circle")
-          .font(.caption)
-        Label(
-          "Rapid taps on the same button are disabled while processing", systemImage: "info.circle"
-        )
-        .font(.caption)
-        .foregroundColor(.blue)
-      }
-      .padding()
-      .background(Color.blue.opacity(0.05))
-      .cornerRadius(8)
-
+      
+      Spacer()
+      
       // Debug Button
       Button(action: {
         print("\n📊 Current Lock State (SingleExecutionStrategy):")
@@ -149,4 +221,37 @@ struct SingleExecutionStrategyView: View {
     .padding()
     .navigationTitle("Single Execution")
   }
+  
+  private func messageColor(for type: SingleExecutionStrategyFeature.State.MessageType) -> Color {
+    switch type {
+    case .none:
+      return .primary
+    case .error:
+      return .red
+    case .success:
+      return .green
+    }
+  }
+}
+
+// MARK: - Dependency
+
+// Wrap the use case in a class to maintain state
+final class SampleProcessUseCaseWrapper {
+  private var useCase = SampleProcessUseCase()
+  
+  func execute() async throws {
+    try await useCase.execute()
+  }
+}
+
+extension DependencyValues {
+  var sampleProcessUseCase: SampleProcessUseCaseWrapper {
+    get { self[SampleProcessUseCaseWrapper.self] }
+    set { self[SampleProcessUseCaseWrapper.self] = newValue }
+  }
+}
+
+extension SampleProcessUseCaseWrapper: DependencyKey {
+  static let liveValue = SampleProcessUseCaseWrapper()
 }
