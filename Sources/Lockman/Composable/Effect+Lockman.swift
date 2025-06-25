@@ -281,8 +281,15 @@ extension Effect {
         // Lock acquired successfully, execute effects immediately
         return builtEffect
 
-      case .successWithPrecedingCancellation:
+      case .successWithPrecedingCancellation(let error):
         // Lock acquired but need to cancel existing operation first
+        if let lockFailure = lockFailure {
+          return .concatenate(
+            .run { send in await lockFailure(error, send) },
+            .cancel(id: cancelID),
+            builtEffect
+          )
+        }
         return .concatenate(.cancel(id: cancelID), builtEffect)
 
       case .failure(let error):
@@ -388,8 +395,16 @@ extension Effect {
         // Lock acquired successfully, execute effect immediately
         return effectBuilder(unlockToken)
 
-      case .successWithPrecedingCancellation:
+      case .successWithPrecedingCancellation(let error):
         // Lock acquired but need to cancel existing operation first
+        // Notify about the cancellation if a handler is provided
+        if let handler = handler {
+          return .concatenate(
+            .run { send in await handler(error, send) },
+            .cancel(id: cancelID),
+            effectBuilder(unlockToken)
+          )
+        }
         return .concatenate(.cancel(id: cancelID), effectBuilder(unlockToken))
 
       case .failure(let error):

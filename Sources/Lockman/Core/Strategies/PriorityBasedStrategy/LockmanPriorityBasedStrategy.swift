@@ -205,12 +205,16 @@ public final class LockmanPriorityBasedStrategy: LockmanStrategy, @unchecked Sen
       if case .failure = behaviorResult {
         failureReason =
           "Same priority action '\(currentHighestPriorityInfo.actionId)' with exclusive behavior is already running"
-      } else if behaviorResult == .successWithPrecedingCancellation {
+      } else if case .successWithPrecedingCancellation(_) = behaviorResult {
         cancelledInfo = (currentHighestPriorityInfo.actionId, currentHighestPriorityInfo.uniqueId)
       }
     } else {
       // Requested action has higher priority - can preempt current
-      result = .successWithPrecedingCancellation
+      result = .successWithPrecedingCancellation(
+        error: LockmanPriorityBasedError.precedingActionCancelled(
+          actionId: currentHighestPriorityInfo.actionId
+        )
+      )
       cancelledInfo = (currentHighestPriorityInfo.actionId, currentHighestPriorityInfo.uniqueId)
     }
 
@@ -373,7 +377,9 @@ extension LockmanPriorityBasedStrategy {
     case .replaceable:
       // Existing action: "I am replaceable, allow new same-priority actions to take over"
       // → Existing action gets canceled, new action succeeds
-      return .successWithPrecedingCancellation
+      return .successWithPrecedingCancellation(
+        error: LockmanPriorityBasedError.precedingActionCancelled(actionId: current.actionId)
+      )
     }
   }
 }

@@ -473,8 +473,11 @@ final class LockmanPriorityBasedInfoIntegrationTests: XCTestCase {
       XCTAssertEqual(resolvedStrategy.canLock(id: boundaryId, info: info3), .success)
 
       // Higher priority preempts lower priority
-      XCTAssertEqual(
-        resolvedStrategy.canLock(id: boundaryId, info: info2), .successWithPrecedingCancellation)
+      if case .successWithPrecedingCancellation = resolvedStrategy.canLock(id: boundaryId, info: info2) {
+        // Success - expected behavior
+      } else {
+        XCTFail("Expected successWithPrecedingCancellation")
+      }
 
       resolvedStrategy.cleanUp()
     }
@@ -497,9 +500,11 @@ final class LockmanPriorityBasedInfoIntegrationTests: XCTestCase {
     strategy.lock(id: boundaryId, info: lowExclusiveInfo)
 
     // High priority preempts low priority
-    XCTAssertEqual(
-      strategy.canLock(id: boundaryId, info: highReplaceableInfo), .successWithPrecedingCancellation
-    )
+    if case .successWithPrecedingCancellation = strategy.canLock(id: boundaryId, info: highReplaceableInfo) {
+      // Success - expected behavior
+    } else {
+      XCTFail("Expected successWithPrecedingCancellation")
+    }
     strategy.lock(id: boundaryId, info: highReplaceableInfo)
 
     // Another low priority fails against high priority

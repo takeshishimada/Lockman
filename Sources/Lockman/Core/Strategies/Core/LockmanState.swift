@@ -384,37 +384,37 @@ extension LockmanState where K == LockmanActionId {
   convenience init() {
     self.init(keyExtractor: { $0.actionId })
   }
-  
+
   // MARK: - ActionId-specific convenience methods
-  
+
   /// Checks if a specific actionId exists in the boundary.
   ///
   /// Convenience method that calls the generic key-based method.
   func contains<B: LockmanBoundaryId>(id: B, actionId: LockmanActionId) -> Bool {
     contains(id: id, key: actionId)
   }
-  
+
   /// Returns all locks with a specific actionId in the boundary.
   ///
   /// Convenience method that calls the generic key-based method.
   func currents<B: LockmanBoundaryId>(id: B, actionId: LockmanActionId) -> [I] {
     currents(id: id, key: actionId)
   }
-  
+
   /// Returns the count of locks with a specific actionId.
   ///
   /// Convenience method that calls the generic key-based method.
   func count<B: LockmanBoundaryId>(id: B, actionId: LockmanActionId) -> Int {
     count(id: id, key: actionId)
   }
-  
+
   /// Removes all locks with a specific actionId from the boundary.
   ///
   /// Convenience method that calls the generic key-based method.
   func removeAll<B: LockmanBoundaryId>(id: B, actionId: LockmanActionId) {
     removeAll(id: id, key: actionId)
   }
-  
+
   /// Returns all unique actionIds in the boundary.
   ///
   /// Convenience method that calls the generic key-based method.

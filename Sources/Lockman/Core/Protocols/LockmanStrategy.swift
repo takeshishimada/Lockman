@@ -20,7 +20,11 @@ public enum LockmanResult: Sendable {
   /// When this result is returned, the calling code should:
   /// 1. Cancel the existing operation (usually via Effect cancellation)
   /// 2. Proceed with the new operation
-  case successWithPrecedingCancellation
+  ///
+  /// - Parameter error: An error describing the failure state of the preceding
+  ///   action that will be canceled. This error should be handled appropriately,
+  ///   such as notifying error handlers before proceeding with cancellation.
+  case successWithPrecedingCancellation(error: any Error)
 
   /// Lock acquisition failed due to conflicts.
   ///

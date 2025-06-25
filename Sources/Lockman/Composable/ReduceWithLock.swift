@@ -353,7 +353,10 @@ extension ReduceWithLock {
     switch result {
     case .failure(let error):
       return (false, error)
-    case .successWithPrecedingCancellation, .success:
+    case .successWithPrecedingCancellation(let error):
+      // Lock acquired but with preceding cancellation - return success with error
+      return (true, error)
+    case .success:
       return (true, nil)
     @unknown default:
       return (true, nil)

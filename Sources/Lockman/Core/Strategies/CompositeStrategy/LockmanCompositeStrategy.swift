@@ -165,11 +165,17 @@ where S1.I == I1, S2.I == I2 {
   ///   - results: Variable number of `LockmanResult` values from component strategies
   /// - Returns: The coordinated result following composite strategy rules
   private func coordinateResults(_ results: LockmanResult...) -> LockmanResult {
+    var cancellationError: (any Error)?
+
     // If any strategy failed, the entire operation fails
     // Return the first failure with its error
     for result in results {
       if case .failure(let error) = result {
         return .failure(error)
+      }
+      // Capture the first cancellation error we encounter
+      if case .successWithPrecedingCancellation(let error) = result, cancellationError == nil {
+        cancellationError = error
       }
     }
 
@@ -179,7 +185,13 @@ where S1.I == I1, S2.I == I2 {
     }
 
     // If any strategy requires cancellation, the operation requires cancellation
-    return .successWithPrecedingCancellation
+    // Use the first cancellation error we found
+    if let error = cancellationError {
+      return .successWithPrecedingCancellation(error: error)
+    }
+
+    // This shouldn't happen if the enum is properly handled
+    fatalError("Unexpected state: successWithPrecedingCancellation expected but no error found")
   }
 }
 
@@ -350,10 +362,16 @@ where S1.I == I1, S2.I == I2, S3.I == I3 {
   // MARK: - Private Helpers
 
   private func coordinateResults(_ results: LockmanResult...) -> LockmanResult {
+    var cancellationError: (any Error)?
+
     // If any strategy failed, return the first failure with its error
     for result in results {
       if case .failure(let error) = result {
         return .failure(error)
+      }
+      // Capture the first cancellation error we encounter
+      if case .successWithPrecedingCancellation(let error) = result, cancellationError == nil {
+        cancellationError = error
       }
     }
 
@@ -361,7 +379,10 @@ where S1.I == I1, S2.I == I2, S3.I == I3 {
       return .success
     }
 
-    return .successWithPrecedingCancellation
+    // If any strategy requires cancellation, use the first cancellation error
+    // At this point, we know at least one result is not .success, so it must be
+    // .successWithPrecedingCancellation, which means cancellationError is set
+    return .successWithPrecedingCancellation(error: cancellationError!)
   }
 }
 
@@ -547,10 +568,16 @@ where S1.I == I1, S2.I == I2, S3.I == I3, S4.I == I4 {
   // MARK: - Private Helpers
 
   private func coordinateResults(_ results: LockmanResult...) -> LockmanResult {
+    var cancellationError: (any Error)?
+
     // If any strategy failed, return the first failure with its error
     for result in results {
       if case .failure(let error) = result {
         return .failure(error)
+      }
+      // Capture the first cancellation error we encounter
+      if case .successWithPrecedingCancellation(let error) = result, cancellationError == nil {
+        cancellationError = error
       }
     }
 
@@ -558,7 +585,10 @@ where S1.I == I1, S2.I == I2, S3.I == I3, S4.I == I4 {
       return .success
     }
 
-    return .successWithPrecedingCancellation
+    // If any strategy requires cancellation, use the first cancellation error
+    // At this point, we know at least one result is not .success, so it must be
+    // .successWithPrecedingCancellation, which means cancellationError is set
+    return .successWithPrecedingCancellation(error: cancellationError!)
   }
 }
 
@@ -776,10 +806,16 @@ where S1.I == I1, S2.I == I2, S3.I == I3, S4.I == I4, S5.I == I5 {
   // MARK: - Private Helpers
 
   private func coordinateResults(_ results: LockmanResult...) -> LockmanResult {
+    var cancellationError: (any Error)?
+
     // If any strategy failed, return the first failure with its error
     for result in results {
       if case .failure(let error) = result {
         return .failure(error)
+      }
+      // Capture the first cancellation error we encounter
+      if case .successWithPrecedingCancellation(let error) = result, cancellationError == nil {
+        cancellationError = error
       }
     }
 
@@ -787,6 +823,9 @@ where S1.I == I1, S2.I == I2, S3.I == I3, S4.I == I4, S5.I == I5 {
       return .success
     }
 
-    return .successWithPrecedingCancellation
+    // If any strategy requires cancellation, use the first cancellation error
+    // At this point, we know at least one result is not .success, so it must be
+    // .successWithPrecedingCancellation, which means cancellationError is set
+    return .successWithPrecedingCancellation(error: cancellationError!)
   }
 }
