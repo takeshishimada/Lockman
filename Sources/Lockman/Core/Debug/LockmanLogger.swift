@@ -68,11 +68,11 @@ public final class LockmanLogger: @unchecked Sendable {
         message =
           "❌ [Lockman] canLock failed - Strategy: \(strategy), BoundaryId: \(boundaryId), Info: \(info.debugDescription)\(reasonStr)"
 
-      case .successWithPrecedingCancellation:
+      case .successWithPrecedingCancellation(let error):
         let cancelledStr =
           cancelledInfo.map { ", Cancelled: '\($0.actionId)' (uniqueId: \($0.uniqueId))" } ?? ""
         message =
-          "⚠️ [Lockman] canLock succeeded with cancellation - Strategy: \(strategy), BoundaryId: \(boundaryId), Info: \(info.debugDescription)\(cancelledStr)"
+          "⚠️ [Lockman] canLock succeeded with cancellation - Strategy: \(strategy), BoundaryId: \(boundaryId), Info: \(info.debugDescription)\(cancelledStr), Error: \(error)"
       }
 
       // Use Logger from Internal/Logger.swift

@@ -599,4 +599,74 @@ final class LockmanPriorityBasedStrategyTests: XCTestCase {
 
     strategy.cleanUp()
   }
+
+  // MARK: - Preceding Action Cancellation Error Tests
+
+  func testSuccessWithPrecedingCancellation_ReturnsCorrectError() {
+    let strategy = LockmanPriorityBasedStrategy()
+    let id = TestBoundaryId.default
+
+    // Lock a low priority action
+    let lowAction = TestInfoFactory.lowExclusive("lowAction")
+    strategy.lock(id: id, info: lowAction)
+
+    // Try to lock a high priority action
+    let highAction = TestInfoFactory.highExclusive("highAction")
+    let result = strategy.canLock(id: id, info: highAction)
+
+    // Should succeed with preceding cancellation
+    switch result {
+    case .successWithPrecedingCancellation(let error):
+      // Verify the error is of the correct type
+      guard let priorityError = error as? LockmanPriorityBasedError else {
+        XCTFail("Expected LockmanPriorityBasedError but got \(type(of: error))")
+        return
+      }
+
+      // Verify the error contains correct information
+      if case .precedingActionCancelled(let actionId) = priorityError {
+        XCTAssertEqual(actionId, "lowAction", "Error should contain the cancelled action ID")
+      } else {
+        XCTFail("Expected precedingActionCancelled error but got \(priorityError)")
+      }
+    default:
+      XCTFail("Expected successWithPrecedingCancellation but got \(result)")
+    }
+
+    strategy.cleanUp()
+  }
+
+  func testReplaceableBehavior_ReturnsCorrectCancellationError() {
+    let strategy = LockmanPriorityBasedStrategy()
+    let id = TestBoundaryId.default
+
+    // Lock a replaceable action
+    let replaceableAction = TestInfoFactory.mediumReplaceable("replaceableAction")
+    strategy.lock(id: id, info: replaceableAction)
+
+    // Try to lock another medium priority action (should replace the existing one)
+    let newAction = TestInfoFactory.mediumExclusive("newAction")
+    let result = strategy.canLock(id: id, info: newAction)
+
+    // Should succeed with preceding cancellation
+    switch result {
+    case .successWithPrecedingCancellation(let error):
+      // Verify the error contains the correct action ID
+      guard let priorityError = error as? LockmanPriorityBasedError else {
+        XCTFail("Expected LockmanPriorityBasedError but got \(type(of: error))")
+        return
+      }
+
+      if case .precedingActionCancelled(let actionId) = priorityError {
+        XCTAssertEqual(
+          actionId, "replaceableAction", "Error should contain the cancelled action ID")
+      } else {
+        XCTFail("Expected precedingActionCancelled error but got \(priorityError)")
+      }
+    default:
+      XCTFail("Expected successWithPrecedingCancellation but got \(result)")
+    }
+
+    strategy.cleanUp()
+  }
 }
