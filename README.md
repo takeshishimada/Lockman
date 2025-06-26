@@ -67,6 +67,13 @@ Example of single-execution action control:
 └─────────────────┴──────────────────┴──────────────────────────────────────┴─────────────────┘
 ```
 
+## Documentation
+
+The documentation for releases and `main` are available here:
+
+* [`main`](https://takeshishimada.github.io/Lockman/main/documentation/lockman/)
+* [0.4.0](https://takeshishimada.github.io/Lockman/0.4.0/documentation/lockman/)
+
 ## Installation
 
 Lockman can be installed using [Swift Package Manager](https://swift.org/package-manager/).
