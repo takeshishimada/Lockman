@@ -85,7 +85,7 @@ Package.swiftファイルに依存関係を追加：
 
 ```swift
 dependencies: [
-  .package(url: "https://github.com/takeshishimada/Lockman", from: "0.3.0")
+  .package(url: "https://github.com/takeshishimada/Lockman", from: "0.4.0")
 ]
 ```
 
@@ -113,6 +113,7 @@ dependencies: [
 
 | Lockman | The Composable Architecture |
 |---------|----------------------------|
+| 0.4.0   | 1.17.1                     |
 | 0.3.0   | 1.17.1                     |
 | 0.2.1   | 1.17.1                     |
 | 0.2.0   | 1.17.1                     |
