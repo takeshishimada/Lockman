@@ -19,7 +19,7 @@ import Foundation
 /// // Delay unlock by specific time interval
 /// .withLock(unlockOption: .delayed(1.5), ...)
 /// ```
-public enum UnlockOption: Sendable, Equatable {
+public enum LockmanUnlockOption: Sendable, Equatable {
   /// Unlock immediately when called (current behavior).
   ///
   /// The unlock operation executes synchronously without any delay.

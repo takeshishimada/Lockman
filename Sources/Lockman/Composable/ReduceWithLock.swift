@@ -227,7 +227,7 @@ extension ReduceWithLock {
   @usableFromInline
   func withLockStep3<B: LockmanBoundaryId, A: LockmanAction>(
     priority: TaskPriority?,
-    unlockOption: UnlockOption?,
+    unlockOption: LockmanUnlockOption?,
     handleCancellationErrors: Bool?,
     action: A,
     cancelID: B,
@@ -394,7 +394,7 @@ extension ReduceWithLock {
     state: State,
     action: Action,
     priority: TaskPriority? = nil,
-    unlockOption: UnlockOption? = nil,
+    unlockOption: LockmanUnlockOption? = nil,
     handleCancellationErrors: Bool? = nil,
     operation: @escaping @Sendable (_ send: Send<Action>) async throws -> Void,
     catch handler: (
@@ -486,7 +486,7 @@ extension ReduceWithLock {
     state: State,
     action: Action,
     priority: TaskPriority? = nil,
-    unlockOption: UnlockOption? = nil,
+    unlockOption: LockmanUnlockOption? = nil,
     handleCancellationErrors: Bool? = nil,
     operation: @escaping @Sendable (
       _ send: Send<Action>, _ unlock: LockmanUnlock<B, A.I>

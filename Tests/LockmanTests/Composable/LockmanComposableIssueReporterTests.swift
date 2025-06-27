@@ -57,22 +57,6 @@ final class ComposableIssueReporterTests: XCTestCase {
     XCTAssertTrue(LockmanIssueReporting.reporter == LockmanComposableIssueReporter.self)
   }
 
-  func testDeprecatedTCAIssueReporterTypealias() {
-    // Test that the deprecated typealias still works
-    XCTAssertTrue(TCAIssueReporter.self == LockmanComposableIssueReporter.self)
-  }
-
-  func testDeprecatedConfigureTCAReporting() {
-    // Initially should be DefaultIssueReporter
-    XCTAssertTrue(LockmanIssueReporting.reporter == DefaultIssueReporter.self)
-
-    // Configure using deprecated method
-    LockmanIssueReporting.configureTCAReporting()
-
-    // Should now be LockmanComposableIssueReporter
-    XCTAssertTrue(LockmanIssueReporting.reporter == LockmanComposableIssueReporter.self)
-  }
-
   func testComposableReporterIntegration() {
     // Configure Lockman to use ComposableIssueReporter
     LockmanIssueReporting.configureComposableReporting()
