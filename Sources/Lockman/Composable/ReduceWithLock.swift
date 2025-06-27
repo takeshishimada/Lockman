@@ -33,7 +33,7 @@ import Foundation
 /// } lockCondition: { state, action in
 ///   // Evaluate state to determine if lock should be acquired
 ///   guard state.isEnabled else {
-///     return .failure(LockmanDynamicConditionError.conditionNotMet(actionId: "fetch", hint: "Not enabled"))
+///     return .failure(MyError.featureDisabled)
 ///   }
 ///   return .success
 /// }
@@ -55,7 +55,7 @@ import Foundation
 ///       lockCondition: { state, _ in
 ///         // Action-level condition
 ///         guard state.balance >= amount else {
-///           return .failure(LockmanDynamicConditionError.conditionNotMet(actionId: "purchase", hint: "Insufficient balance"))
+///           return .failure(MyError.insufficientBalance(required: amount, available: state.balance))
 ///         }
 ///         return .success
 ///       }
@@ -66,7 +66,7 @@ import Foundation
 /// } lockCondition: { state, _ in
 ///   // Reducer-level condition
 ///   guard state.isLoggedIn else {
-///     return .failure(LockmanDynamicConditionError.conditionNotMet(actionId: "auth", hint: "Not logged in"))
+///     return .failure(MyError.notAuthenticated)
 ///   }
 ///   return .success
 /// }

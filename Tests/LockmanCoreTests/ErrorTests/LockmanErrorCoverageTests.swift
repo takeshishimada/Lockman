@@ -2,6 +2,24 @@ import XCTest
 
 @testable import Lockman
 
+// Test-specific error for dynamic condition tests
+struct TestDynamicConditionError: Error, LocalizedError {
+  let actionId: String
+  let hint: String?
+  
+  var errorDescription: String? {
+    "Dynamic condition not met for action '\(actionId)'" + (hint.map { ". Hint: \($0)" } ?? "")
+  }
+  
+  var failureReason: String? {
+    "The condition for action '\(actionId)' was not met" + (hint.map { ": \($0)" } ?? "")
+  }
+  
+  static func conditionNotMet(actionId: String, hint: String?) -> TestDynamicConditionError {
+    TestDynamicConditionError(actionId: actionId, hint: hint)
+  }
+}
+
 /// Tests to improve code coverage for error types
 final class LockmanErrorCoverageTests: XCTestCase {
 
@@ -41,14 +59,14 @@ final class LockmanErrorCoverageTests: XCTestCase {
     XCTAssertTrue(error3.failureReason!.contains("action"))
   }
 
-  // MARK: - LockmanDynamicConditionError Tests
+  // MARK: - TestDynamicConditionError Tests
 
   func testDynamicConditionErrorFailureReason() {
-    let error1 = LockmanDynamicConditionError.conditionNotMet(actionId: "test-action", hint: nil)
+    let error1 = TestDynamicConditionError.conditionNotMet(actionId: "test-action", hint: nil)
     XCTAssertNotNil(error1.failureReason)
     XCTAssertTrue(error1.failureReason!.contains("condition"))
 
-    let error2 = LockmanDynamicConditionError.conditionNotMet(
+    let error2 = TestDynamicConditionError.conditionNotMet(
       actionId: "test-action", hint: "Rate limit exceeded")
     XCTAssertNotNil(error2.failureReason)
     XCTAssertTrue(error2.failureReason!.contains("condition"))
@@ -101,7 +119,7 @@ final class LockmanErrorCoverageTests: XCTestCase {
     XCTAssertNotNil(error2.errorDescription)
     XCTAssertTrue(error2.errorDescription!.contains(specialId))
 
-    let error3 = LockmanDynamicConditionError.conditionNotMet(actionId: specialId, hint: nil)
+    let error3 = TestDynamicConditionError.conditionNotMet(actionId: specialId, hint: nil)
     XCTAssertNotNil(error3.errorDescription)
     XCTAssertTrue(error3.errorDescription!.contains(specialId))
   }
@@ -148,7 +166,7 @@ final class LockmanErrorCoverageTests: XCTestCase {
     ]
 
     for hint in hints {
-      let error = LockmanDynamicConditionError.conditionNotMet(actionId: "test", hint: hint)
+      let error = TestDynamicConditionError.conditionNotMet(actionId: "test", hint: hint)
       XCTAssertNotNil(error.errorDescription)
       if let hint = hint {
         XCTAssertTrue(error.errorDescription!.contains(hint))

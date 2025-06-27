@@ -4,6 +4,24 @@ import XCTest
 
 @testable import Lockman
 
+// Test-specific error for dynamic condition tests
+private struct ComposableTestDynamicConditionError: Error, LocalizedError {
+  let actionId: String
+  let hint: String?
+  
+  var errorDescription: String? {
+    "Dynamic condition not met for action '\(actionId)'" + (hint.map { ". Hint: \($0)" } ?? "")
+  }
+  
+  var failureReason: String? {
+    "The condition for action '\(actionId)' was not met" + (hint.map { ": \($0)" } ?? "")
+  }
+  
+  static func conditionNotMet(actionId: String, hint: String?) -> ComposableTestDynamicConditionError {
+    ComposableTestDynamicConditionError(actionId: actionId, hint: hint)
+  }
+}
+
 /// Integration tests for ReduceWithLock to ensure proper lock management
 final class ReduceWithLockIntegrationTests: XCTestCase {
 
@@ -232,7 +250,7 @@ final class ReduceWithLockIntegrationTests: XCTestCase {
             lockCondition: { _, _ in
               // Failing condition
               return .failure(
-                LockmanDynamicConditionError.conditionNotMet(
+                ComposableTestDynamicConditionError.conditionNotMet(
                   actionId: "test",
                   hint: "Test failure"
                 ))

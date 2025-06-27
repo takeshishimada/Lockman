@@ -2,6 +2,19 @@ import ComposableArchitecture
 import Lockman
 import SwiftUI
 
+// Custom error for authentication
+struct AuthenticationError: Error, LocalizedError {
+  let actionId: String
+  
+  var errorDescription: String? {
+    "Cannot acquire lock for action '\(actionId)': User is not logged in."
+  }
+  
+  var failureReason: String? {
+    "The user must be logged in to perform this action."
+  }
+}
+
 enum CompositeStrategyInjection {
   static func inject() {
     let strategy = LockmanCompositeStrategy2(
@@ -48,12 +61,7 @@ struct CompositeStrategyFeature {
               if isLoggined {
                 return .success
               } else {
-                return .failure(
-                  LockmanDynamicConditionError.conditionNotMet(
-                    actionId: actionName,
-                    hint: "User is not logged in"
-                  )
-                )
+                return .failure(AuthenticationError(actionId: actionName))
               }
             })
         )
