@@ -3,6 +3,24 @@ import XCTest
 
 @testable import Lockman
 
+// Test-specific error for dynamic condition strategy tests
+private struct MockDynamicConditionError: Error, LocalizedError {
+  let actionId: String
+  let hint: String?
+  
+  var errorDescription: String? {
+    "Dynamic condition not met for action '\(actionId)'" + (hint.map { ". Hint: \($0)" } ?? "")
+  }
+  
+  var failureReason: String? {
+    "The condition for action '\(actionId)' was not met" + (hint.map { ": \($0)" } ?? "")
+  }
+  
+  static func conditionNotMet(actionId: String, hint: String?) -> MockDynamicConditionError {
+    MockDynamicConditionError(actionId: actionId, hint: hint)
+  }
+}
+
 // Helper class for thread-safe mutable state in tests
 private final class Atomic<Value>: @unchecked Sendable {
   private var _value: Value
@@ -74,7 +92,7 @@ final class LockmanDynamicConditionStrategyTests: XCTestCase {
         currentCount.value < 2
           ? .success
           : .failure(
-            LockmanDynamicConditionError.conditionNotMet(
+            MockDynamicConditionError.conditionNotMet(
               actionId: "fetch", hint: "Count limit exceeded"))
       }
     )
@@ -91,7 +109,7 @@ final class LockmanDynamicConditionStrategyTests: XCTestCase {
         currentCount.value < 2
           ? .success
           : .failure(
-            LockmanDynamicConditionError.conditionNotMet(
+            MockDynamicConditionError.conditionNotMet(
               actionId: "fetch", hint: "Count limit exceeded"))
       }
     )
@@ -106,7 +124,7 @@ final class LockmanDynamicConditionStrategyTests: XCTestCase {
         currentCount.value < 2
           ? .success
           : .failure(
-            LockmanDynamicConditionError.conditionNotMet(
+            MockDynamicConditionError.conditionNotMet(
               actionId: "fetch", hint: "Count limit exceeded"))
       }
     )
@@ -127,7 +145,7 @@ final class LockmanDynamicConditionStrategyTests: XCTestCase {
         priority > 5
           ? .success
           : .failure(
-            LockmanDynamicConditionError.conditionNotMet(
+            MockDynamicConditionError.conditionNotMet(
               actionId: "process", hint: "Priority too low"))
       }
     )
@@ -142,7 +160,7 @@ final class LockmanDynamicConditionStrategyTests: XCTestCase {
         lowPriority > 5
           ? .success
           : .failure(
-            LockmanDynamicConditionError.conditionNotMet(
+            MockDynamicConditionError.conditionNotMet(
               actionId: "process", hint: "Priority too low"))
       }
     )
@@ -163,7 +181,7 @@ final class LockmanDynamicConditionStrategyTests: XCTestCase {
         (currentHour >= 9 && currentHour < 17)
           ? .success
           : .failure(
-            LockmanDynamicConditionError.conditionNotMet(
+            MockDynamicConditionError.conditionNotMet(
               actionId: "batch", hint: "Outside business hours"))
       }
     )
@@ -178,7 +196,7 @@ final class LockmanDynamicConditionStrategyTests: XCTestCase {
         (afterHour >= 9 && afterHour < 17)
           ? .success
           : .failure(
-            LockmanDynamicConditionError.conditionNotMet(
+            MockDynamicConditionError.conditionNotMet(
               actionId: "batch", hint: "Outside business hours"))
       }
     )
@@ -200,7 +218,7 @@ final class LockmanDynamicConditionStrategyTests: XCTestCase {
         !isLocked.value
           ? .success
           : .failure(
-            LockmanDynamicConditionError.conditionNotMet(
+            MockDynamicConditionError.conditionNotMet(
               actionId: "exclusive", hint: "Already locked"))
       }
     )
@@ -217,7 +235,7 @@ final class LockmanDynamicConditionStrategyTests: XCTestCase {
         !isLocked.value
           ? .success
           : .failure(
-            LockmanDynamicConditionError.conditionNotMet(
+            MockDynamicConditionError.conditionNotMet(
               actionId: "exclusive", hint: "Already locked"))
       }
     )
@@ -234,7 +252,7 @@ final class LockmanDynamicConditionStrategyTests: XCTestCase {
         !isLocked.value
           ? .success
           : .failure(
-            LockmanDynamicConditionError.conditionNotMet(
+            MockDynamicConditionError.conditionNotMet(
               actionId: "exclusive", hint: "Already locked"))
       }
     )
@@ -445,7 +463,7 @@ final class LockmanDynamicConditionStrategyTests: XCTestCase {
           return requestCount.value < quota
             ? .success
             : .failure(
-              LockmanDynamicConditionError.conditionNotMet(
+              MockDynamicConditionError.conditionNotMet(
                 actionId: "api-call", hint: "Quota exceeded"))
         }
       )
@@ -472,7 +490,7 @@ final class LockmanDynamicConditionStrategyTests: XCTestCase {
       actionId: "restricted",
       condition: {
         .failure(
-          LockmanDynamicConditionError.conditionNotMet(actionId: "restricted", hint: "Always fails")
+          MockDynamicConditionError.conditionNotMet(actionId: "restricted", hint: "Always fails")
         )
       }
     )
@@ -498,7 +516,7 @@ final class LockmanDynamicConditionStrategyTests: XCTestCase {
         user1Count.value < 1
           ? .success
           : .failure(
-            LockmanDynamicConditionError.conditionNotMet(
+            MockDynamicConditionError.conditionNotMet(
               actionId: "request", hint: "User limit reached"))
       }
     )
@@ -515,7 +533,7 @@ final class LockmanDynamicConditionStrategyTests: XCTestCase {
         user2Count.value < 1
           ? .success
           : .failure(
-            LockmanDynamicConditionError.conditionNotMet(
+            MockDynamicConditionError.conditionNotMet(
               actionId: "request", hint: "User limit reached"))
       }
     )
@@ -530,7 +548,7 @@ final class LockmanDynamicConditionStrategyTests: XCTestCase {
         user1Count.value < 1
           ? .success
           : .failure(
-            LockmanDynamicConditionError.conditionNotMet(
+            MockDynamicConditionError.conditionNotMet(
               actionId: "request", hint: "User limit reached"))
       }
     )

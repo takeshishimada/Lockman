@@ -6,20 +6,23 @@ import Foundation
 ///
 /// ## Example
 /// ```swift
+/// // Define custom errors for your business logic
+/// enum MyActionError: Error {
+///     case priorityTooLow(priority: Int)
+///     case taskTooBig(size: Int)
+/// }
+/// 
 /// @LockmanDynamicCondition
 /// enum MyAction {
 ///     case fetchData(userId: String, priority: Int)
 ///     case processTask(size: Int)
 /// }
 ///
-/// // Usage
+/// // Usage with custom error
 /// let action = MyAction.fetchData(userId: "123", priority: 5)
 /// let info = action.with {
 ///     guard priority > 3 else {
-///         return .failure(LockmanDynamicConditionError.conditionNotMet(
-///             actionId: "fetchData",
-///             hint: "Priority too low"
-///         ))
+///         return .failure(MyActionError.priorityTooLow(priority: priority))
 ///     }
 ///     return .success
 /// }

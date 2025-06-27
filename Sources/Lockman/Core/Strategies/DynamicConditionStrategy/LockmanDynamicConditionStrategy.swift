@@ -8,14 +8,15 @@ import Foundation
 ///
 /// ## Example
 /// ```swift
-/// // Business logic condition
+/// // Business logic condition with custom error
+/// struct PriorityTooLowError: Error {
+///     let priority: Int
+/// }
+/// 
 /// let action = MyAction.fetchData(userId: "123", priority: 5)
 /// let conditionalAction = action.with {
 ///     guard priority > 3 else {
-///         return .failure(LockmanDynamicConditionError.conditionNotMet(
-///             actionId: "fetchData",
-///             hint: "Priority too low"
-///         ))
+///         return .failure(PriorityTooLowError(priority: priority))
 ///     }
 ///     return .success
 /// }

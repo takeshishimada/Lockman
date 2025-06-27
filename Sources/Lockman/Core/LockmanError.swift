@@ -11,9 +11,10 @@ import Foundation
 /// Each strategy defines its own error type conforming to this protocol:
 /// - `LockmanSingleExecutionError`: Errors from single execution strategy
 /// - `LockmanPriorityBasedError`: Errors from priority-based strategy
-/// - `LockmanDynamicConditionError`: Errors from dynamic condition strategy
 /// - `LockmanGroupCoordinationError`: Errors from group coordination strategy
 /// - `LockmanRegistrationError`: Errors from strategy registration and resolution
+/// 
+/// For dynamic condition strategy, users define their own error types.
 ///
 /// ## Usage
 /// When a lock acquisition fails, strategies return `.failure(error)` where

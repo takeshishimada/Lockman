@@ -33,7 +33,7 @@ extension Effect {
   /// Lock acquisition error types include:
   /// - `LockmanSingleExecutionError`: Single execution conflicts
   /// - `LockmanPriorityBasedError`: Priority-based conflicts
-  /// - `LockmanDynamicConditionError`: Dynamic condition failures
+  /// - User-defined errors from dynamic conditions
   /// - `LockmanGroupCoordinationError`: Group coordination conflicts
   public static func withLock<B: LockmanBoundaryId, A: LockmanAction>(
     priority: TaskPriority? = nil,

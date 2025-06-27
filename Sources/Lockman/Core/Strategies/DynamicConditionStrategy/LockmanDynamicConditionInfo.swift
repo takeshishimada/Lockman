@@ -7,14 +7,20 @@ import Foundation
 ///
 /// ## Example
 /// ```swift
+/// // Define custom error for your business logic
+/// struct UserLimitExceededError: Error {
+///     let currentUsers: Int
+///     let maxUsers: Int
+/// }
+/// 
 /// let info = LockmanDynamicConditionInfo(
 ///     actionId: "fetchData",
 ///     condition: {
 ///         // Custom business logic to determine if lock can be acquired
 ///         guard userCount < maxUsers else {
-///             return .failure(LockmanDynamicConditionError.conditionNotMet(
-///                 actionId: "fetchData",
-///                 hint: "User limit exceeded"
+///             return .failure(UserLimitExceededError(
+///                 currentUsers: userCount,
+///                 maxUsers: maxUsers
 ///             ))
 ///         }
 ///         return .success
