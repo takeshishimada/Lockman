@@ -3,7 +3,10 @@ import Foundation
 /// A strategy that coordinates actions within groups based on their roles.
 ///
 /// This strategy manages group-based locking where:
-/// - **Leaders** can only execute when their group is empty (no other members)
+/// - **Leaders** can execute based on their entry policy:
+///   - `.emptyGroup`: Only when the group is completely empty
+///   - `.withoutMembers`: When there are no members (other leaders allowed)
+///   - `.withoutLeader`: When there is no other leader (members allowed)
 /// - **Members** can only execute when their group has active participants
 ///
 /// This creates a coordination pattern where leaders start group activities

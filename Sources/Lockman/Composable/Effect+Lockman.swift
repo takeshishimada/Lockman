@@ -128,8 +128,8 @@ extension Effect {
   ///
   /// ## Error Handling
   /// This method supports two types of error handlers:
-  /// - `catch handler`: For errors that occur during operation execution (has unlock token)
-  /// - `lockFailure`: For lock acquisition failures (no unlock token needed)
+  /// - `catch handler`: For errors that occur during operation execution (receives unlock token)
+  /// - `lockFailure`: For lock acquisition failures (no unlock token available)
   public static func withLock<B: LockmanBoundaryId, A: LockmanAction>(
     priority: TaskPriority? = nil,
     unlockOption: UnlockOption? = nil,
@@ -333,7 +333,8 @@ extension Effect {
   /// ## Error Handling Strategy
   /// This method uses a do-catch pattern to handle strategy resolution errors.
   /// If strategy resolution fails, it calls `handleError` to provide detailed
-  /// diagnostic information and returns `.none` to prevent effect execution.
+  /// diagnostic information and optionally calls the provided handler before
+  /// returning `.none` to prevent effect execution.
   ///
   /// ## Type Safety
   /// The method maintains type safety through generic constraints:

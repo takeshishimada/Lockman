@@ -92,7 +92,7 @@ public final class LockmanSingleExecutionStrategy: LockmanStrategy, @unchecked S
 
     switch info.mode {
     case .none:
-      // No exclusive execution - always allow
+      // No exclusive execution - bypasses lock checking and always returns success
       result = .success
 
     case .boundary:

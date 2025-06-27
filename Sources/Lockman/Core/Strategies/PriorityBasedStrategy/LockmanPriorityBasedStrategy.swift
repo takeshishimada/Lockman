@@ -341,11 +341,11 @@ extension LockmanPriorityBasedStrategy {
   ///
   /// ## Examples
   /// ```swift
-  /// // Existing payment (.exclusive) blocks new search
-  /// existing(.exclusive) + new(.replaceable) → .failure
+  /// // Existing action with exclusive behavior blocks new action
+  /// current: .high(.exclusive), requested: .high(.replaceable) → .failure
   ///
-  /// // Existing search (.replaceable) yields to new search
-  /// existing(.replaceable) + new(.exclusive) → .successWithPrecedingCancellation
+  /// // Existing action with replaceable behavior yields to new action
+  /// current: .high(.replaceable), requested: .high(.exclusive) → .successWithPrecedingCancellation
   /// ```
   ///
   /// ## Design Rationale
