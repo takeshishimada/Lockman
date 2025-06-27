@@ -29,6 +29,9 @@ import Foundation
 public struct LockmanSingleExecutionInfo: LockmanInfo, Sendable, Equatable {
   // MARK: - LockmanInfo Protocol Properties
 
+  /// The strategy identifier for this lock info.
+  public let strategyId: LockmanStrategyId
+
   /// The action identifier used for lock conflict detection.
   ///
   /// This identifier determines which actions are considered conflicting:
@@ -75,9 +78,11 @@ public struct LockmanSingleExecutionInfo: LockmanInfo, Sendable, Equatable {
   /// system to track individual lock acquisitions while still enforcing
   /// execution semantics based on the mode.
   public init(
+    strategyId: LockmanStrategyId = .singleExecution,
     actionId: LockmanActionId = LockmanActionId(""),
     mode: LockmanSingleExecutionStrategy.ExecutionMode
   ) {
+    self.strategyId = strategyId
     self.actionId = actionId
     self.mode = mode
     self.uniqueId = UUID()
@@ -102,11 +107,11 @@ public struct LockmanSingleExecutionInfo: LockmanInfo, Sendable, Equatable {
   // MARK: - CustomDebugStringConvertible
 
   public var debugDescription: String {
-    "LockmanSingleExecutionInfo(actionId: '\(actionId)', uniqueId: \(uniqueId), mode: \(mode))"
+    "LockmanSingleExecutionInfo(strategyId: '\(strategyId)', actionId: '\(actionId)', uniqueId: \(uniqueId), mode: \(mode))"
   }
-  
+
   // MARK: - Debug Additional Info
-  
+
   public var debugAdditionalInfo: String {
     "mode: \(mode)"
   }

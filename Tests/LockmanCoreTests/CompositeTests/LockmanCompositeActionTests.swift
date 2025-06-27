@@ -15,12 +15,9 @@ final class LockmanCompositeActionTests: XCTestCase {
 
     let actionName = "mockComposite2"
 
-    var strategyId: LockmanStrategyId {
-      LockmanStrategyId(name: "MockComposite2")
-    }
-
     var lockmanInfo: LockmanCompositeInfo2<I1, I2> {
       LockmanCompositeInfo2(
+        strategyId: LockmanStrategyId(name: "MockComposite2"),
         actionId: actionName,
         lockmanInfoForStrategy1: LockmanSingleExecutionInfo(actionId: actionName, mode: .boundary),
         lockmanInfoForStrategy2: LockmanPriorityBasedInfo(
@@ -39,12 +36,9 @@ final class LockmanCompositeActionTests: XCTestCase {
 
     let actionName = "mockComposite3"
 
-    var strategyId: LockmanStrategyId {
-      LockmanStrategyId(name: "MockComposite3")
-    }
-
     var lockmanInfo: LockmanCompositeInfo3<I1, I2, I3> {
       LockmanCompositeInfo3(
+        strategyId: LockmanStrategyId(name: "MockComposite3"),
         actionId: actionName,
         lockmanInfoForStrategy1: LockmanSingleExecutionInfo(
           actionId: "\(actionName)-1", mode: .boundary),
@@ -68,12 +62,9 @@ final class LockmanCompositeActionTests: XCTestCase {
 
     let actionName = "mockComposite4"
 
-    var strategyId: LockmanStrategyId {
-      LockmanStrategyId(name: "MockComposite4")
-    }
-
     var lockmanInfo: LockmanCompositeInfo4<I1, I2, I3, I4> {
       LockmanCompositeInfo4(
+        strategyId: LockmanStrategyId(name: "MockComposite4"),
         actionId: actionName,
         lockmanInfoForStrategy1: LockmanSingleExecutionInfo(
           actionId: "\(actionName)-1", mode: .boundary),
@@ -101,12 +92,9 @@ final class LockmanCompositeActionTests: XCTestCase {
 
     let actionName = "mockComposite5"
 
-    var strategyId: LockmanStrategyId {
-      LockmanStrategyId(name: "MockComposite5")
-    }
-
     var lockmanInfo: LockmanCompositeInfo5<I1, I2, I3, I4, I5> {
       LockmanCompositeInfo5(
+        strategyId: LockmanStrategyId(name: "MockComposite5"),
         actionId: actionName,
         lockmanInfoForStrategy1: LockmanSingleExecutionInfo(
           actionId: "\(actionName)-1", mode: .boundary),
@@ -131,7 +119,7 @@ final class LockmanCompositeActionTests: XCTestCase {
     XCTAssertEqual(action.actionName, "mockComposite2")
 
     // Test strategy ID
-    XCTAssertEqual(action.strategyId.value, "MockComposite2")
+    XCTAssertEqual(action.lockmanInfo.strategyId.value, "MockComposite2")
 
     // Test lockmanInfo
     let lockmanInfo = action.lockmanInfo

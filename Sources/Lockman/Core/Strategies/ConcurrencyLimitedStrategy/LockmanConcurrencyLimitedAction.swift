@@ -6,8 +6,5 @@ where I == LockmanConcurrencyLimitedInfo {
 }
 
 extension LockmanConcurrencyLimitedAction {
-  /// The strategy identifier for concurrency-limited locking.
-  public var strategyId: LockmanStrategyId {
-    LockmanConcurrencyLimitedStrategy.makeStrategyId()
-  }
+  // Strategy ID is now provided by lockmanInfo
 }

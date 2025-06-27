@@ -20,7 +20,8 @@ public enum LockmanGroupCoordinationError: LockmanError {
   /// Indicates that an action with the same ID is already in the group.
   ///
   /// Each action ID must be unique within a coordination group.
-  case actionAlreadyInGroup(existingInfo: LockmanGroupCoordinatedInfo, groupIds: Set<AnyLockmanGroupId>)
+  case actionAlreadyInGroup(
+    existingInfo: LockmanGroupCoordinatedInfo, groupIds: Set<AnyLockmanGroupId>)
 
   /// Indicates that an action is blocked by an exclusive leader.
   ///

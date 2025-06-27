@@ -243,7 +243,7 @@ extension Effect {
     do {
       // Resolve strategy and prepare unlock mechanism
       let strategy: AnyLockmanStrategy<A.I> = try LockmanManager.container.resolve(
-        id: action.strategyId,
+        id: action.lockmanInfo.strategyId,
         expecting: A.I.self
       )
       let lockmanInfo = action.lockmanInfo
@@ -369,7 +369,7 @@ extension Effect {
     do {
       // Resolve the strategy from the container using strategyId
       let strategy: AnyLockmanStrategy<A.I> = try LockmanManager.container.resolve(
-        id: action.strategyId,
+        id: action.lockmanInfo.strategyId,
         expecting: A.I.self
       )
       let lockmanInfo = action.lockmanInfo

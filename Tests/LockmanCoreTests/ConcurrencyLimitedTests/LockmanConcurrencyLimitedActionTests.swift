@@ -102,7 +102,7 @@ final class LockmanConcurrencyLimitedActionTests: XCTestCase {
   func testStrategyIdProperty() {
     let action = TestAction.fetchUser(id: "123")
     let expectedId = LockmanConcurrencyLimitedStrategy.makeStrategyId()
-    XCTAssertEqual(action.strategyId, expectedId)
+    XCTAssertEqual(action.lockmanInfo.strategyId, expectedId)
   }
 
   // MARK: - Different Action Cases Tests

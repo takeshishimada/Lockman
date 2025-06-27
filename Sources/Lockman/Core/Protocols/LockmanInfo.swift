@@ -25,6 +25,20 @@ import Foundation
 /// let priorityInfo = LockmanPriorityBasedInfo(actionId: "sync", priority: .high(.preferLater))
 /// ```
 public protocol LockmanInfo: Sendable, CustomDebugStringConvertible {
+  /// The strategy identifier that created this lock info.
+  ///
+  /// This identifier helps with debugging by showing which strategy is managing
+  /// this particular lock. The format typically follows the pattern:
+  /// "ModuleName.StrategyTypeName" or a custom identifier for configured strategies.
+  ///
+  /// ## Examples
+  /// ```swift
+  /// strategyId = "Lockman.SingleExecutionStrategy"
+  /// strategyId = "Lockman.PriorityBasedStrategy"
+  /// strategyId = "CustomApp.RateLimitStrategy"
+  /// ```
+  var strategyId: LockmanStrategyId { get }
+
   /// The action identifier used for lock conflict detection.
   ///
   /// This is the primary identifier that locking strategies use to determine
@@ -56,7 +70,7 @@ public protocol LockmanInfo: Sendable, CustomDebugStringConvertible {
   /// This is typically a `UUID` that is automatically generated during
   /// initialization to ensure uniqueness across all instances.
   var uniqueId: UUID { get }
-  
+
   /// Returns additional debug information specific to this lock info type.
   ///
   /// This method provides a formatted string containing strategy-specific

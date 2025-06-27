@@ -22,7 +22,8 @@ public enum LockmanSingleExecutionError: LockmanError {
   public var errorDescription: String? {
     switch self {
     case let .boundaryAlreadyLocked(boundaryId, existingInfo):
-      return "Cannot acquire lock: boundary '\(boundaryId)' already has an active lock for action '\(existingInfo.actionId)'."
+      return
+        "Cannot acquire lock: boundary '\(boundaryId)' already has an active lock for action '\(existingInfo.actionId)'."
     case let .actionAlreadyRunning(existingInfo):
       return "Cannot acquire lock: action '\(existingInfo.actionId)' is already running."
     }

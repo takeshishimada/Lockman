@@ -657,7 +657,8 @@ final class LockmanPriorityBasedStrategyTests: XCTestCase {
 
       // Verify the error contains correct information
       if case .precedingActionCancelled(let cancelledInfo) = priorityError {
-        XCTAssertEqual(cancelledInfo.actionId, "lowAction", "Error should contain the cancelled action ID")
+        XCTAssertEqual(
+          cancelledInfo.actionId, "lowAction", "Error should contain the cancelled action ID")
       } else {
         XCTFail("Expected precedingActionCancelled error but got \(priorityError)")
       }
@@ -691,7 +692,8 @@ final class LockmanPriorityBasedStrategyTests: XCTestCase {
 
       if case .precedingActionCancelled(let cancelledInfo) = priorityError {
         XCTAssertEqual(
-          cancelledInfo.actionId, "replaceableAction", "Error should contain the cancelled action ID")
+          cancelledInfo.actionId, "replaceableAction",
+          "Error should contain the cancelled action ID")
       } else {
         XCTFail("Expected precedingActionCancelled error but got \(priorityError)")
       }

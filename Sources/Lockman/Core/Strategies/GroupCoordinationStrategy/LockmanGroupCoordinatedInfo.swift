@@ -77,6 +77,9 @@ public enum GroupCoordinationRole: Sendable, Hashable {
 /// )
 /// ```
 public struct LockmanGroupCoordinatedInfo: LockmanInfo, Sendable {
+  /// The strategy identifier for this lock info.
+  public let strategyId: LockmanStrategyId
+
   /// The identifier for this specific action.
   public let actionId: LockmanActionId
 
@@ -102,10 +105,12 @@ public struct LockmanGroupCoordinatedInfo: LockmanInfo, Sendable {
   ///   - groupId: The group identifier for coordination
   ///   - coordinationRole: The role this action plays in the group
   public init<G: LockmanGroupId>(
+    strategyId: LockmanStrategyId = .groupCoordination,
     actionId: LockmanActionId,
     groupId: G,
     coordinationRole: GroupCoordinationRole
   ) {
+    self.strategyId = strategyId
     self.actionId = actionId
     self.uniqueId = UUID()
     self.groupIds = [AnyLockmanGroupId(groupId)]
@@ -119,10 +124,12 @@ public struct LockmanGroupCoordinatedInfo: LockmanInfo, Sendable {
   ///   - groupIds: The set of group identifiers for coordination (maximum 5)
   ///   - coordinationRole: The role this action plays in all groups
   public init<G: LockmanGroupId>(
+    strategyId: LockmanStrategyId = .groupCoordination,
     actionId: LockmanActionId,
     groupIds: Set<G>,
     coordinationRole: GroupCoordinationRole
   ) {
+    self.strategyId = strategyId
     precondition(!groupIds.isEmpty, "At least one group ID must be provided")
     precondition(groupIds.count <= 5, "Maximum 5 groups allowed, got \(groupIds.count)")
 
@@ -149,11 +156,11 @@ extension LockmanGroupCoordinatedInfo: CustomDebugStringConvertible {
   public var debugDescription: String {
     let groupIdsStr = groupIds.map { "\($0)" }.sorted().joined(separator: ", ")
     return
-      "LockmanGroupCoordinatedInfo(actionId: '\(actionId)', uniqueId: \(uniqueId), groupIds: [\(groupIdsStr)], coordinationRole: .\(coordinationRole))"
+      "LockmanGroupCoordinatedInfo(strategyId: '\(strategyId)', actionId: '\(actionId)', uniqueId: \(uniqueId), groupIds: [\(groupIdsStr)], coordinationRole: .\(coordinationRole))"
   }
-  
+
   // MARK: - Debug Additional Info
-  
+
   public var debugAdditionalInfo: String {
     let groupsStr = groupIds.map { "\($0)" }.sorted().joined(separator: ",")
     return "groups: \(groupsStr) r: \(coordinationRole)"

@@ -24,6 +24,9 @@ import Foundation
 public struct LockmanDynamicConditionInfo: LockmanInfo, Sendable {
   // MARK: - Properties
 
+  /// The strategy identifier for this lock info.
+  public let strategyId: LockmanStrategyId
+
   /// The action identifier for this lock.
   public let actionId: LockmanActionId
 
@@ -45,9 +48,11 @@ public struct LockmanDynamicConditionInfo: LockmanInfo, Sendable {
   ///   - condition: A closure that evaluates whether the lock can be acquired,
   ///                returning a `LockmanResult`
   public init(
+    strategyId: LockmanStrategyId = .dynamicCondition,
     actionId: LockmanActionId,
     condition: @escaping @Sendable () -> LockmanResult
   ) {
+    self.strategyId = strategyId
     self.actionId = actionId
     self.uniqueId = UUID()
     self.condition = condition
@@ -59,8 +64,10 @@ public struct LockmanDynamicConditionInfo: LockmanInfo, Sendable {
   ///
   /// - Parameter actionId: The identifier for this action
   public init(
+    strategyId: LockmanStrategyId = .dynamicCondition,
     actionId: LockmanActionId
   ) {
+    self.strategyId = strategyId
     self.actionId = actionId
     self.uniqueId = UUID()
     self.condition = { .success }  // Default: always allow
@@ -76,11 +83,11 @@ public struct LockmanDynamicConditionInfo: LockmanInfo, Sendable {
   // MARK: - CustomDebugStringConvertible
 
   public var debugDescription: String {
-    "LockmanDynamicConditionInfo(actionId: '\(actionId)', uniqueId: \(uniqueId), condition: <closure>)"
+    "LockmanDynamicConditionInfo(strategyId: '\(strategyId)', actionId: '\(actionId)', uniqueId: \(uniqueId), condition: <closure>)"
   }
-  
+
   // MARK: - Debug Additional Info
-  
+
   public var debugAdditionalInfo: String {
     "condition: <closure>"
   }

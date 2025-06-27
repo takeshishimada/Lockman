@@ -92,8 +92,5 @@ where I == LockmanGroupCoordinatedInfo {
 // MARK: - Default Implementations
 
 extension LockmanGroupCoordinatedAction {
-  /// The strategy identifier for group coordination.
-  public var strategyId: LockmanStrategyId {
-    .groupCoordination
-  }
+  // Strategy ID is now provided by lockmanInfo
 }

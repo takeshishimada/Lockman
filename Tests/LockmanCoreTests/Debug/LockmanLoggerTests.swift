@@ -48,6 +48,7 @@ final class LockmanLoggerTests: XCTestCase {
 
     // Create a test lock info
     struct TestInfo: LockmanInfo {
+      var strategyId: LockmanStrategyId { .init("TestStrategy") }
       var actionId: String { "testAction" }
       var uniqueId: UUID { UUID() }
       var debugDescription: String { "TestInfo(actionId: \(actionId))" }

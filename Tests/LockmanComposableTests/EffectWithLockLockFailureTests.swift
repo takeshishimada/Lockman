@@ -140,7 +140,8 @@ final class EffectWithLockLockFailureTests: XCTestCase {
 
     await store.receive(
       .lockFailureOccurred(
-        "Cannot acquire lock: boundary 'testBoundary' already has an active lock for action 'test-action'.")
+        "Cannot acquire lock: boundary 'testBoundary' already has an active lock for action 'test-action'."
+      )
     ) {
       $0.lockFailureErrorMessage =
         "Cannot acquire lock: boundary 'testBoundary' already has an active lock for action 'test-action'."

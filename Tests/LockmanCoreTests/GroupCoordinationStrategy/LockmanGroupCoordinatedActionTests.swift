@@ -118,7 +118,7 @@ final class LockmanGroupCoordinatedActionTests: XCTestCase {
     XCTAssertEqual(action.actionName, "startLoading")
 
     // Test automatic strategyId
-    XCTAssertEqual(action.strategyId, .groupCoordination)
+    XCTAssertEqual(action.lockmanInfo.strategyId, .groupCoordination)
 
     // Test lockmanInfo
     let info = action.lockmanInfo
@@ -132,7 +132,7 @@ final class LockmanGroupCoordinatedActionTests: XCTestCase {
     let action = UpdateProgressAction()
 
     XCTAssertEqual(action.actionName, "updateProgress")
-    XCTAssertEqual(action.strategyId, .groupCoordination)
+    XCTAssertEqual(action.lockmanInfo.strategyId, .groupCoordination)
 
     let info = action.lockmanInfo
     XCTAssertEqual(info.actionId, "updateProgress")
@@ -195,8 +195,8 @@ final class LockmanGroupCoordinatedActionTests: XCTestCase {
     XCTAssertEqual(memberInfo.coordinationRole, .member)
 
     // Both use the same strategy
-    XCTAssertEqual(leader.strategyId, .groupCoordination)
-    XCTAssertEqual(member.strategyId, .groupCoordination)
+    XCTAssertEqual(leader.lockmanInfo.strategyId, .groupCoordination)
+    XCTAssertEqual(member.lockmanInfo.strategyId, .groupCoordination)
   }
 
   // MARK: - LockmanInfo Generation Tests
@@ -299,7 +299,7 @@ final class LockmanGroupCoordinatedActionTests: XCTestCase {
     let action = MultiGroupAction()
 
     XCTAssertEqual(action.actionName, "multiGroupOperation")
-    XCTAssertEqual(action.strategyId, .groupCoordination)
+    XCTAssertEqual(action.lockmanInfo.strategyId, .groupCoordination)
 
     let info = action.lockmanInfo
     XCTAssertEqual(info.actionId, "multiGroupOperation")
