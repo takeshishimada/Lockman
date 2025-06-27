@@ -372,7 +372,7 @@ public macro LockmanDynamicCondition() =
 /// Example usage with TCA:
 /// ```swift
 /// // Define your concurrency groups
-/// enum MyConcurrencyGroup: ConcurrencyGroup {
+/// enum MyConcurrencyGroup: LockmanConcurrencyGroup {
 ///   case apiRequests
 ///   case fileOperations
 ///   case uiUpdates
@@ -385,7 +385,7 @@ public macro LockmanDynamicCondition() =
 ///     }
 ///   }
 ///
-///   var limit: ConcurrencyLimit {
+///   var limit: LockmanConcurrencyLimit {
 ///     switch self {
 ///     case .apiRequests: return .limited(3)
 ///     case .fileOperations: return .limited(2)

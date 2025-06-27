@@ -37,7 +37,7 @@ final class ComposableIssueReporterTests: XCTestCase {
     }
 
     // Test
-    ComposableIssueReporter.reportIssue("Test issue message", file: #file, line: #line)
+    LockmanComposableIssueReporter.reportIssue("Test issue message", file: #file, line: #line)
 
     wait(for: [expectation], timeout: 1.0)
 
@@ -53,13 +53,13 @@ final class ComposableIssueReporterTests: XCTestCase {
     // Configure to use ComposableIssueReporter
     LockmanIssueReporting.configureComposableReporting()
 
-    // Should now be ComposableIssueReporter
-    XCTAssertTrue(LockmanIssueReporting.reporter == ComposableIssueReporter.self)
+    // Should now be LockmanComposableIssueReporter
+    XCTAssertTrue(LockmanIssueReporting.reporter == LockmanComposableIssueReporter.self)
   }
 
   func testDeprecatedTCAIssueReporterTypealias() {
     // Test that the deprecated typealias still works
-    XCTAssertTrue(TCAIssueReporter.self == ComposableIssueReporter.self)
+    XCTAssertTrue(TCAIssueReporter.self == LockmanComposableIssueReporter.self)
   }
 
   func testDeprecatedConfigureTCAReporting() {
@@ -69,8 +69,8 @@ final class ComposableIssueReporterTests: XCTestCase {
     // Configure using deprecated method
     LockmanIssueReporting.configureTCAReporting()
 
-    // Should now be ComposableIssueReporter
-    XCTAssertTrue(LockmanIssueReporting.reporter == ComposableIssueReporter.self)
+    // Should now be LockmanComposableIssueReporter
+    XCTAssertTrue(LockmanIssueReporting.reporter == LockmanComposableIssueReporter.self)
   }
 
   func testComposableReporterIntegration() {
@@ -91,7 +91,7 @@ final class ComposableIssueReporterTests: XCTestCase {
       IssueReporting.reportIssue = originalReportIssue
     }
 
-    // Use LockmanIssueReporting which should now use ComposableIssueReporter
+    // Use LockmanIssueReporting which should now use LockmanComposableIssueReporter
     LockmanIssueReporting.reportIssue("Integration test message")
 
     wait(for: [expectation], timeout: 1.0)

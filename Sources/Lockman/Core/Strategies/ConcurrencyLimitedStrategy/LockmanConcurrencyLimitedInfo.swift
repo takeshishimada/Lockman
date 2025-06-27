@@ -11,7 +11,7 @@ public struct LockmanConcurrencyLimitedInfo: LockmanInfo, Sendable, Equatable {
   /// The concurrency group identifier.
   public let concurrencyId: String
   /// The concurrency limit.
-  public let limit: ConcurrencyLimit
+  public let limit: LockmanConcurrencyLimit
 
   /// Initialize with a predefined concurrency group.
   /// - Parameters:
@@ -21,7 +21,7 @@ public struct LockmanConcurrencyLimitedInfo: LockmanInfo, Sendable, Equatable {
   public init(
     strategyId: LockmanStrategyId = LockmanConcurrencyLimitedStrategy.makeStrategyId(),
     actionId: LockmanActionId,
-    group: any ConcurrencyGroup
+    group: any LockmanConcurrencyGroup
   ) {
     self.strategyId = strategyId
     self.actionId = actionId
@@ -38,7 +38,7 @@ public struct LockmanConcurrencyLimitedInfo: LockmanInfo, Sendable, Equatable {
   public init(
     strategyId: LockmanStrategyId = LockmanConcurrencyLimitedStrategy.makeStrategyId(),
     actionId: LockmanActionId,
-    _ limit: ConcurrencyLimit
+    _ limit: LockmanConcurrencyLimit
   ) {
     self.strategyId = strategyId
     self.actionId = actionId

@@ -90,7 +90,7 @@ public final class LockmanGroupCoordinationStrategy: LockmanStrategy, @unchecked
     /// Information about a group member.
     struct GroupMember {
       let info: LockmanGroupCoordinatedInfo
-      var role: GroupCoordinationRole { info.coordinationRole }
+      var role: LockmanGroupCoordinationRole { info.coordinationRole }
     }
   }
 

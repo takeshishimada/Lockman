@@ -28,7 +28,7 @@ public enum LockmanGroupCoordinationError: LockmanError {
   /// Exclusive leaders can prevent other actions from executing based on their entry policy.
   case blockedByExclusiveLeader(
     leaderInfo: LockmanGroupCoordinatedInfo, groupId: AnyLockmanGroupId,
-    entryPolicy: GroupCoordinationRole.LeaderEntryPolicy)
+    entryPolicy: LockmanGroupCoordinationRole.LeaderEntryPolicy)
 
   public var errorDescription: String? {
     switch self {

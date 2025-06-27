@@ -72,7 +72,7 @@ final class LockmanGroupCoordinatedActionTests: XCTestCase {
         screenId = id
       }
 
-      let role: GroupCoordinationRole
+      let role: LockmanGroupCoordinationRole
       switch self {
       case .startNavigation:
         role = .none
@@ -92,9 +92,9 @@ final class LockmanGroupCoordinatedActionTests: XCTestCase {
   private struct ConfigurableAction: LockmanGroupCoordinatedAction {
     let actionName: String
     let groupId: String
-    let coordinationRole: GroupCoordinationRole
+    let coordinationRole: LockmanGroupCoordinationRole
 
-    init(name: String, group: String, role: GroupCoordinationRole) {
+    init(name: String, group: String, role: LockmanGroupCoordinationRole) {
       self.actionName = name
       self.groupId = group
       self.coordinationRole = role
