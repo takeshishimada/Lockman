@@ -107,8 +107,8 @@ public protocol LockmanStrategy<I>: Sendable {
   /// Checks if a lock can be acquired without actually acquiring it.
   ///
   /// This method allows the strategy to evaluate whether a lock acquisition
-  /// would succeed without modifying the strategy's internal state. This is
-  /// useful for pre-flight checks and decision making in the Effect system.
+  /// would succeed without modifying the strategy's internal state. The actual
+  /// lock acquisition happens in the subsequent `lock` method call.
   ///
   /// ## Implementation Guidelines
   /// - Should not modify internal state

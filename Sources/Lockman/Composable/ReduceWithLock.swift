@@ -472,7 +472,7 @@ extension ReduceWithLock {
   ///   - unlockOption: Controls when the unlock operation is executed
   ///   - handleCancellationErrors: Whether to pass CancellationError to catch handler
   ///   - operation: Async closure receiving `send` and `unlock` functions
-  ///   - handler: Optional error handler receiving error, send, and unlock functions
+  ///   - handler: Optional error handler (`catch` parameter) receiving error, send, and unlock functions
   ///   - lockFailure: Optional handler for lock acquisition failures (no unlock token)
   ///   - lockAction: LockmanAction providing lock information and strategy type
   ///   - cancelID: Unique identifier for effect cancellation and lock boundary

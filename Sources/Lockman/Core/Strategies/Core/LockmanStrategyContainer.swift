@@ -97,7 +97,7 @@ public final class LockmanStrategyContainer: @unchecked Sendable {
   /// - Parameters:
   ///   - id: The unique identifier for this strategy configuration
   ///   - strategy: A concrete strategy conforming to `LockmanStrategy<I>`
-  /// - Throws: `LockmanError.strategyAlreadyRegistered` if this ID is already registered
+  /// - Throws: `LockmanRegistrationError.strategyAlreadyRegistered` if this ID is already registered
   ///
   /// ## Complexity
   /// O(1) - Direct hash map insertion with conflict detection
@@ -130,7 +130,7 @@ public final class LockmanStrategyContainer: @unchecked Sendable {
   /// consistency between the strategy's identity and its registration.
   ///
   /// - Parameter strategy: A concrete strategy conforming to `LockmanStrategy<I>`
-  /// - Throws: `LockmanError.strategyAlreadyRegistered` if this ID is already registered
+  /// - Throws: `LockmanRegistrationError.strategyAlreadyRegistered` if this ID is already registered
   ///
   /// ## Example
   /// ```swift
@@ -227,7 +227,7 @@ public final class LockmanStrategyContainer: @unchecked Sendable {
   ///   - id: The strategy identifier to look up
   ///   - expecting: The expected `LockmanInfo` type (for type inference)
   /// - Returns: An `AnyLockmanStrategy<I>` wrapping the registered strategy instance
-  /// - Throws: `LockmanError.strategyNotRegistered` if no strategy with this ID is registered
+  /// - Throws: `LockmanRegistrationError.strategyNotRegistered` if no strategy with this ID is registered
   ///
   /// ## Complexity
   /// O(1) - Direct hash map lookup by ID
@@ -262,7 +262,7 @@ public final class LockmanStrategyContainer: @unchecked Sendable {
   ///
   /// - Parameter strategyType: The concrete strategy type to look up
   /// - Returns: An `AnyLockmanStrategy<I>` wrapping the registered strategy instance
-  /// - Throws: `LockmanError.strategyNotRegistered` if no strategy of this type is registered
+  /// - Throws: `LockmanRegistrationError.strategyNotRegistered` if no strategy of this type is registered
   ///
   /// ## Example
   /// ```swift
