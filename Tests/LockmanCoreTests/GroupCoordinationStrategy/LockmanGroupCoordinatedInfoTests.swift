@@ -54,12 +54,12 @@ final class LockmanGroupCoordinatedInfoTests: XCTestCase {
     XCTAssertNotEqual(info1.uniqueId, info2.uniqueId)
   }
 
-  // MARK: - GroupCoordinationRole Tests
+  // MARK: - LockmanGroupCoordinationRole Tests
 
-  func testGroupCoordinationRoleValues() {
-    let noneRole = GroupCoordinationRole.none
-    let exclusiveLeader = GroupCoordinationRole.leader(.emptyGroup)
-    let member = GroupCoordinationRole.member
+  func testLockmanGroupCoordinationRoleValues() {
+    let noneRole = LockmanGroupCoordinationRole.none
+    let exclusiveLeader = LockmanGroupCoordinationRole.leader(.emptyGroup)
+    let member = LockmanGroupCoordinationRole.member
 
     // Test pattern matching
     if case .none = noneRole {
@@ -81,8 +81,8 @@ final class LockmanGroupCoordinatedInfoTests: XCTestCase {
     }
   }
 
-  func testGroupCoordinationRoleIsSendableAndHashable() {
-    let roles: Set<GroupCoordinationRole> = [
+  func testLockmanGroupCoordinationRoleIsSendableAndHashable() {
+    let roles: Set<LockmanGroupCoordinationRole> = [
       .none,
       .member,
       .none,
@@ -91,7 +91,7 @@ final class LockmanGroupCoordinatedInfoTests: XCTestCase {
     XCTAssertEqual(roles.count, 3)  // Duplicate .none removed
 
     // Can be used in dictionaries
-    let roleMap: [GroupCoordinationRole: String] = [
+    let roleMap: [LockmanGroupCoordinationRole: String] = [
       .none: "Start",
       .leader(.emptyGroup): "ExclusiveStart",
       .member: "Join",

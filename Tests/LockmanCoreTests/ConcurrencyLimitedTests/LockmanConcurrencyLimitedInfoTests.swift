@@ -5,7 +5,7 @@ import XCTest
 
 // MARK: - Test Concurrency Group
 
-private enum TestConcurrencyGroup: ConcurrencyGroup {
+private enum TestConcurrencyGroup: LockmanConcurrencyGroup {
   case apiRequests
   case fileOperations
 
@@ -16,7 +16,7 @@ private enum TestConcurrencyGroup: ConcurrencyGroup {
     }
   }
 
-  var limit: ConcurrencyLimit {
+  var limit: LockmanConcurrencyLimit {
     switch self {
     case .apiRequests: return .limited(3)
     case .fileOperations: return .limited(2)

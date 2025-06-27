@@ -7,13 +7,13 @@ final class LockmanIssueReporterTests: XCTestCase {
   override func setUp() {
     super.setUp()
     // Reset to default reporter before each test
-    LockmanIssueReporting.reporter = DefaultLockmanIssueReporter.self
+    LockmanIssueReporting.reporter = LockmanDefaultIssueReporter.self
   }
 
   override func tearDown() {
     super.tearDown()
     // Reset to default reporter after each test
-    LockmanIssueReporting.reporter = DefaultLockmanIssueReporter.self
+    LockmanIssueReporting.reporter = LockmanDefaultIssueReporter.self
   }
 
   func testDefaultLockmanIssueReporter() {
@@ -23,7 +23,7 @@ final class LockmanIssueReporterTests: XCTestCase {
     dup2(pipe.fileHandleForWriting.fileDescriptor, STDOUT_FILENO)
 
     // Report an issue
-    DefaultLockmanIssueReporter.reportIssue("Test issue", file: "TestFile.swift", line: 42)
+    LockmanDefaultIssueReporter.reportIssue("Test issue", file: "TestFile.swift", line: 42)
 
     // Restore stdout
     fflush(stdout)
@@ -45,7 +45,7 @@ final class LockmanIssueReporterTests: XCTestCase {
   }
 
   func testLockmanIssueReportingWithDefaultReporter() {
-    XCTAssertTrue(LockmanIssueReporting.reporter == DefaultLockmanIssueReporter.self)
+    XCTAssertTrue(LockmanIssueReporting.reporter == LockmanDefaultIssueReporter.self)
 
     // Capture console output
     let pipe = Pipe()
@@ -124,7 +124,7 @@ final class LockmanIssueReporterTests: XCTestCase {
         if i % 2 == 0 {
           LockmanIssueReporting.reporter = TempReporter.self
         } else {
-          LockmanIssueReporting.reporter = DefaultLockmanIssueReporter.self
+          LockmanIssueReporting.reporter = LockmanDefaultIssueReporter.self
         }
         expectation.fulfill()
       }
@@ -152,8 +152,8 @@ final class LockmanIssueReporterTests: XCTestCase {
 final class LockmanIssueReporterBackwardCompatibilityTests: XCTestCase {
 
   func testDefaultIssueReporterTypeAlias() {
-    // DefaultIssueReporter should be an alias for DefaultLockmanIssueReporter
-    XCTAssertTrue(DefaultIssueReporter.self == DefaultLockmanIssueReporter.self)
+    // DefaultIssueReporter should be an alias for LockmanDefaultIssueReporter
+    XCTAssertTrue(DefaultIssueReporter.self == LockmanDefaultIssueReporter.self)
   }
 }
 

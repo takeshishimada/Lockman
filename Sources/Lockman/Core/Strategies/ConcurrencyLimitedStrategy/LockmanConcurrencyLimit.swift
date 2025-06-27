@@ -1,5 +1,5 @@
 /// Represents the concurrency limit for an action.
-public enum ConcurrencyLimit: Sendable, Equatable {
+public enum LockmanConcurrencyLimit: Sendable, Equatable {
   /// No limit on concurrent executions.
   case unlimited
   /// Limited to a specific number of concurrent executions.
@@ -29,7 +29,7 @@ public enum ConcurrencyLimit: Sendable, Equatable {
   }
 }
 
-extension ConcurrencyLimit: CustomDebugStringConvertible {
+extension LockmanConcurrencyLimit: CustomDebugStringConvertible {
   public var debugDescription: String {
     switch self {
     case .unlimited:

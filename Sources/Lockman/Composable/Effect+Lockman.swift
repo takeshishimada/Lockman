@@ -37,7 +37,7 @@ extension Effect {
   /// - `LockmanGroupCoordinationError`: Group coordination conflicts
   public static func withLock<B: LockmanBoundaryId, A: LockmanAction>(
     priority: TaskPriority? = nil,
-    unlockOption: UnlockOption? = nil,
+    unlockOption: LockmanUnlockOption? = nil,
     handleCancellationErrors: Bool? = nil,
     operation: @escaping @Sendable (_ send: Send<Action>) async throws -> Void,
     catch handler: (
@@ -132,7 +132,7 @@ extension Effect {
   /// - `lockFailure`: For lock acquisition failures (no unlock token available)
   public static func withLock<B: LockmanBoundaryId, A: LockmanAction>(
     priority: TaskPriority? = nil,
-    unlockOption: UnlockOption? = nil,
+    unlockOption: LockmanUnlockOption? = nil,
     handleCancellationErrors: Bool? = nil,
     operation: @escaping @Sendable (
       _ send: Send<Action>, _ unlock: LockmanUnlock<B, A.I>
@@ -230,7 +230,7 @@ extension Effect {
   ///   - column: Source column number for debugging (auto-populated)
   /// - Returns: Concatenated effect with automatic lock management, or `.none` if lock acquisition fails
   public static func concatenateWithLock<B: LockmanBoundaryId, A: LockmanAction>(
-    unlockOption: UnlockOption? = nil,
+    unlockOption: LockmanUnlockOption? = nil,
     operations: [Effect<Action>],
     lockFailure: (@Sendable (_ error: any Error, _ send: Send<Action>) async -> Void)? = nil,
     action: A,
@@ -359,7 +359,7 @@ extension Effect {
   static func withLockCommon<B: LockmanBoundaryId, A: LockmanAction>(
     action: A,
     cancelID: B,
-    unlockOption: UnlockOption,
+    unlockOption: LockmanUnlockOption,
     fileID: StaticString,
     filePath: StaticString,
     line: UInt,

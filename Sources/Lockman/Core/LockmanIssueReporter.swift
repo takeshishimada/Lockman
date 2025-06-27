@@ -19,7 +19,7 @@ public protocol LockmanIssueReporter {
 }
 
 /// Default Lockman issue reporter that prints to console in debug builds.
-public enum DefaultLockmanIssueReporter: LockmanIssueReporter {
+public enum LockmanDefaultIssueReporter: LockmanIssueReporter {
   public static func reportIssue(
     _ message: String,
     file: StaticString = #file,
@@ -36,7 +36,7 @@ public enum DefaultLockmanIssueReporter: LockmanIssueReporter {
 public enum LockmanIssueReporting {
   /// The current issue reporter. Defaults to `DefaultIssueReporter`.
   private static let _reporter = LockIsolated<any LockmanIssueReporter.Type>(
-    DefaultLockmanIssueReporter.self)
+    LockmanDefaultIssueReporter.self)
 
   public static var reporter: any LockmanIssueReporter.Type {
     get { _reporter.value }

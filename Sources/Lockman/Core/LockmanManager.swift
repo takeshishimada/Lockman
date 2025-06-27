@@ -17,7 +17,7 @@ public enum LockmanManager {
     /// when the `unlockOption` parameter is not provided.
     ///
     /// Default value is `.transition` to ensure safe coordination with UI transitions.
-    var defaultUnlockOption: UnlockOption = .transition
+    var defaultUnlockOption: LockmanUnlockOption = .transition
 
     /// Controls whether CancellationError should be passed to error handlers in withLock operations.
     ///
@@ -50,7 +50,7 @@ public enum LockmanManager {
     /// // Change to immediate unlock if UI transitions are not a concern
     /// LockmanManager.config.defaultUnlockOption = .immediate
     /// ```
-    public static var defaultUnlockOption: UnlockOption {
+    public static var defaultUnlockOption: LockmanUnlockOption {
       get { _configuration.withCriticalRegion { $0.defaultUnlockOption } }
       set {
         _configuration.withCriticalRegion { $0.defaultUnlockOption = newValue }

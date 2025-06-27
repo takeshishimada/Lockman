@@ -11,7 +11,7 @@ import Foundation
 /// // Navigation leader action
 /// struct NavigateToDetailAction: LockmanGroupCoordinatedAction {
 ///   let groupId = "navigation"
-///   let coordinationRole = GroupCoordinationRole.leader(.none)
+///   let coordinationRole = LockmanGroupCoordinationRole.leader(.none)
 ///
 ///   var actionName: String { "navigateToDetail" }
 /// }
@@ -19,7 +19,7 @@ import Foundation
 /// // Exclusive navigation that blocks other actions
 /// struct ExclusiveNavigationAction: LockmanGroupCoordinatedAction {
 ///   let groupId = "navigation"
-///   let coordinationRole = GroupCoordinationRole.leader(.all)
+///   let coordinationRole = LockmanGroupCoordinationRole.leader(.all)
 ///
 ///   var actionName: String { "exclusiveNavigate" }
 /// }
@@ -30,7 +30,7 @@ import Foundation
 /// // Complex action belonging to multiple groups
 /// struct ComplexDataLoadAction: LockmanGroupCoordinatedAction {
 ///   let groupIds: Set<String> = ["navigation", "dataLoading", "ui"]
-///   let coordinationRole = GroupCoordinationRole.member
+///   let coordinationRole = LockmanGroupCoordinationRole.member
 ///
 ///   var actionName: String { "complexDataLoad" }
 /// }
@@ -52,7 +52,7 @@ import Foundation
 ///     }
 ///   }
 ///
-///   var coordinationRole: GroupCoordinationRole {
+///   var coordinationRole: LockmanGroupCoordinationRole {
 ///     switch self {
 ///     case .startLoading:
 ///       return .leader(.none)

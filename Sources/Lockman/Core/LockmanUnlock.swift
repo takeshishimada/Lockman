@@ -29,14 +29,14 @@ public struct LockmanUnlock<B: LockmanBoundaryId, I: LockmanInfo>: Sendable {
   /// Controls whether the unlock happens immediately, on the next run loop cycle,
   /// or after a specified delay. This enables coordination with UI operations
   /// like screen transitions.
-  private let unlockOption: UnlockOption
+  private let unlockOption: LockmanUnlockOption
 
   /// Creates a new unlock token with the specified components and unlock option.
   public init(
     id: B,
     info: I,
     strategy: AnyLockmanStrategy<I>,
-    unlockOption: UnlockOption
+    unlockOption: LockmanUnlockOption
   ) {
     self.id = id
     self.info = info

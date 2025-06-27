@@ -21,7 +21,7 @@ private struct TestBoundaryId: LockmanBoundaryId {
   }
 }
 
-private enum TestConcurrencyGroup: ConcurrencyGroup {
+private enum TestConcurrencyGroup: LockmanConcurrencyGroup {
   case apiRequests
   case fileOperations
   case uiUpdates
@@ -34,7 +34,7 @@ private enum TestConcurrencyGroup: ConcurrencyGroup {
     }
   }
 
-  var limit: ConcurrencyLimit {
+  var limit: LockmanConcurrencyLimit {
     switch self {
     case .apiRequests: return .limited(3)
     case .fileOperations: return .limited(2)
