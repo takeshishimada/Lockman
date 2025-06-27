@@ -3,18 +3,20 @@
 /// Conforming types must provide:
 /// - `I`: The concrete `LockmanInfo` type associated with this action.
 /// - `lockmanInfo`: An instance of that lock information.
-/// - `strategyId`: The identifier for the strategy to use.
 ///
-/// The new design uses `LockmanStrategyId` instead of type references,
-/// providing better flexibility for user-defined and configured strategies.
+/// The strategy to use is determined by the `strategyId` property in the
+/// `lockmanInfo` instance, providing better flexibility for user-defined
+/// and configured strategies.
 ///
 /// Example implementation:
 /// ```swift
 /// struct MyAction: LockmanAction {
 ///   typealias I = LockmanSingleExecutionInfo
 ///
-///   let lockmanInfo: I
-///   let strategyId = LockmanStrategyId.singleExecution
+///   let lockmanInfo = LockmanSingleExecutionInfo(
+///     actionId: "myAction",
+///     mode: .boundary
+///   )
 /// }
 /// ```
 ///
@@ -23,10 +25,12 @@
 /// struct ConfiguredAction: LockmanAction {
 ///   typealias I = CustomLockInfo
 ///
-///   let lockmanInfo: I
-///   let strategyId = LockmanStrategyId(
-///     name: "RateLimitStrategy",
-///     configuration: "limit-100"
+///   let lockmanInfo = CustomLockInfo(
+///     strategyId: LockmanStrategyId(
+///       name: "RateLimitStrategy",
+///       configuration: "limit-100"
+///     ),
+///     actionId: "apiCall"
 ///   )
 /// }
 /// ```
@@ -37,17 +41,6 @@ public protocol LockmanAction: Sendable {
 
   /// The lock information that defines how this action should be locked or unlocked.
   /// This instance contains all the necessary data for the strategy to make
-  /// locking decisions (e.g., action ID, priority, etc.).
+  /// locking decisions (e.g., action ID, priority, strategy ID, etc.).
   var lockmanInfo: I { get }
-
-  /// The identifier for the strategy to use for lock operations.
-  /// This will be used to resolve the appropriate strategy from the container.
-  ///
-  /// Example:
-  /// ```swift
-  /// var strategyId: LockmanStrategyId {
-  ///   return .singleExecution
-  /// }
-  /// ```
-  var strategyId: LockmanStrategyId { get }
 }

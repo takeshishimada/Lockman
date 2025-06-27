@@ -9,6 +9,7 @@ import XCTest
 private struct MockLockmanInfo: LockmanInfo, Equatable {
   let actionId: String
   let uniqueId: UUID = .init()
+  var strategyId: LockmanStrategyId { LockmanStrategyId(type: MockLockmanStrategy.self) }
 
   var description: String {
     "MockLockmanInfo(id: \(actionId))"
@@ -97,6 +98,7 @@ private class MockLockmanStrategy: LockmanStrategy, @unchecked Sendable {
 private struct AnotherMockLockmanInfo: LockmanInfo {
   let actionId: LockmanActionId
   let uniqueId: UUID = .init()
+  var strategyId: LockmanStrategyId { LockmanStrategyId(type: AnotherMockLockmanStrategy.self) }
 
   var description: String {
     "AnotherMockLockmanInfo(actionId: \(actionId))"

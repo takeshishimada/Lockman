@@ -12,14 +12,14 @@ enum ProcessError: Error, Equatable {
 
 struct SampleProcessUseCase {
   private var executionCount = 0
-  
+
   mutating func execute() async throws {
     // Wait for 5 seconds
     try await Task.sleep(nanoseconds: 5_000_000_000)
-    
+
     // Increment execution count
     executionCount += 1
-    
+
     // Odd number = success, even number = failure
     if executionCount % 2 == 0 {
       throw ProcessError.processFailed
@@ -35,23 +35,23 @@ struct SingleExecutionStrategyFeature {
     var message: String = ""
     var messageType: MessageType = .none
     var previousMessage: String = ""
-    
+
     enum MessageType: Equatable {
       case none
       case error
       case success
     }
   }
-  
+
   @Dependency(\.sampleProcessUseCase) var useCase
-  
+
   @LockmanSingleExecution
   enum Action {
     case startProcessButtonTapped
     case processStart
     case processCompleted
     case handleError(Error)
-    
+
     var lockmanInfo: LockmanSingleExecutionInfo {
       switch self {
       case .startProcessButtonTapped:
@@ -61,11 +61,11 @@ struct SingleExecutionStrategyFeature {
       }
     }
   }
-  
+
   enum CancelID {
     case process
   }
-  
+
   var body: some Reducer<State, Action> {
     Reduce { state, action in
       switch action {
@@ -85,22 +85,22 @@ struct SingleExecutionStrategyFeature {
           action: action,
           cancelID: CancelID.process
         )
-        
+
       case .processStart:
         state.isProcessing = true
         state.message = ""
         state.messageType = .none
         return .none
-        
+
       case .processCompleted:
         state.isProcessing = false
         state.message = "Process completed successfully"
         state.messageType = .success
         return .none
-        
+
       case .handleError(let error):
         state.messageType = .error
-        
+
         if error is LockmanSingleExecutionError {
           state.previousMessage = state.message
           state.message = "Process is already running"
@@ -112,7 +112,7 @@ struct SingleExecutionStrategyFeature {
             state.message = "Unknown error occurred"
           }
         }
-        
+
         return .none
       }
     }
@@ -121,7 +121,7 @@ struct SingleExecutionStrategyFeature {
 
 struct SingleExecutionStrategyView: View {
   @Bindable var store: StoreOf<SingleExecutionStrategyFeature>
-  
+
   var body: some View {
     VStack(spacing: 30) {
       // Overview
@@ -129,7 +129,7 @@ struct SingleExecutionStrategyView: View {
         Text("SingleExecutionStrategy")
           .font(.title2)
           .fontWeight(.bold)
-        
+
         Text(
           "Example of exclusive control using @LockmanSingleExecution.\nDuplicate executions are blocked while processing."
         )
@@ -140,9 +140,9 @@ struct SingleExecutionStrategyView: View {
       .padding()
       .background(Color.gray.opacity(0.1))
       .cornerRadius(10)
-      
+
       Spacer()
-      
+
       // Main content
       VStack(spacing: 20) {
         // Process execution button
@@ -185,7 +185,7 @@ struct SingleExecutionStrategyView: View {
           .scaleEffect(store.isProcessing ? 0.98 : 1.0)
           .animation(.easeInOut(duration: 0.1), value: store.isProcessing)
         }
-        
+
         // Message label
         Text(store.message)
           .font(.body)
@@ -194,15 +194,16 @@ struct SingleExecutionStrategyView: View {
           .frame(height: 20)
           .opacity(store.message.isEmpty ? 0 : 1)
           .animation(
-            store.message == "Process is already running" && store.previousMessage == "Process is already running" 
-            ? .none 
-            : .easeInOut(duration: 0.3), 
+            store.message == "Process is already running"
+              && store.previousMessage == "Process is already running"
+              ? .none
+              : .easeInOut(duration: 0.3),
             value: store.message
           )
       }
-      
+
       Spacer()
-      
+
       // Debug Button
       Button(action: {
         print("\n📊 Current Lock State (SingleExecutionStrategy):")
@@ -221,7 +222,7 @@ struct SingleExecutionStrategyView: View {
     .padding()
     .navigationTitle("Single Execution")
   }
-  
+
   private func messageColor(for type: SingleExecutionStrategyFeature.State.MessageType) -> Color {
     switch type {
     case .none:
@@ -239,7 +240,7 @@ struct SingleExecutionStrategyView: View {
 // Wrap the use case in a class to maintain state
 final class SampleProcessUseCaseWrapper {
   private var useCase = SampleProcessUseCase()
-  
+
   func execute() async throws {
     try await useCase.execute()
   }

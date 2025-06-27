@@ -14,12 +14,6 @@
 ///
 ///   let actionName = "myCompositeAction"
 ///
-///   var strategyId: LockmanStrategyId {
-///     LockmanStrategyId(
-///       name: "ActionComposite"
-///     )
-///   }
-///
 ///   var lockmanInfo: LockmanCompositeInfo2<I1, I2> {
 ///     LockmanCompositeInfo2(
 ///       actionId: actionName,
@@ -41,10 +35,6 @@ public protocol LockmanCompositeAction2: LockmanAction {
 
   /// The second strategy type used in the composite strategy.
   associatedtype S2: LockmanStrategy where S2.I == I2
-
-  /// The composite strategy identifier.
-  /// Composite strategies use their own unique identifiers.
-  var strategyId: LockmanStrategyId { get }
 
   /// Composite lock information containing details for both strategies.
   /// This includes action identifiers and strategy-specific information.
@@ -73,10 +63,6 @@ public protocol LockmanCompositeAction3: LockmanAction {
 
   /// The third strategy type used in the composite strategy.
   associatedtype S3: LockmanStrategy where S3.I == I3
-
-  /// The composite strategy identifier.
-  /// Composite strategies use their own unique identifiers.
-  var strategyId: LockmanStrategyId { get }
 
   /// Composite lock information containing details for all three strategies.
   /// This includes action identifiers and strategy-specific information.
@@ -111,10 +97,6 @@ public protocol LockmanCompositeAction4: LockmanAction {
 
   /// The fourth strategy type used in the composite strategy.
   associatedtype S4: LockmanStrategy where S4.I == I4
-
-  /// The composite strategy identifier.
-  /// Composite strategies use their own unique identifiers.
-  var strategyId: LockmanStrategyId { get }
 
   /// Composite lock information containing details for all four strategies.
   /// This includes action identifiers and strategy-specific information.
@@ -155,10 +137,6 @@ public protocol LockmanCompositeAction5: LockmanAction {
 
   /// The fifth strategy type used in the composite strategy.
   associatedtype S5: LockmanStrategy where S5.I == I5
-
-  /// The composite strategy identifier.
-  /// Composite strategies use their own unique identifiers.
-  var strategyId: LockmanStrategyId { get }
 
   /// Composite lock information containing details for all five strategies.
   /// This includes action identifiers and strategy-specific information.

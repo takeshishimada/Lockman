@@ -37,11 +37,7 @@ where I == LockmanPriorityBasedInfo {
 // MARK: - Default Implementation
 
 extension LockmanPriorityBasedAction {
-  /// The strategy ID for priority-based locking.
-  /// Uses the built-in priority-based strategy identifier.
-  public var strategyId: LockmanStrategyId {
-    .priorityBased
-  }
+  // Strategy ID is now provided by lockmanInfo
 }
 
 // MARK: - Priority Helper Methods

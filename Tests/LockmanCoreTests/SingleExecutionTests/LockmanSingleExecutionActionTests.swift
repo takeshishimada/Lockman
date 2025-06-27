@@ -68,8 +68,8 @@ final class LockmanSingleExecutionActionTests: XCTestCase {
     // Test actionName
     XCTAssertEqual(action.actionName, "simpleAction")
 
-    // Test automatic strategyId
-    XCTAssertEqual(action.strategyId, .singleExecution)
+    // Test automatic strategyId (accessed through lockmanInfo)
+    XCTAssertEqual(action.lockmanInfo.strategyId, .singleExecution)
 
     // Test automatic lockmanInfo
     let info = action.lockmanInfo
@@ -89,11 +89,11 @@ final class LockmanSingleExecutionActionTests: XCTestCase {
     XCTAssertEqual(action3.actionName, "updateProfile_123")
     XCTAssertEqual(action4.actionName, "deletePost_789")
 
-    // All should use the same strategy ID
-    XCTAssertEqual(action1.strategyId, .singleExecution)
-    XCTAssertEqual(action2.strategyId, .singleExecution)
-    XCTAssertEqual(action3.strategyId, .singleExecution)
-    XCTAssertEqual(action4.strategyId, .singleExecution)
+    // All should use the same strategy ID (accessed through lockmanInfo)
+    XCTAssertEqual(action1.lockmanInfo.strategyId, .singleExecution)
+    XCTAssertEqual(action2.lockmanInfo.strategyId, .singleExecution)
+    XCTAssertEqual(action3.lockmanInfo.strategyId, .singleExecution)
+    XCTAssertEqual(action4.lockmanInfo.strategyId, .singleExecution)
 
     // LockmanInfo should reflect the actionName
     XCTAssertEqual(action1.lockmanInfo.actionId, "fetchUser_123")
@@ -145,7 +145,7 @@ final class LockmanSingleExecutionActionTests: XCTestCase {
       // Resolve strategy for the action
       do {
         let strategy: AnyLockmanStrategy<LockmanSingleExecutionInfo> = try container.resolve(
-          id: action.strategyId,
+          id: action.lockmanInfo.strategyId,
           expecting: LockmanSingleExecutionInfo.self
         )
 
@@ -201,7 +201,7 @@ final class LockmanSingleExecutionActionTests: XCTestCase {
     let action = EmptyNameAction()
     XCTAssertEqual(action.actionName, "")
     XCTAssertEqual(action.lockmanInfo.actionId, "")
-    XCTAssertEqual(action.strategyId, .singleExecution)
+    XCTAssertEqual(action.lockmanInfo.strategyId, .singleExecution)
   }
 
   func testunicodeActionNameHandling() {

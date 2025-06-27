@@ -9,7 +9,8 @@ final class LockmanErrorCoverageTests: XCTestCase {
 
   func testSingleExecutionErrorFailureReason() {
     let existingInfo = LockmanSingleExecutionInfo(actionId: "existing-action", mode: .boundary)
-    let error1 = LockmanSingleExecutionError.boundaryAlreadyLocked(boundaryId: "test-boundary", existingInfo: existingInfo)
+    let error1 = LockmanSingleExecutionError.boundaryAlreadyLocked(
+      boundaryId: "test-boundary", existingInfo: existingInfo)
     XCTAssertNotNil(error1.failureReason)
     XCTAssertTrue(error1.failureReason!.contains("boundary"))
 
@@ -33,7 +34,8 @@ final class LockmanErrorCoverageTests: XCTestCase {
     XCTAssertNotNil(error2.failureReason)
     XCTAssertTrue(error2.failureReason!.contains("priority"))
 
-    let existingInfo3 = LockmanPriorityBasedInfo(actionId: "test-action", priority: .high(.exclusive))
+    let existingInfo3 = LockmanPriorityBasedInfo(
+      actionId: "test-action", priority: .high(.exclusive))
     let error3 = LockmanPriorityBasedError.blockedBySameAction(existingInfo: existingInfo3)
     XCTAssertNotNil(error3.failureReason)
     XCTAssertTrue(error3.failureReason!.contains("action"))
@@ -75,7 +77,8 @@ final class LockmanErrorCoverageTests: XCTestCase {
     let existingInfo3 = LockmanGroupCoordinatedInfo(
       actionId: "action1", groupId: "group1", coordinationRole: .member)
     let error3 = LockmanGroupCoordinationError.actionAlreadyInGroup(
-      existingInfo: existingInfo3, groupIds: [AnyLockmanGroupId("group1"), AnyLockmanGroupId("group2")])
+      existingInfo: existingInfo3,
+      groupIds: [AnyLockmanGroupId("group1"), AnyLockmanGroupId("group2")])
     XCTAssertNotNil(error3.errorDescription)
     XCTAssertTrue(error3.errorDescription!.contains("action1"))
     XCTAssertNotNil(error3.failureReason)
@@ -88,7 +91,8 @@ final class LockmanErrorCoverageTests: XCTestCase {
     let specialId = "test-<>&\"'123"
 
     let existingInfo1 = LockmanSingleExecutionInfo(actionId: "existing", mode: .boundary)
-    let error1 = LockmanSingleExecutionError.boundaryAlreadyLocked(boundaryId: specialId, existingInfo: existingInfo1)
+    let error1 = LockmanSingleExecutionError.boundaryAlreadyLocked(
+      boundaryId: specialId, existingInfo: existingInfo1)
     XCTAssertNotNil(error1.errorDescription)
     XCTAssertTrue(error1.errorDescription!.contains(specialId))
 

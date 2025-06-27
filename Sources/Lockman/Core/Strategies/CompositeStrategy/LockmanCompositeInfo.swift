@@ -23,6 +23,9 @@ import Foundation
 public struct LockmanCompositeInfo2<I1: LockmanInfo, I2: LockmanInfo>: LockmanInfo, Sendable {
   // MARK: - LockmanInfo Protocol Properties
 
+  /// The strategy identifier for this composite lock info.
+  public let strategyId: LockmanStrategyId
+
   /// The action identifier for this composite action.
   ///
   /// This identifier represents the overall composite operation and should typically
@@ -63,10 +66,12 @@ public struct LockmanCompositeInfo2<I1: LockmanInfo, I2: LockmanInfo>: LockmanIn
   /// The `uniqueId` is automatically generated to ensure each instance has
   /// a distinct identity, even when multiple instances share the same `actionId`.
   public init(
+    strategyId: LockmanStrategyId = .init("Lockman.CompositeStrategy2"),
     actionId: LockmanActionId,
     lockmanInfoForStrategy1: I1,
     lockmanInfoForStrategy2: I2
   ) {
+    self.strategyId = strategyId
     self.actionId = actionId
     self.uniqueId = UUID()
     self.lockmanInfoForStrategy1 = lockmanInfoForStrategy1
@@ -78,9 +83,9 @@ public struct LockmanCompositeInfo2<I1: LockmanInfo, I2: LockmanInfo>: LockmanIn
 
 extension LockmanCompositeInfo2: CustomDebugStringConvertible {
   public var debugDescription: String {
-    "LockmanCompositeInfo2(actionId: '\(actionId)', uniqueId: \(uniqueId), info1: \(lockmanInfoForStrategy1.debugDescription), info2: \(lockmanInfoForStrategy2.debugDescription))"
+    "LockmanCompositeInfo2(strategyId: '\(strategyId)', actionId: '\(actionId)', uniqueId: \(uniqueId), info1: \(lockmanInfoForStrategy1.debugDescription), info2: \(lockmanInfoForStrategy2.debugDescription))"
   }
-  
+
   public var debugAdditionalInfo: String {
     "Composite"
   }
@@ -97,6 +102,9 @@ public struct LockmanCompositeInfo3<I1: LockmanInfo, I2: LockmanInfo, I3: Lockma
   Sendable
 {
   // MARK: - LockmanInfo Protocol Properties
+
+  /// The strategy identifier for this composite lock info.
+  public let strategyId: LockmanStrategyId
 
   /// The action identifier for this composite action.
   public let actionId: LockmanActionId
@@ -125,11 +133,13 @@ public struct LockmanCompositeInfo3<I1: LockmanInfo, I2: LockmanInfo, I3: Lockma
   ///   - lockmanInfoForStrategy2: Lock information for the second strategy
   ///   - lockmanInfoForStrategy3: Lock information for the third strategy
   public init(
+    strategyId: LockmanStrategyId = .init("Lockman.CompositeStrategy3"),
     actionId: LockmanActionId,
     lockmanInfoForStrategy1: I1,
     lockmanInfoForStrategy2: I2,
     lockmanInfoForStrategy3: I3
   ) {
+    self.strategyId = strategyId
     self.actionId = actionId
     self.uniqueId = UUID()
     self.lockmanInfoForStrategy1 = lockmanInfoForStrategy1
@@ -142,9 +152,9 @@ public struct LockmanCompositeInfo3<I1: LockmanInfo, I2: LockmanInfo, I3: Lockma
 
 extension LockmanCompositeInfo3: CustomDebugStringConvertible {
   public var debugDescription: String {
-    "LockmanCompositeInfo3(actionId: '\(actionId)', uniqueId: \(uniqueId), info1: \(lockmanInfoForStrategy1.debugDescription), info2: \(lockmanInfoForStrategy2.debugDescription), info3: \(lockmanInfoForStrategy3.debugDescription))"
+    "LockmanCompositeInfo3(strategyId: '\(strategyId)', actionId: '\(actionId)', uniqueId: \(uniqueId), info1: \(lockmanInfoForStrategy1.debugDescription), info2: \(lockmanInfoForStrategy2.debugDescription), info3: \(lockmanInfoForStrategy3.debugDescription))"
   }
-  
+
   public var debugAdditionalInfo: String {
     "Composite"
   }
@@ -161,6 +171,9 @@ public struct LockmanCompositeInfo4<
   I1: LockmanInfo, I2: LockmanInfo, I3: LockmanInfo, I4: LockmanInfo
 >: LockmanInfo, Sendable {
   // MARK: - LockmanInfo Protocol Properties
+
+  /// The strategy identifier for this composite lock info.
+  public let strategyId: LockmanStrategyId
 
   /// The action identifier for this composite action.
   public let actionId: LockmanActionId
@@ -193,12 +206,14 @@ public struct LockmanCompositeInfo4<
   ///   - lockmanInfoForStrategy3: Lock information for the third strategy
   ///   - lockmanInfoForStrategy4: Lock information for the fourth strategy
   public init(
+    strategyId: LockmanStrategyId = .init("Lockman.CompositeStrategy4"),
     actionId: LockmanActionId,
     lockmanInfoForStrategy1: I1,
     lockmanInfoForStrategy2: I2,
     lockmanInfoForStrategy3: I3,
     lockmanInfoForStrategy4: I4
   ) {
+    self.strategyId = strategyId
     self.actionId = actionId
     self.uniqueId = UUID()
     self.lockmanInfoForStrategy1 = lockmanInfoForStrategy1
@@ -212,9 +227,9 @@ public struct LockmanCompositeInfo4<
 
 extension LockmanCompositeInfo4: CustomDebugStringConvertible {
   public var debugDescription: String {
-    "LockmanCompositeInfo4(actionId: '\(actionId)', uniqueId: \(uniqueId), info1: \(lockmanInfoForStrategy1.debugDescription), info2: \(lockmanInfoForStrategy2.debugDescription), info3: \(lockmanInfoForStrategy3.debugDescription), info4: \(lockmanInfoForStrategy4.debugDescription))"
+    "LockmanCompositeInfo4(strategyId: '\(strategyId)', actionId: '\(actionId)', uniqueId: \(uniqueId), info1: \(lockmanInfoForStrategy1.debugDescription), info2: \(lockmanInfoForStrategy2.debugDescription), info3: \(lockmanInfoForStrategy3.debugDescription), info4: \(lockmanInfoForStrategy4.debugDescription))"
   }
-  
+
   public var debugAdditionalInfo: String {
     "Composite"
   }
@@ -231,6 +246,9 @@ public struct LockmanCompositeInfo5<
   I1: LockmanInfo, I2: LockmanInfo, I3: LockmanInfo, I4: LockmanInfo, I5: LockmanInfo
 >: LockmanInfo, Sendable {
   // MARK: - LockmanInfo Protocol Properties
+
+  /// The strategy identifier for this composite lock info.
+  public let strategyId: LockmanStrategyId
 
   /// The action identifier for this composite action.
   public let actionId: LockmanActionId
@@ -267,6 +285,7 @@ public struct LockmanCompositeInfo5<
   ///   - lockmanInfoForStrategy4: Lock information for the fourth strategy
   ///   - lockmanInfoForStrategy5: Lock information for the fifth strategy
   public init(
+    strategyId: LockmanStrategyId = .init("Lockman.CompositeStrategy5"),
     actionId: LockmanActionId,
     lockmanInfoForStrategy1: I1,
     lockmanInfoForStrategy2: I2,
@@ -274,6 +293,7 @@ public struct LockmanCompositeInfo5<
     lockmanInfoForStrategy4: I4,
     lockmanInfoForStrategy5: I5
   ) {
+    self.strategyId = strategyId
     self.actionId = actionId
     self.uniqueId = UUID()
     self.lockmanInfoForStrategy1 = lockmanInfoForStrategy1
@@ -288,9 +308,9 @@ public struct LockmanCompositeInfo5<
 
 extension LockmanCompositeInfo5: CustomDebugStringConvertible {
   public var debugDescription: String {
-    "LockmanCompositeInfo5(actionId: '\(actionId)', uniqueId: \(uniqueId), info1: \(lockmanInfoForStrategy1.debugDescription), info2: \(lockmanInfoForStrategy2.debugDescription), info3: \(lockmanInfoForStrategy3.debugDescription), info4: \(lockmanInfoForStrategy4.debugDescription), info5: \(lockmanInfoForStrategy5.debugDescription))"
+    "LockmanCompositeInfo5(strategyId: '\(strategyId)', actionId: '\(actionId)', uniqueId: \(uniqueId), info1: \(lockmanInfoForStrategy1.debugDescription), info2: \(lockmanInfoForStrategy2.debugDescription), info3: \(lockmanInfoForStrategy3.debugDescription), info4: \(lockmanInfoForStrategy4.debugDescription), info5: \(lockmanInfoForStrategy5.debugDescription))"
   }
-  
+
   public var debugAdditionalInfo: String {
     "Composite"
   }

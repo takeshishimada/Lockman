@@ -29,6 +29,7 @@ extension AnyLockmanStrategy {
 private struct MockLockmanInfo: LockmanInfo {
   let actionId: String
   let uniqueId: UUID = .init()
+  var strategyId: LockmanStrategyId { LockmanStrategyId(type: MockLockmanStrategy.self) }
 
   var debugDescription: String {
     "MockLockmanInfo(actionId: \(actionId))"

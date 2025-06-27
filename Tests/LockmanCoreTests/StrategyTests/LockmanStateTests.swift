@@ -36,6 +36,7 @@ private struct TestLockmanInfo: LockmanInfo, Equatable {
   let actionId: String
   let uniqueId: UUID = .init()
   let timestamp: Date
+  var strategyId: LockmanStrategyId { LockmanStrategyId("TestStrategy") }
 
   init(id: String, timestamp: Date = Date()) {
     self.actionId = id

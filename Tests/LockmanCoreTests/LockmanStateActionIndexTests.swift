@@ -14,6 +14,7 @@ final class LockmanStateActionIndexTests: XCTestCase {
   private struct TestInfo: LockmanInfo {
     let actionId: LockmanActionId
     let uniqueId: UUID
+    var strategyId: LockmanStrategyId { LockmanStrategyId(type: MockLockmanStrategy.self) }
 
     init(actionId: LockmanActionId) {
       self.actionId = actionId
@@ -23,6 +24,21 @@ final class LockmanStateActionIndexTests: XCTestCase {
     var debugDescription: String {
       "TestInfo(actionId: \(actionId))"
     }
+  }
+
+  // Mock strategy type for the TestInfo
+  private final class MockLockmanStrategy: LockmanStrategy {
+    typealias I = TestInfo
+
+    var strategyId: LockmanStrategyId { LockmanStrategyId(type: Self.self) }
+    static func makeStrategyId() -> LockmanStrategyId { LockmanStrategyId(type: self) }
+
+    func canLock<B: LockmanBoundaryId>(id: B, info: TestInfo) -> LockmanResult { .success }
+    func lock<B: LockmanBoundaryId>(id: B, info: TestInfo) {}
+    func unlock<B: LockmanBoundaryId>(id: B, info: TestInfo) {}
+    func cleanUp() {}
+    func cleanUp<B: LockmanBoundaryId>(id: B) {}
+    func getCurrentLocks() -> [AnyLockmanBoundaryId: [any LockmanInfo]] { [:] }
   }
 
   // MARK: - Basic Functionality Tests

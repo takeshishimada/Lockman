@@ -52,12 +52,7 @@ where I == LockmanSingleExecutionInfo {
 // MARK: - Automatic Implementation
 
 extension LockmanSingleExecutionAction {
-  /// The strategy ID for single-execution locking.
-  /// Uses the built-in single execution strategy identifier.
-  public var strategyId: LockmanStrategyId {
-    .singleExecution
-  }
-
   // Note: lockmanInfo must be implemented by the conforming type
   // to specify the execution mode (.none, .boundary, or .action)
+  // The strategyId is now provided by the lockmanInfo itself
 }

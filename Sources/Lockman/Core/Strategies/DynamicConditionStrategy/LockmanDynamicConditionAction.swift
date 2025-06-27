@@ -57,10 +57,7 @@ extension LockmanDynamicConditionAction {
 
   // MARK: - LockmanAction
 
-  /// The strategy identifier for dynamic condition strategy.
-  public var strategyId: LockmanStrategyId {
-    .dynamicCondition
-  }
+  // Strategy ID is now provided by lockmanInfo
 
   /// Provides default lock info with always-success condition.
   public var lockmanInfo: LockmanDynamicConditionInfo {

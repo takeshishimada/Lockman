@@ -87,7 +87,7 @@ final class EffectWithLockPrecedingCancellationTests: XCTestCase {
     case lowReplaceable
     case highExclusive
     case highReplaceable
-    
+
     var actionName: String {
       switch self {
       case .lowPriority: return "lowPriority"
@@ -96,7 +96,7 @@ final class EffectWithLockPrecedingCancellationTests: XCTestCase {
       case .highReplaceable: return "highReplaceable"
       }
     }
-    
+
     var lockmanInfo: LockmanPriorityBasedInfo {
       switch self {
       case .lowPriority:
@@ -110,7 +110,7 @@ final class EffectWithLockPrecedingCancellationTests: XCTestCase {
       }
     }
   }
-  
+
   // Test feature for priority-based cancellation
   @Reducer
   struct TestPriorityFeature {

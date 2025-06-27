@@ -41,6 +41,9 @@ import Foundation
 public struct LockmanPriorityBasedInfo: LockmanInfo, Sendable, Equatable {
   // MARK: - LockmanInfo Protocol Properties
 
+  /// The strategy identifier for this lock info.
+  public let strategyId: LockmanStrategyId
+
   /// The action identifier used for lock conflict detection.
   ///
   /// This identifier, combined with the priority level, determines how this
@@ -111,10 +114,12 @@ public struct LockmanPriorityBasedInfo: LockmanInfo, Sendable, Equatable {
   /// a distinct identity, even when multiple instances share the same
   /// `actionId` and `priority`.
   public init(
+    strategyId: LockmanStrategyId = .priorityBased,
     actionId: LockmanActionId,
     priority: Priority,
     blocksSameAction: Bool = true
   ) {
+    self.strategyId = strategyId
     self.actionId = actionId
     self.uniqueId = UUID()
     self.priority = priority
@@ -151,11 +156,11 @@ public struct LockmanPriorityBasedInfo: LockmanInfo, Sendable, Equatable {
     }
 
     return
-      "LockmanPriorityBasedInfo(actionId: '\(actionId)', uniqueId: \(uniqueId), priority: \(priorityStr), blocksSameAction: \(blocksSameAction))"
+      "LockmanPriorityBasedInfo(strategyId: '\(strategyId)', actionId: '\(actionId)', uniqueId: \(uniqueId), priority: \(priorityStr), blocksSameAction: \(blocksSameAction))"
   }
-  
+
   // MARK: - Debug Additional Info
-  
+
   public var debugAdditionalInfo: String {
     var result = "priority: \(priority)"
     if let behavior = priority.behavior {

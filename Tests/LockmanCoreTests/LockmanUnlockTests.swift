@@ -24,6 +24,7 @@ private struct TestBoundaryId: LockmanBoundaryId {
 private struct TestLockmanInfo: LockmanInfo, Sendable, Equatable {
   let actionId: String
   let uniqueId: UUID = .init()
+  var strategyId: LockmanStrategyId { LockmanStrategyId(type: MockLockmanStrategy.self) }
   var description: String { "ActionId: \(actionId)" }
 
   var debugDescription: String {

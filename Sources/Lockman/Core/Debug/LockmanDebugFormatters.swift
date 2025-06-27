@@ -277,7 +277,7 @@ extension LockmanManager.debug {
         // Print sub-strategies info
         let subInfos = compositeInfo.allInfos()
         for (_, subInfo) in subInfos.enumerated() {
-          let subStrategy = formatStrategyName(getStrategyName(for: subInfo), options: options)
+          let subStrategy = formatStrategyName(subInfo.strategyId.value, options: options)
           let subActionId = subInfo.actionId
           let subUniqueId = subInfo.uniqueId.uuidString
           let subAdditionalInfo = extractAdditionalInfo(from: subInfo)
@@ -326,23 +326,5 @@ extension LockmanManager.debug {
   private static func extractAdditionalInfo(from info: any LockmanInfo) -> String {
     // Use the debugAdditionalInfo property defined by each info type
     return info.debugAdditionalInfo
-  }
-
-  /// Gets the strategy name for a given lock info type.
-  private static func getStrategyName(for info: any LockmanInfo) -> String {
-    switch info {
-    case is LockmanSingleExecutionInfo:
-      return "SingleExecution"
-    case is LockmanPriorityBasedInfo:
-      return "PriorityBased"
-    case is LockmanDynamicConditionInfo:
-      return "DynamicCondition"
-    case is LockmanGroupCoordinatedInfo:
-      return "GroupCoordination"
-    case is LockmanConcurrencyLimitedInfo:
-      return "ConcurrencyLimited"
-    default:
-      return "Unknown"
-    }
   }
 }
