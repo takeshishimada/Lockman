@@ -1,5 +1,6 @@
 import Foundation
 import XCTest
+import ConcurrencyExtras
 
 @testable import Lockman
 
@@ -386,9 +387,11 @@ final class LockmanStateGenericTests: XCTestCase {
   // MARK: - Edge Cases
   
   func testKeyExtractorConsistency() {
-    var extractorCallCount = 0
+    let extractorCallCount = ManagedCriticalState(0)
     let state = LockmanState<TestInfo, String>(keyExtractor: { info in
-      extractorCallCount += 1
+      extractorCallCount.withCriticalRegion { count in
+        count += 1
+      }
       return info.category
     })
     
@@ -396,14 +399,14 @@ final class LockmanStateGenericTests: XCTestCase {
     let info = TestInfo(actionId: "a1", category: "network")
     
     // Add should call extractor once
-    let initialCount = extractorCallCount
+    let initialCount = extractorCallCount.withCriticalRegion { $0 }
     state.add(id: boundaryId, info: info)
-    XCTAssertEqual(extractorCallCount, initialCount + 1)
+    XCTAssertEqual(extractorCallCount.withCriticalRegion { $0 }, initialCount + 1)
     
     // Remove should call extractor once
-    let countBeforeRemove = extractorCallCount
+    let countBeforeRemove = extractorCallCount.withCriticalRegion { $0 }
     state.remove(id: boundaryId, info: info)
-    XCTAssertEqual(extractorCallCount, countBeforeRemove + 1)
+    XCTAssertEqual(extractorCallCount.withCriticalRegion { $0 }, countBeforeRemove + 1)
   }
   
   func testOrderPreservationWithCustomKeys() {
