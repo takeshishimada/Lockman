@@ -16,16 +16,16 @@ public enum LockmanManager {
     /// This value is used by all `withLock` and `concatenateWithLock` methods
     /// when the `unlockOption` parameter is not provided.
     ///
-    /// Default value is `.transition` to ensure safe coordination with UI transitions.
-    var defaultUnlockOption: LockmanUnlockOption = .transition
+    /// Default value is `.immediate` for immediate unlock behavior.
+    var defaultUnlockOption: LockmanUnlockOption = .immediate
 
     /// Controls whether CancellationError should be passed to error handlers in withLock operations.
     ///
-    /// When `true` (default), CancellationError is passed to the catch handler if provided.
+    /// When `true`, CancellationError is passed to the catch handler if provided.
     /// When `false`, CancellationError is silently ignored and not passed to handlers.
     ///
-    /// Default value is `true` to maintain backward compatibility.
-    var handleCancellationErrors: Bool = true
+    /// Default value is `false` to silently ignore cancellation errors.
+    var handleCancellationErrors: Bool = false
 
     /// Creates a new configuration with default values.
     init() {}
@@ -43,7 +43,7 @@ public enum LockmanManager {
     /// This value is used by all `withLock` and `concatenateWithLock` methods
     /// when the `unlockOption` parameter is not provided.
     ///
-    /// Default value is `.transition` to ensure safe coordination with UI transitions.
+    /// Default value is `.immediate` for immediate unlock behavior.
     ///
     /// ```swift
     /// // In AppDelegate or App initialization
@@ -59,7 +59,7 @@ public enum LockmanManager {
 
     /// Controls whether CancellationError should be passed to error handlers in withLock operations.
     ///
-    /// When `true` (default), CancellationError is passed to the catch handler if provided.
+    /// When `true`, CancellationError is passed to the catch handler if provided.
     /// When `false`, CancellationError is silently ignored and not passed to handlers.
     ///
     /// ```swift

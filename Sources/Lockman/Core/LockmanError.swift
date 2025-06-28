@@ -13,7 +13,7 @@ import Foundation
 /// - `LockmanPriorityBasedError`: Errors from priority-based strategy
 /// - `LockmanGroupCoordinationError`: Errors from group coordination strategy
 /// - `LockmanRegistrationError`: Errors from strategy registration and resolution
-/// 
+///
 /// For dynamic condition strategy, users define their own error types.
 ///
 /// ## Usage

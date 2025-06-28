@@ -137,4 +137,3 @@ final class LockmanConcurrencyLimitedErrorTests: XCTestCase {
     XCTAssertNotNil(error.failureReason)
   }
 }
-
