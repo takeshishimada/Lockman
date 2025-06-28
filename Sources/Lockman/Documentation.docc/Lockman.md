@@ -19,6 +19,7 @@ Lockman provides a comprehensive solution for managing exclusive control over us
 - <doc:Unlock>
 - <doc:ChoosingStrategy>
 - <doc:Configuration>
+- <doc:DebuggingGuide>
 
 ### Strategies
 - <doc:SingleExecutionStrategy>
@@ -27,7 +28,3 @@ Lockman provides a comprehensive solution for managing exclusive control over us
 - <doc:GroupCoordinationStrategy>
 - <doc:DynamicConditionStrategy>
 - <doc:CompositeStrategy>
-
-### Advanced
-- <doc:CustomStrategyImplementation>
-- <doc:DebuggingGuide>
