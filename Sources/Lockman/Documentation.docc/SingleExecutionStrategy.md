@@ -4,6 +4,181 @@ Prevent duplicate execution of the same action.
 
 ## Overview
 
-## Specification
+SingleExecutionStrategyは、重複実行を防止するための戦略です。同じ処理が重複して実行されることを防ぎ、データの整合性とアプリケーションの安定性を保ちます。
 
-## Basic Usage
+この戦略は、ユーザーの連続的な操作や自動処理の重複実行を防ぐために最も頻繁に使用される基本的な戦略です。
+
+## 実行モード
+
+SingleExecutionStrategyは3つの実行モードをサポートしています：
+
+### none - 制御なし
+
+```swift
+LockmanSingleExecutionInfo(
+    actionId: "save",
+    mode: .none
+)
+```
+
+- 排他制御を行わず、全ての処理を同時実行
+- 一時的にロック機能を無効化したい場合に使用
+- デバッグやテスト時の動作確認に適用
+
+### boundary - 境界単位の排他制御
+
+```swift
+LockmanSingleExecutionInfo(
+    actionId: "save", 
+    mode: .boundary
+)
+```
+
+- 同一境界内で1つの処理のみ実行可能
+- 画面やコンポーネント単位での排他制御
+- UIの操作全体を制御したい場合に適用
+
+### action - アクション単位の排他制御
+
+```swift
+LockmanSingleExecutionInfo(
+    actionId: "save",
+    mode: .action  
+)
+```
+
+- 同一アクションの重複実行のみ防止
+- 異なるアクションは同時実行可能
+- 特定の処理のみを制御したい場合に適用
+
+## 使用方法
+
+### 基本的な使用例
+
+```swift
+@LockmanSingleExecution
+enum Action {
+    case save
+    case load
+    
+    var lockmanInfo: LockmanSingleExecutionInfo {
+        switch self {
+        case .save:
+            return LockmanSingleExecutionInfo(
+                actionId: actionName,
+                mode: .action
+            )
+        case .load:
+            return LockmanSingleExecutionInfo(
+                actionId: actionName,
+                mode: .action
+            )
+        }
+    }
+}
+```
+
+### Effect内での使用
+
+```swift
+case .saveButtonTapped:
+    return .withLock(
+        operation: { send in
+            try await saveUserData()
+            send(.saveCompleted)
+        },
+        catch: { error, send in
+            send(.saveError(error.localizedDescription))
+        },
+        lockFailure: { error, send in
+            send(.saveBusy("保存処理が実行中です"))
+        },
+        action: .save,
+        cancelID: CancelID.userAction
+    )
+```
+
+## 動作例
+
+### action モードの場合
+
+```
+時刻: 0秒  - saveアクション開始 → ✅ 実行
+時刻: 1秒  - saveアクション要求 → ❌ 拒否（同じアクション実行中）
+時刻: 1秒  - loadアクション要求 → ✅ 実行（異なるアクション）
+時刻: 3秒  - saveアクション完了 → 🔓 ロック解除
+時刻: 4秒  - saveアクション要求 → ✅ 実行（前回処理完了済み）
+```
+
+### boundary モードの場合
+
+```
+時刻: 0秒  - saveアクション開始 → ✅ 実行
+時刻: 1秒  - saveアクション要求 → ❌ 拒否（境界内で実行中）
+時刻: 1秒  - loadアクション要求 → ❌ 拒否（境界内で実行中）
+時刻: 3秒  - saveアクション完了 → 🔓 ロック解除
+時刻: 4秒  - loadアクション要求 → ✅ 実行（境界内の処理完了済み）
+```
+
+## エラーハンドリング
+
+### LockmanSingleExecutionError
+
+**boundaryAlreadyLocked** - 境界が既にロックされている
+
+```swift
+lockFailure: { error, send in
+    if case .boundaryAlreadyLocked(let boundaryId, let existingInfo) = error as? LockmanSingleExecutionError {
+        send(.showBusyMessage("他の処理が実行中です"))
+    }
+}
+```
+
+**actionAlreadyRunning** - 同じアクションが既に実行中
+
+```swift
+lockFailure: { error, send in
+    if case .actionAlreadyRunning(let existingInfo) = error as? LockmanSingleExecutionError {
+        send(.showBusyMessage("保存処理が実行中です"))
+    }
+}
+```
+
+## 推奨パターン
+
+### UI操作の重複防止
+
+```swift
+// ボタンの連続タップ防止
+case .saveButtonTapped:
+    return .withLock(
+        operation: { send in
+            try await performSave()
+            send(.saveSuccess)
+        },
+        lockFailure: { _, send in
+            // 無視またはユーザーフィードバック
+            send(.showToast("保存中です..."))
+        },
+        action: .save,
+        cancelID: CancelID.save
+    )
+```
+
+### データ処理の重複防止
+
+```swift
+// 同期処理の重複防止
+case .syncData:
+    return .withLock(
+        operation: { send in
+            let data = try await fetchFromServer()
+            send(.syncCompleted(data))
+        },
+        lockFailure: { _, send in
+            send(.syncSkipped("同期処理が既に実行中です"))
+        },
+        action: .sync,
+        cancelID: CancelID.dataSync
+    )
+```
