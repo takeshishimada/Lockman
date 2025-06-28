@@ -10,17 +10,24 @@ Lockmanは、TCAアプリケーションでユーザーアクションの排他�
 
 ## Adding Lockman as a dependency
 
-プロジェクトにLockmanを追加するには、Xcodeのパッケージ依存関係に以下を追加します：
-
-```
-https://github.com/takeshishimada/Lockman
-```
-
-そして、Lockmanを使用するファイルでインポートします：
+To use Lockman in a Swift Package Manager project, add it to the dependencies in your `Package.swift` file:
 
 ```swift
-import Lockman
-import ComposableArchitecture
+dependencies: [
+  .package(url: "https://github.com/takeshishimada/Lockman", from: "1.0.0")
+]
+```
+
+And add `Lockman` as a dependency of your package's target:
+
+```swift
+.target(
+  name: "YourTarget",
+  dependencies: [
+    "Lockman",
+    .product(name: "ComposableArchitecture", package: "swift-composable-architecture")
+  ]
+)
 ```
 
 ## Writing your first feature

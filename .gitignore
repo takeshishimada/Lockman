@@ -8,3 +8,4 @@ xcuserdata/
 .docc-build/
 .claude/*.xcodeproj/project.xcworkspace/contents.xcworkspacedata
 .claude/settings.local.json
+build/
