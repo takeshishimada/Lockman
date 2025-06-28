@@ -11,7 +11,7 @@ import Foundation
 ///     case priorityTooLow(priority: Int)
 ///     case taskTooBig(size: Int)
 /// }
-/// 
+///
 /// @LockmanDynamicCondition
 /// enum MyAction {
 ///     case fetchData(userId: String, priority: Int)

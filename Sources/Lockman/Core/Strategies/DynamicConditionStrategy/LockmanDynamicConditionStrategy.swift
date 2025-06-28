@@ -12,7 +12,7 @@ import Foundation
 /// struct PriorityTooLowError: Error {
 ///     let priority: Int
 /// }
-/// 
+///
 /// let action = MyAction.fetchData(userId: "123", priority: 5)
 /// let conditionalAction = action.with {
 ///     guard priority > 3 else {

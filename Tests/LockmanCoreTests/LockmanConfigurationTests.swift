@@ -60,7 +60,9 @@ final class LockmanConfigurationTests: XCTestCase {
       // Multiple writers
       for i in 0..<iterations {
         group.addTask {
-          let options: [LockmanUnlockOption] = [.immediate, .mainRunLoop, .transition, .delayed(0.1)]
+          let options: [LockmanUnlockOption] = [
+            .immediate, .mainRunLoop, .transition, .delayed(0.1),
+          ]
           LockmanManager.config.defaultUnlockOption = options[i % options.count]
         }
       }

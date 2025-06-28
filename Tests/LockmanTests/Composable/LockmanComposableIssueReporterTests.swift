@@ -83,4 +83,3 @@ final class ComposableIssueReporterTests: XCTestCase {
     XCTAssertEqual(reportedMessage, "Integration test message")
   }
 }
-

@@ -5,11 +5,11 @@ import SwiftUI
 // Custom error for authentication
 struct AuthenticationError: Error, LocalizedError {
   let actionId: String
-  
+
   var errorDescription: String? {
     "Cannot acquire lock for action '\(actionId)': User is not logged in."
   }
-  
+
   var failureReason: String? {
     "The user must be logged in to perform this action."
   }
