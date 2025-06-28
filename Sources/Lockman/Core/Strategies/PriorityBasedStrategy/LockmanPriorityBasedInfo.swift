@@ -105,6 +105,7 @@ public struct LockmanPriorityBasedInfo: LockmanInfo, Sendable, Equatable {
   /// Creates a new priority-based lock information instance.
   ///
   /// - Parameters:
+  ///   - strategyId: The strategy identifier for this lock (defaults to .priorityBased)
   ///   - actionId: A unique identifier for the action
   ///   - priority: The priority level and concurrency behavior for this action
   ///   - blocksSameAction: Whether to block other actions with the same actionId (default: true)

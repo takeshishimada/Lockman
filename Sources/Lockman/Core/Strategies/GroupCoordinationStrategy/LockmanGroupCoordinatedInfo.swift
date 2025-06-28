@@ -65,6 +65,7 @@ public struct LockmanGroupCoordinatedInfo: LockmanInfo, Sendable {
   /// Creates a new group coordinated lock information with a single group.
   ///
   /// - Parameters:
+  ///   - strategyId: The strategy identifier for this lock (defaults to .groupCoordination)
   ///   - actionId: The identifier for this action
   ///   - groupId: The group identifier for coordination
   ///   - coordinationRole: The role this action plays in the group
@@ -84,6 +85,7 @@ public struct LockmanGroupCoordinatedInfo: LockmanInfo, Sendable {
   /// Creates a new group coordinated lock information with multiple groups.
   ///
   /// - Parameters:
+  ///   - strategyId: The strategy identifier for this lock (defaults to .groupCoordination)
   ///   - actionId: The identifier for this action
   ///   - groupIds: The set of group identifiers for coordination (maximum 5)
   ///   - coordinationRole: The role this action plays in all groups

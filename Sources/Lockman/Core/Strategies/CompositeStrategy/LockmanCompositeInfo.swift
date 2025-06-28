@@ -58,6 +58,7 @@ public struct LockmanCompositeInfo2<I1: LockmanInfo, I2: LockmanInfo>: LockmanIn
   /// Creates a new composite info instance with user-specified action ID.
   ///
   /// - Parameters:
+  ///   - strategyId: The strategy identifier for this composite lock (defaults to "Lockman.CompositeStrategy2")
   ///   - actionId: User-specified action identifier for the composite operation
   ///   - lockmanInfoForStrategy1: Lock information for the first strategy
   ///   - lockmanInfoForStrategy2: Lock information for the second strategy
@@ -128,6 +129,7 @@ public struct LockmanCompositeInfo3<I1: LockmanInfo, I2: LockmanInfo, I3: Lockma
   /// Creates a new composite info instance with user-specified action ID.
   ///
   /// - Parameters:
+  ///   - strategyId: The strategy identifier for this composite lock (defaults to "Lockman.CompositeStrategy3")
   ///   - actionId: User-specified action identifier for the composite operation
   ///   - lockmanInfoForStrategy1: Lock information for the first strategy
   ///   - lockmanInfoForStrategy2: Lock information for the second strategy
@@ -200,6 +202,7 @@ public struct LockmanCompositeInfo4<
   /// Creates a new composite info instance with user-specified action ID.
   ///
   /// - Parameters:
+  ///   - strategyId: The strategy identifier for this composite lock (defaults to "Lockman.CompositeStrategy4")
   ///   - actionId: User-specified action identifier for the composite operation
   ///   - lockmanInfoForStrategy1: Lock information for the first strategy
   ///   - lockmanInfoForStrategy2: Lock information for the second strategy
@@ -278,6 +281,7 @@ public struct LockmanCompositeInfo5<
   /// Creates a new composite info instance with user-specified action ID.
   ///
   /// - Parameters:
+  ///   - strategyId: The strategy identifier for this composite lock (defaults to "Lockman.CompositeStrategy5")
   ///   - actionId: User-specified action identifier for the composite operation
   ///   - lockmanInfoForStrategy1: Lock information for the first strategy
   ///   - lockmanInfoForStrategy2: Lock information for the second strategy
