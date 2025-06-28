@@ -21,7 +21,6 @@ Lockman provides a comprehensive solution for managing exclusive control over us
 - <doc:Configuration>
 
 ### Strategies
-- <doc:StrategiesOverview>
 - <doc:SingleExecutionStrategy>
 - <doc:PriorityBasedStrategy>
 - <doc:ConcurrencyLimitedStrategy>
