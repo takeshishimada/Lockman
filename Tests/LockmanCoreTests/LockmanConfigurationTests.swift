@@ -13,9 +13,9 @@ final class LockmanConfigurationTests: XCTestCase {
 
   // MARK: - Configuration Tests
 
-  func testDefaultConfigurationHasTransitionUnlockOption() async throws {
-    // Default configuration should use .transition
-    XCTAssertEqual(LockmanManager.config.defaultUnlockOption, .transition)
+  func testDefaultConfigurationHasImmediateUnlockOption() async throws {
+    // Default configuration should use .immediate
+    XCTAssertEqual(LockmanManager.config.defaultUnlockOption, .immediate)
   }
 
   func testConfigurationCanBeModified() async throws {
@@ -43,7 +43,7 @@ final class LockmanConfigurationTests: XCTestCase {
 
     // Reset to default
     LockmanManager.config.reset()
-    XCTAssertEqual(LockmanManager.config.defaultUnlockOption, .transition)
+    XCTAssertEqual(LockmanManager.config.defaultUnlockOption, .immediate)
   }
 
   func testConfigurationIsThreadSafe() async throws {
@@ -106,28 +106,28 @@ final class LockmanConfigurationTests: XCTestCase {
 
   // MARK: - Handle Cancellation Errors Tests
 
-  func testDefaultHandleCancellationErrorsIsTrue() async throws {
-    XCTAssertTrue(LockmanManager.config.handleCancellationErrors)
+  func testDefaultHandleCancellationErrorsIsFalse() async throws {
+    XCTAssertFalse(LockmanManager.config.handleCancellationErrors)
   }
 
   func testHandleCancellationErrorsCanBeModified() async throws {
+    // Enable (default is false)
+    LockmanManager.config.handleCancellationErrors = true
+    XCTAssertTrue(LockmanManager.config.handleCancellationErrors)
+
     // Disable
     LockmanManager.config.handleCancellationErrors = false
     XCTAssertFalse(LockmanManager.config.handleCancellationErrors)
-
-    // Enable
-    LockmanManager.config.handleCancellationErrors = true
-    XCTAssertTrue(LockmanManager.config.handleCancellationErrors)
   }
 
   func testHandleCancellationErrorsResetRestoresDefault() async throws {
     // Modify configuration
-    LockmanManager.config.handleCancellationErrors = false
-    XCTAssertFalse(LockmanManager.config.handleCancellationErrors)
+    LockmanManager.config.handleCancellationErrors = true
+    XCTAssertTrue(LockmanManager.config.handleCancellationErrors)
 
     // Reset to default
     LockmanManager.config.reset()
-    XCTAssertTrue(LockmanManager.config.handleCancellationErrors)
+    XCTAssertFalse(LockmanManager.config.handleCancellationErrors)
   }
 
   func testHandleCancellationErrorsThreadSafe() async throws {
