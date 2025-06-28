@@ -4,8 +4,81 @@ Understanding the locking mechanism in Lockman.
 
 ## Overview
 
-## TCA Integration
+Lockmanにおけるロックは、戦略ベースの排他制御システムです。従来の単純なON/OFF制御とは異なり、選択した戦略によって以下のような多様な制御が可能になります。
 
-## Effect Extension
+- **実行の防止**: 重複実行の阻止
+- **実行の優先**: 既存処理を中断した新しい処理の優先実行
+- **実行の協調**: 関連する処理グループの協調的な調整
+- **実行の制限**: 同時実行数の制限
+- **実行の条件付き制御**: カスタムロジックによる動的な条件制御
 
-## Reducer Integration
+## 仕様
+
+Lockmanは戦略に基づいてロック取得の成否を判定し、その結果に応じて処理を実行します。ロック取得の判定プロセスは、指定された戦略のルールに従って行われ、複数戦略が指定されている場合は、すべての戦略でロック取得が可能である場合のみ成功となります。
+
+## メソッド
+
+Lockmanは3つの主要なメソッドを提供し、用途に応じて使い分けることができます。
+
+### withLock（自動解除版）
+
+最も基本的で推奨される使用方法です。ロックの取得と解除を自動で管理します。
+
+```swift
+.withLock(
+  operation: { send in /* 処理 */ },
+  catch: { error, send in /* エラー処理 */ },
+  lockFailure: { error, send in /* ロック取得失敗処理 */ },
+  action: action,
+  cancelID: cancelID
+)
+```
+
+**特徴:**
+- 自動的なロック管理
+- 処理の正常終了、例外発生、キャンセル時も確実にロック解除
+- エラーハンドリング機能
+
+### withLock（手動解除版）
+
+ロックの解除タイミングを手動で制御したい場合に使用します。
+
+```swift
+.withLock(
+  operation: { send, unlock in 
+    /* 処理 */
+    unlock() // 手動解除
+  },
+  catch: { error, send, unlock in /* エラー処理 */ },
+  lockFailure: { error, send in /* ロック取得失敗処理 */ },
+  action: action,
+  cancelID: cancelID
+)
+```
+
+**特徴:**
+- 明示的なロック解除制御
+- より細かい制御が可能
+- **重要**: 必ず全てのコードパスでunlock()を呼び出す必要があります
+
+### concatenateWithLock
+
+複数のEffectを順次実行する間、同一のロックを保持し続けます。
+
+```swift
+.concatenateWithLock(
+  operations: [
+    .run { send in /* 処理1 */ },
+    .run { send in /* 処理2 */ },
+    .run { send in /* 処理3 */ }
+  ],
+  lockFailure: { error, send in /* ロック取得失敗処理 */ },
+  action: action,
+  cancelID: cancelID
+)
+```
+
+**特徴:**
+- 複数のEffect間で同じロックを維持
+- トランザクション的な処理に適している
+- 一つでも失敗すると全体が中断される
