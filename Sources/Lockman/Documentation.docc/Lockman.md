@@ -1,6 +1,6 @@
 # ``Lockman``
 
-Lockman is a Swift library that solves concurrent action control issues in The Composable Architecture (TCA) applications, with responsiveness, transparency, and declarative design in mind.
+A library to implement exclusive control of user actions in application development using TCA.
 
 @Metadata {
   @PageImage(purpose: icon, source: "Lockman.png", alt: "Lockman logo")
@@ -8,18 +8,44 @@ Lockman is a Swift library that solves concurrent action control issues in The C
 
 ## Overview
 
-Lockman provides the following control strategies to address common problems in app development:
-
-- **Single Execution**: Prevents duplicate execution of the same action
-- **Priority Based**: Action control and cancellation based on priority
-- **Group Coordination**: Group control through leader/member roles
-- **Dynamic Condition**: Dynamic control based on runtime conditions
-- **Composite Strategy**: Combination of multiple strategies
+Lockman provides a comprehensive solution for managing exclusive control over user actions in applications built with The Composable Architecture (TCA). It offers various strategies to handle concurrent operations, prevent duplicate executions, and maintain consistent application state.
 
 ## Topics
 
-### Getting Started
+### Getting started
+- <doc:GettingStarted>
+- <doc:AddingLockmanDependency>
+- <doc:WritingYourFirstFeature>
 
-- ``LockmanManager``
-- ``LockmanPriorityBasedInfo``
-- ``LockmanGroupCoordinatedInfo``
+### Boundary
+- <doc:BoundaryOverview>
+
+### Lock & Unlock
+- <doc:LockUnlockOverview>
+- <doc:TCAIntegration>
+- <doc:EffectExtension>
+- <doc:ReducerIntegration>
+
+### Strategies
+- <doc:StrategiesOverview>
+- <doc:ChoosingStrategy>
+- <doc:SingleExecutionStrategy>
+- <doc:PriorityBasedStrategy>
+- <doc:ConcurrencyLimitedStrategy>
+- <doc:GroupCoordinationStrategy>
+- <doc:DynamicConditionStrategy>
+- <doc:CompositeStrategy>
+
+### Advance
+- <doc:CustomStrategy>
+- <doc:Configuration>
+
+### Debugging
+- <doc:Debugging>
+
+### Performance
+- <doc:Performance>
+
+### Troubleshooting
+- <doc:CommonIssues>
+- <doc:FAQ>
