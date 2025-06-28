@@ -4,15 +4,7 @@ Understand the concept of boundaries in Lockman.
 
 ## Overview
 
-Boundaryとは、Lockmanにおける**排他制御の境界線**です。LockmanはTCAのCancelIDをこの境界線として利用し、アクションの実行制御を行います。
-
-## CancelIDとの関係
-
-LockmanにおけるBoundaryは、実はTCAのCancelIDと同じものです：
-
-- **Boundary** = 排他制御の境界線を表す概念
-- **CancelID** = TCAでタスクをキャンセルするための識別子
-- **Lockman** = CancelIDを境界線として活用し、排他制御を実現
+Boundaryとは、Lockmanにおける**排他制御の境界**です。LockmanはTCAのCancelIDをこの境界として利用し、アクションの実行制御を行います。
 
 ```swift
 // withLockでCancelIDを境界として指定
@@ -28,21 +20,16 @@ return .withLock(
 )
 ```
 
-## CancelIDを利用する理由
-
-CancelIDを境界線として使用することで、以下の利点があります：
+CancelIDを境界として使用することで、以下の利点があります：
 
 1. **TCAとの自然な統合** - 既存のTCAの仕組みを活用
 2. **明確な境界の定義** - CancelIDによって排他制御の範囲が明確になる
-3. **柔軟な制御** - 同じCancelIDを持つアクション間で排他制御が可能
 
-## 制限事項
-
-Lockmanの境界による排他制御には、以下の重要な制限があります：
+## Boundaryの仕様
 
 ### 1. 境界を超えた排他制御は不可能
 
-異なるCancelID間での排他制御はできません：
+異なるBoundary間での排他制御はできません：
 
 ```swift
 // ❌ できないこと：saveとloadを同時に制御
@@ -57,12 +44,12 @@ case .loadButtonTapped:
 
 これらは別々の境界として扱われるため、saveの実行中でもloadは実行可能です。
 
-### 2. 一つのアクションに指定できる境界は一つのみ
+### 2. 一つのアクションに指定できるBoundaryは一つのみ
 
-単一のアクションに複数のCancelIDを指定することはできません：
+単一のアクションに複数のBoundaryを指定することはできません：
 
 ```swift
-// ❌ できないこと：複数の境界を同時に指定
+// ❌ できないこと：複数のBoundaryを同時に指定
 return .withLock(
     operation: { send in /* ... */ },
     lockFailure: { error, send in /* ... */ },
@@ -71,7 +58,7 @@ return .withLock(
 )
 ```
 
-複数の処理を同時に制御したい場合は、共通の境界を定義する必要があります：
+複数の処理を同時に制御したい場合は、共通のBoundaryを定義する必要があります：
 
 ```swift
 // ✅ 正しい方法：共通の境界を使用
@@ -85,7 +72,7 @@ case .saveButtonTapped, .loadButtonTapped, .validateButtonTapped:
 
 ## まとめ
 
-Boundaryは排他制御の境界線であり、LockmanはTCAのCancelIDをこの境界として活用します。適切な境界を設定することで、アプリケーションの安定性と応答性を両立できます。
+Boundaryは排他制御の境界であり、LockmanはTCAのCancelIDをこの境界として活用します。適切な境界を設定することで、アプリケーションの安定性と応答性を両立できます。
 
 ## 次のステップ
 
