@@ -4,8 +4,6 @@ Learn how to integrate Lockman into your TCA application.
 
 ## Overview
 
-## Topics
+## Adding the Lockman as a dependency
 
-### Essentials
-- <doc:AddingLockmanDependency>
-- <doc:WritingYourFirstFeature>
+## Writing your first feature

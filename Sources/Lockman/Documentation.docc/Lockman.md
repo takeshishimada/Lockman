@@ -14,21 +14,16 @@ Lockman provides a comprehensive solution for managing exclusive control over us
 
 ### Getting started
 - <doc:GettingStarted>
-- <doc:AddingLockmanDependency>
-- <doc:WritingYourFirstFeature>
 
-### Boundary
+### Core Concepts
 - <doc:BoundaryOverview>
-
-### Lock & Unlock
-- <doc:LockUnlockOverview>
-- <doc:TCAIntegration>
-- <doc:EffectExtension>
-- <doc:ReducerIntegration>
+- <doc:Lock>
+- <doc:Unlock>
+- <doc:ChoosingStrategy>
+- <doc:Configuration>
 
 ### Strategies
 - <doc:StrategiesOverview>
-- <doc:ChoosingStrategy>
 - <doc:SingleExecutionStrategy>
 - <doc:PriorityBasedStrategy>
 - <doc:ConcurrencyLimitedStrategy>
@@ -36,16 +31,6 @@ Lockman provides a comprehensive solution for managing exclusive control over us
 - <doc:DynamicConditionStrategy>
 - <doc:CompositeStrategy>
 
-### Advance
-- <doc:CustomStrategy>
-- <doc:Configuration>
-
-### Debugging
-- <doc:Debugging>
-
-### Performance
-- <doc:Performance>
-
-### Troubleshooting
-- <doc:CommonIssues>
-- <doc:FAQ>
+### Advanced
+- <doc:CustomStrategyImplementation>
+- <doc:DebuggingGuide>
