@@ -1,4 +1,4 @@
-# Claude.md
+# CLAUDE.md
 
 ## Purpose
 Develop a library to implement exclusive control of user actions in application development using TCA
@@ -19,6 +19,20 @@ Develop a library to implement exclusive control of user actions in application 
 - Run `make format` before committing changes to ensure consistent code style
 - This command uses swift-format to format all Swift files in the project
 - Code formatting is required for all PRs
+- **IMPORTANT**: Always run `make format` before creating any commit
+- The formatter may modify multiple files automatically - review and include these changes in your commit
+
+## Code Editing Guidelines
+- When updating repetitive patterns (e.g., adding missing parameter documentation), use `replace_all=true` in Edit operations
+- For safety, use `Grep` tool first to verify the number of occurrences before using `replace_all=true`
+- Prefer `MultiEdit` with specific context for critical changes
+
+## Commit Workflow
+1. Make your code changes
+2. Run `make format` to format all Swift files
+3. Review the formatting changes and stage all modified files
+4. Create your commit with a semantic commit message
+5. Push to your feature branch
 
 ## Pull Request
 - Commit messages must follow Semantic Commit Message rules
@@ -135,12 +149,14 @@ Every PR must have at least one label from each applicable category:
 ## Testing
 
 ### Using Makefile (Recommended)
-```bash
-# Run tests for iOS (default)
-make xcodebuild
+The Makefile automatically handles simulator selection and workspace configuration.
 
-# Run tests for macOS
+```bash
+# Run tests for macOS (simplest - no simulator needed)
 make PLATFORM=MACOS xcodebuild
+
+# Run tests for iOS (default - automatically finds simulator)
+make xcodebuild
 
 # Run tests with raw output (without xcbeautify)
 make xcodebuild-raw
@@ -148,13 +164,19 @@ make xcodebuild-raw
 # Available platforms: IOS, MACOS, MAC_CATALYST, TVOS, VISIONOS, WATCHOS
 ```
 
+Note: If iOS simulator tests fail, try running `make warm-simulator` first or use macOS tests instead.
+
 ### Using xcodebuild directly
 ```bash
-# iOS tests
-xcodebuild test -configuration Debug -scheme "Lockman-Package" -destination "platform=iOS Simulator,name=iPhone 16" -workspace .github/package.xcworkspace -skipMacroValidation
-
-# macOS tests  
+# macOS tests (simplest option - no simulator needed)
 xcodebuild test -configuration Debug -scheme "Lockman-Package" -destination "platform=macOS" -workspace .github/package.xcworkspace -skipMacroValidation
+
+# iOS tests (requires finding a simulator)
+# First, list available simulators:
+xcrun simctl list devices available | grep iPhone
+
+# Then use a specific simulator (example with iPhone 16):
+xcodebuild test -configuration Debug -scheme "Lockman-Package" -destination "platform=iOS Simulator,name=iPhone 16" -workspace .github/package.xcworkspace -skipMacroValidation
 ```
 
 ## Building Examples
