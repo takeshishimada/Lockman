@@ -166,3 +166,9 @@ catch: { error, send in
     }
 }
 ```
+
+## ガイド
+
+次のステップ <doc:ConcurrencyLimitedStrategy>
+
+前のステップ <doc:SingleExecutionStrategy>

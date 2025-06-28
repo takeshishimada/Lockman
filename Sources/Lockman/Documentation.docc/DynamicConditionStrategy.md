@@ -216,3 +216,9 @@ lockFailure: { error, send in
     }
 }
 ```
+
+## ガイド
+
+次のステップ <doc:CompositeStrategy>
+
+前のステップ <doc:GroupCoordinationStrategy>

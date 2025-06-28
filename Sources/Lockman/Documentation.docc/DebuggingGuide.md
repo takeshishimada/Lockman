@@ -82,3 +82,9 @@ LockmanManager.cleanup.all()
 // 特定境界のロックのみクリーンアップ
 LockmanManager.cleanup.boundary(CancelID.userAction)
 ```
+
+## ガイド
+
+次のステップ <doc:SingleExecutionStrategy>
+
+前のステップ <doc:Configuration>

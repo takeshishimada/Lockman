@@ -170,3 +170,9 @@ lockFailure: { error, send in
 - `requestedInfo`: 実行要求された処理の情報
 - `existingInfos`: 現在実行中の処理一覧
 - `current`: 現在の同時実行数
+
+## ガイド
+
+次のステップ <doc:GroupCoordinationStrategy>
+
+前のステップ <doc:PriorityBasedStrategy>

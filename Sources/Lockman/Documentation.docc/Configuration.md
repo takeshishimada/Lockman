@@ -87,3 +87,9 @@ func applicationDidFinishLaunching() {
 - 設定変更はアプリケーション全体に影響するため、初期化時に行うことを推奨
 - 実行時の設定変更は可能ですが、予期しない動作を避けるため慎重に行ってください
 - テスト時は設定をリセットして、テスト間の影響を避けることを推奨
+
+## ガイド
+
+次のステップ <doc:DebuggingGuide>
+
+前のステップ <doc:ChoosingStrategy>

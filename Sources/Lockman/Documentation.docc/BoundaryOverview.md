@@ -74,8 +74,8 @@ case .saveButtonTapped, .loadButtonTapped, .validateButtonTapped:
 
 Boundaryは排他制御の境界であり、LockmanはTCAのCancelIDをこの境界として活用します。適切な境界を設定することで、アプリケーションの安定性と応答性を両立できます。
 
-## 次のステップ
+## ガイド
 
-- <doc:Lock> - 境界内でのロック取得の詳細
-- <doc:Unlock> - ロックの解放とCancelIDの関係
-- <doc:ChoosingStrategy> - より高度な境界制御戦略
+次のステップ <doc:Lock>
+
+前のステップ <doc:GettingStarted>

@@ -194,3 +194,9 @@ lockFailure: { error, send in
     }
 }
 ```
+
+## ガイド
+
+次のステップ <doc:DynamicConditionStrategy>
+
+前のステップ <doc:ConcurrencyLimitedStrategy>

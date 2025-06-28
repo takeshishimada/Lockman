@@ -6,15 +6,13 @@ Learn how to integrate Lockman into your TCA application.
 
 このガイドでは、LockmanをThe Composable Architecture (TCA)プロジェクトに統合し、最初の機能を実装する方法を学びます。
 
-Lockmanは、TCAアプリケーションでユーザーアクションの排他制御を簡単に実現するためのライブラリです。ボタンの連打防止やAPIリクエストの重複実行防止など、一般的な排他制御のニーズに対応します。
-
 ## Adding Lockman as a dependency
 
 To use Lockman in a Swift Package Manager project, add it to the dependencies in your `Package.swift` file:
 
 ```swift
 dependencies: [
-  .package(url: "https://github.com/takeshishimada/Lockman", from: "1.0.0")
+  .package(url: "https://github.com/takeshishimada/Lockman", from: "0.7.0")
 ]
 ```
 
@@ -82,8 +80,9 @@ struct ProcessFeature {
 
 - `@LockmanSingleExecution`マクロをAction enumに適用することで、このenumが`LockmanSingleExecutionAction`プロトコルに準拠します
 - `lockmanInfo`プロパティは各アクションのロック制御方法を定義します
-  - `mode: .boundary`：このアクションがロックの境界となり、処理の開始と終了を管理します
-  - `mode: .none`：ロック制御に関与しない内部アクションです
+  - 制御パラメータの設定: 戦略固有の動作設定（優先度、同時実行数制限、グループ協調ルール等）を指定します
+  - アクション識別: ロック管理システム内でのアクション識別子を提供します
+  - 戦略間の連携: 複合戦略使用時に、各戦略へ渡すパラメータを個別に定義します
 
 ### Step 3: Reducer本体を実装する
 
@@ -130,4 +129,6 @@ var body: some Reducer<State, Action> {
 
 これで、`startProcessButtonTapped`アクションは処理中に再度実行されることがなくなり、ユーザーが誤って複数回ボタンをタップしても安全です。
 
-次のステップとして、より高度な排他制御戦略について学ぶには、[Advanced Features](<doc:AdvancedFeatures>)セクションを参照してください。
+## ガイド
+
+次のステップ <doc:BoundaryOverview>

@@ -172,3 +172,7 @@ lockFailure: { error, send in
 3. **リソース制御が必要なら追加**: ConcurrencyLimitedを組み合わせ
 4. **協調制御が必要なら追加**: GroupCoordinationを組み合わせ
 5. **カスタムロジックが必要なら追加**: DynamicConditionを組み合わせ
+
+## ガイド
+
+前のステップ <doc:DynamicConditionStrategy>
