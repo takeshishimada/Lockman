@@ -152,4 +152,3 @@ final class LockmanInfoTests: XCTestCase {
     XCTAssertTrue(debugString.contains("debug data"))
   }
 }
-

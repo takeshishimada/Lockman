@@ -12,7 +12,7 @@ import Foundation
 ///     let currentUsers: Int
 ///     let maxUsers: Int
 /// }
-/// 
+///
 /// let info = LockmanDynamicConditionInfo(
 ///     actionId: "fetchData",
 ///     condition: {

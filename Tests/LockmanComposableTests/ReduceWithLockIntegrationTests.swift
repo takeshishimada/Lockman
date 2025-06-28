@@ -8,16 +8,18 @@ import XCTest
 private struct ComposableTestDynamicConditionError: Error, LocalizedError {
   let actionId: String
   let hint: String?
-  
+
   var errorDescription: String? {
     "Dynamic condition not met for action '\(actionId)'" + (hint.map { ". Hint: \($0)" } ?? "")
   }
-  
+
   var failureReason: String? {
     "The condition for action '\(actionId)' was not met" + (hint.map { ": \($0)" } ?? "")
   }
-  
-  static func conditionNotMet(actionId: String, hint: String?) -> ComposableTestDynamicConditionError {
+
+  static func conditionNotMet(actionId: String, hint: String?)
+    -> ComposableTestDynamicConditionError
+  {
     ComposableTestDynamicConditionError(actionId: actionId, hint: hint)
   }
 }

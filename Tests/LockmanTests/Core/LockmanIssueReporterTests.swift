@@ -156,4 +156,3 @@ final class LockmanIssueReporterBackwardCompatibilityTests: XCTestCase {
     XCTAssertTrue(DefaultIssueReporter.self == LockmanDefaultIssueReporter.self)
   }
 }
-

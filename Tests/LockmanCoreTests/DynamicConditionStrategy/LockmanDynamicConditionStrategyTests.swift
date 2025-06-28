@@ -7,15 +7,15 @@ import XCTest
 private struct MockDynamicConditionError: Error, LocalizedError {
   let actionId: String
   let hint: String?
-  
+
   var errorDescription: String? {
     "Dynamic condition not met for action '\(actionId)'" + (hint.map { ". Hint: \($0)" } ?? "")
   }
-  
+
   var failureReason: String? {
     "The condition for action '\(actionId)' was not met" + (hint.map { ": \($0)" } ?? "")
   }
-  
+
   static func conditionNotMet(actionId: String, hint: String?) -> MockDynamicConditionError {
     MockDynamicConditionError(actionId: actionId, hint: hint)
   }
