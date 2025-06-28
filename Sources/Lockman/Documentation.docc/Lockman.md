@@ -12,10 +12,8 @@ Lockman provides a comprehensive solution for managing exclusive control over us
 
 ## Topics
 
-### Getting started
+### Essentials
 - <doc:GettingStarted>
-
-### Core Concepts
 - <doc:BoundaryOverview>
 - <doc:Lock>
 - <doc:Unlock>
