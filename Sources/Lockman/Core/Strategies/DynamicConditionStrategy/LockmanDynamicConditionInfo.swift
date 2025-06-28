@@ -50,6 +50,7 @@ public struct LockmanDynamicConditionInfo: LockmanInfo, Sendable {
   /// Creates a new dynamic condition lock info with a custom condition.
   ///
   /// - Parameters:
+  ///   - strategyId: The strategy identifier for this lock (defaults to .dynamicCondition)
   ///   - actionId: The identifier for this action
   ///   - condition: A closure that evaluates whether the lock can be acquired,
   ///                returning a `LockmanResult`
@@ -68,7 +69,9 @@ public struct LockmanDynamicConditionInfo: LockmanInfo, Sendable {
   ///
   /// This initializer is useful when you want to use the lock without any restrictions.
   ///
-  /// - Parameter actionId: The identifier for this action
+  /// - Parameters:
+  ///   - strategyId: The strategy identifier for this lock (defaults to .dynamicCondition)
+  ///   - actionId: The identifier for this action
   public init(
     strategyId: LockmanStrategyId = .dynamicCondition,
     actionId: LockmanActionId

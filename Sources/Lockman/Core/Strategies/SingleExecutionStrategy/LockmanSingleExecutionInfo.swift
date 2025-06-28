@@ -67,6 +67,7 @@ public struct LockmanSingleExecutionInfo: LockmanInfo, Sendable, Equatable {
   /// Creates a new single-execution lock information instance.
   ///
   /// - Parameters:
+  ///   - strategyId: The strategy identifier for this lock (defaults to .singleExecution)
   ///   - actionId: The action identifier for conflict detection. Defaults to empty string,
   ///     which is suitable for `.boundary` and `.none` modes where the specific action
   ///     identity doesn't affect locking behavior
