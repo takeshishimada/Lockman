@@ -97,6 +97,32 @@ LockmanPriorityBasedInfo(
 )
 ```
 
+## 動作例
+
+### 優先度による中断
+
+```
+時刻: 0秒  - low優先度処理開始    → ✅ 実行
+時刻: 2秒  - high優先度処理要求   → ✅ 実行（low処理を中断）
+時刻: 2秒  - low優先度処理        → 🛑 キャンセル
+時刻: 5秒  - high優先度処理完了   → ✅ 完了
+```
+
+### 同一優先度での制御
+
+```
+// exclusive設定の場合
+時刻: 0秒  - high(.exclusive)開始  → ✅ 実行
+時刻: 1秒  - high(.exclusive)要求  → ❌ 拒否
+時刻: 3秒  - 最初の処理完了       → ✅ 完了
+時刻: 4秒  - high(.exclusive)要求  → ✅ 実行
+
+// replaceable設定の場合  
+時刻: 0秒  - high(.replaceable)開始 → ✅ 実行
+時刻: 1秒  - high(.replaceable)要求 → ✅ 実行（前の処理を中断）
+時刻: 1秒  - 最初の処理            → 🛑 キャンセル
+```
+
 ## エラーハンドリング
 
 ### LockmanPriorityBasedError
