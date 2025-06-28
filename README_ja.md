@@ -74,6 +74,14 @@ Lockmanは以下の制御戦略を提供し、実際のアプリ開発で頻繁�
 * [`main`](https://takeshishimada.github.io/Lockman/main/documentation/lockman/)
 * [0.5.0](https://takeshishimada.github.io/Lockman/0.5.0/documentation/lockman/)
 
+<details>
+<summary>その他のバージョン</summary>
+
+* [0.4.0](https://takeshishimada.github.io/Lockman/0.4.0/documentation/lockman/)
+* [0.3.0](https://takeshishimada.github.io/Lockman/0.3.0/documentation/lockman/)
+
+</details>
+
 ## インストール
 
 Lockmanは[Swift Package Manager](https://swift.org/package-manager/)でインストールできます。
@@ -121,11 +129,19 @@ dependencies: [
 | Lockman | The Composable Architecture |
 |---------|----------------------------|
 | 0.5.0   | 1.17.1                     |
+
+<details>
+<summary>その他のバージョン</summary>
+
+| Lockman | The Composable Architecture |
+|---------|----------------------------|
 | 0.4.0   | 1.17.1                     |
 | 0.3.0   | 1.17.1                     |
 | 0.2.1   | 1.17.1                     |
 | 0.2.0   | 1.17.1                     |
 | 0.1.0   | 1.17.1                     |
+
+</details>
 
 ## コミュニティ
 
