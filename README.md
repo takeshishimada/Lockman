@@ -72,11 +72,12 @@ Example of single-execution action control:
 The documentation for releases and `main` are available here:
 
 * [`main`](https://takeshishimada.github.io/Lockman/main/documentation/lockman/)
-* [0.5.0](https://takeshishimada.github.io/Lockman/0.5.0/documentation/lockman/)
+* [0.6.0](https://takeshishimada.github.io/Lockman/0.6.0/documentation/lockman/)
 
 <details>
 <summary>Other versions</summary>
 
+* [0.5.0](https://takeshishimada.github.io/Lockman/0.5.0/documentation/lockman/)
 * [0.4.0](https://takeshishimada.github.io/Lockman/0.4.0/documentation/lockman/)
 * [0.3.0](https://takeshishimada.github.io/Lockman/0.3.0/documentation/lockman/)
 
@@ -100,7 +101,7 @@ Add the dependency to your Package.swift file:
 
 ```swift
 dependencies: [
-  .package(url: "https://github.com/takeshishimada/Lockman", from: "0.5.0")
+  .package(url: "https://github.com/takeshishimada/Lockman", from: "0.6.0")
 ]
 ```
 
@@ -128,13 +129,14 @@ Add the dependency to your target:
 
 | Lockman | The Composable Architecture |
 |---------|----------------------------|
-| 0.5.0   | 1.17.1                     |
+| 0.6.0   | 1.17.1                     |
 
 <details>
 <summary>Other versions</summary>
 
 | Lockman | The Composable Architecture |
 |---------|----------------------------|
+| 0.5.0   | 1.17.1                     |
 | 0.4.0   | 1.17.1                     |
 | 0.3.0   | 1.17.1                     |
 | 0.2.1   | 1.17.1                     |
