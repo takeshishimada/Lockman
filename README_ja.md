@@ -72,11 +72,12 @@ Lockmanは以下の制御戦略を提供し、実際のアプリ開発で頻繁�
 リリース版とmainのドキュメントはこちらで利用できます：
 
 * [`main`](https://takeshishimada.github.io/Lockman/main/documentation/lockman/)
-* [0.6.0](https://takeshishimada.github.io/Lockman/0.6.0/documentation/lockman/)
+* [0.7.0](https://takeshishimada.github.io/Lockman/0.7.0/documentation/lockman/)
 
 <details>
 <summary>その他のバージョン</summary>
 
+* [0.6.0](https://takeshishimada.github.io/Lockman/0.6.0/documentation/lockman/)
 * [0.5.0](https://takeshishimada.github.io/Lockman/0.5.0/documentation/lockman/)
 * [0.4.0](https://takeshishimada.github.io/Lockman/0.4.0/documentation/lockman/)
 * [0.3.0](https://takeshishimada.github.io/Lockman/0.3.0/documentation/lockman/)
@@ -101,7 +102,7 @@ Package.swiftファイルに依存関係を追加：
 
 ```swift
 dependencies: [
-  .package(url: "https://github.com/takeshishimada/Lockman", from: "0.6.0")
+  .package(url: "https://github.com/takeshishimada/Lockman", from: "0.7.0")
 ]
 ```
 
@@ -129,13 +130,14 @@ dependencies: [
 
 | Lockman | The Composable Architecture |
 |---------|----------------------------|
-| 0.6.0   | 1.17.1                     |
+| 0.7.0   | 1.17.1                     |
 
 <details>
 <summary>その他のバージョン</summary>
 
 | Lockman | The Composable Architecture |
 |---------|----------------------------|
+| 0.6.0   | 1.17.1                     |
 | 0.5.0   | 1.17.1                     |
 | 0.4.0   | 1.17.1                     |
 | 0.3.0   | 1.17.1                     |
