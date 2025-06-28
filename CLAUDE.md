@@ -6,14 +6,14 @@ Develop a library to implement exclusive control of user actions in application 
 ## Development Guidelines
 - Swift versions: 6.0, 5.10, 5.9
 - Type-safe implementation
-- Test-driven development
 - Single unified Lockman module, developed exclusively for TCA
 - Based on Composable Architecture 1.17
-- When modifying Package.swift, also update Package@swift-6.0
+- When modifying Package.swift, you MUST also update Package@swift-6.0 to keep them in sync
 
 ## Documentation
 - Documentation is provided through SwiftDoc comments in source code and DocC documentation
-- Update documentation when changing source code
+- When modifying source code, you MUST update the corresponding documentation in the same commit
+- README updates are done at release time or when manually determined necessary
 
 ## Code Formatting
 - Run `make format` before committing changes to ensure consistent code style
@@ -31,27 +31,37 @@ Develop a library to implement exclusive control of user actions in application 
 1. Make your code changes
 2. Run `make format` to format all Swift files
 3. Review the formatting changes and stage all modified files
-4. Create your commit with a semantic commit message
-5. Push to your feature branch
+4. Run tests using `xcodebuild test -configuration Debug -scheme "Lockman-Package" -destination "platform=macOS,name=My Mac" -workspace .github/package.xcworkspace -skipMacroValidation` for macOS or `make xcodebuild` for iOS
+5. Fix any test failures before proceeding
+6. Create your commit with a semantic commit message
+7. Push to your feature branch
 
 ## Pull Request
+
+### Pre-PR Checklist
+1. **Run Tests**: Execute tests ONLY if Swift code has been modified. For documentation-only changes, skip testing
+2. **Fix All Test Failures**: All tests must pass before creating a PR (when tests are run)
+3. **No Test Coverage Requirements**: Test coverage is not enforced
+4. **Verify Build**: Ensure the project builds without errors (only for code changes)
+
+### PR Requirements
 - Commit messages must follow Semantic Commit Message rules
 - Apply appropriate labels based on the type of change and affected modules
 - Assign yourself as the assignee
-- Direct commits to main and develop branches are prohibited - all changes must be made through Pull Requests
+- Direct commits to main branch are prohibited - all changes must be made through Pull Requests
+- After PR is merged, delete the feature branch
 
 ### Git Branch Protection Rules
-- NEVER execute the following commands on main or develop branches:
+- NEVER execute the following commands on main branch:
   - `git commit`
   - `git cherry-pick`
   - `git merge` (except from PR)
   - `git rebase`
 - When requested to cherry-pick, merge, or rebase:
   1. First check the current branch with `git branch --show-current`
-  2. If on main or develop, create a new feature branch first
+  2. If on main, create a new feature branch first
   3. Perform the operation on the feature branch
   4. Create a Pull Request for review
-- Always work on feature branches (e.g., feat/xxx, fix/xxx, refactor/xxx)
 
 ### PR Creation Command
 When creating a PR, use the following command format:
@@ -64,7 +74,7 @@ gh pr create \
 ```
 - Always include `--assignee @me` to assign yourself
 - The `--title` should follow the semantic commit format
-- The `--body` should include Summary, Changes, and Test plan sections
+- The `--body` should include Summary and Changes sections
 - Use `--label` to add appropriate labels based on the mappings below
 
 ### Automatic Label Mapping
@@ -148,30 +158,33 @@ Every PR must have at least one label from each applicable category:
 
 ## Testing
 
-### Using Makefile (Recommended)
-The Makefile automatically handles simulator selection and workspace configuration.
+### Local Testing Requirements
+- Local testing is required on macOS and iOS only
+- All Swift versions (6.0, 5.10, 5.9) are tested in CI/CD environment
+- Use your local Xcode environment for testing before creating a PR
 
+### Testing Commands
+
+**For macOS (Recommended - no simulator needed):**
 ```bash
-# Run tests for macOS (simplest - no simulator needed)
-make PLATFORM=MACOS xcodebuild
+xcodebuild test -configuration Debug -scheme "Lockman-Package" -destination "platform=macOS,name=My Mac" -workspace .github/package.xcworkspace -skipMacroValidation
+```
 
-# Run tests for iOS (default - automatically finds simulator)
+**For iOS using Makefile:**
+```bash
+# Run tests for iOS (automatically finds simulator)
 make xcodebuild
 
 # Run tests with raw output (without xcbeautify)
 make xcodebuild-raw
-
-# Available platforms: IOS, MACOS, MAC_CATALYST, TVOS, VISIONOS, WATCHOS
 ```
 
-Note: If iOS simulator tests fail, try running `make warm-simulator` first or use macOS tests instead.
+Note: The Makefile has a known issue with macOS destination specification. Use the direct xcodebuild command for macOS testing.
 
-### Using xcodebuild directly
+### Alternative Testing Methods
+
+**iOS tests with specific simulator:**
 ```bash
-# macOS tests (simplest option - no simulator needed)
-xcodebuild test -configuration Debug -scheme "Lockman-Package" -destination "platform=macOS" -workspace .github/package.xcworkspace -skipMacroValidation
-
-# iOS tests (requires finding a simulator)
 # First, list available simulators:
 xcrun simctl list devices available | grep iPhone
 
