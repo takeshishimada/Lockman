@@ -9,3 +9,4 @@ xcuserdata/
 .claude/*.xcodeproj/project.xcworkspace/contents.xcworkspacedata
 .claude/settings.local.json
 build/
+coverage.xcresult/
