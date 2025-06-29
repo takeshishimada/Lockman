@@ -6,7 +6,7 @@
 
 [English](../README.md) | [日本語](README_ja.md) | [简体中文](README_zh-CN.md) | [繁體中文](README_zh-TW.md) | [Español](README_es.md) | [Français](README_fr.md) | [Deutsch](README_de.md) | [한국어](README_ko.md) | [Português](README_pt-BR.md) | [Italiano](README_it.md)
 
-Lockman es una biblioteca Swift que resuelve problemas de control de acciones concurrentes en aplicaciones The Composable Architecture (TCA), con énfasis en la capacidad de respuesta, transparencia y diseño declarativo.
+Lockman es una biblioteca Swift que resuelve problemas de control exclusivo de acciones en aplicaciones The Composable Architecture (TCA), con énfasis en la capacidad de respuesta, transparencia y diseño declarativo.
 
 * [Filosofía de Diseño](#filosofía-de-diseño)
 * [Descripción General](#descripción-general)

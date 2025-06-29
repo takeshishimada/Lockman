@@ -56,7 +56,7 @@ public struct LockmanSingleExecutionInfo: LockmanInfo, Sendable, Equatable {
   ///
   /// Controls how the strategy evaluates lock conflicts:
   /// - `.none`: No exclusive execution - all actions can run concurrently
-  /// - `.boundary`: Only one action per boundary - strictest concurrency control
+  /// - `.boundary`: Only one action per boundary - strictest exclusive control
   /// - `.action`: Only one instance of the same action - allows different actions to run concurrently
   ///
   /// Performance note: `.action` mode uses O(1) hash-based lookups for optimal performance

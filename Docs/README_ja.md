@@ -6,7 +6,7 @@
 
 [English](../README.md) | [日本語](README_ja.md) | [简体中文](README_zh-CN.md) | [繁體中文](README_zh-TW.md) | [Español](README_es.md) | [Français](README_fr.md) | [Deutsch](README_de.md) | [한국어](README_ko.md) | [Português](README_pt-BR.md) | [Italiano](README_it.md)
 
-LockmanはThe Composable Architecture（TCA）アプリケーションにおける並行アクションの制御問題を解決するSwiftライブラリです。応答性、透明性、宣言的設計を重視しています。
+LockmanはThe Composable Architecture（TCA）アプリケーションにおける排他アクションの制御問題を解決するSwiftライブラリです。応答性、透明性、宣言的設計を重視しています。
 
 * [設計思想](#設計思想)
 * [概要](#概要)
@@ -41,7 +41,7 @@ Lockmanは以下の制御戦略を提供し、実際のアプリ開発で頻繁�
 * **Priority Based**: 優先度に基づくアクションの制御とキャンセル
 * **Group Coordination**: リーダー/メンバーの役割によるグループ制御
 * **Dynamic Condition**: 実行時条件による動的制御
-* **Concurrency Limited**: グループごとの並行実行数を制限
+* **Concurrency Limited**: グループごとの同時実行数を制限
 * **Composite Strategy**: 複数戦略の組み合わせ
 
 ## 例

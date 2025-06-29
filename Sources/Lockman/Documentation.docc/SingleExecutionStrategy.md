@@ -21,7 +21,7 @@ LockmanSingleExecutionInfo(
 )
 ```
 
-- Executes all processing concurrently without exclusive control
+- Executes all processing without exclusive control
 - Used when temporarily disabling lock functionality
 - Applied for behavior verification during debugging or testing
 
