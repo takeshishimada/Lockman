@@ -44,7 +44,77 @@ Lockmanは以下の制御戦略を提供し、実際のアプリ開発で頻繁�
 
 ## 基本例
 
-単一実行アクション制御の例：
+`@LockmanSingleExecution`マクロを使用して、処理の重複実行を防ぐ機能を実装する方法：
+
+```swift
+import ComposableArchitecture
+import Lockman
+
+@Reducer
+struct ProcessFeature {
+    @ObservableState
+    struct State: Equatable {
+        var isProcessing = false
+        var message = ""
+    }
+    
+    @LockmanSingleExecution
+    enum Action {
+        case startProcessButtonTapped
+        case processStart
+        case processCompleted
+        
+        var lockmanInfo: LockmanSingleExecutionInfo {
+            switch self {
+            case .startProcessButtonTapped:
+                return .init(actionId: actionName, mode: .boundary)
+            case .processStart, .processCompleted:
+                return .init(actionId: actionName, mode: .none)
+            }
+        }
+    }
+    
+    enum CancelID {
+        case userAction
+    }
+    
+    var body: some Reducer<State, Action> {
+        Reduce { state, action in
+            switch action {
+            case .startProcessButtonTapped:
+                return .withLock(
+                    operation: { send in
+                        await send(.processStart)
+                        // 重い処理をシミュレート
+                        try await Task.sleep(nanoseconds: 3_000_000_000)
+                        await send(.processCompleted)
+                    },
+                    lockFailure: { error, send in
+                        // すでに処理が実行中の場合
+                        state.message = "処理は既に実行中です"
+                    },
+                    action: action,
+                    cancelID: CancelID.userAction
+                )
+                
+            case .processStart:
+                state.isProcessing = true
+                state.message = "処理を開始しました..."
+                return .none
+                
+            case .processCompleted:
+                state.isProcessing = false
+                state.message = "処理が完了しました"
+                return .none
+            }
+        }
+    }
+}
+```
+
+`withLock`メソッドにより、`startProcessButtonTapped`アクションは処理中に再度実行されることがなくなり、ユーザーが誤って複数回ボタンをタップしても安全です。
+
+### デバッグ出力例
 
 ![01-SingleExecutionStrategy](https://github.com/user-attachments/assets/3f630c51-94c9-4404-b06a-0f565e1bedd3)
 

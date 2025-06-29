@@ -44,7 +44,77 @@ Lockman provides the following control strategies to address common problems in 
 
 ## Basic Example
 
-Example of single-execution action control:
+Here's how to implement a feature that prevents duplicate execution of processes using the `@LockmanSingleExecution` macro:
+
+```swift
+import ComposableArchitecture
+import Lockman
+
+@Reducer
+struct ProcessFeature {
+    @ObservableState
+    struct State: Equatable {
+        var isProcessing = false
+        var message = ""
+    }
+    
+    @LockmanSingleExecution
+    enum Action {
+        case startProcessButtonTapped
+        case processStart
+        case processCompleted
+        
+        var lockmanInfo: LockmanSingleExecutionInfo {
+            switch self {
+            case .startProcessButtonTapped:
+                return .init(actionId: actionName, mode: .boundary)
+            case .processStart, .processCompleted:
+                return .init(actionId: actionName, mode: .none)
+            }
+        }
+    }
+    
+    enum CancelID {
+        case userAction
+    }
+    
+    var body: some Reducer<State, Action> {
+        Reduce { state, action in
+            switch action {
+            case .startProcessButtonTapped:
+                return .withLock(
+                    operation: { send in
+                        await send(.processStart)
+                        // Simulate heavy processing
+                        try await Task.sleep(nanoseconds: 3_000_000_000)
+                        await send(.processCompleted)
+                    },
+                    lockFailure: { error, send in
+                        // When processing is already in progress
+                        state.message = "Processing is already in progress"
+                    },
+                    action: action,
+                    cancelID: CancelID.userAction
+                )
+                
+            case .processStart:
+                state.isProcessing = true
+                state.message = "Processing started..."
+                return .none
+                
+            case .processCompleted:
+                state.isProcessing = false
+                state.message = "Processing completed"
+                return .none
+            }
+        }
+    }
+}
+```
+
+The `withLock` method ensures that `startProcessButtonTapped` won't execute while processing is in progress, preventing duplicate operations even if the user taps the button multiple times.
+
+### Debug Output Example
 
 ![01-SingleExecutionStrategy](https://github.com/user-attachments/assets/3f630c51-94c9-4404-b06a-0f565e1bedd3)
 
