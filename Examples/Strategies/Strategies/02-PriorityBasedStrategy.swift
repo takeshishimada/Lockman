@@ -50,8 +50,7 @@ struct PriorityBasedStrategyFeature {
           actionId: actionId,
           lockmanInfoForStrategy1: LockmanPriorityBasedInfo(
             actionId: actionId,
-            priority: priority,
-            blocksSameAction: false  // SingleExecutionStrategyに委譲
+            priority: priority
           ),
           lockmanInfoForStrategy2: LockmanSingleExecutionInfo(
             actionId: actionId,
@@ -131,8 +130,6 @@ struct PriorityBasedStrategyFeature {
             failureMessage = "Blocked by higher priority"
           case .samePriorityConflict:
             failureMessage = "Same priority running"
-          case .blockedBySameAction:
-            failureMessage = "Already running"
           case let .precedingActionCancelled(cancelledInfo):
             // Update the cancelled task's button to show it was cancelled
             let cancelledButton: Action.ButtonType
@@ -200,9 +197,11 @@ struct PriorityBasedStrategyView: View {
           .font(.title2)
           .fontWeight(.bold)
 
-        Text("High priority cancels lower ones. Same priority: Exclusive blocks, Replaceable cancels and replaces.")
-          .font(.caption)
-          .foregroundColor(.secondary)
+        Text(
+          "High priority cancels lower ones. Same priority: Exclusive blocks, Replaceable cancels and replaces."
+        )
+        .font(.caption)
+        .foregroundColor(.secondary)
       }
       .padding()
       .frame(maxWidth: .infinity, alignment: .leading)

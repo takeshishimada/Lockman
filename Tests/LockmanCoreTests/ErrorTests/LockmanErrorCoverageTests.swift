@@ -51,12 +51,6 @@ final class LockmanErrorCoverageTests: XCTestCase {
     let error2 = LockmanPriorityBasedError.samePriorityConflict(priority: .low(.replaceable))
     XCTAssertNotNil(error2.failureReason)
     XCTAssertTrue(error2.failureReason!.contains("priority"))
-
-    let existingInfo3 = LockmanPriorityBasedInfo(
-      actionId: "test-action", priority: .high(.exclusive))
-    let error3 = LockmanPriorityBasedError.blockedBySameAction(existingInfo: existingInfo3)
-    XCTAssertNotNil(error3.failureReason)
-    XCTAssertTrue(error3.failureReason!.contains("action"))
   }
 
   // MARK: - TestDynamicConditionError Tests
@@ -114,14 +108,9 @@ final class LockmanErrorCoverageTests: XCTestCase {
     XCTAssertNotNil(error1.errorDescription)
     XCTAssertTrue(error1.errorDescription!.contains(specialId))
 
-    let existingInfo2 = LockmanPriorityBasedInfo(actionId: specialId, priority: .high(.exclusive))
-    let error2 = LockmanPriorityBasedError.blockedBySameAction(existingInfo: existingInfo2)
+    let error2 = TestDynamicConditionError.conditionNotMet(actionId: specialId, hint: nil)
     XCTAssertNotNil(error2.errorDescription)
     XCTAssertTrue(error2.errorDescription!.contains(specialId))
-
-    let error3 = TestDynamicConditionError.conditionNotMet(actionId: specialId, hint: nil)
-    XCTAssertNotNil(error3.errorDescription)
-    XCTAssertTrue(error3.errorDescription!.contains(specialId))
   }
 
   func testErrorDescriptionsWithEmptyStrings() {

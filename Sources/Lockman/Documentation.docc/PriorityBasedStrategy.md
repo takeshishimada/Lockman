@@ -87,15 +87,6 @@ enum Action {
 }
 ```
 
-### Same Action Blocking Setting
-
-```swift
-LockmanPriorityBasedInfo(
-    actionId: "criticalUpdate",
-    priority: .high(.exclusive),
-    blocksSameAction: true  // Block duplicate execution of the same action ID
-)
-```
 
 ## Operation Examples
 
@@ -145,16 +136,6 @@ lockFailure: { error, send in
 lockFailure: { error, send in
     if case .samePriorityConflict(let priority) = error as? LockmanPriorityBasedError {
         send(.busyMessage("Process with same priority is running"))
-    }
-}
-```
-
-**blockedBySameAction** - Blocked by same action
-
-```swift
-lockFailure: { error, send in
-    if case .blockedBySameAction(let existingInfo) = error as? LockmanPriorityBasedError {
-        send(.duplicateAction("Same process is already running"))
     }
 }
 ```
