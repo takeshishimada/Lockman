@@ -1,58 +1,58 @@
-<img src="Lockman.png" alt="Lockman Logo" width="400">
+<img src="../Lockman.png" alt="Lockman Logo" width="400">
 
 [![CI](https://github.com/takeshishimada/Lockman/workflows/CI/badge.svg)](https://github.com/takeshishimada/Lockman/actions?query=workflow%3ACI)
 [![Swift](https://img.shields.io/badge/Swift-5.9%20%7C%205.10%20%7C%206.0-ED523F.svg?style=flat)](https://swift.org/download/)
 [![Platforms](https://img.shields.io/badge/Platforms-iOS%20%7C%20macOS%20%7C%20tvOS%20%7C%20watchOS%20%7C%20Mac%20Catalyst-333333.svg?style=flat)](https://developer.apple.com/)
 
-[English](README.md) | [日本語](README_ja.md) | [简体中文](README_zh-CN.md) | [繁體中文](README_zh-TW.md) | [Español](README_es.md) | [Français](README_fr.md) | [Deutsch](README_de.md) | [한국어](README_ko.md) | [Português](README_pt-BR.md) | [Italiano](README_it.md)
+[English](../README.md) | [日本語](README_ja.md) | [简体中文](README_zh-CN.md) | [繁體中文](README_zh-TW.md) | [Español](README_es.md) | [Français](README_fr.md) | [Deutsch](README_de.md) | [한국어](README_ko.md) | [Português](README_pt-BR.md) | [Italiano](README_it.md)
 
-Lockman은 The Composable Architecture (TCA) 애플리케이션에서 동시 액션 제어 문제를 해결하는 Swift 라이브러리로, 반응성, 투명성, 선언적 설계에 중점을 둡니다.
+Lockman ist eine Swift-Bibliothek, die Probleme bei der Kontrolle konkurrierender Aktionen in The Composable Architecture (TCA) Anwendungen löst, mit Fokus auf Reaktionsfähigkeit, Transparenz und deklaratives Design.
 
-* [설계 철학](#설계-철학)
-* [개요](#개요)
-* [기본 예제](#기본-예제)
-* [설치](#설치)
-* [커뮤니티](#커뮤니티)
+* [Design-Philosophie](#design-philosophie)
+* [Überblick](#überblick)
+* [Grundlegendes Beispiel](#grundlegendes-beispiel)
+* [Installation](#installation)
+* [Community](#community)
 
-## 설계 철학
+## Design-Philosophie
 
-### Designing Fluid Interfaces 원칙
+### Designing Fluid Interfaces Prinzipien
 
-WWDC18의 "Designing Fluid Interfaces" 프레젠테이션은 뛰어난 인터페이스를 위한 원칙을 제시했습니다:
+Die Präsentation "Designing Fluid Interfaces" der WWDC18 stellte Prinzipien für außergewöhnliche Schnittstellen vor:
 
-* **즉각적인 응답과 지속적인 리디렉션** - 10ms의 지연도 허용하지 않는 반응성
-* **터치와 콘텐츠 간의 일대일 움직임** - 드래그 작업 중 콘텐츠가 손가락을 따라감
-* **지속적인 피드백** - 모든 상호작용에 대한 즉각적인 반응
-* **병렬 제스처 감지** - 여러 제스처를 동시에 인식
-* **공간적 일관성** - 애니메이션 중 위치 일관성 유지
-* **가벼운 상호작용, 증폭된 출력** - 작은 입력에서 큰 효과
+* **Sofortige Reaktion und kontinuierliche Umleitung** - Reaktionsfähigkeit, die nicht einmal 10ms Verzögerung toleriert
+* **Eins-zu-Eins-Bewegung zwischen Berührung und Inhalt** - Inhalt folgt dem Finger während Ziehvorgängen
+* **Kontinuierliches Feedback** - Sofortige Reaktion auf alle Interaktionen
+* **Parallele Gestenerkennung** - Gleichzeitige Erkennung mehrerer Gesten
+* **Räumliche Konsistenz** - Beibehaltung der Positionskonsistenz während Animationen
+* **Leichte Interaktionen, verstärkte Ausgabe** - Große Effekte aus kleinen Eingaben
 
-### 기존의 과제
+### Traditionelle Herausforderungen
 
-기존 UI 개발은 단순히 동시 버튼 누름과 중복 실행을 금지하여 문제를 해결했습니다. 이러한 접근 방식은 현대적인 유동적 인터페이스 설계에서 사용자 경험을 저해하는 요인이 되었습니다.
+Die traditionelle UI-Entwicklung löste Probleme, indem sie gleichzeitige Tasteneingaben und doppelte Ausführungen einfach verbot. Diese Ansätze wurden zu Faktoren, die die Benutzererfahrung im modernen flüssigen Interface-Design behindern.
 
-사용자는 동시에 버튼을 누르더라도 어떤 형태의 피드백을 기대합니다. UI 레이어에서의 즉각적인 응답과 비즈니스 로직 레이어에서의 적절한 상호 배제 제어를 명확히 분리하는 것이 중요합니다.
+Benutzer erwarten eine Form von Feedback, auch wenn sie gleichzeitig Tasten drücken. Es ist entscheidend, die sofortige Reaktion auf UI-Ebene klar von der angemessenen gegenseitigen Ausschlusskontrolle auf Geschäftslogikebene zu trennen.
 
-## 개요
+## Überblick
 
-Lockman은 애플리케이션 개발의 일반적인 문제를 해결하기 위해 다음과 같은 제어 전략을 제공합니다:
+Lockman bietet die folgenden Kontrollstrategien zur Lösung häufiger Probleme in der Anwendungsentwicklung:
 
-* **Single Execution**: 동일한 액션의 중복 실행 방지
-* **Priority Based**: 우선순위 기반 액션 제어 및 취소
-* **Group Coordination**: 리더/멤버 역할을 통한 그룹 제어
-* **Dynamic Condition**: 실행 조건에 기반한 동적 제어
-* **Concurrency Limited**: 그룹당 동시 실행 수 제한
-* **Composite Strategy**: 여러 전략 조합
+* **Single Execution**: Verhindert doppelte Ausführung derselben Aktion
+* **Priority Based**: Prioritätsbasierte Aktionskontrolle und -stornierung
+* **Group Coordination**: Gruppenkontrolle über Leader/Member-Rollen
+* **Dynamic Condition**: Dynamische Kontrolle basierend auf Ausführungsbedingungen
+* **Concurrency Limited**: Begrenzt die Anzahl gleichzeitiger Ausführungen pro Gruppe
+* **Composite Strategy**: Kombination mehrerer Strategien
 
-## 예제
+## Beispiele
 
 | Single Execution Strategy | Priority Based Strategy | Concurrency Limited Strategy |
 |--------------------------|------------------------|------------------------------|
-| ![Single Execution Strategy](Sources/Lockman/Documentation.docc/images/01-SingleExecutionStrategy.gif) | ![Priority Based Strategy](Sources/Lockman/Documentation.docc/images/02-PriorityBasedStrategy.gif) | ![Concurrency Limited Strategy](Sources/Lockman/Documentation.docc/images/03-ConcurrencyLimitedStrategy.gif) |
+| ![Single Execution Strategy](../Sources/Lockman/Documentation.docc/images/01-SingleExecutionStrategy.gif) | ![Priority Based Strategy](../Sources/Lockman/Documentation.docc/images/02-PriorityBasedStrategy.gif) | ![Concurrency Limited Strategy](../Sources/Lockman/Documentation.docc/images/03-ConcurrencyLimitedStrategy.gif) |
 
-## 코드 예제
+## Code-Beispiel
 
-`@LockmanSingleExecution` 매크로를 사용하여 프로세스의 중복 실행을 방지하는 기능을 구현하는 방법입니다:
+So implementieren Sie eine Funktion, die doppelte Prozessausführung mit dem `@LockmanSingleExecution` Makro verhindert:
 
 ```swift
 import ComposableArchitecture
@@ -129,9 +129,9 @@ struct ProcessFeature {
 }
 ```
 
-`withLock` 메서드는 처리가 진행 중일 때 `startProcessButtonTapped`가 실행되지 않도록 보장하여, 사용자가 버튼을 여러 번 눌러도 중복 작업을 방지합니다.
+Die `withLock` Methode stellt sicher, dass `startProcessButtonTapped` nicht ausgeführt wird, während die Verarbeitung läuft, wodurch doppelte Operationen verhindert werden, auch wenn der Benutzer mehrmals auf die Schaltfläche drückt.
 
-### 디버그 출력 예제
+### Debug-Ausgabe Beispiel
 
 ```
 ✅ [Lockman] canLock succeeded - Strategy: SingleExecution, BoundaryId: process, Info: LockmanSingleExecutionInfo(actionId: 'startProcessButtonTapped', uniqueId: 7BFC785A-3D25-4722-B9BC-A3A63A7F49FC, mode: boundary)
@@ -152,9 +152,9 @@ struct ProcessFeature {
 └─────────────────┴──────────────────┴──────────────────────────────────────┴─────────────────┘
 ```
 
-## 문서
+## Dokumentation
 
-출시된 버전과 `main`에 대한 문서는 여기에서 사용할 수 있습니다:
+Die Dokumentation für veröffentlichte Versionen und `main` ist hier verfügbar:
 
 * [`main`](https://takeshishimada.github.io/Lockman/main/documentation/lockman/)
 * [0.11.0](https://takeshishimada.github.io/Lockman/0.11.0/documentation/lockman/)
@@ -163,7 +163,7 @@ struct ProcessFeature {
 * [0.8.0](https://takeshishimada.github.io/Lockman/0.8.0/documentation/lockman/)
 
 <details>
-<summary>다른 버전</summary>
+<summary>Weitere Versionen</summary>
 
 * [0.7.0](https://takeshishimada.github.io/Lockman/0.7.0/documentation/lockman/)
 * [0.6.0](https://takeshishimada.github.io/Lockman/0.6.0/documentation/lockman/)
@@ -173,35 +173,35 @@ struct ProcessFeature {
 
 </details>
 
-라이브러리에 익숙해지는 데 도움이 될 수 있는 여러 문서가 있습니다:
+Es gibt mehrere Artikel in der Dokumentation, die Ihnen beim Einstieg in die Bibliothek helfen können:
 
-### 필수 사항
-* [시작하기](https://takeshishimada.github.io/Lockman/main/documentation/lockman/gettingstarted) - TCA 애플리케이션에 Lockman을 통합하는 방법 알아보기
-* [Boundary 개요](https://takeshishimada.github.io/Lockman/main/documentation/lockman/boundaryoverview) - Lockman의 boundary 개념 이해하기
-* [잠금](https://takeshishimada.github.io/Lockman/main/documentation/lockman/lock) - 잠금 메커니즘 이해하기
-* [잠금 해제](https://takeshishimada.github.io/Lockman/main/documentation/lockman/unlock) - 잠금 해제 메커니즘 이해하기
-* [전략 선택](https://takeshishimada.github.io/Lockman/main/documentation/lockman/choosingstrategy) - 사용 사례에 맞는 전략 선택하기
-* [구성](https://takeshishimada.github.io/Lockman/main/documentation/lockman/configuration) - 애플리케이션 요구 사항에 맞게 Lockman 구성하기
-* [오류 처리](https://takeshishimada.github.io/Lockman/main/documentation/lockman/errorhandling) - 일반적인 오류 처리 패턴 알아보기
-* [디버깅 가이드](https://takeshishimada.github.io/Lockman/main/documentation/lockman/debuggingguide) - 애플리케이션에서 Lockman 관련 문제 디버깅하기
+### Grundlagen
+* [Erste Schritte](https://takeshishimada.github.io/Lockman/main/documentation/lockman/gettingstarted) - Lernen Sie, wie Sie Lockman in Ihre TCA-Anwendung integrieren
+* [Boundary-Überblick](https://takeshishimada.github.io/Lockman/main/documentation/lockman/boundaryoverview) - Verstehen Sie das Boundary-Konzept in Lockman
+* [Sperren](https://takeshishimada.github.io/Lockman/main/documentation/lockman/lock) - Verstehen Sie den Sperrmechanismus
+* [Entsperren](https://takeshishimada.github.io/Lockman/main/documentation/lockman/unlock) - Verstehen Sie den Entsperrmechanismus
+* [Eine Strategie wählen](https://takeshishimada.github.io/Lockman/main/documentation/lockman/choosingstrategy) - Wählen Sie die richtige Strategie für Ihren Anwendungsfall
+* [Konfiguration](https://takeshishimada.github.io/Lockman/main/documentation/lockman/configuration) - Konfigurieren Sie Lockman für Ihre Anwendungsanforderungen
+* [Fehlerbehandlung](https://takeshishimada.github.io/Lockman/main/documentation/lockman/errorhandling) - Lernen Sie gängige Fehlerbehandlungsmuster
+* [Debugging-Leitfaden](https://takeshishimada.github.io/Lockman/main/documentation/lockman/debuggingguide) - Debuggen Sie Lockman-bezogene Probleme in Ihrer Anwendung
 
-### 전략
-* [Single Execution Strategy](https://takeshishimada.github.io/Lockman/main/documentation/lockman/singleexecutionstrategy) - 중복 실행 방지
-* [Priority Based Strategy](https://takeshishimada.github.io/Lockman/main/documentation/lockman/prioritybasedstrategy) - 우선순위 기반 제어
-* [Concurrency Limited Strategy](https://takeshishimada.github.io/Lockman/main/documentation/lockman/concurrencylimitedstrategy) - 동시 실행 제한
-* [Group Coordination Strategy](https://takeshishimada.github.io/Lockman/main/documentation/lockman/groupcoordinationstrategy) - 관련 액션 조정
-* [Dynamic Condition Strategy](https://takeshishimada.github.io/Lockman/main/documentation/lockman/dynamicconditionstrategy) - 동적 런타임 제어
-* [Composite Strategy](https://takeshishimada.github.io/Lockman/main/documentation/lockman/compositestrategy) - 여러 전략 결합
+### Strategien
+* [Single Execution Strategy](https://takeshishimada.github.io/Lockman/main/documentation/lockman/singleexecutionstrategy) - Doppelte Ausführung verhindern
+* [Priority Based Strategy](https://takeshishimada.github.io/Lockman/main/documentation/lockman/prioritybasedstrategy) - Prioritätsbasierte Kontrolle
+* [Concurrency Limited Strategy](https://takeshishimada.github.io/Lockman/main/documentation/lockman/concurrencylimitedstrategy) - Gleichzeitige Ausführungen begrenzen
+* [Group Coordination Strategy](https://takeshishimada.github.io/Lockman/main/documentation/lockman/groupcoordinationstrategy) - Verwandte Aktionen koordinieren
+* [Dynamic Condition Strategy](https://takeshishimada.github.io/Lockman/main/documentation/lockman/dynamicconditionstrategy) - Dynamische Laufzeitkontrolle
+* [Composite Strategy](https://takeshishimada.github.io/Lockman/main/documentation/lockman/compositestrategy) - Mehrere Strategien kombinieren
 
-참고: 문서는 영어로만 제공됩니다.
+Hinweis: Die Dokumentation ist nur auf Englisch verfügbar.
 
-## 설치
+## Installation
 
-Lockman은 [Swift Package Manager](https://swift.org/package-manager/)를 사용하여 설치할 수 있습니다.
+Lockman kann über den [Swift Package Manager](https://swift.org/package-manager/) installiert werden.
 
 ### Xcode
 
-Xcode에서 File → Add Package Dependencies를 선택하고 다음 URL을 입력하세요:
+Wählen Sie in Xcode File → Add Package Dependencies und geben Sie die folgende URL ein:
 
 ```
 https://github.com/takeshishimada/Lockman
@@ -209,7 +209,7 @@ https://github.com/takeshishimada/Lockman
 
 ### Package.swift
 
-Package.swift 파일에 종속성을 추가하세요:
+Fügen Sie die Abhängigkeit zu Ihrer Package.swift-Datei hinzu:
 
 ```swift
 dependencies: [
@@ -217,7 +217,7 @@ dependencies: [
 ]
 ```
 
-타겟에 종속성을 추가하세요:
+Fügen Sie die Abhängigkeit zu Ihrem Target hinzu:
 
 ```swift
 .target(
@@ -228,16 +228,16 @@ dependencies: [
 )
 ```
 
-### 요구 사항
+### Anforderungen
 
-| 플랫폼  | 최소 버전 |
-|---------|-----------|
-| iOS     | 13.0      |
-| macOS   | 10.15     |
-| tvOS    | 13.0      |
-| watchOS | 6.0       |
+| Plattform | Mindestversion |
+|-----------|----------------|
+| iOS       | 13.0           |
+| macOS     | 10.15          |
+| tvOS      | 13.0           |
+| watchOS   | 6.0            |
 
-### 버전 호환성
+### Versionskompatibilität
 
 | Lockman | The Composable Architecture |
 |---------|----------------------------|
@@ -246,7 +246,7 @@ dependencies: [
 | 0.9.0   | 1.18.0                     |
 
 <details>
-<summary>다른 버전</summary>
+<summary>Weitere Versionen</summary>
 
 | Lockman | The Composable Architecture |
 |---------|----------------------------|
@@ -262,20 +262,20 @@ dependencies: [
 
 </details>
 
-## 커뮤니티
+## Community
 
-### 토론 및 도움말
+### Diskussion und Hilfe
 
-질문과 토론은 [GitHub Discussions](https://github.com/takeshishimada/Lockman/discussions)에서 진행할 수 있습니다.
+Fragen und Diskussionen können in [GitHub Discussions](https://github.com/takeshishimada/Lockman/discussions) geführt werden.
 
-### 버그 보고
+### Fehlerberichte
 
-버그를 발견하면 [Issues](https://github.com/takeshishimada/Lockman/issues)에 보고해 주세요.
+Wenn Sie einen Fehler finden, melden Sie ihn bitte unter [Issues](https://github.com/takeshishimada/Lockman/issues).
 
-### 기여
+### Beitragen
 
-라이브러리에 기여하고 싶으시면 링크와 함께 PR을 열어주세요!
+Wenn Sie zur Bibliothek beitragen möchten, öffnen Sie bitte eine PR mit einem Link dazu!
 
-## 라이선스
+## Lizenz
 
-이 라이브러리는 MIT 라이선스로 출시되었습니다. 자세한 내용은 [LICENSE](./LICENSE) 파일을 참조하세요.
+Diese Bibliothek wird unter der MIT-Lizenz veröffentlicht. Siehe [LICENSE](./LICENSE) Datei für Details.

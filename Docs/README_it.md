@@ -1,58 +1,58 @@
-<img src="Lockman.png" alt="Lockman Logo" width="400">
+<img src="../Lockman.png" alt="Lockman Logo" width="400">
 
 [![CI](https://github.com/takeshishimada/Lockman/workflows/CI/badge.svg)](https://github.com/takeshishimada/Lockman/actions?query=workflow%3ACI)
 [![Swift](https://img.shields.io/badge/Swift-5.9%20%7C%205.10%20%7C%206.0-ED523F.svg?style=flat)](https://swift.org/download/)
 [![Platforms](https://img.shields.io/badge/Platforms-iOS%20%7C%20macOS%20%7C%20tvOS%20%7C%20watchOS%20%7C%20Mac%20Catalyst-333333.svg?style=flat)](https://developer.apple.com/)
 
-[English](README.md) | [日本語](README_ja.md) | [简体中文](README_zh-CN.md) | [繁體中文](README_zh-TW.md) | [Español](README_es.md) | [Français](README_fr.md) | [Deutsch](README_de.md) | [한국어](README_ko.md) | [Português](README_pt-BR.md) | [Italiano](README_it.md)
+[English](../README.md) | [日本語](README_ja.md) | [简体中文](README_zh-CN.md) | [繁體中文](README_zh-TW.md) | [Español](README_es.md) | [Français](README_fr.md) | [Deutsch](README_de.md) | [한국어](README_ko.md) | [Português](README_pt-BR.md) | [Italiano](README_it.md)
 
-Lockman ist eine Swift-Bibliothek, die Probleme bei der Kontrolle konkurrierender Aktionen in The Composable Architecture (TCA) Anwendungen löst, mit Fokus auf Reaktionsfähigkeit, Transparenz und deklaratives Design.
+Lockman è una libreria Swift che risolve i problemi di controllo delle azioni concorrenti nelle applicazioni The Composable Architecture (TCA), con reattività, trasparenza e design dichiarativo in mente.
 
-* [Design-Philosophie](#design-philosophie)
-* [Überblick](#überblick)
-* [Grundlegendes Beispiel](#grundlegendes-beispiel)
-* [Installation](#installation)
-* [Community](#community)
+* [Filosofia di Design](#filosofia-di-design)
+* [Panoramica](#panoramica)
+* [Esempio Base](#esempio-base)
+* [Installazione](#installazione)
+* [Comunità](#comunità)
 
-## Design-Philosophie
+## Filosofia di Design
 
-### Designing Fluid Interfaces Prinzipien
+### Principi di Designing Fluid Interfaces
 
-Die Präsentation "Designing Fluid Interfaces" der WWDC18 stellte Prinzipien für außergewöhnliche Schnittstellen vor:
+"Designing Fluid Interfaces" della WWDC18 ha presentato principi per interfacce eccezionali:
 
-* **Sofortige Reaktion und kontinuierliche Umleitung** - Reaktionsfähigkeit, die nicht einmal 10ms Verzögerung toleriert
-* **Eins-zu-Eins-Bewegung zwischen Berührung und Inhalt** - Inhalt folgt dem Finger während Ziehvorgängen
-* **Kontinuierliches Feedback** - Sofortige Reaktion auf alle Interaktionen
-* **Parallele Gestenerkennung** - Gleichzeitige Erkennung mehrerer Gesten
-* **Räumliche Konsistenz** - Beibehaltung der Positionskonsistenz während Animationen
-* **Leichte Interaktionen, verstärkte Ausgabe** - Große Effekte aus kleinen Eingaben
+* **Risposta Immediata e Reindirizzamento Continuo** - Reattività che non permette nemmeno 10ms di ritardo
+* **Movimento di Tocco e Contenuto Uno-a-Uno** - Il contenuto segue il dito durante le operazioni di trascinamento
+* **Feedback Continuo** - Reazione immediata a tutte le interazioni
+* **Rilevamento di Gesti Paralleli** - Riconoscimento di più gesti simultaneamente
+* **Coerenza Spaziale** - Mantenimento della coerenza di posizione durante le animazioni
+* **Interazioni Leggere, Output Amplificato** - Grandi effetti da piccoli input
 
-### Traditionelle Herausforderungen
+### Sfide Tradizionali
 
-Die traditionelle UI-Entwicklung löste Probleme, indem sie gleichzeitige Tasteneingaben und doppelte Ausführungen einfach verbot. Diese Ansätze wurden zu Faktoren, die die Benutzererfahrung im modernen flüssigen Interface-Design behindern.
+Lo sviluppo tradizionale dell'UI ha risolto i problemi semplicemente proibendo pressioni simultanee di pulsanti ed esecuzioni duplicate. Questi approcci sono diventati fattori che ostacolano l'esperienza utente nel moderno design di interfacce fluide.
 
-Benutzer erwarten eine Form von Feedback, auch wenn sie gleichzeitig Tasten drücken. Es ist entscheidend, die sofortige Reaktion auf UI-Ebene klar von der angemessenen gegenseitigen Ausschlusskontrolle auf Geschäftslogikebene zu trennen.
+Gli utenti si aspettano qualche forma di feedback anche quando premono i pulsanti simultaneamente. È cruciale separare chiaramente la risposta immediata al livello UI dal controllo appropriato di esclusione reciproca al livello della logica di business.
 
-## Überblick
+## Panoramica
 
-Lockman bietet die folgenden Kontrollstrategien zur Lösung häufiger Probleme in der Anwendungsentwicklung:
+Lockman fornisce le seguenti strategie di controllo per affrontare problemi comuni nello sviluppo di app:
 
-* **Single Execution**: Verhindert doppelte Ausführung derselben Aktion
-* **Priority Based**: Prioritätsbasierte Aktionskontrolle und -stornierung
-* **Group Coordination**: Gruppenkontrolle über Leader/Member-Rollen
-* **Dynamic Condition**: Dynamische Kontrolle basierend auf Ausführungsbedingungen
-* **Concurrency Limited**: Begrenzt die Anzahl gleichzeitiger Ausführungen pro Gruppe
-* **Composite Strategy**: Kombination mehrerer Strategien
+* **Esecuzione Singola**: Previene l'esecuzione duplicata della stessa azione
+* **Basata su Priorità**: Controllo e cancellazione delle azioni basata su priorità
+* **Coordinamento di Gruppo**: Controllo di gruppo attraverso ruoli leader/membro
+* **Condizione Dinamica**: Controllo dinamico basato su condizioni runtime
+* **Concorrenza Limitata**: Limita il numero di esecuzioni concorrenti per gruppo
+* **Strategia Composita**: Combinazione di più strategie
 
-## Beispiele
+## Esempi
 
-| Single Execution Strategy | Priority Based Strategy | Concurrency Limited Strategy |
-|--------------------------|------------------------|------------------------------|
-| ![Single Execution Strategy](Sources/Lockman/Documentation.docc/images/01-SingleExecutionStrategy.gif) | ![Priority Based Strategy](Sources/Lockman/Documentation.docc/images/02-PriorityBasedStrategy.gif) | ![Concurrency Limited Strategy](Sources/Lockman/Documentation.docc/images/03-ConcurrencyLimitedStrategy.gif) |
+| Strategia di Esecuzione Singola | Strategia Basata su Priorità | Strategia di Concorrenza Limitata |
+|----------------------------------|------------------------------|-----------------------------------|
+| ![Strategia di Esecuzione Singola](../Sources/Lockman/Documentation.docc/images/01-SingleExecutionStrategy.gif) | ![Strategia Basata su Priorità](../Sources/Lockman/Documentation.docc/images/02-PriorityBasedStrategy.gif) | ![Strategia di Concorrenza Limitata](../Sources/Lockman/Documentation.docc/images/03-ConcurrencyLimitedStrategy.gif) |
 
-## Code-Beispiel
+## Esempio di Codice
 
-So implementieren Sie eine Funktion, die doppelte Prozessausführung mit dem `@LockmanSingleExecution` Makro verhindert:
+Ecco come implementare una funzionalità che previene l'esecuzione duplicata di processi usando il macro `@LockmanSingleExecution`:
 
 ```swift
 import ComposableArchitecture
@@ -129,9 +129,9 @@ struct ProcessFeature {
 }
 ```
 
-Die `withLock` Methode stellt sicher, dass `startProcessButtonTapped` nicht ausgeführt wird, während die Verarbeitung läuft, wodurch doppelte Operationen verhindert werden, auch wenn der Benutzer mehrmals auf die Schaltfläche drückt.
+Il metodo `withLock` garantisce che `startProcessButtonTapped` non verrà eseguito mentre l'elaborazione è in corso, prevenendo operazioni duplicate anche se l'utente tocca il pulsante più volte.
 
-### Debug-Ausgabe Beispiel
+### Esempio di Output di Debug
 
 ```
 ✅ [Lockman] canLock succeeded - Strategy: SingleExecution, BoundaryId: process, Info: LockmanSingleExecutionInfo(actionId: 'startProcessButtonTapped', uniqueId: 7BFC785A-3D25-4722-B9BC-A3A63A7F49FC, mode: boundary)
@@ -152,9 +152,9 @@ Die `withLock` Methode stellt sicher, dass `startProcessButtonTapped` nicht ausg
 └─────────────────┴──────────────────┴──────────────────────────────────────┴─────────────────┘
 ```
 
-## Dokumentation
+## Documentazione
 
-Die Dokumentation für veröffentlichte Versionen und `main` ist hier verfügbar:
+La documentazione per le release e `main` è disponibile qui:
 
 * [`main`](https://takeshishimada.github.io/Lockman/main/documentation/lockman/)
 * [0.11.0](https://takeshishimada.github.io/Lockman/0.11.0/documentation/lockman/)
@@ -163,7 +163,7 @@ Die Dokumentation für veröffentlichte Versionen und `main` ist hier verfügbar
 * [0.8.0](https://takeshishimada.github.io/Lockman/0.8.0/documentation/lockman/)
 
 <details>
-<summary>Weitere Versionen</summary>
+<summary>Altre versioni</summary>
 
 * [0.7.0](https://takeshishimada.github.io/Lockman/0.7.0/documentation/lockman/)
 * [0.6.0](https://takeshishimada.github.io/Lockman/0.6.0/documentation/lockman/)
@@ -173,35 +173,35 @@ Die Dokumentation für veröffentlichte Versionen und `main` ist hier verfügbar
 
 </details>
 
-Es gibt mehrere Artikel in der Dokumentation, die Ihnen beim Einstieg in die Bibliothek helfen können:
+Ci sono numerosi articoli nella documentazione che potresti trovare utili mentre prendi confidenza con la libreria:
 
-### Grundlagen
-* [Erste Schritte](https://takeshishimada.github.io/Lockman/main/documentation/lockman/gettingstarted) - Lernen Sie, wie Sie Lockman in Ihre TCA-Anwendung integrieren
-* [Boundary-Überblick](https://takeshishimada.github.io/Lockman/main/documentation/lockman/boundaryoverview) - Verstehen Sie das Boundary-Konzept in Lockman
-* [Sperren](https://takeshishimada.github.io/Lockman/main/documentation/lockman/lock) - Verstehen Sie den Sperrmechanismus
-* [Entsperren](https://takeshishimada.github.io/Lockman/main/documentation/lockman/unlock) - Verstehen Sie den Entsperrmechanismus
-* [Eine Strategie wählen](https://takeshishimada.github.io/Lockman/main/documentation/lockman/choosingstrategy) - Wählen Sie die richtige Strategie für Ihren Anwendungsfall
-* [Konfiguration](https://takeshishimada.github.io/Lockman/main/documentation/lockman/configuration) - Konfigurieren Sie Lockman für Ihre Anwendungsanforderungen
-* [Fehlerbehandlung](https://takeshishimada.github.io/Lockman/main/documentation/lockman/errorhandling) - Lernen Sie gängige Fehlerbehandlungsmuster
-* [Debugging-Leitfaden](https://takeshishimada.github.io/Lockman/main/documentation/lockman/debuggingguide) - Debuggen Sie Lockman-bezogene Probleme in Ihrer Anwendung
+### Essenziali
+* [Iniziare](https://takeshishimada.github.io/Lockman/main/documentation/lockman/gettingstarted) - Impara come integrare Lockman nella tua applicazione TCA
+* [Panoramica dei Confini](https://takeshishimada.github.io/Lockman/main/documentation/lockman/boundaryoverview) - Comprendi il concetto di confini in Lockman
+* [Lock](https://takeshishimada.github.io/Lockman/main/documentation/lockman/lock) - Comprendere il meccanismo di blocco
+* [Unlock](https://takeshishimada.github.io/Lockman/main/documentation/lockman/unlock) - Comprendere il meccanismo di sblocco
+* [Scegliere una Strategia](https://takeshishimada.github.io/Lockman/main/documentation/lockman/choosingstrategy) - Seleziona la strategia giusta per il tuo caso d'uso
+* [Configurazione](https://takeshishimada.github.io/Lockman/main/documentation/lockman/configuration) - Configura Lockman per le esigenze della tua applicazione
+* [Gestione degli Errori](https://takeshishimada.github.io/Lockman/main/documentation/lockman/errorhandling) - Impara i pattern comuni di gestione degli errori
+* [Guida al Debug](https://takeshishimada.github.io/Lockman/main/documentation/lockman/debuggingguide) - Esegui il debug dei problemi relativi a Lockman nella tua applicazione
 
-### Strategien
-* [Single Execution Strategy](https://takeshishimada.github.io/Lockman/main/documentation/lockman/singleexecutionstrategy) - Doppelte Ausführung verhindern
-* [Priority Based Strategy](https://takeshishimada.github.io/Lockman/main/documentation/lockman/prioritybasedstrategy) - Prioritätsbasierte Kontrolle
-* [Concurrency Limited Strategy](https://takeshishimada.github.io/Lockman/main/documentation/lockman/concurrencylimitedstrategy) - Gleichzeitige Ausführungen begrenzen
-* [Group Coordination Strategy](https://takeshishimada.github.io/Lockman/main/documentation/lockman/groupcoordinationstrategy) - Verwandte Aktionen koordinieren
-* [Dynamic Condition Strategy](https://takeshishimada.github.io/Lockman/main/documentation/lockman/dynamicconditionstrategy) - Dynamische Laufzeitkontrolle
-* [Composite Strategy](https://takeshishimada.github.io/Lockman/main/documentation/lockman/compositestrategy) - Mehrere Strategien kombinieren
+### Strategie
+* [Strategia di Esecuzione Singola](https://takeshishimada.github.io/Lockman/main/documentation/lockman/singleexecutionstrategy) - Previene l'esecuzione duplicata
+* [Strategia Basata su Priorità](https://takeshishimada.github.io/Lockman/main/documentation/lockman/prioritybasedstrategy) - Controllo basato su priorità
+* [Strategia di Concorrenza Limitata](https://takeshishimada.github.io/Lockman/main/documentation/lockman/concurrencylimitedstrategy) - Limita le esecuzioni concorrenti
+* [Strategia di Coordinamento di Gruppo](https://takeshishimada.github.io/Lockman/main/documentation/lockman/groupcoordinationstrategy) - Coordina le azioni correlate
+* [Strategia di Condizione Dinamica](https://takeshishimada.github.io/Lockman/main/documentation/lockman/dynamicconditionstrategy) - Controllo dinamico runtime
+* [Strategia Composita](https://takeshishimada.github.io/Lockman/main/documentation/lockman/compositestrategy) - Combina più strategie
 
-Hinweis: Die Dokumentation ist nur auf Englisch verfügbar.
+Nota: La documentazione è disponibile solo in inglese.
 
-## Installation
+## Installazione
 
-Lockman kann über den [Swift Package Manager](https://swift.org/package-manager/) installiert werden.
+Lockman può essere installato usando [Swift Package Manager](https://swift.org/package-manager/).
 
 ### Xcode
 
-Wählen Sie in Xcode File → Add Package Dependencies und geben Sie die folgende URL ein:
+In Xcode, seleziona File → Add Package Dependencies e inserisci il seguente URL:
 
 ```
 https://github.com/takeshishimada/Lockman
@@ -209,7 +209,7 @@ https://github.com/takeshishimada/Lockman
 
 ### Package.swift
 
-Fügen Sie die Abhängigkeit zu Ihrer Package.swift-Datei hinzu:
+Aggiungi la dipendenza al tuo file Package.swift:
 
 ```swift
 dependencies: [
@@ -217,7 +217,7 @@ dependencies: [
 ]
 ```
 
-Fügen Sie die Abhängigkeit zu Ihrem Target hinzu:
+Aggiungi la dipendenza al tuo target:
 
 ```swift
 .target(
@@ -228,16 +228,16 @@ Fügen Sie die Abhängigkeit zu Ihrem Target hinzu:
 )
 ```
 
-### Anforderungen
+### Requisiti
 
-| Plattform | Mindestversion |
-|-----------|----------------|
-| iOS       | 13.0           |
-| macOS     | 10.15          |
-| tvOS      | 13.0           |
-| watchOS   | 6.0            |
+| Piattaforma | Versione Minima |
+|-------------|-----------------|
+| iOS         | 13.0            |
+| macOS       | 10.15           |
+| tvOS        | 13.0            |
+| watchOS     | 6.0             |
 
-### Versionskompatibilität
+### Compatibilità delle Versioni
 
 | Lockman | The Composable Architecture |
 |---------|----------------------------|
@@ -246,7 +246,7 @@ Fügen Sie die Abhängigkeit zu Ihrem Target hinzu:
 | 0.9.0   | 1.18.0                     |
 
 <details>
-<summary>Weitere Versionen</summary>
+<summary>Altre versioni</summary>
 
 | Lockman | The Composable Architecture |
 |---------|----------------------------|
@@ -262,20 +262,20 @@ Fügen Sie die Abhängigkeit zu Ihrem Target hinzu:
 
 </details>
 
-## Community
+## Comunità
 
-### Diskussion und Hilfe
+### Discussione e Aiuto
 
-Fragen und Diskussionen können in [GitHub Discussions](https://github.com/takeshishimada/Lockman/discussions) geführt werden.
+Domande e discussioni possono essere tenute su [GitHub Discussions](https://github.com/takeshishimada/Lockman/discussions).
 
-### Fehlerberichte
+### Segnalazioni di Bug
 
-Wenn Sie einen Fehler finden, melden Sie ihn bitte unter [Issues](https://github.com/takeshishimada/Lockman/issues).
+Se trovi un bug, per favore segnalalo su [Issues](https://github.com/takeshishimada/Lockman/issues).
 
-### Beitragen
+### Contribuire
 
-Wenn Sie zur Bibliothek beitragen möchten, öffnen Sie bitte eine PR mit einem Link dazu!
+Se desideri contribuire alla libreria, per favore apri una PR con un link ad essa!
 
-## Lizenz
+## Licenza
 
-Diese Bibliothek wird unter der MIT-Lizenz veröffentlicht. Siehe [LICENSE](./LICENSE) Datei für Details.
+Questa libreria è rilasciata sotto licenza MIT. Vedi il file [LICENSE](./LICENSE) per i dettagli.
