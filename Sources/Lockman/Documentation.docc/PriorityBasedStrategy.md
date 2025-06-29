@@ -125,6 +125,8 @@ LockmanPriorityBasedInfo(
 
 ## エラーハンドリング
 
+PriorityBasedStrategyで発生する可能性のあるエラーと、その対処法については[Error Handling](<doc:ErrorHandling>)ページの共通パターンも参照してください。
+
 ### LockmanPriorityBasedError
 
 **higherPriorityExists** - より高い優先度が実行中

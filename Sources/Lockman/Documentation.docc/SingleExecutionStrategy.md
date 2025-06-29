@@ -122,24 +122,26 @@ case .saveButtonTapped:
 
 ## エラーハンドリング
 
+SingleExecutionStrategyで発生する可能性のあるエラーと、その対処法については[Error Handling](<doc:ErrorHandling>)ページの共通パターンも参照してください。
+
 ### LockmanSingleExecutionError
 
 **boundaryAlreadyLocked** - 境界が既にロックされている
+- `boundaryId`: ロックされている境界のID
+- `existingInfo`: 既存のロック情報
+
+**actionAlreadyRunning** - 同じアクションが既に実行中  
+- `existingInfo`: 実行中のアクション情報
 
 ```swift
 lockFailure: { error, send in
-    if case .boundaryAlreadyLocked(let boundaryId, let existingInfo) = error as? LockmanSingleExecutionError {
-        send(.showBusyMessage("他の処理が実行中です"))
-    }
-}
-```
-
-**actionAlreadyRunning** - 同じアクションが既に実行中
-
-```swift
-lockFailure: { error, send in
-    if case .actionAlreadyRunning(let existingInfo) = error as? LockmanSingleExecutionError {
-        send(.showBusyMessage("保存処理が実行中です"))
+    switch error as? LockmanSingleExecutionError {
+    case .boundaryAlreadyLocked(_, let existingInfo):
+        send(.showBusyMessage("他の処理が実行中です: \(existingInfo.actionId)"))
+    case .actionAlreadyRunning(let existingInfo):
+        send(.showBusyMessage("\(existingInfo.actionId)が実行中です"))
+    default:
+        send(.showBusyMessage("処理を開始できません"))
     }
 }
 ```

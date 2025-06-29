@@ -38,6 +38,7 @@ Lockman provides a comprehensive solution for managing exclusive control over us
 - <doc:Unlock>
 - <doc:ChoosingStrategy>
 - <doc:Configuration>
+- <doc:ErrorHandling>
 - <doc:DebuggingGuide>
 
 ### Strategies

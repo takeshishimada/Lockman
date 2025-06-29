@@ -152,9 +152,14 @@ LockmanConcurrencyLimitedInfo(
 
 ## エラーハンドリング
 
+ConcurrencyLimitedStrategyで発生する可能性のあるエラーと、その対処法については[Error Handling](<doc:ErrorHandling>)ページの共通パターンも参照してください。
+
 ### LockmanConcurrencyLimitedError
 
 **concurrencyLimitReached** - 同時実行制限に到達
+- `requestedInfo`: 実行要求された処理の情報
+- `existingInfos`: 現在実行中の処理一覧  
+- `current`: 現在の同時実行数
 
 ```swift
 lockFailure: { error, send in
@@ -165,11 +170,6 @@ lockFailure: { error, send in
     }
 }
 ```
-
-**エラー情報の活用**:
-- `requestedInfo`: 実行要求された処理の情報
-- `existingInfos`: 現在実行中の処理一覧
-- `current`: 現在の同時実行数
 
 ## ガイド
 

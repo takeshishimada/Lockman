@@ -90,6 +90,6 @@ func applicationDidFinishLaunching() {
 
 ## ガイド
 
-次のステップ [Debugging](<doc:DebuggingGuide>)
+次のステップ [Error Handling](<doc:ErrorHandling>)
 
 前のステップ <doc:ChoosingStrategy>

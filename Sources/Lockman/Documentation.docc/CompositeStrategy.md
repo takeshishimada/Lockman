@@ -142,11 +142,14 @@ enum Action {
 
 ## エラーハンドリング
 
-複合戦略では、各構成戦略からのエラーが統合されて報告されます：
+CompositeStrategyで発生する可能性のあるエラーと、その対処法については[Error Handling](<doc:ErrorHandling>)ページの共通パターンも参照してください。
+
+### 複合戦略でのエラー処理
+
+複合戦略では、各構成戦略からのエラーが統合されて報告されます。最初に失敗した戦略のエラーが返されるため、エラーの型を確認して適切に処理します：
 
 ```swift
 lockFailure: { error, send in
-    // 最初に失敗した戦略のエラーが返される
     switch error {
     case let singleError as LockmanSingleExecutionError:
         send(.singleExecutionConflict("重複実行が検出されました"))

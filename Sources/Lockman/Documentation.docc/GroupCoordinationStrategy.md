@@ -163,6 +163,8 @@ LockmanGroupCoordinatedInfo(
 
 ## エラーハンドリング
 
+GroupCoordinationStrategyで発生する可能性のあるエラーと、その対処法については[Error Handling](<doc:ErrorHandling>)ページの共通パターンも参照してください。
+
 ### LockmanGroupCoordinationError
 
 **actionAlreadyInGroup** - アクションが既にグループに参加
