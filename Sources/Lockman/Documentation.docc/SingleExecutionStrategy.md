@@ -148,4 +148,4 @@ lockFailure: { error, send in
 
 次のステップ <doc:PriorityBasedStrategy>
 
-前のステップ <doc:DebuggingGuide>
+前のステップ [Debugging](<doc:DebuggingGuide>)

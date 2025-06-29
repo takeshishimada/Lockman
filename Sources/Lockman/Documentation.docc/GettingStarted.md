@@ -84,7 +84,21 @@ struct ProcessFeature {
   - アクション識別: ロック管理システム内でのアクション識別子を提供します
   - 戦略間の連携: 複合戦略使用時に、各戦略へ渡すパラメータを個別に定義します
 
-### Step 3: Reducer本体を実装する
+### Step 3: CancelIDを定義する
+
+Effectのキャンセル識別子として使用する`CancelID`を定義します：
+
+```swift
+extension ProcessFeature {
+    enum CancelID {
+        case userAction
+    }
+}
+```
+
+`CancelID`はEffectのキャンセルとロック境界の識別に使用されます。
+
+### Step 4: Reducer本体を実装する
 
 [`withLock`](<doc:Lock>)メソッドを使用して、排他制御を伴う処理を実装します：
 
@@ -104,7 +118,8 @@ var body: some Reducer<State, Action> {
                     // すでに処理が実行中の場合
                     state.message = "処理は既に実行中です"
                 },
-                action: action
+                action: action,
+                cancelID: CancelID.userAction
             )
             
         case .processStart:
@@ -126,6 +141,7 @@ var body: some Reducer<State, Action> {
 - `operation`：排他制御下で実行される処理を定義します
 - `lockFailure`：すでに同じ処理が実行中の場合に呼ばれるハンドラーです
 - `action`：現在処理中のアクションを渡します
+- `cancelID`：Effectのキャンセルとロック境界の識別子を指定します
 
 これで、`startProcessButtonTapped`アクションは処理中に再度実行されることがなくなり、ユーザーが誤って複数回ボタンをタップしても安全です。
 

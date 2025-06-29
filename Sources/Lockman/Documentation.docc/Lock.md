@@ -26,13 +26,25 @@ Lockmanは3つの主要なメソッドを提供し、用途に応じて使い分
 
 ```swift
 .withLock(
+  priority: .userInitiated, // オプション: タスク優先度
+  unlockOption: .immediate, // オプション: ロック解除タイミング
   operation: { send in /* 処理 */ },
-  catch: { error, send in /* エラー処理 */ },
-  lockFailure: { error, send in /* ロック取得失敗処理 */ },
+  catch handler: { error, send in /* エラー処理 */ }, // オプション
+  lockFailure: { error, send in /* ロック取得失敗処理 */ }, // オプション
   action: action,
   cancelID: cancelID
 )
 ```
+
+**パラメータ:**
+- `priority`: タスクの優先度（オプション）
+- `unlockOption`: ロック解除のタイミング（オプション、デフォルトは設定値）
+- `handleCancellationErrors`: キャンセルエラーの扱い（オプション、デフォルトは設定値）
+- `operation`: 排他制御下で実行する処理
+- `catch handler`: エラーハンドラー（オプション）
+- `lockFailure`: ロック取得失敗時のハンドラー（オプション）
+- `action`: 現在のアクション
+- `cancelID`: Effectのキャンセル識別子
 
 **特徴:**
 - 自動的なロック管理
@@ -45,12 +57,14 @@ Lockmanは3つの主要なメソッドを提供し、用途に応じて使い分
 
 ```swift
 .withLock(
+  priority: .userInitiated, // オプション: タスク優先度
+  unlockOption: .immediate, // オプション: ロック解除タイミング
   operation: { send, unlock in 
     /* 処理 */
     unlock() // 手動解除
   },
-  catch: { error, send, unlock in /* エラー処理 */ },
-  lockFailure: { error, send in /* ロック取得失敗処理 */ },
+  catch handler: { error, send, unlock in /* エラー処理 */ }, // オプション
+  lockFailure: { error, send in /* ロック取得失敗処理 */ }, // オプション
   action: action,
   cancelID: cancelID
 )
@@ -67,12 +81,13 @@ Lockmanは3つの主要なメソッドを提供し、用途に応じて使い分
 
 ```swift
 .concatenateWithLock(
+  unlockOption: .immediate, // オプション: ロック解除タイミング
   operations: [
     .run { send in /* 処理1 */ },
     .run { send in /* 処理2 */ },
     .run { send in /* 処理3 */ }
   ],
-  lockFailure: { error, send in /* ロック取得失敗処理 */ },
+  lockFailure: { error, send in /* ロック取得失敗処理 */ }, // オプション
   action: action,
   cancelID: cancelID
 )
