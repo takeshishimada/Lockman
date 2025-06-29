@@ -4,15 +4,15 @@ Prevent duplicate execution of the same action.
 
 ## Overview
 
-SingleExecutionStrategyは、重複実行を防止するための戦略です。同じ処理が重複して実行されることを防ぎ、データの整合性とアプリケーションの安定性を保ちます。
+SingleExecutionStrategy is a strategy for preventing duplicate execution. It prevents the same processing from being executed redundantly, maintaining data consistency and application stability.
 
-この戦略は、ユーザーの連続的な操作や自動処理の重複実行を防ぐために最も頻繁に使用される基本的な戦略です。
+This is the most frequently used basic strategy for preventing continuous user operations and duplicate execution of automatic processing.
 
-## 実行モード
+## Execution Modes
 
-SingleExecutionStrategyは3つの実行モードをサポートしています：
+SingleExecutionStrategy supports three execution modes:
 
-### none - 制御なし
+### none - No Control
 
 ```swift
 LockmanSingleExecutionInfo(
@@ -21,11 +21,11 @@ LockmanSingleExecutionInfo(
 )
 ```
 
-- 排他制御を行わず、全ての処理を同時実行
-- 一時的にロック機能を無効化したい場合に使用
-- デバッグやテスト時の動作確認に適用
+- Executes all processing concurrently without exclusive control
+- Used when temporarily disabling lock functionality
+- Applied for behavior verification during debugging or testing
 
-### boundary - 境界単位の排他制御
+### boundary - Boundary-level Exclusive Control
 
 ```swift
 LockmanSingleExecutionInfo(
@@ -38,7 +38,7 @@ LockmanSingleExecutionInfo(
 - Exclusive control at screen or component level
 - Applied when wanting to control entire UI operations
 
-### action - アクション単位の排他制御
+### action - Action-level Exclusive Control
 
 ```swift
 LockmanSingleExecutionInfo(
@@ -47,13 +47,13 @@ LockmanSingleExecutionInfo(
 )
 ```
 
-- 同一アクションの重複実行のみ防止
-- 異なるアクションは同時実行可能
-- 特定の処理のみを制御したい場合に適用
+- Prevents only duplicate execution of the same action
+- Different actions can execute concurrently
+- Applied when wanting to control only specific processing
 
-## 使用方法
+## Usage
 
-### 基本的な使用例
+### Basic Usage Example
 
 ```swift
 @LockmanSingleExecution
@@ -78,7 +78,7 @@ enum Action {
 }
 ```
 
-### Effect内での使用
+### Usage within Effects
 
 ```swift
 case .saveButtonTapped:
@@ -91,57 +91,57 @@ case .saveButtonTapped:
             send(.saveError(error.localizedDescription))
         },
         lockFailure: { error, send in
-            send(.saveBusy("保存処理が実行中です"))
+            send(.saveBusy("Save process is currently running"))
         },
         action: .save,
         cancelID: CancelID.userAction
     )
 ```
 
-## 動作例
+## Operation Examples
 
-### action モードの場合
-
-```
-時刻: 0秒  - saveアクション開始 → ✅ 実行
-時刻: 1秒  - saveアクション要求 → ❌ 拒否（同じアクション実行中）
-時刻: 1秒  - loadアクション要求 → ✅ 実行（異なるアクション）
-時刻: 3秒  - saveアクション完了 → 🔓 ロック解除
-時刻: 4秒  - saveアクション要求 → ✅ 実行（前回処理完了済み）
-```
-
-### boundary モードの場合
+### action mode
 
 ```
-時刻: 0秒  - saveアクション開始 → ✅ 実行
-時刻: 1秒  - saveアクション要求 → ❌ 拒否（境界内で実行中）
-時刻: 1秒  - loadアクション要求 → ❌ 拒否（境界内で実行中）
-時刻: 3秒  - saveアクション完了 → 🔓 ロック解除
-時刻: 4秒  - loadアクション要求 → ✅ 実行（境界内の処理完了済み）
+Time: 0s  - save action starts → ✅ Execute
+Time: 1s  - save action request → ❌ Reject (same action running)
+Time: 1s  - load action request → ✅ Execute (different action)
+Time: 3s  - save action complete → 🔓 Unlock
+Time: 4s  - save action request → ✅ Execute (previous process completed)
 ```
 
-## エラーハンドリング
+### boundary mode
 
-SingleExecutionStrategyで発生する可能性のあるエラーと、その対処法については[Error Handling](<doc:ErrorHandling>)ページの共通パターンも参照してください。
+```
+Time: 0s  - save action starts → ✅ Execute
+Time: 1s  - save action request → ❌ Reject (running within boundary)
+Time: 1s  - load action request → ❌ Reject (running within boundary)
+Time: 3s  - save action complete → 🔓 Unlock
+Time: 4s  - load action request → ✅ Execute (boundary process completed)
+```
+
+## Error Handling
+
+For errors that may occur with SingleExecutionStrategy and their solutions, please also refer to the common patterns on the [Error Handling](<doc:ErrorHandling>) page.
 
 ### LockmanSingleExecutionError
 
-**boundaryAlreadyLocked** - 境界が既にロックされている
-- `boundaryId`: ロックされている境界のID
-- `existingInfo`: 既存のロック情報
+**boundaryAlreadyLocked** - Boundary is already locked
+- `boundaryId`: ID of the locked boundary
+- `existingInfo`: Existing lock information
 
-**actionAlreadyRunning** - 同じアクションが既に実行中  
-- `existingInfo`: 実行中のアクション情報
+**actionAlreadyRunning** - Same action is already running  
+- `existingInfo`: Running action information
 
 ```swift
 lockFailure: { error, send in
     switch error as? LockmanSingleExecutionError {
     case .boundaryAlreadyLocked(_, let existingInfo):
-        send(.showBusyMessage("他の処理が実行中です: \(existingInfo.actionId)"))
+        send(.showBusyMessage("Another process is running: \(existingInfo.actionId)"))
     case .actionAlreadyRunning(let existingInfo):
-        send(.showBusyMessage("\(existingInfo.actionId)が実行中です"))
+        send(.showBusyMessage("\(existingInfo.actionId) is running"))
     default:
-        send(.showBusyMessage("処理を開始できません"))
+        send(.showBusyMessage("Cannot start processing"))
     }
 }
 ```
