@@ -6,15 +6,15 @@ import SwiftUI
 struct SingleExecutionStrategyFeature {
   @ObservableState
   struct State: Equatable {
-    var isProcessing = false
-    var message: String = ""
-    var messageType: MessageType = .none
-    var previousMessage: String = ""
+    var processStatus: ProcessStatus = .idle
+    var temporaryMessage: String? = nil
 
-    enum MessageType: Equatable {
-      case none
-      case error
-      case success
+    enum ProcessStatus: Equatable {
+      case idle
+      case processing
+      case completed
+      case failed(String)
+      case blocked
     }
   }
 
@@ -37,6 +37,8 @@ struct SingleExecutionStrategyFeature {
       case processStart
       case processCompleted
       case handleError(Error)
+      case handleLockFailure(Error)
+      case clearTemporaryMessage
     }
   }
 
@@ -73,7 +75,10 @@ struct SingleExecutionStrategyFeature {
           await send(.internal(.handleError(error)))
         },
         lockFailure: { error, send in
-          await send(.internal(.handleError(error)))
+          print("🔒 Lock failure detected: \(error)")
+          print("  Error type: \(type(of: error))")
+          print("  Error description: \(error.localizedDescription)")
+          await send(.internal(.handleLockFailure(error)))
         },
         action: action,
         cancelID: CancelID.process
@@ -88,32 +93,40 @@ struct SingleExecutionStrategyFeature {
   ) -> Effect<Action> {
     switch action {
     case .processStart:
-      state.isProcessing = true
-      state.message = ""
-      state.messageType = .none
+      state.processStatus = .processing
       return .none
 
     case .processCompleted:
-      state.isProcessing = false
-      state.message = "Process completed successfully"
-      state.messageType = .success
+      state.processStatus = .completed
       return .none
 
     case .handleError(let error):
-      state.messageType = .error
-
-      if error is LockmanSingleExecutionError {
-        state.previousMessage = state.message
-        state.message = "Process is already running"
+      if error is ProcessError {
+        state.processStatus = .failed("Process failed")
       } else {
-        state.isProcessing = false
-        if error is ProcessError {
-          state.message = "Process failed"
-        } else {
-          state.message = "Unknown error occurred"
-        }
+        state.processStatus = .failed("Unknown error occurred")
       }
+      return .none
 
+    case .handleLockFailure(let error):
+      if error is LockmanSingleExecutionError {
+        // Show temporary message when blocked during processing
+        if state.processStatus == .processing {
+          state.temporaryMessage = "Already running"
+          return .run { send in
+            try await Task.sleep(nanoseconds: 2_000_000_000)  // 2 seconds
+            await send(.internal(.clearTemporaryMessage))
+          }
+        } else {
+          state.processStatus = .blocked
+        }
+      } else {
+        state.processStatus = .failed("Lock acquisition failed")
+      }
+      return .none
+
+    case .clearTemporaryMessage:
+      state.temporaryMessage = nil
       return .none
     }
   }
@@ -121,87 +134,49 @@ struct SingleExecutionStrategyFeature {
 
 @ViewAction(for: SingleExecutionStrategyFeature.self)
 struct SingleExecutionStrategyView: View {
-  @Bindable var store: StoreOf<SingleExecutionStrategyFeature>
+  let store: StoreOf<SingleExecutionStrategyFeature>
 
   var body: some View {
-    VStack(spacing: 30) {
-      // Overview
+    VStack(spacing: 0) {
+      // Header
       VStack(alignment: .leading, spacing: 10) {
-        Text("SingleExecutionStrategy")
+        Text("Single Execution Strategy")
           .font(.title2)
           .fontWeight(.bold)
 
-        Text(
-          "Example of exclusive control using @LockmanSingleExecution.\nDuplicate executions are blocked while processing."
-        )
-        .font(.caption)
-        .foregroundColor(.secondary)
-        .multilineTextAlignment(.leading)
+        Text("Prevents duplicate executions while processing")
+          .font(.caption)
+          .foregroundColor(.secondary)
       }
       .padding()
-      .background(Color.gray.opacity(0.1))
+      .frame(maxWidth: .infinity, alignment: .leading)
+      .background(Color(.systemGray6))
       .cornerRadius(10)
 
-      Spacer()
-
-      // Main content
-      VStack(spacing: 20) {
-        // Process execution button
-        Button(action: {
-          send(.startProcessButtonTapped)
-        }) {
-          HStack(spacing: 10) {
-            if store.isProcessing {
-              ProgressView()
-                .progressViewStyle(CircularProgressViewStyle(tint: .white))
-                .scaleEffect(0.9)
-              Text("Processing...")
-                .fontWeight(.medium)
-            } else {
-              Image(systemName: "play.fill")
-                .font(.system(size: 16))
+      // Process list
+      List {
+        HStack {
+          // Button (left column)
+          Button(action: { send(.startProcessButtonTapped) }) {
+            HStack {
+              Image(systemName: iconName(for: store.processStatus))
+                .foregroundColor(iconColor(for: store.processStatus))
               Text("Start Process")
-                .fontWeight(.semibold)
             }
           }
-          .frame(minWidth: 200)
-          .padding(.horizontal, 24)
-          .padding(.vertical, 14)
-          .background(
-            Group {
-              if store.isProcessing {
-                Color.gray.opacity(0.7)
-              } else {
-                LinearGradient(
-                  gradient: Gradient(colors: [Color.blue, Color.blue.opacity(0.8)]),
-                  startPoint: .top,
-                  endPoint: .bottom
-                )
-              }
-            }
-          )
-          .foregroundColor(.white)
-          .cornerRadius(12)
-          .shadow(color: store.isProcessing ? .clear : .blue.opacity(0.3), radius: 8, x: 0, y: 4)
-          .scaleEffect(store.isProcessing ? 0.98 : 1.0)
-          .animation(.easeInOut(duration: 0.1), value: store.isProcessing)
-        }
+          .frame(width: 140, alignment: .leading)
 
-        // Message label
-        Text(store.message)
-          .font(.body)
-          .foregroundColor(messageColor(for: store.messageType))
-          .padding(.horizontal)
-          .frame(height: 20)
-          .opacity(store.message.isEmpty ? 0 : 1)
-          .animation(
-            store.message == "Process is already running"
-              && store.previousMessage == "Process is already running"
-              ? .none
-              : .easeInOut(duration: 0.3),
-            value: store.message
-          )
+          Spacer()
+
+          // Status display (right column)
+          Text(store.temporaryMessage ?? statusText(for: store.processStatus))
+            .font(.caption)
+            .foregroundColor(
+              store.temporaryMessage != nil ? .orange : statusColor(for: store.processStatus))
+        }
+        .padding(.vertical, 8)
       }
+      .listStyle(.insetGrouped)
 
       Spacer()
 
@@ -220,18 +195,69 @@ struct SingleExecutionStrategyView: View {
       }
       .padding(.top, 20)
     }
-    .padding()
-    .navigationTitle("Single Execution")
+    .navigationTitle("SingleExecutionStrategy")
+    .navigationBarTitleDisplayMode(.inline)
   }
 
-  private func messageColor(for type: SingleExecutionStrategyFeature.State.MessageType) -> Color {
-    switch type {
-    case .none:
-      return .primary
-    case .error:
-      return .red
-    case .success:
+  private func iconName(for status: SingleExecutionStrategyFeature.State.ProcessStatus) -> String {
+    switch status {
+    case .idle:
+      return "play.circle"
+    case .processing:
+      return "play.circle.fill"
+    case .completed:
+      return "checkmark.circle.fill"
+    case .failed:
+      return "xmark.circle.fill"
+    case .blocked:
+      return "exclamationmark.circle.fill"
+    }
+  }
+
+  private func iconColor(for status: SingleExecutionStrategyFeature.State.ProcessStatus) -> Color {
+    switch status {
+    case .idle:
+      return .blue
+    case .processing:
+      return .orange
+    case .completed:
       return .green
+    case .failed:
+      return .red
+    case .blocked:
+      return .yellow
+    }
+  }
+
+  private func statusText(for status: SingleExecutionStrategyFeature.State.ProcessStatus) -> String
+  {
+    switch status {
+    case .idle:
+      return "Ready to start"
+    case .processing:
+      return "Processing..."
+    case .completed:
+      return "Completed successfully"
+    case .failed(let error):
+      return error
+    case .blocked:
+      return "Already running"
+    }
+  }
+
+  private func statusColor(for status: SingleExecutionStrategyFeature.State.ProcessStatus) -> Color
+  {
+    switch status {
+    case .idle:
+      return .secondary
+    case .processing:
+      return .orange
+    case .completed:
+      return .green
+    case .failed:
+      return .red
+    case .blocked:
+      return .orange
     }
   }
 }
