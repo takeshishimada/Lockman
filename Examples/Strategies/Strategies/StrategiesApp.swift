@@ -28,7 +28,6 @@ class AppDelegate: NSObject, UIApplicationDelegate {
     #endif
 
     // Register strategies used in examples
-    CompositeStrategyInjection.inject()
     registerConcurrencyLimitedStrategies()
     registerGroupCoordinationStrategy()
     registerDynamicConditionStrategy()

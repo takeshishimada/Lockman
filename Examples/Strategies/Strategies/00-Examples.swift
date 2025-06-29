@@ -13,7 +13,6 @@ struct ExamplesFeature {
   @CasePathable
   enum Action {
     case path(StackAction<Path.State, Path.Action>)
-    case compositeStrategyTapped
     case concurrencyLimitedStrategyTapped
     case dynamicConditionStrategyTapped
     case groupCoordinationStrategyTapped
@@ -25,10 +24,6 @@ struct ExamplesFeature {
   var body: some ReducerOf<Self> {
     Reduce { state, action in
       switch action {
-      case .compositeStrategyTapped:
-        state.path.append(.compositeStrategy(CompositeStrategyFeature.State()))
-        return .none
-
       case .concurrencyLimitedStrategyTapped:
         state.path.append(.concurrencyLimitedStrategy(ConcurrencyLimitedStrategyFeature.State()))
         return .none
@@ -71,7 +66,6 @@ struct ExamplesFeature {
 struct Path {
   @ObservableState
   enum State: Equatable {
-    case compositeStrategy(CompositeStrategyFeature.State)
     case concurrencyLimitedStrategy(ConcurrencyLimitedStrategyFeature.State)
     case dynamicConditionStrategy(DynamicConditionStrategyFeature.State)
     case groupCoordinationStrategy(GroupCoordinationStrategyFeature.State)
@@ -80,7 +74,6 @@ struct Path {
   }
 
   enum Action {
-    case compositeStrategy(CompositeStrategyFeature.Action)
     case concurrencyLimitedStrategy(ConcurrencyLimitedStrategyFeature.Action)
     case dynamicConditionStrategy(DynamicConditionStrategyFeature.Action)
     case groupCoordinationStrategy(GroupCoordinationStrategyFeature.Action)
@@ -89,9 +82,6 @@ struct Path {
   }
 
   var body: some ReducerOf<Self> {
-    Scope(state: \.compositeStrategy, action: \.compositeStrategy) {
-      CompositeStrategyFeature()
-    }
     Scope(state: \.concurrencyLimitedStrategy, action: \.concurrencyLimitedStrategy) {
       ConcurrencyLimitedStrategyFeature()
     }
@@ -155,9 +145,11 @@ struct ExamplesView: View {
             .foregroundColor(.primary)
             .font(.headline)
 
-            Text("Controls action execution order and replacement based on priority levels")
-              .font(.caption)
-              .foregroundColor(.secondary)
+            Text(
+              "Controls action execution order and replacement based on priority levels\n(Uses CompositeStrategy with SingleExecutionStrategy)"
+            )
+            .font(.caption)
+            .foregroundColor(.secondary)
           }
           .padding(.vertical, 4)
 
@@ -169,9 +161,11 @@ struct ExamplesView: View {
             .foregroundColor(.primary)
             .font(.headline)
 
-            Text("Limits the number of concurrent executions for resource-intensive operations")
-              .font(.caption)
-              .foregroundColor(.secondary)
+            Text(
+              "Limits the number of concurrent executions for resource-intensive operations\n(Uses CompositeStrategy with SingleExecutionStrategy)"
+            )
+            .font(.caption)
+            .foregroundColor(.secondary)
           }
           .padding(.vertical, 4)
 
@@ -203,19 +197,6 @@ struct ExamplesView: View {
           }
           .padding(.vertical, 4)
 
-          // CompositeStrategy
-          VStack(alignment: .leading, spacing: 4) {
-            Button("CompositeStrategy") {
-              store.send(.compositeStrategyTapped)
-            }
-            .foregroundColor(.primary)
-            .font(.headline)
-
-            Text("Combines multiple strategies to achieve complex control logic")
-              .font(.caption)
-              .foregroundColor(.secondary)
-          }
-          .padding(.vertical, 4)
         }
 
         // Debug Section
@@ -241,10 +222,6 @@ struct ExamplesView: View {
       .navigationTitle("Examples")
     } destination: { store in
       switch store.state {
-      case .compositeStrategy:
-        if let store = store.scope(state: \.compositeStrategy, action: \.compositeStrategy) {
-          CompositeStrategyView(store: store)
-        }
       case .concurrencyLimitedStrategy:
         if let store = store.scope(
           state: \.concurrencyLimitedStrategy, action: \.concurrencyLimitedStrategy)
