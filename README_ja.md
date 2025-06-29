@@ -42,7 +42,13 @@ Lockmanは以下の制御戦略を提供し、実際のアプリ開発で頻繁�
 * **Concurrency Limited**: グループごとの並行実行数を制限
 * **Composite Strategy**: 複数戦略の組み合わせ
 
-## 基本例
+## 例
+
+| Single Execution Strategy | Priority Based Strategy | Concurrency Limited Strategy |
+|--------------------------|------------------------|------------------------------|
+| ![Single Execution Strategy](Sources/Lockman/Documentation.docc/images/01-SingleExecutionStrategy.gif) | ![Priority Based Strategy](Sources/Lockman/Documentation.docc/images/02-PriorityBasedStrategy.gif) | ![Concurrency Limited Strategy](Sources/Lockman/Documentation.docc/images/03-ConcurrencyLimitedStrategy.gif) |
+
+## コード例
 
 `@LockmanSingleExecution`マクロを使用して、処理の重複実行を防ぐ機能を実装する方法：
 
@@ -124,8 +130,6 @@ struct ProcessFeature {
 `withLock`メソッドにより、`startProcessButtonTapped`アクションは処理中に再度実行されることがなくなり、ユーザーが誤って複数回ボタンをタップしても安全です。
 
 ### デバッグ出力例
-
-![01-SingleExecutionStrategy](https://github.com/user-attachments/assets/3f630c51-94c9-4404-b06a-0f565e1bedd3)
 
 ```
 ✅ [Lockman] canLock succeeded - Strategy: SingleExecution, BoundaryId: process, Info: LockmanSingleExecutionInfo(actionId: 'startProcessButtonTapped', uniqueId: 7BFC785A-3D25-4722-B9BC-A3A63A7F49FC, mode: boundary)
