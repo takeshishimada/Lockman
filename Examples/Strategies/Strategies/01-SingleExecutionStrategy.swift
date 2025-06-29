@@ -18,8 +18,6 @@ struct SingleExecutionStrategyFeature {
     }
   }
 
-  @Dependency(\.sampleProcessUseCase) var useCase
-
   enum Action: ViewAction {
     case view(ViewAction)
     case `internal`(InternalAction)
@@ -68,7 +66,7 @@ struct SingleExecutionStrategyFeature {
       return .withLock(
         operation: { send in
           await send(.internal(.processStart))
-          try await useCase.execute()
+          try await Task.sleep(nanoseconds: 5_000_000_000)  // 5 seconds
           await send(.internal(.processCompleted))
         },
         catch: { error, send in
@@ -101,11 +99,7 @@ struct SingleExecutionStrategyFeature {
       return .none
 
     case .handleError(let error):
-      if error is ProcessError {
-        state.processStatus = .failed("Process failed")
-      } else {
-        state.processStatus = .failed("Unknown error occurred")
-      }
+      state.processStatus = .failed("Error: \(error.localizedDescription)")
       return .none
 
     case .handleLockFailure(let error):
@@ -260,51 +254,4 @@ struct SingleExecutionStrategyView: View {
       return .orange
     }
   }
-}
-
-// MARK: - Errors
-
-enum ProcessError: Error, Equatable {
-  case processFailed
-}
-
-// MARK: - Use Case
-
-struct SampleProcessUseCase {
-  private var executionCount = 0
-
-  mutating func execute() async throws {
-    // Wait for 5 seconds
-    try await Task.sleep(nanoseconds: 5_000_000_000)
-
-    // Increment execution count
-    executionCount += 1
-
-    // Odd number = success, even number = failure
-    if executionCount % 2 == 0 {
-      throw ProcessError.processFailed
-    }
-  }
-}
-
-// MARK: - Dependency
-
-// Wrap the use case in a class to maintain state
-final class SampleProcessUseCaseWrapper {
-  private var useCase = SampleProcessUseCase()
-
-  func execute() async throws {
-    try await useCase.execute()
-  }
-}
-
-extension DependencyValues {
-  var sampleProcessUseCase: SampleProcessUseCaseWrapper {
-    get { self[SampleProcessUseCaseWrapper.self] }
-    set { self[SampleProcessUseCaseWrapper.self] = newValue }
-  }
-}
-
-extension SampleProcessUseCaseWrapper: DependencyKey {
-  static let liveValue = SampleProcessUseCaseWrapper()
 }
