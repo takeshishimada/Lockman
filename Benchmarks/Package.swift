@@ -10,7 +10,7 @@ let package = Package(
   dependencies: [
     .package(path: ".."),
     .package(url: "https://github.com/ordo-one/package-benchmark", from: "1.4.0"),
-    .package(url: "https://github.com/pointfreeco/swift-composable-architecture", exact: "1.18.0"),
+    .package(url: "https://github.com/pointfreeco/swift-composable-architecture", exact: "1.19.0"),
   ],
   targets: [
     .executableTarget(

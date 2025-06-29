@@ -19,8 +19,8 @@ let package = Package(
       targets: ["Lockman"])
   ],
   dependencies: [
-    .package(url: "https://github.com/pointfreeco/swift-composable-architecture", exact: "1.18.0"),
-    .package(url: "https://github.com/swiftlang/swift-syntax", "509.0.0"..<"601.0.0"),
+    .package(url: "https://github.com/pointfreeco/swift-composable-architecture", exact: "1.19.0"),
+    .package(url: "https://github.com/swiftlang/swift-syntax", "509.0.0"..<"602.0.0"),
     .package(url: "https://github.com/pointfreeco/swift-macro-testing", from: "0.2.0"),
     .package(url: "https://github.com/apple/swift-collections.git", from: "1.1.4"),
     .package(url: "https://github.com/swiftlang/swift-docc-plugin", exact: "1.0.0"),
