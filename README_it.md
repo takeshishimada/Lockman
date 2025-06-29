@@ -157,11 +157,12 @@ Il metodo `withLock` garantisce che `startProcessButtonTapped` non verrà esegui
 La documentazione per le release e `main` è disponibile qui:
 
 * [`main`](https://takeshishimada.github.io/Lockman/main/documentation/lockman/)
-* [0.7.0](https://takeshishimada.github.io/Lockman/0.7.0/documentation/lockman/)
+* [0.8.0](https://takeshishimada.github.io/Lockman/0.8.0/documentation/lockman/)
 
 <details>
 <summary>Altre versioni</summary>
 
+* [0.7.0](https://takeshishimada.github.io/Lockman/0.7.0/documentation/lockman/)
 * [0.6.0](https://takeshishimada.github.io/Lockman/0.6.0/documentation/lockman/)
 * [0.5.0](https://takeshishimada.github.io/Lockman/0.5.0/documentation/lockman/)
 * [0.4.0](https://takeshishimada.github.io/Lockman/0.4.0/documentation/lockman/)
@@ -209,7 +210,7 @@ Aggiungi la dipendenza al tuo file Package.swift:
 
 ```swift
 dependencies: [
-  .package(url: "https://github.com/takeshishimada/Lockman", from: "0.7.0")
+  .package(url: "https://github.com/takeshishimada/Lockman", from: "0.8.0")
 ]
 ```
 
@@ -237,13 +238,14 @@ Aggiungi la dipendenza al tuo target:
 
 | Lockman | The Composable Architecture |
 |---------|----------------------------|
-| 0.7.0   | 1.17.1                     |
+| 0.8.0   | 1.17.1                     |
 
 <details>
 <summary>Altre versioni</summary>
 
 | Lockman | The Composable Architecture |
 |---------|----------------------------|
+| 0.7.0   | 1.17.1                     |
 | 0.6.0   | 1.17.1                     |
 | 0.5.0   | 1.17.1                     |
 | 0.4.0   | 1.17.1                     |
