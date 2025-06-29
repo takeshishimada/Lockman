@@ -67,39 +67,6 @@ public struct LockmanPriorityBasedInfo: LockmanInfo, Sendable, Equatable {
   /// See `Priority` enum for detailed information about priority levels and behaviors.
   public let priority: Priority
 
-  /// Whether this action blocks other actions with the same actionId.
-  ///
-  /// When set to `true`, this action will prevent any other action with the same
-  /// `actionId` from being locked, regardless of priority levels. This is useful
-  /// for operations that must be unique per action type.
-  ///
-  /// When set to `false`, actions with the same `actionId` follow the
-  /// normal priority rules and can coexist based on their priority levels.
-  ///
-  /// ## Use Cases
-  /// - **true**: Payment processing, file saves, or any operation where only one
-  ///   instance of a specific action should run at a time
-  /// - **false**: Search queries, UI updates, or operations that can have multiple
-  ///   instances with different priorities
-  ///
-  /// ## Example
-  /// ```swift
-  /// // Only one payment can process at a time
-  /// let payment = LockmanPriorityBasedInfo(
-  ///   actionId: "payment",
-  ///   priority: .high(.exclusive),
-  ///   blocksSameAction: true
-  /// )
-  ///
-  /// // Multiple searches can coexist based on priority
-  /// let search = LockmanPriorityBasedInfo(
-  ///   actionId: "search",
-  ///   priority: .high(.replaceable),
-  ///   blocksSameAction: false
-  /// )
-  /// ```
-  public let blocksSameAction: Bool
-
   // MARK: - Initialization
 
   /// Creates a new priority-based lock information instance.
@@ -108,7 +75,6 @@ public struct LockmanPriorityBasedInfo: LockmanInfo, Sendable, Equatable {
   ///   - strategyId: The strategy identifier for this lock (defaults to .priorityBased)
   ///   - actionId: A unique identifier for the action
   ///   - priority: The priority level and concurrency behavior for this action
-  ///   - blocksSameAction: Whether to block other actions with the same actionId (default: true)
   ///
   /// ## Design Note
   /// The `uniqueId` is automatically generated to ensure each instance has
@@ -117,14 +83,12 @@ public struct LockmanPriorityBasedInfo: LockmanInfo, Sendable, Equatable {
   public init(
     strategyId: LockmanStrategyId = .priorityBased,
     actionId: LockmanActionId,
-    priority: Priority,
-    blocksSameAction: Bool = true
+    priority: Priority
   ) {
     self.strategyId = strategyId
     self.actionId = actionId
     self.uniqueId = UUID()
     self.priority = priority
-    self.blocksSameAction = blocksSameAction
   }
 
   // MARK: - Equatable Implementation
@@ -157,7 +121,7 @@ public struct LockmanPriorityBasedInfo: LockmanInfo, Sendable, Equatable {
     }
 
     return
-      "LockmanPriorityBasedInfo(strategyId: '\(strategyId)', actionId: '\(actionId)', uniqueId: \(uniqueId), priority: \(priorityStr), blocksSameAction: \(blocksSameAction))"
+      "LockmanPriorityBasedInfo(strategyId: '\(strategyId)', actionId: '\(actionId)', uniqueId: \(uniqueId), priority: \(priorityStr))"
   }
 
   // MARK: - Debug Additional Info
@@ -168,7 +132,6 @@ public struct LockmanPriorityBasedInfo: LockmanInfo, Sendable, Equatable {
       let behaviorStr = behavior == .exclusive ? ".exclusive" : ".replaceable"
       result = String(result.prefix(20 - 13)) + " b: " + behaviorStr
     }
-    result += " blocksSameAction: \(blocksSameAction)"
     return result
   }
 }

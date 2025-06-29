@@ -31,39 +31,39 @@ extension TestBoundaryId {
 
 /// Factory for creating priority-based test info
 private enum TestInfoFactory {
-  static func none(_ actionId: String = "noneAction", blocksSameAction: Bool = true)
+  static func none(_ actionId: String = "noneAction")
     -> LockmanPriorityBasedInfo
   {
     LockmanPriorityBasedInfo(
-      actionId: actionId, priority: .none, blocksSameAction: blocksSameAction)
+      actionId: actionId, priority: .none)
   }
 
-  static func lowExclusive(_ actionId: String = "lowExclusive", blocksSameAction: Bool = true)
+  static func lowExclusive(_ actionId: String = "lowExclusive")
     -> LockmanPriorityBasedInfo
   {
     LockmanPriorityBasedInfo(
-      actionId: actionId, priority: .low(.exclusive), blocksSameAction: blocksSameAction)
+      actionId: actionId, priority: .low(.exclusive))
   }
 
-  static func lowReplaceable(_ actionId: String = "lowReplaceable", blocksSameAction: Bool = true)
+  static func lowReplaceable(_ actionId: String = "lowReplaceable")
     -> LockmanPriorityBasedInfo
   {
     LockmanPriorityBasedInfo(
-      actionId: actionId, priority: .low(.replaceable), blocksSameAction: blocksSameAction)
+      actionId: actionId, priority: .low(.replaceable))
   }
 
-  static func highExclusive(_ actionId: String = "highExclusive", blocksSameAction: Bool = true)
+  static func highExclusive(_ actionId: String = "highExclusive")
     -> LockmanPriorityBasedInfo
   {
     LockmanPriorityBasedInfo(
-      actionId: actionId, priority: .high(.exclusive), blocksSameAction: blocksSameAction)
+      actionId: actionId, priority: .high(.exclusive))
   }
 
-  static func highReplaceable(_ actionId: String = "highReplaceable", blocksSameAction: Bool = true)
+  static func highReplaceable(_ actionId: String = "highReplaceable")
     -> LockmanPriorityBasedInfo
   {
     LockmanPriorityBasedInfo(
-      actionId: actionId, priority: .high(.replaceable), blocksSameAction: blocksSameAction)
+      actionId: actionId, priority: .high(.replaceable))
   }
 }
 
@@ -486,148 +486,6 @@ final class LockmanPriorityBasedStrategyTests: XCTestCase {
 
     // Now replaceable cannot replace exclusive
     XCTAssertLockFailure(strategy.canLock(id: id, info: lowReplaceable))
-
-    strategy.cleanUp()
-  }
-
-  // MARK: - blocksSameAction Tests
-
-  func testBlocksSameActionPreventsSameActionId() {
-    let strategy = LockmanPriorityBasedStrategy()
-    let id = TestBoundaryId.default
-    let actionId = "payment"
-
-    // First action with blocksSameAction = true
-    let info1 = TestInfoFactory.highExclusive(actionId, blocksSameAction: true)
-    XCTAssertEqual(strategy.canLock(id: id, info: info1), .success)
-    strategy.lock(id: id, info: info1)
-
-    // Second action with same actionId should fail regardless of priority
-    let info2 = TestInfoFactory.highReplaceable(actionId)
-    XCTAssertLockFailure(strategy.canLock(id: id, info: info2))
-
-    // Even with lower priority, should fail
-    let info3 = TestInfoFactory.lowExclusive(actionId)
-    XCTAssertLockFailure(strategy.canLock(id: id, info: info3))
-
-    // Different actionId should work normally
-    let info4 = TestInfoFactory.highExclusive("different")
-    XCTAssertLockFailure(strategy.canLock(id: id, info: info4))  // Normal priority rule applies
-
-    strategy.cleanUp()
-  }
-
-  func testBlocksSameActionIsBidirectional() {
-    let strategy = LockmanPriorityBasedStrategy()
-    let id = TestBoundaryId.default
-    let actionId = "save"
-
-    // First action without blocksSameAction
-    let info1 = TestInfoFactory.lowExclusive(actionId)
-    strategy.lock(id: id, info: info1)
-
-    // Second action with blocksSameAction = true and same actionId should fail
-    let info2 = TestInfoFactory.highExclusive(actionId, blocksSameAction: true)
-    XCTAssertLockFailure(strategy.canLock(id: id, info: info2))
-
-    strategy.cleanUp()
-  }
-
-  func testBlocksSameActionWithNonePriority() {
-    let strategy = LockmanPriorityBasedStrategy()
-    let id = TestBoundaryId.default
-    let actionId = "notification"
-
-    // None priority with blocksSameAction = true
-    let info1 = TestInfoFactory.none(actionId, blocksSameAction: true)
-    XCTAssertEqual(strategy.canLock(id: id, info: info1), .success)
-    strategy.lock(id: id, info: info1)
-
-    // Another none priority with same actionId should still succeed (none bypasses priority system)
-    let info2 = TestInfoFactory.none(actionId)
-    XCTAssertEqual(strategy.canLock(id: id, info: info2), .success)
-
-    strategy.cleanUp()
-  }
-
-  func testBlocksSameActionAcrossBoundaries() {
-    let strategy = LockmanPriorityBasedStrategy()
-    let id1 = TestBoundaryId.boundary1
-    let id2 = TestBoundaryId.boundary2
-    let actionId = "update"
-
-    // Lock on boundary1 with blocksSameAction
-    let info1 = TestInfoFactory.highExclusive(actionId, blocksSameAction: true)
-    strategy.lock(id: id1, info: info1)
-
-    // Same actionId on boundary2 should succeed (boundaries are isolated)
-    let info2 = TestInfoFactory.highExclusive(actionId, blocksSameAction: true)
-    XCTAssertEqual(strategy.canLock(id: id2, info: info2), .success)
-    strategy.lock(id: id2, info: info2)
-
-    // But same actionId on same boundary should fail
-    XCTAssertLockFailure(strategy.canLock(id: id1, info: info2))
-    XCTAssertLockFailure(strategy.canLock(id: id2, info: info1))
-
-    strategy.cleanUp()
-  }
-
-  func testBlocksSameActionWithPriorityTransitions() {
-    let strategy = LockmanPriorityBasedStrategy()
-    let id = TestBoundaryId.default
-    let actionId = "process"
-
-    // Start with low priority blocksSameAction
-    let lowBlocking = TestInfoFactory.lowExclusive(actionId, blocksSameAction: true)
-    strategy.lock(id: id, info: lowBlocking)
-
-    // High priority with same actionId should fail despite higher priority
-    let highNormal = TestInfoFactory.highReplaceable(actionId)
-    XCTAssertLockFailure(strategy.canLock(id: id, info: highNormal))
-
-    // Unlock the blocking action
-    strategy.unlock(id: id, info: lowBlocking)
-
-    // Now high priority should succeed
-    XCTAssertEqual(strategy.canLock(id: id, info: highNormal), .success)
-    strategy.lock(id: id, info: highNormal)
-
-    // Low priority blocking should now fail (normal priority rules)
-    XCTAssertLockFailure(strategy.canLock(id: id, info: lowBlocking))
-
-    strategy.cleanUp()
-  }
-
-  func testBlocksSameActionComplexScenario() {
-    let strategy = LockmanPriorityBasedStrategy()
-    let id = TestBoundaryId.default
-
-    // Multiple actions with different actionIds and blocksSameAction settings
-    let payment1 = TestInfoFactory.highExclusive("payment", blocksSameAction: true)
-    let payment2 = TestInfoFactory.highReplaceable("payment")
-    let search1 = TestInfoFactory.highReplaceable("search")
-    let search2 = TestInfoFactory.highReplaceable("search", blocksSameAction: true)
-    let update1 = TestInfoFactory.lowExclusive("update", blocksSameAction: true)
-
-    // Lock payment with blocksSameAction
-    strategy.lock(id: id, info: payment1)
-
-    // Payment2 should fail
-    XCTAssertLockFailure(strategy.canLock(id: id, info: payment2))
-
-    // Search1 should succeed (different actionId)
-    XCTAssertLockFailure(strategy.canLock(id: id, info: search1))  // Normal priority rule (same high priority, exclusive behavior)
-
-    // Update1 should succeed (different actionId, despite blocksSameAction)
-    XCTAssertLockFailure(strategy.canLock(id: id, info: update1))  // Normal priority rule (lower priority)
-
-    strategy.unlock(id: id, info: payment1)
-
-    // Now lock search1 without blocksSameAction
-    strategy.lock(id: id, info: search1)
-
-    // Search2 with blocksSameAction should fail
-    XCTAssertLockFailure(strategy.canLock(id: id, info: search2))
 
     strategy.cleanUp()
   }

@@ -99,10 +99,9 @@ public final class LockmanPriorityBasedStrategy: LockmanStrategy, @unchecked Sen
   ///
   /// ## Decision Process
   /// 1. **No Priority Bypass**: Actions with `.none` priority always succeed
-  /// 2. **Same Action Blocking**: Check if any existing action blocks the same actionId
-  /// 3. **Current State Check**: Examines existing non-none priority actions
-  /// 4. **Priority Comparison**: Compares requested priority with current highest
-  /// 5. **Behavior Application**: Applies existing action's concurrency behavior when levels match
+  /// 2. **Current State Check**: Examines existing non-none priority actions
+  /// 3. **Priority Comparison**: Compares requested priority with current highest
+  /// 4. **Behavior Application**: Applies existing action's concurrency behavior when levels match
   ///
   /// ## Return Values
   /// - `.success`: No conflicts, lock can be acquired immediately
@@ -137,37 +136,6 @@ public final class LockmanPriorityBasedStrategy: LockmanStrategy, @unchecked Sen
 
     // Get all current locks for this boundary
     let currentLocks = state.currents(id: id)
-
-    // Check blocksSameAction bidirectional blocking logic:
-    // 1. If the requested action has blocksSameAction=true, it cannot execute if any action with the same actionId exists
-    // 2. If any existing action with the same actionId has blocksSameAction=true, the requested action cannot execute
-    // This ensures bidirectional blocking between actions with the same actionId
-    if requestedInfo.blocksSameAction
-      || currentLocks.contains(where: {
-        $0.actionId == requestedInfo.actionId && $0.blocksSameAction
-      })
-    {
-      // Check if any action with the same actionId already exists
-      let hasSameActionConflict = currentLocks.contains {
-        $0.actionId == requestedInfo.actionId
-      }
-      if hasSameActionConflict {
-        // Find the existing info with the same actionId
-        let existingInfo = currentLocks.first { $0.actionId == requestedInfo.actionId }!
-        result = .failure(
-          LockmanPriorityBasedError.blockedBySameAction(existingInfo: existingInfo))
-        failureReason = "Same action '\(requestedInfo.actionId)' is blocked by policy"
-
-        LockmanLogger.shared.logCanLock(
-          result: result,
-          strategy: "PriorityBased",
-          boundaryId: String(describing: id),
-          info: info,
-          reason: failureReason
-        )
-        return result
-      }
-    }
 
     // Filter out non-priority actions for priority comparison
     let priorityLocks = currentLocks.filter { $0.priority != .none }

@@ -24,39 +24,39 @@ private struct TestBoundaryId: LockmanBoundaryId {
 
 /// Factory for creating test info instances with clear intent
 private enum TestInfoFactory {
-  static func none(_ actionId: String = "noneAction", blocksSameAction: Bool = true)
+  static func none(_ actionId: String = "noneAction")
     -> LockmanPriorityBasedInfo
   {
     LockmanPriorityBasedInfo(
-      actionId: actionId, priority: .none, blocksSameAction: blocksSameAction)
+      actionId: actionId, priority: .none)
   }
 
-  static func lowExclusive(_ actionId: String = "lowExclusive", blocksSameAction: Bool = true)
+  static func lowExclusive(_ actionId: String = "lowExclusive")
     -> LockmanPriorityBasedInfo
   {
     LockmanPriorityBasedInfo(
-      actionId: actionId, priority: .low(.exclusive), blocksSameAction: blocksSameAction)
+      actionId: actionId, priority: .low(.exclusive))
   }
 
-  static func lowReplaceable(_ actionId: String = "lowReplaceable", blocksSameAction: Bool = true)
+  static func lowReplaceable(_ actionId: String = "lowReplaceable")
     -> LockmanPriorityBasedInfo
   {
     LockmanPriorityBasedInfo(
-      actionId: actionId, priority: .low(.replaceable), blocksSameAction: blocksSameAction)
+      actionId: actionId, priority: .low(.replaceable))
   }
 
-  static func highExclusive(_ actionId: String = "highExclusive", blocksSameAction: Bool = true)
+  static func highExclusive(_ actionId: String = "highExclusive")
     -> LockmanPriorityBasedInfo
   {
     LockmanPriorityBasedInfo(
-      actionId: actionId, priority: .high(.exclusive), blocksSameAction: blocksSameAction)
+      actionId: actionId, priority: .high(.exclusive))
   }
 
-  static func highReplaceable(_ actionId: String = "highReplaceable", blocksSameAction: Bool = true)
+  static func highReplaceable(_ actionId: String = "highReplaceable")
     -> LockmanPriorityBasedInfo
   {
     LockmanPriorityBasedInfo(
-      actionId: actionId, priority: .high(.replaceable), blocksSameAction: blocksSameAction)
+      actionId: actionId, priority: .high(.replaceable))
   }
 }
 
@@ -80,30 +80,7 @@ final class LockmanPriorityBasedInfoTests: XCTestCase {
     for (info, expectedPriority) in testCases {
       XCTAssertEqual(info.actionId, actionId)
       XCTAssertEqual(info.priority, expectedPriority)
-      XCTAssertTrue(info.blocksSameAction)  // Default value
     }
-  }
-
-  func testInitializeWithBlocksSameAction() {
-    let actionId = "testAction"
-
-    // Test default value
-    let info1 = LockmanPriorityBasedInfo(actionId: actionId, priority: .high(.exclusive))
-    XCTAssertTrue(info1.blocksSameAction)
-
-    // Test explicit false
-    let info2 = LockmanPriorityBasedInfo(
-      actionId: actionId, priority: .high(.exclusive), blocksSameAction: false)
-    XCTAssertFalse(info2.blocksSameAction)
-
-    // Test explicit true
-    let info3 = LockmanPriorityBasedInfo(
-      actionId: actionId, priority: .high(.exclusive), blocksSameAction: true)
-    XCTAssertTrue(info3.blocksSameAction)
-
-    // Test with factory methods
-    let info4 = TestInfoFactory.highExclusive(actionId, blocksSameAction: true)
-    XCTAssertTrue(info4.blocksSameAction)
   }
 
   func testUniqueIdGenerationEnsuresInstanceUniqueness() {

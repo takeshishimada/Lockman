@@ -77,9 +77,9 @@ public macro LockmanSingleExecution() =
 ///     var lockmanInfo: LockmanPriorityBasedInfo {
 ///       switch self {
 ///       case .highPriorityTask:
-///         return .init(priority: 100, perBoundary: false, blocksSameAction: true)
+///         return .init(actionId: actionName, priority: .high(.exclusive))
 ///       case .lowPriorityTask:
-///         return .init(priority: 10, perBoundary: false, blocksSameAction: true)
+///         return .init(actionId: actionName, priority: .low(.replaceable))
 ///       }
 ///     }
 ///   }
