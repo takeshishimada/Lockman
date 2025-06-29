@@ -58,7 +58,7 @@ Lockmanにおけるアンロックは、取得したロックを適切に解除�
     send(.completed)
     // ここで自動的にロック解除
   },
-  catch: { error, send in
+  catch handler: { error, send in
     // エラー処理後に自動解除
     send(.failed(error))
   },
@@ -84,7 +84,7 @@ Lockmanにおけるアンロックは、取得したロックを適切に解除�
     try await secondOperation()
     unlock() // 必須: 最終解除
   },
-  catch: { error, send, unlock in
+  catch handler: { error, send, unlock in
     // エラー処理
     unlock() // エラー時も解除
     send(.failed(error))

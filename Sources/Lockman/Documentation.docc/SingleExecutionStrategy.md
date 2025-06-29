@@ -87,7 +87,7 @@ case .saveButtonTapped:
             try await saveUserData()
             send(.saveCompleted)
         },
-        catch: { error, send in
+        catch handler: { error, send in
             send(.saveError(error.localizedDescription))
         },
         lockFailure: { error, send in

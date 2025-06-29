@@ -160,7 +160,7 @@ lockFailure: { error, send in
 **precedingActionCancelled** - 先行処理のキャンセル
 
 ```swift
-catch: { error, send in
+catch handler: { error, send in
     if case .precedingActionCancelled(let cancelledInfo) = error as? LockmanPriorityBasedError {
         send(.processCancelled("高優先度処理により中断されました"))
     }

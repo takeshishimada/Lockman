@@ -16,7 +16,7 @@ return .withLock(
         // 同じ境界内で既に実行中の場合の処理
     },
     action: action,
-    cancelId: CancelID.userAction  // このCancelIDがBoundaryとして機能
+    cancelID: CancelID.userAction  // このCancelIDがBoundaryとして機能
 )
 ```
 
@@ -35,11 +35,11 @@ CancelIDを境界として使用することで、以下の利点があります
 // ❌ できないこと：saveとloadを同時に制御
 case .saveButtonTapped:
     // CancelID.saveの境界内でのみ制御
-    return .withLock(..., cancelId: CancelID.save)
+    return .withLock(..., cancelID: CancelID.save)
     
 case .loadButtonTapped:
     // CancelID.loadの境界内でのみ制御（saveとは独立）
-    return .withLock(..., cancelId: CancelID.load)
+    return .withLock(..., cancelID: CancelID.load)
 ```
 
 これらは別々の境界として扱われるため、saveの実行中でもloadは実行可能です。
@@ -54,7 +54,7 @@ return .withLock(
     operation: { send in /* ... */ },
     lockFailure: { error, send in /* ... */ },
     action: action,
-    cancelId: [CancelID.save, CancelID.validate]  // 複数指定は不可
+    cancelID: [CancelID.save, CancelID.validate]  // 複数指定は不可
 )
 ```
 
@@ -67,7 +67,7 @@ enum CancelID {
 }
 
 case .saveButtonTapped, .loadButtonTapped, .validateButtonTapped:
-    return .withLock(..., cancelId: CancelID.fileOperation)
+    return .withLock(..., cancelID: CancelID.fileOperation)
 ```
 
 ## まとめ
