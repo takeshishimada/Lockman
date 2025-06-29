@@ -4,6 +4,22 @@ A library to implement exclusive control of user actions in application developm
 
 @Metadata {
   @PageImage(purpose: icon, source: "Lockman.png", alt: "Lockman logo")
+  @PageOrder {
+    <doc:GettingStarted>
+    <doc:BoundaryOverview>
+    <doc:Lock>
+    <doc:Unlock>
+    <doc:ChoosingStrategy>
+    <doc:Configuration>
+    <doc:ErrorHandling>
+    <doc:DebuggingGuide>
+    <doc:SingleExecutionStrategy>
+    <doc:PriorityBasedStrategy>
+    <doc:ConcurrencyLimitedStrategy>
+    <doc:GroupCoordinationStrategy>
+    <doc:DynamicConditionStrategy>
+    <doc:CompositeStrategy>
+  }
 }
 
 ## Design Philosophy

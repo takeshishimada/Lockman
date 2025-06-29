@@ -146,8 +146,3 @@ lockFailure: { error, send in
 }
 ```
 
-## ガイド
-
-次のステップ <doc:PriorityBasedStrategy>
-
-前のステップ [Debugging](<doc:DebuggingGuide>)

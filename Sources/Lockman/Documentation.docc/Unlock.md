@@ -114,8 +114,3 @@ case .modal(.delegate(let unlock)):
   }
 ```
 
-## ガイド
-
-次のステップ <doc:ChoosingStrategy>
-
-前のステップ <doc:Lock>

@@ -140,8 +140,3 @@ lockFailure: { error, send in
 - [DynamicConditionStrategy](<doc:DynamicConditionStrategy>) - 条件不一致エラー
 - [CompositeStrategy](<doc:CompositeStrategy>) - 複合戦略エラー
 
-## ガイド
-
-次のステップ [Debugging](<doc:DebuggingGuide>)
-
-前のステップ <doc:Configuration>

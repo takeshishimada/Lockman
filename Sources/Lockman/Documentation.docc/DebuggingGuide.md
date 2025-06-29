@@ -83,8 +83,3 @@ LockmanManager.cleanup.all()
 LockmanManager.cleanup.boundary(CancelID.userAction)
 ```
 
-## ガイド
-
-次のステップ <doc:SingleExecutionStrategy>
-
-前のステップ [Error Handling](<doc:ErrorHandling>)

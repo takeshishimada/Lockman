@@ -88,8 +88,3 @@ func applicationDidFinishLaunching() {
 - 実行時の設定変更は可能ですが、予期しない動作を避けるため慎重に行ってください
 - テスト時は設定をリセットして、テスト間の影響を避けることを推奨
 
-## ガイド
-
-次のステップ [Error Handling](<doc:ErrorHandling>)
-
-前のステップ <doc:ChoosingStrategy>

@@ -145,6 +145,3 @@ var body: some Reducer<State, Action> {
 
 これで、`startProcessButtonTapped`アクションは処理中に再度実行されることがなくなり、ユーザーが誤って複数回ボタンをタップしても安全です。
 
-## ガイド
-
-次のステップ <doc:BoundaryOverview>

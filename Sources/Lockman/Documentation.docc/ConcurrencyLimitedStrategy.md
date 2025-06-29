@@ -171,8 +171,3 @@ lockFailure: { error, send in
 }
 ```
 
-## ガイド
-
-次のステップ <doc:GroupCoordinationStrategy>
-
-前のステップ <doc:PriorityBasedStrategy>

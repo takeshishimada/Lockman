@@ -74,8 +74,3 @@ case .saveButtonTapped, .loadButtonTapped, .validateButtonTapped:
 
 適切な境界を設定することで、アプリケーションの安定性と応答性を両立できます。
 
-## ガイド
-
-次のステップ <doc:Lock>
-
-前のステップ <doc:GettingStarted>
