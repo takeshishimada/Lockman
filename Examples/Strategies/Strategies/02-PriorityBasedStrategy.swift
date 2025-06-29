@@ -7,9 +7,9 @@ struct PriorityBasedStrategyFeature {
   @ObservableState
   struct State: Equatable {
     var highButtonResult: String = ""
-    var lowButtonResult: String = ""
+    var lowExclusiveResult: String = ""
+    var lowReplaceableResult: String = ""
     var noneButtonResult: String = ""
-    var currentRunning: String = ""
   }
 
   enum Action: ViewAction {
@@ -22,13 +22,15 @@ struct PriorityBasedStrategyFeature {
     )
     enum ViewAction {
       case highButtonTapped
-      case lowButtonTapped
+      case lowExclusiveTapped
+      case lowReplaceableTapped
       case noneButtonTapped
 
       var actionId: String {
         switch self {
         case .highButtonTapped: return "high-priority"
-        case .lowButtonTapped: return "low-priority"
+        case .lowExclusiveTapped: return "low-exclusive"
+        case .lowReplaceableTapped: return "low-replaceable"
         case .noneButtonTapped: return "none-priority"
         }
       }
@@ -36,7 +38,8 @@ struct PriorityBasedStrategyFeature {
       var priority: LockmanPriorityBasedInfo.Priority {
         switch self {
         case .highButtonTapped: return .high(.exclusive)
-        case .lowButtonTapped: return .low(.exclusive)
+        case .lowExclusiveTapped: return .low(.exclusive)
+        case .lowReplaceableTapped: return .low(.replaceable)
         case .noneButtonTapped: return .none
         }
       }
@@ -60,12 +63,10 @@ struct PriorityBasedStrategyFeature {
 
     enum InternalAction {
       case updateResult(button: ButtonType, result: String)
-      case setCurrentRunning(String)
-      case clearCurrentRunning
     }
 
     enum ButtonType {
-      case high, low, none
+      case high, lowExclusive, lowReplaceable, none
     }
   }
 
@@ -91,23 +92,20 @@ struct PriorityBasedStrategyFeature {
     state: inout State
   ) -> Effect<Action> {
     let buttonType: Action.ButtonType
-    let priorityName: String
 
     switch action {
     case .highButtonTapped:
       buttonType = .high
-      priorityName = "High Priority"
-    case .lowButtonTapped:
-      buttonType = .low
-      priorityName = "Low Priority"
+    case .lowExclusiveTapped:
+      buttonType = .lowExclusive
+    case .lowReplaceableTapped:
+      buttonType = .lowReplaceable
     case .noneButtonTapped:
       buttonType = .none
-      priorityName = "No Priority"
     }
 
     return .withLock(
       operation: { send in
-        await send(.internal(.setCurrentRunning(priorityName)))
         await send(.internal(.updateResult(button: buttonType, result: "Running...")))
 
         // Simulate operation with different durations
@@ -120,11 +118,9 @@ struct PriorityBasedStrategyFeature {
 
         try await Task.sleep(nanoseconds: sleepTime)
         await send(.internal(.updateResult(button: buttonType, result: "Success")))
-        await send(.internal(.clearCurrentRunning))
       },
       catch: { error, send in
         await send(.internal(.updateResult(button: buttonType, result: "Cancelled")))
-        // Don't clear current running here if it's not us
       },
       lockFailure: { error, send in
         // Handle different types of lock failures
@@ -143,13 +139,15 @@ struct PriorityBasedStrategyFeature {
             switch cancelledInfo.actionId {
             case "high-priority":
               cancelledButton = .high
-            case "low-priority":
-              cancelledButton = .low
+            case "low-exclusive":
+              cancelledButton = .lowExclusive
+            case "low-replaceable":
+              cancelledButton = .lowReplaceable
             case "none-priority":
               cancelledButton = .none
             default:
               // Fallback - shouldn't happen with our action IDs
-              cancelledButton = .low
+              cancelledButton = .lowExclusive
             }
             await send(
               .internal(
@@ -178,19 +176,13 @@ struct PriorityBasedStrategyFeature {
       switch button {
       case .high:
         state.highButtonResult = result
-      case .low:
-        state.lowButtonResult = result
+      case .lowExclusive:
+        state.lowExclusiveResult = result
+      case .lowReplaceable:
+        state.lowReplaceableResult = result
       case .none:
         state.noneButtonResult = result
       }
-      return .none
-
-    case let .setCurrentRunning(priority):
-      state.currentRunning = priority
-      return .none
-
-    case .clearCurrentRunning:
-      state.currentRunning = ""
       return .none
     }
   }
@@ -208,18 +200,9 @@ struct PriorityBasedStrategyView: View {
           .font(.title2)
           .fontWeight(.bold)
 
-        Text("Tap buttons to see how priority affects execution")
+        Text("High priority cancels lower ones. Same priority: Exclusive blocks, Replaceable cancels and replaces.")
           .font(.caption)
           .foregroundColor(.secondary)
-
-        HStack {
-          Text("Currently running:")
-            .font(.caption)
-          Text(store.currentRunning.isEmpty ? "None" : store.currentRunning)
-            .font(.caption)
-            .fontWeight(.medium)
-            .foregroundColor(store.currentRunning.isEmpty ? .secondary : .blue)
-        }
       }
       .padding()
       .frame(maxWidth: .infinity, alignment: .leading)
@@ -249,14 +232,14 @@ struct PriorityBasedStrategyView: View {
         }
         .padding(.vertical, 8)
 
-        // Low Priority
+        // Low Priority (Exclusive)
         HStack {
           // Button (left column)
-          Button(action: { send(.lowButtonTapped) }) {
+          Button(action: { send(.lowExclusiveTapped) }) {
             HStack {
               Image(systemName: "minus.circle.fill")
                 .foregroundColor(.orange)
-              Text("Low Priority")
+              Text("Low Priority (Exclusive)")
             }
           }
           .frame(width: 140, alignment: .leading)
@@ -264,9 +247,30 @@ struct PriorityBasedStrategyView: View {
           Spacer()
 
           // Status display (right column)
-          Text(store.lowButtonResult.isEmpty ? "Ready" : store.lowButtonResult)
+          Text(store.lowExclusiveResult.isEmpty ? "Ready" : store.lowExclusiveResult)
             .font(.caption)
-            .foregroundColor(statusColor(store.lowButtonResult))
+            .foregroundColor(statusColor(store.lowExclusiveResult))
+        }
+        .padding(.vertical, 8)
+
+        // Low Priority (Replaceable)
+        HStack {
+          // Button (left column)
+          Button(action: { send(.lowReplaceableTapped) }) {
+            HStack {
+              Image(systemName: "arrow.2.circlepath.circle.fill")
+                .foregroundColor(.orange)
+              Text("Low Priority (Replaceable)")
+            }
+          }
+          .frame(width: 140, alignment: .leading)
+
+          Spacer()
+
+          // Status display (right column)
+          Text(store.lowReplaceableResult.isEmpty ? "Ready" : store.lowReplaceableResult)
+            .font(.caption)
+            .foregroundColor(statusColor(store.lowReplaceableResult))
         }
         .padding(.vertical, 8)
 

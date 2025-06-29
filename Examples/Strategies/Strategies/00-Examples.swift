@@ -18,7 +18,6 @@ struct ExamplesFeature {
     case groupCoordinationStrategyTapped
     case priorityBasedStrategyTapped
     case singleExecutionStrategyTapped
-    case showCurrentLocksTapped
   }
 
   var body: some ReducerOf<Self> {
@@ -42,13 +41,6 @@ struct ExamplesFeature {
 
       case .singleExecutionStrategyTapped:
         state.path.append(.singleExecutionStrategy(SingleExecutionStrategyFeature.State()))
-        return .none
-
-      case .showCurrentLocksTapped:
-        // Print current locks to console with compact formatting
-        print("\n📊 Current Lock State:")
-        LockmanManager.debug.printCurrentLocks(options: .compact)
-        print("")
         return .none
 
       case .path:
@@ -197,25 +189,6 @@ struct ExamplesView: View {
           }
           .padding(.vertical, 4)
 
-        }
-
-        // Debug Section
-        Section("Debug Tools") {
-          Button(action: {
-            store.send(.showCurrentLocksTapped)
-          }) {
-            HStack {
-              Image(systemName: "lock.doc")
-                .foregroundColor(.blue)
-              Text("Show Current Locks")
-                .foregroundColor(.primary)
-              Spacer()
-              Text("Console")
-                .font(.caption)
-                .foregroundColor(.secondary)
-            }
-          }
-          .padding(.vertical, 4)
         }
       }
       .listStyle(.grouped)
