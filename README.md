@@ -42,7 +42,13 @@ Lockman provides the following control strategies to address common problems in 
 * **Concurrency Limited**: Limits the number of concurrent executions per group
 * **Composite Strategy**: Combination of multiple strategies
 
-## Basic Example
+## Examples
+
+| Single Execution Strategy | Priority Based Strategy | Concurrency Limited Strategy |
+|--------------------------|------------------------|------------------------------|
+| ![Single Execution Strategy](Sources/Lockman/Documentation.docc/images/01-SingleExecutionStrategy.gif) | ![Priority Based Strategy](Sources/Lockman/Documentation.docc/images/02-PriorityBasedStrategy.gif) | ![Concurrency Limited Strategy](Sources/Lockman/Documentation.docc/images/03-ConcurrencyLimitedStrategy.gif) |
+
+## Code Example
 
 Here's how to implement a feature that prevents duplicate execution of processes using the `@LockmanSingleExecution` macro:
 
@@ -124,8 +130,6 @@ struct ProcessFeature {
 The `withLock` method ensures that `startProcessButtonTapped` won't execute while processing is in progress, preventing duplicate operations even if the user taps the button multiple times.
 
 ### Debug Output Example
-
-![01-SingleExecutionStrategy](https://github.com/user-attachments/assets/3f630c51-94c9-4404-b06a-0f565e1bedd3)
 
 ```
 ✅ [Lockman] canLock succeeded - Strategy: SingleExecution, BoundaryId: process, Info: LockmanSingleExecutionInfo(actionId: 'startProcessButtonTapped', uniqueId: 7BFC785A-3D25-4722-B9BC-A3A63A7F49FC, mode: boundary)
