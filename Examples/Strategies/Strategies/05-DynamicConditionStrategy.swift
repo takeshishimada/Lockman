@@ -116,6 +116,16 @@ struct DynamicConditionStrategyFeature {
     switch action {
     // Pattern 1: Login-based
     case .syncDataTapped:
+      // Check login state manually
+      if !state.isLoggedIn {
+        return .send(
+          .internal(
+            .operationFailed(
+              operation: "Sync",
+              error: "Please login to sync data"
+            )))
+      }
+
       return .withLock(
         operation: { send in
           await send(.internal(.syncStarted))
@@ -400,7 +410,7 @@ struct DynamicConditionStrategyView: View {
 
         // Pattern 3: Day-based
         VStack(alignment: .leading, spacing: 15) {
-          Label("Pattern 3: Day Control (ReducerWithLock)", systemImage: "calendar")
+          Label("Pattern 3: Day Control (Manual Check)", systemImage: "calendar")
             .font(.headline)
 
           HStack {

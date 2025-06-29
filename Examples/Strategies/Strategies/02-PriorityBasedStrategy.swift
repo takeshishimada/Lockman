@@ -220,7 +220,7 @@ struct PriorityBasedStrategyFeature {
       state.operationHistory.removeLast()
     }
   }
-  
+
   private func priorityDescription(_ priority: LockmanPriorityBasedInfo.Priority) -> String {
     switch priority {
     case .none:

@@ -236,7 +236,6 @@ struct SingleExecutionStrategyView: View {
   }
 }
 
-
 // MARK: - Errors
 
 enum ProcessError: Error, Equatable {
