@@ -59,30 +59,43 @@ LockmanPriorityBasedInfo(
 ### Basic Usage Example
 
 ```swift
-@LockmanPriorityBased
-enum Action {
-    case emergencySync
-    case normalSync
-    case backgroundTask
+enum Action: ViewAction {
+    case view(ViewAction)
+    case `internal`(InternalAction)
     
-    var lockmanInfo: LockmanPriorityBasedInfo {
-        switch self {
-        case .emergencySync:
-            return LockmanPriorityBasedInfo(
-                actionId: actionName,
-                priority: .high(.exclusive)
-            )
-        case .normalSync:
-            return LockmanPriorityBasedInfo(
-                actionId: actionName,
-                priority: .low(.replaceable)
-            )
-        case .backgroundTask:
-            return LockmanPriorityBasedInfo(
-                actionId: actionName,
-                priority: .none
-            )
+    @LockmanPriorityBased
+    enum ViewAction {
+        case emergencySync
+        case normalSync
+        case backgroundTask
+        
+        var lockmanInfo: LockmanPriorityBasedInfo {
+            switch self {
+            case .emergencySync:
+                return LockmanPriorityBasedInfo(
+                    actionId: actionName,
+                    priority: .high(.exclusive)
+                )
+            case .normalSync:
+                return LockmanPriorityBasedInfo(
+                    actionId: actionName,
+                    priority: .low(.replaceable)
+                )
+            case .backgroundTask:
+                return LockmanPriorityBasedInfo(
+                    actionId: actionName,
+                    priority: .none
+                )
+            }
         }
+    }
+    
+    enum InternalAction {
+        case syncCompleted
+        case syncFailed(String)
+        case priorityConflict(String)
+        case busyMessage(String)
+        case processCancelled(String)
     }
 }
 ```
@@ -125,7 +138,7 @@ For errors that may occur with PriorityBasedStrategy and their solutions, please
 ```swift
 lockFailure: { error, send in
     if case .higherPriorityExists(let requested, let current) = error as? LockmanPriorityBasedError {
-        send(.priorityConflict("Waiting due to high priority process running"))
+        state.message = "Waiting due to high priority process running"
     }
 }
 ```
@@ -135,7 +148,7 @@ lockFailure: { error, send in
 ```swift
 lockFailure: { error, send in
     if case .samePriorityConflict(let priority) = error as? LockmanPriorityBasedError {
-        send(.busyMessage("Process with same priority is running"))
+        state.busyMessage = "Process with same priority is running"
     }
 }
 ```
@@ -145,7 +158,7 @@ lockFailure: { error, send in
 ```swift
 catch handler: { error, send in
     if case .precedingActionCancelled(let cancelledInfo) = error as? LockmanPriorityBasedError {
-        send(.processCancelled("Interrupted by high priority process"))
+        await send(.internal(.processCancelled("Interrupted by high priority process")))
     }
 }
 ```

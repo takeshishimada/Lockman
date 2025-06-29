@@ -20,10 +20,10 @@ Basic lockFailure handler structure used in all strategies:
     lockFailure: { error, send in
         // Error handling
         if case .specificError(let info) = error as? StrategySpecificError {
-            send(.userFriendlyMessage("Error message"))
+            state.errorMessage = "Error message"
         }
     },
-    action: action,
+    action: viewAction,
     cancelID: cancelID
 )
 ```
@@ -38,7 +38,7 @@ Handling general errors that occur during processing:
 
 ```swift
 catch handler: { error, send in
-    send(.operationError(error.localizedDescription))
+    await send(.internal(.operationError(error.localizedDescription)))
 }
 ```
 
@@ -54,10 +54,10 @@ This handler catches errors thrown within the operation and appropriately notifi
 ```swift
 lockFailure: { error, send in
     // Notify user that processing is in progress
-    send(.showMessage("Processing is in progress"))
+    state.message = "Processing is in progress"
     
     // Or provide visual feedback in UI
-    send(.setButtonState(.loading))
+    state.buttonState = .loading
 }
 ```
 
@@ -70,7 +70,7 @@ lockFailure: { error, send in
 lockFailure: { error, send in
     // Understand the situation from errors containing detailed information
     if let conflictInfo = extractConflictInfo(from: error) {
-        send(.showMessage("Another important process is running: \(conflictInfo.description)"))
+        state.message = "Another important process is running: \(conflictInfo.description)"
     }
 }
 ```
@@ -83,9 +83,9 @@ lockFailure: { error, send in
 ```swift
 catch handler: { error, send in
     if error is CancellationError {
-        send(.processCancelled("Interrupted by a more important process"))
+        await send(.internal(.processCancelled("Interrupted by a more important process")))
     } else {
-        send(.processError(error.localizedDescription))
+        await send(.internal(.processError(error.localizedDescription)))
     }
 }
 ```
@@ -108,10 +108,10 @@ send(.showError(error.localizedDescription))
 
 ```swift
 // ✅ Good example: Specific and easy to understand message
-send(.showMessage("Saving data. Please wait a moment."))
+state.message = "Saving data. Please wait a moment."
 
 // ❌ Bad example: Technical error message
-send(.showMessage("LockmanError: boundary locked"))
+state.message = "LockmanError: boundary locked"
 ```
 
 ### 3. Utilizing Additional Information
@@ -122,9 +122,9 @@ Many errors contain additional information:
 lockFailure: { error, send in
     switch error as? LockmanConcurrencyLimitedError {
     case .concurrencyLimitReached(let current, let limit, _):
-        send(.showMessage("Concurrent execution limit (\(limit)) reached (current: \(current))"))
+        state.message = "Concurrent execution limit (\(limit)) reached (current: \(current))"
     default:
-        send(.showMessage("Cannot start processing"))
+        state.message = "Cannot start processing"
     }
 }
 ```

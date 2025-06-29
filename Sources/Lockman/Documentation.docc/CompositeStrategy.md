@@ -33,34 +33,46 @@ Lockman supports combinations of 2 to 5 strategies:
 ### Basic Usage Example
 
 ```swift
-@LockmanCompositeStrategy(
-    LockmanSingleExecutionStrategy.self,
-    LockmanPriorityBasedStrategy.self
-)
-enum Action {
-    case criticalSave
-    case normalSave
+enum Action: ViewAction {
+    case view(ViewAction)
+    case `internal`(InternalAction)
     
-    var lockmanInfoForStrategy1: LockmanSingleExecutionInfo {
-        LockmanSingleExecutionInfo(
-            actionId: actionName,
-            mode: .action
-        )
-    }
-    
-    var lockmanInfoForStrategy2: LockmanPriorityBasedInfo {
-        switch self {
-        case .criticalSave:
-            return LockmanPriorityBasedInfo(
+    @LockmanCompositeStrategy(
+        LockmanSingleExecutionStrategy.self,
+        LockmanPriorityBasedStrategy.self
+    )
+    enum ViewAction {
+        case criticalSave
+        case normalSave
+        
+        var lockmanInfoForStrategy1: LockmanSingleExecutionInfo {
+            LockmanSingleExecutionInfo(
                 actionId: actionName,
-                priority: .high(.exclusive)
-            )
-        case .normalSave:
-            return LockmanPriorityBasedInfo(
-                actionId: actionName,
-                priority: .low(.replaceable)
+                mode: .action
             )
         }
+        
+        var lockmanInfoForStrategy2: LockmanPriorityBasedInfo {
+            switch self {
+            case .criticalSave:
+                return LockmanPriorityBasedInfo(
+                    actionId: actionName,
+                    priority: .high(.exclusive)
+                )
+            case .normalSave:
+                return LockmanPriorityBasedInfo(
+                    actionId: actionName,
+                    priority: .low(.replaceable)
+                )
+            }
+        }
+    }
+    
+    enum InternalAction {
+        case saveCompleted
+        case singleExecutionConflict(String)
+        case priorityConflict(String)
+        case unknownLockFailure(String)
     }
 }
 ```
@@ -68,34 +80,44 @@ enum Action {
 ### Combining 3 Strategies
 
 ```swift
-@LockmanCompositeStrategy(
-    LockmanSingleExecutionStrategy.self,
-    LockmanPriorityBasedStrategy.self,
-    LockmanConcurrencyLimitedStrategy.self
-)
-enum Action {
-    case downloadFile
+enum Action: ViewAction {
+    case view(ViewAction)
+    case `internal`(InternalAction)
     
-    var lockmanInfoForStrategy1: LockmanSingleExecutionInfo {
-        LockmanSingleExecutionInfo(
-            actionId: actionName,
-            mode: .action // Prevent duplication
-        )
+    @LockmanCompositeStrategy(
+        LockmanSingleExecutionStrategy.self,
+        LockmanPriorityBasedStrategy.self,
+        LockmanConcurrencyLimitedStrategy.self
+    )
+    enum ViewAction {
+        case downloadFile
+        
+        var lockmanInfoForStrategy1: LockmanSingleExecutionInfo {
+            LockmanSingleExecutionInfo(
+                actionId: actionName,
+                mode: .action // Prevent duplication
+            )
+        }
+        
+        var lockmanInfoForStrategy2: LockmanPriorityBasedInfo {
+            LockmanPriorityBasedInfo(
+                actionId: actionName,
+                priority: .low(.replaceable) // Priority control
+            )
+        }
+        
+        var lockmanInfoForStrategy3: LockmanConcurrencyLimitedInfo {
+            LockmanConcurrencyLimitedInfo(
+                actionId: actionName,
+                concurrencyId: "downloads",
+                limit: .limited(3) // Concurrent execution limit
+            )
+        }
     }
     
-    var lockmanInfoForStrategy2: LockmanPriorityBasedInfo {
-        LockmanPriorityBasedInfo(
-            actionId: actionName,
-            priority: .low(.replaceable) // Priority control
-        )
-    }
-    
-    var lockmanInfoForStrategy3: LockmanConcurrencyLimitedInfo {
-        LockmanConcurrencyLimitedInfo(
-            actionId: actionName,
-            concurrencyId: "downloads",
-            limit: .limited(3) // Concurrent execution limit
-        )
+    enum InternalAction {
+        case downloadCompleted
+        case concurrencyLimitReached(String)
     }
 }
 ```
@@ -152,16 +174,16 @@ In composite strategies, errors from each component strategy are integrated and 
 lockFailure: { error, send in
     switch error {
     case let singleError as LockmanSingleExecutionError:
-        send(.singleExecutionConflict("Duplicate execution detected"))
+        state.errorMessage = "Duplicate execution detected"
         
     case let priorityError as LockmanPriorityBasedError:
-        send(.priorityConflict("Priority conflict occurred"))
+        state.errorMessage = "Priority conflict occurred"
         
     case let concurrencyError as LockmanConcurrencyLimitedError:
-        send(.concurrencyLimitReached("Concurrent execution limit reached"))
+        state.errorMessage = "Concurrent execution limit reached"
         
     default:
-        send(.unknownLockFailure("Failed to acquire lock"))
+        state.errorMessage = "Failed to acquire lock"
     }
 }
 ```

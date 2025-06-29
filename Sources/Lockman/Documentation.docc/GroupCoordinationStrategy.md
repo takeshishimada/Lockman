@@ -91,33 +91,46 @@ LockmanGroupCoordinatedInfo(
 ### Basic Usage Example
 
 ```swift
-@LockmanGroupCoordination
-enum Action {
-    case startDataSync
-    case processChunk
-    case showProgress
+enum Action: ViewAction {
+    case view(ViewAction)
+    case `internal`(InternalAction)
     
-    var lockmanInfo: LockmanGroupCoordinatedInfo {
-        switch self {
-        case .startDataSync:
-            return LockmanGroupCoordinatedInfo(
-                actionId: actionName,
-                groupIds: ["dataSync"],
-                coordinationRole: .leader(.emptyGroup)
-            )
-        case .processChunk:
-            return LockmanGroupCoordinatedInfo(
-                actionId: actionName,
-                groupIds: ["dataSync"],
-                coordinationRole: .member
-            )
-        case .showProgress:
-            return LockmanGroupCoordinatedInfo(
-                actionId: actionName,
-                groupIds: ["dataSync"],
-                coordinationRole: .none
-            )
+    @LockmanGroupCoordination
+    enum ViewAction {
+        case startDataSync
+        case processChunk
+        case showProgress
+        
+        var lockmanInfo: LockmanGroupCoordinatedInfo {
+            switch self {
+            case .startDataSync:
+                return LockmanGroupCoordinatedInfo(
+                    actionId: actionName,
+                    groupIds: ["dataSync"],
+                    coordinationRole: .leader(.emptyGroup)
+                )
+            case .processChunk:
+                return LockmanGroupCoordinatedInfo(
+                    actionId: actionName,
+                    groupIds: ["dataSync"],
+                    coordinationRole: .member
+                )
+            case .showProgress:
+                return LockmanGroupCoordinatedInfo(
+                    actionId: actionName,
+                    groupIds: ["dataSync"],
+                    coordinationRole: .none
+                )
+            }
         }
+    }
+    
+    enum InternalAction {
+        case syncCompleted
+        case chunkProcessed
+        case alreadyActive(String)
+        case groupBusy(String)
+        case noActiveGroup(String)
     }
 }
 ```
@@ -172,7 +185,7 @@ For errors that may occur with GroupCoordinationStrategy and their solutions, pl
 ```swift
 lockFailure: { error, send in
     if case .actionAlreadyInGroup(let existingInfo, let groupIds) = error as? LockmanGroupCoordinationError {
-        send(.alreadyActive("Process is already running"))
+        state.message = "Process is already running"
     }
 }
 ```
@@ -182,7 +195,7 @@ lockFailure: { error, send in
 ```swift
 lockFailure: { error, send in
     if case .leaderCannotJoinNonEmptyGroup(let groupIds) = error as? LockmanGroupCoordinationError {
-        send(.groupBusy("Cannot start because other processing is running"))
+        state.message = "Cannot start because other processing is running"
     }
 }
 ```
@@ -192,7 +205,7 @@ lockFailure: { error, send in
 ```swift
 lockFailure: { error, send in
     if case .memberCannotJoinEmptyGroup(let groupIds) = error as? LockmanGroupCoordinationError {
-        send(.noActiveGroup("No active group"))
+        state.message = "No active group"
     }
 }
 ```

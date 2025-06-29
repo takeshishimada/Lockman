@@ -64,33 +64,45 @@ LockmanConcurrencyLimitedInfo(
 ### 基本的な使用例
 
 ```swift
-@LockmanConcurrencyLimited
-enum Action {
-    case downloadFile(URL)
-    case uploadFile(URL)
-    case processImage(UIImage)
+enum Action: ViewAction {
+    case view(ViewAction)
+    case `internal`(InternalAction)
     
-    var lockmanInfo: LockmanConcurrencyLimitedInfo {
-        switch self {
-        case .downloadFile:
-            return LockmanConcurrencyLimitedInfo(
-                actionId: actionName,
-                concurrencyId: "network",
-                limit: .limited(3)
-            )
-        case .uploadFile:
-            return LockmanConcurrencyLimitedInfo(
-                actionId: actionName,
-                concurrencyId: "network", 
-                limit: .limited(3)
-            )
-        case .processImage:
-            return LockmanConcurrencyLimitedInfo(
-                actionId: actionName,
-                concurrencyId: "imageProcessing",
-                limit: .limited(2)
-            )
+    @LockmanConcurrencyLimited
+    enum ViewAction {
+        case downloadFile(URL)
+        case uploadFile(URL)
+        case processImage(UIImage)
+        
+        var lockmanInfo: LockmanConcurrencyLimitedInfo {
+            switch self {
+            case .downloadFile:
+                return LockmanConcurrencyLimitedInfo(
+                    actionId: actionName,
+                    concurrencyId: "network",
+                    limit: .limited(3)
+                )
+            case .uploadFile:
+                return LockmanConcurrencyLimitedInfo(
+                    actionId: actionName,
+                    concurrencyId: "network", 
+                    limit: .limited(3)
+                )
+            case .processImage:
+                return LockmanConcurrencyLimitedInfo(
+                    actionId: actionName,
+                    concurrencyId: "imageProcessing",
+                    limit: .limited(2)
+                )
+            }
         }
+    }
+    
+    enum InternalAction {
+        case downloadCompleted
+        case uploadCompleted
+        case processCompleted
+        case concurrencyLimitReached(String)
     }
 }
 ```
@@ -164,9 +176,7 @@ ConcurrencyLimitedStrategyで発生する可能性のあるエラーと、その
 ```swift
 lockFailure: { error, send in
     if case .concurrencyLimitReached(let requestedInfo, let existingInfos, let current) = error as? LockmanConcurrencyLimitedError {
-        send(.concurrencyLimitReached(
-            "同時実行制限に到達しました (\(current)/\(requestedInfo.limit))"
-        ))
+        state.errorMessage = "同時実行制限に到達しました (\(current)/\(requestedInfo.limit))"
     }
 }
 ```

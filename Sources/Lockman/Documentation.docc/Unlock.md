@@ -55,14 +55,14 @@ Unlock execution timing can be controlled with LockmanUnlockOption:
   operation: { send in
     // Execute processing
     try await someAsyncWork()
-    send(.completed)
+    await send(.internal(.completed))
     // Lock is automatically released here
   },
   catch handler: { error, send in
     // Automatically released after error handling
-    send(.failed(error))
+    await send(.internal(.failed(error)))
   },
-  action: action,
+  action: viewAction,
   cancelID: cancelID
 )
 ```
@@ -87,9 +87,9 @@ Basic usage example:
   catch handler: { error, send, unlock in
     // Error handling
     unlock() // Release on error too
-    send(.failed(error))
+    await send(.internal(.failed(error)))
   },
-  action: action,
+  action: viewAction,
   cancelID: cancelID
 )
 ```
@@ -100,17 +100,20 @@ Example of release in another screen's delegate:
 .withLock(
   operation: { send, unlock in
     // Pass unlock object to another screen and transition
-    send(.delegate(unlock: unlock))
+    await send(.internal(.delegate(unlock: unlock)))
   },
-  action: action,
+  action: viewAction,
   cancelID: cancelID
 )
 
 // Receive and release on the delegate side
-case .modal(.delegate(let unlock)):
-  return .run { send in
-    // Release after modal processing completion
-    unlock()
+case let .internal(internalAction):
+  switch internalAction {
+  case .delegate(let unlock):
+    return .run { send in
+      // Release after modal processing completion
+      unlock()
+    }
   }
 ```
 

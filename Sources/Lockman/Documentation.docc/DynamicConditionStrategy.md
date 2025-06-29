@@ -35,27 +35,33 @@ Using ReduceWithLock enables more advanced condition evaluation based on current
 ```swift
 ReduceWithLock { state, action in
     switch action {
-    case .makePayment(let amount):
-        return self.withLock(
-            state: state,
-            action: action,
-            operation: { send in
-                try await processPayment(amount)
-                send(.paymentCompleted)
-            },
-            lockAction: PaymentAction.makePayment,
-            cancelID: CancelID.payment,
-            lockCondition: { state, action in
-                // Action-level condition
-                guard state.balance >= amount else {
-                    return .failure(PaymentError.insufficientFunds(
-                        required: amount, 
-                        available: state.balance
-                    ))
+    case let .view(viewAction):
+        switch viewAction {
+        case .makePayment(let amount):
+            return self.withLock(
+                state: state,
+                action: viewAction,
+                operation: { send in
+                    try await processPayment(amount)
+                    await send(.internal(.paymentCompleted))
+                },
+                lockAction: viewAction,
+                cancelID: CancelID.payment,
+                lockCondition: { state, action in
+                    // Action-level condition
+                    guard state.balance >= amount else {
+                        return .failure(PaymentError.insufficientFunds(
+                            required: amount, 
+                            available: state.balance
+                        ))
+                    }
+                    return .success
                 }
-                return .success
-            }
-        )
+            )
+        }
+        
+    case .internal:
+        return .none
     }
 } lockCondition: { state, _ in
     // Reducer-level condition
@@ -71,40 +77,51 @@ ReduceWithLock { state, action in
 ### Basic Usage Example
 
 ```swift
-@LockmanDynamicCondition
-enum Action {
-    case transfer(amount: Double)
-    case withdraw(amount: Double)
+enum Action: ViewAction {
+    case view(ViewAction)
+    case `internal`(InternalAction)
     
-    var lockmanInfo: LockmanDynamicConditionInfo {
-        switch self {
-        case .transfer(let amount):
-            return LockmanDynamicConditionInfo(
-                actionId: actionName,
-                condition: {
-                    // Business hours check
-                    guard BusinessHours.isOpen else {
-                        return .failure(BankError.outsideBusinessHours)
+    @LockmanDynamicCondition
+    enum ViewAction {
+        case transfer(amount: Double)
+        case withdraw(amount: Double)
+        
+        var lockmanInfo: LockmanDynamicConditionInfo {
+            switch self {
+            case .transfer(let amount):
+                return LockmanDynamicConditionInfo(
+                    actionId: actionName,
+                    condition: {
+                        // Business hours check
+                        guard BusinessHours.isOpen else {
+                            return .failure(BankError.outsideBusinessHours)
+                        }
+                        // Amount limit check
+                        guard amount <= transferLimit else {
+                            return .failure(BankError.transferLimitExceeded)
+                        }
+                        return .success
                     }
-                    // Amount limit check
-                    guard amount <= transferLimit else {
-                        return .failure(BankError.transferLimitExceeded)
+                )
+            case .withdraw(let amount):
+                return LockmanDynamicConditionInfo(
+                    actionId: actionName,
+                    condition: {
+                        // ATM availability check
+                        guard ATMService.isAvailable else {
+                            return .failure(BankError.atmUnavailable)
+                        }
+                        return .success
                     }
-                    return .success
-                }
-            )
-        case .withdraw(let amount):
-            return LockmanDynamicConditionInfo(
-                actionId: actionName,
-                condition: {
-                    // ATM availability check
-                    guard ATMService.isAvailable else {
-                        return .failure(BankError.atmUnavailable)
-                    }
-                    return .success
-                }
-            )
+                )
+            }
         }
+    }
+    
+    enum InternalAction {
+        case paymentCompleted
+        case operationCompleted
+        case showError(String)
     }
 }
 ```
@@ -120,24 +137,30 @@ ReduceWithLock provides three stages of condition evaluation:
 ```swift
 ReduceWithLock { state, action in
     switch action {
-    case .criticalOperation:
-        return self.withLock(
-            state: state,
-            action: action,
-            operation: { send in
-                try await performCriticalOperation()
-                send(.operationCompleted)
-            },
-            lockAction: CriticalAction.execute, // 3. Traditional strategy (SingleExecution, etc.)
-            cancelID: CancelID.critical,
-            lockCondition: { state, _ in
-                // 1. Action-level condition
-                guard state.systemStatus == .ready else {
-                    return .failure(SystemError.notReady)
+    case let .view(viewAction):
+        switch viewAction {
+        case .criticalOperation:
+            return self.withLock(
+                state: state,
+                action: viewAction,
+                operation: { send in
+                    try await performCriticalOperation()
+                    await send(.internal(.operationCompleted))
+                },
+                lockAction: viewAction, // 3. Traditional strategy (SingleExecution, etc.)
+                cancelID: CancelID.critical,
+                lockCondition: { state, _ in
+                    // 1. Action-level condition
+                    guard state.systemStatus == .ready else {
+                        return .failure(SystemError.notReady)
+                    }
+                    return .success
                 }
-                return .success
-            }
-        )
+            )
+        }
+        
+    case .internal:
+        return .none
     }
 } lockCondition: { state, _ in
     // 2. Reducer-level condition
@@ -202,19 +225,19 @@ enum BusinessError: Error {
 lockFailure: { error, send in
     switch error as? BusinessError {
     case .insufficientFunds(let required, let available):
-        send(.showError("Insufficient funds: Required ¥\(required), Available ¥\(available)"))
+        state.errorMessage = "Insufficient funds: Required ¥\(required), Available ¥\(available)"
         
     case .dailyLimitExceeded(let limit):
-        send(.showError("Daily limit of ¥\(limit) exceeded"))
+        state.errorMessage = "Daily limit of ¥\(limit) exceeded"
         
     case .accountSuspended(let reason):
-        send(.showError("Account suspended: \(reason)"))
+        state.errorMessage = "Account suspended: \(reason)"
         
     case .outsideBusinessHours:
-        send(.showError("Outside business hours (Weekdays 9:00-17:00)"))
+        state.errorMessage = "Outside business hours (Weekdays 9:00-17:00)"
         
     default:
-        send(.showError("Cannot perform operation"))
+        state.errorMessage = "Cannot perform operation"
     }
 }
 ```

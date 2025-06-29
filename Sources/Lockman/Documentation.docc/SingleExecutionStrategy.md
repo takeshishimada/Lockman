@@ -56,24 +56,35 @@ LockmanSingleExecutionInfo(
 ### Basic Usage Example
 
 ```swift
-@LockmanSingleExecution
-enum Action {
-    case save
-    case load
+enum Action: ViewAction {
+    case view(ViewAction)
+    case `internal`(InternalAction)
     
-    var lockmanInfo: LockmanSingleExecutionInfo {
-        switch self {
-        case .save:
-            return LockmanSingleExecutionInfo(
-                actionId: actionName,
-                mode: .action
-            )
-        case .load:
-            return LockmanSingleExecutionInfo(
-                actionId: actionName,
-                mode: .action
-            )
+    @LockmanSingleExecution
+    enum ViewAction {
+        case save
+        case load
+        
+        var lockmanInfo: LockmanSingleExecutionInfo {
+            switch self {
+            case .save:
+                return LockmanSingleExecutionInfo(
+                    actionId: actionName,
+                    mode: .action
+                )
+            case .load:
+                return LockmanSingleExecutionInfo(
+                    actionId: actionName,
+                    mode: .action
+                )
+            }
         }
+    }
+    
+    enum InternalAction {
+        case saveCompleted
+        case saveError(String)
+        case saveBusy(String)
     }
 }
 ```
@@ -81,21 +92,27 @@ enum Action {
 ### Usage within Effects
 
 ```swift
-case .saveButtonTapped:
-    return .withLock(
-        operation: { send in
-            try await saveUserData()
-            send(.saveCompleted)
-        },
-        catch handler: { error, send in
-            send(.saveError(error.localizedDescription))
-        },
-        lockFailure: { error, send in
-            send(.saveBusy("Save process is currently running"))
-        },
-        action: .save,
-        cancelID: CancelID.userAction
-    )
+case let .view(viewAction):
+    switch viewAction {
+    case .save:
+        return .withLock(
+            operation: { send in
+                try await saveUserData()
+                await send(.internal(.saveCompleted))
+            },
+            catch handler: { error, send in
+                await send(.internal(.saveError(error.localizedDescription)))
+            },
+            lockFailure: { error, send in
+                state.message = "Save process is currently running"
+            },
+            action: viewAction,
+            cancelID: CancelID.userAction
+        )
+    case .load:
+        // load action implementation
+        return .none
+    }
 ```
 
 ## Operation Examples
@@ -137,11 +154,11 @@ For errors that may occur with SingleExecutionStrategy and their solutions, plea
 lockFailure: { error, send in
     switch error as? LockmanSingleExecutionError {
     case .boundaryAlreadyLocked(_, let existingInfo):
-        send(.showBusyMessage("Another process is running: \(existingInfo.actionId)"))
+        state.busyMessage = "Another process is running: \(existingInfo.actionId)"
     case .actionAlreadyRunning(let existingInfo):
-        send(.showBusyMessage("\(existingInfo.actionId) is running"))
+        state.busyMessage = "\(existingInfo.actionId) is running"
     default:
-        send(.showBusyMessage("Cannot start processing"))
+        state.busyMessage = "Cannot start processing"
     }
 }
 ```
