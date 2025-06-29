@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Discussions
+    url: https://github.com/takeshishimada/Lockman/discussions
+    about: Ask questions, share ideas, and discuss Lockman with the community
+  - name: Documentation
+    url: https://takeshishimada.github.io/Lockman/main/documentation/lockman/
+    about: Browse the official Lockman documentation
