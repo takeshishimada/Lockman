@@ -157,6 +157,7 @@ El método `withLock` asegura que `startProcessButtonTapped` no se ejecute mient
 La documentación para las versiones publicadas y `main` está disponible aquí:
 
 * [`main`](https://takeshishimada.github.io/Lockman/main/documentation/lockman/)
+* [0.11.0](https://takeshishimada.github.io/Lockman/0.11.0/documentation/lockman/)
 * [0.10.0](https://takeshishimada.github.io/Lockman/0.10.0/documentation/lockman/)
 * [0.9.0](https://takeshishimada.github.io/Lockman/0.9.0/documentation/lockman/)
 * [0.8.0](https://takeshishimada.github.io/Lockman/0.8.0/documentation/lockman/)
@@ -212,7 +213,7 @@ Agrega la dependencia a tu archivo Package.swift:
 
 ```swift
 dependencies: [
-  .package(url: "https://github.com/takeshishimada/Lockman", from: "0.10.0")
+  .package(url: "https://github.com/takeshishimada/Lockman", from: "0.11.0")
 ]
 ```
 
@@ -240,6 +241,7 @@ Agrega la dependencia a tu objetivo:
 
 | Lockman | The Composable Architecture |
 |---------|----------------------------|
+| 0.11.0  | 1.19.1                     |
 | 0.10.0  | 1.19.0                     |
 | 0.9.0   | 1.18.0                     |
 
