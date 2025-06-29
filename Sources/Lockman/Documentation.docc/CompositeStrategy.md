@@ -105,8 +105,8 @@ enum Action {
 ### Operation with 2 Strategy Combination
 
 ```
-戦略1: SingleExecution(.action)
-戦略2: PriorityBased(.high(.exclusive))
+Strategy 1: SingleExecution(.action)
+Strategy 2: PriorityBased(.high(.exclusive))
 
 Time: 0s  - normalSave request
   Strategy 1: ✅ Success (no duplication)
@@ -127,9 +127,9 @@ Time: 2s  - criticalSave request (high priority)
 ### Operation with 3 Strategy Combination
 
 ```
-戦略1: SingleExecution(.action)
-戦略2: PriorityBased(.low(.replaceable))  
-戦略3: ConcurrencyLimited(.limited(2))
+Strategy 1: SingleExecution(.action)
+Strategy 2: PriorityBased(.low(.replaceable))  
+Strategy 3: ConcurrencyLimited(.limited(2))
 
 Current situation: 2 download processes running
 
