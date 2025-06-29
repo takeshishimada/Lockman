@@ -7,7 +7,7 @@ Develop a library to implement exclusive control of user actions in application 
 - Swift versions: 6.0, 5.10, 5.9
 - Type-safe implementation
 - Single unified Lockman module, developed exclusively for TCA
-- Based on Composable Architecture 1.19
+- Based on Composable Architecture 1.20.1
 - When modifying Package.swift, you MUST also update Package@swift-6.0 to keep them in sync
 
 ## Documentation
