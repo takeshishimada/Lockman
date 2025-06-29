@@ -14,6 +14,7 @@ struct ExamplesFeature {
   enum Action {
     case path(StackAction<Path.State, Path.Action>)
     case compositeStrategyTapped
+    case concurrencyLimitedStrategyTapped
     case priorityBasedStrategyTapped
     case singleExecutionStrategyTapped
     case showCurrentLocksTapped
@@ -24,6 +25,10 @@ struct ExamplesFeature {
       switch action {
       case .compositeStrategyTapped:
         state.path.append(.compositeStrategy(CompositeStrategyFeature.State()))
+        return .none
+
+      case .concurrencyLimitedStrategyTapped:
+        state.path.append(.concurrencyLimitedStrategy(ConcurrencyLimitedStrategyFeature.State()))
         return .none
 
       case .priorityBasedStrategyTapped:
@@ -57,12 +62,14 @@ struct Path {
   @ObservableState
   enum State: Equatable {
     case compositeStrategy(CompositeStrategyFeature.State)
+    case concurrencyLimitedStrategy(ConcurrencyLimitedStrategyFeature.State)
     case priorityBasedStrategy(PriorityBasedStrategyFeature.State)
     case singleExecutionStrategy(SingleExecutionStrategyFeature.State)
   }
 
   enum Action {
     case compositeStrategy(CompositeStrategyFeature.Action)
+    case concurrencyLimitedStrategy(ConcurrencyLimitedStrategyFeature.Action)
     case priorityBasedStrategy(PriorityBasedStrategyFeature.Action)
     case singleExecutionStrategy(SingleExecutionStrategyFeature.Action)
   }
@@ -70,6 +77,9 @@ struct Path {
   var body: some ReducerOf<Self> {
     Scope(state: \.compositeStrategy, action: \.compositeStrategy) {
       CompositeStrategyFeature()
+    }
+    Scope(state: \.concurrencyLimitedStrategy, action: \.concurrencyLimitedStrategy) {
+      ConcurrencyLimitedStrategyFeature()
     }
     Scope(state: \.priorityBasedStrategy, action: \.priorityBasedStrategy) {
       PriorityBasedStrategyFeature()
@@ -131,6 +141,20 @@ struct ExamplesView: View {
           }
           .padding(.vertical, 4)
 
+          // ConcurrencyLimitedStrategy
+          VStack(alignment: .leading, spacing: 4) {
+            Button("ConcurrencyLimitedStrategy") {
+              store.send(.concurrencyLimitedStrategyTapped)
+            }
+            .foregroundColor(.primary)
+            .font(.headline)
+
+            Text("Limits the number of concurrent executions for resource-intensive operations")
+              .font(.caption)
+              .foregroundColor(.secondary)
+          }
+          .padding(.vertical, 4)
+
           // CompositeStrategy
           VStack(alignment: .leading, spacing: 4) {
             Button("CompositeStrategy") {
@@ -172,6 +196,10 @@ struct ExamplesView: View {
       case .compositeStrategy:
         if let store = store.scope(state: \.compositeStrategy, action: \.compositeStrategy) {
           CompositeStrategyView(store: store)
+        }
+      case .concurrencyLimitedStrategy:
+        if let store = store.scope(state: \.concurrencyLimitedStrategy, action: \.concurrencyLimitedStrategy) {
+          ConcurrencyLimitedStrategyView(store: store)
         }
       case .priorityBasedStrategy:
         if let store = store.scope(state: \.priorityBasedStrategy, action: \.priorityBasedStrategy)
