@@ -357,7 +357,6 @@ struct GroupCoordinationStrategyView: View {
           .foregroundColor(.white)
           .cornerRadius(10)
         }
-        .disabled(store.syncStatus == .syncing)
 
         // Member buttons
         HStack(spacing: 10) {
@@ -478,7 +477,6 @@ struct GroupCoordinationStrategyView: View {
         )
         .cornerRadius(10)
       }
-      .disabled(isActive || store.syncStatus != .syncing)
 
       if progress > 0 {
         ProgressView(value: progress)

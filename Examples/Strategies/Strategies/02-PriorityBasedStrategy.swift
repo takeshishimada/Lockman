@@ -108,7 +108,7 @@ struct PriorityBasedStrategyFeature {
     return .withLock(
       operation: { send in
         await send(.internal(.setCurrentRunning(priorityName)))
-        await send(.internal(.updateResult(button: buttonType, result: "🔄 Running...")))
+        await send(.internal(.updateResult(button: buttonType, result: "Running...")))
 
         // Simulate operation with different durations
         let sleepTime: UInt64
@@ -119,11 +119,11 @@ struct PriorityBasedStrategyFeature {
         }
 
         try await Task.sleep(nanoseconds: sleepTime)
-        await send(.internal(.updateResult(button: buttonType, result: "✅ Success")))
+        await send(.internal(.updateResult(button: buttonType, result: "Success")))
         await send(.internal(.clearCurrentRunning))
       },
       catch: { error, send in
-        await send(.internal(.updateResult(button: buttonType, result: "❌ Cancelled")))
+        await send(.internal(.updateResult(button: buttonType, result: "Cancelled")))
         // Don't clear current running here if it's not us
       },
       lockFailure: { error, send in
@@ -132,11 +132,11 @@ struct PriorityBasedStrategyFeature {
         if let priorityError = error as? LockmanPriorityBasedError {
           switch priorityError {
           case .higherPriorityExists:
-            failureMessage = "❌ Blocked by higher priority"
+            failureMessage = "Blocked by higher priority"
           case .samePriorityConflict:
-            failureMessage = "❌ Same priority running"
+            failureMessage = "Same priority running"
           case .blockedBySameAction:
-            failureMessage = "❌ Already running"
+            failureMessage = "Already running"
           case let .precedingActionCancelled(cancelledInfo):
             // Update the cancelled task's button to show it was cancelled
             let cancelledButton: Action.ButtonType
@@ -153,13 +153,13 @@ struct PriorityBasedStrategyFeature {
             }
             await send(
               .internal(
-                .updateResult(button: cancelledButton, result: "❌ Cancelled by higher priority")))
-            failureMessage = "✅ Replaced lower priority"
+                .updateResult(button: cancelledButton, result: "Cancelled by higher priority")))
+            failureMessage = "Replaced lower priority"
           }
         } else if error is LockmanSingleExecutionError {
           failureMessage = "❌ Already running"
         } else {
-          failureMessage = "❌ Failed"
+          failureMessage = "Failed"
         }
         await send(.internal(.updateResult(button: buttonType, result: failureMessage)))
       },
@@ -238,7 +238,6 @@ struct PriorityBasedStrategyView: View {
               Text("High Priority")
             }
           }
-          .disabled(store.highButtonResult.contains("🔄"))
           .frame(width: 140, alignment: .leading)
 
           Spacer()
@@ -260,7 +259,6 @@ struct PriorityBasedStrategyView: View {
               Text("Low Priority")
             }
           }
-          .disabled(store.lowButtonResult.contains("🔄"))
           .frame(width: 140, alignment: .leading)
 
           Spacer()
@@ -282,7 +280,6 @@ struct PriorityBasedStrategyView: View {
               Text("No Priority")
             }
           }
-          .disabled(store.noneButtonResult.contains("🔄"))
           .frame(width: 140, alignment: .leading)
 
           Spacer()
@@ -320,11 +317,14 @@ struct PriorityBasedStrategyView: View {
   private func statusColor(_ result: String) -> Color {
     if result.isEmpty {
       return .secondary
-    } else if result.contains("✅") {
+    } else if result == "Success" || result == "Replaced lower priority" {
       return .green
-    } else if result.contains("❌") {
+    } else if result.contains("Blocked") || result.contains("Failed")
+      || result.contains("Cancelled") || result == "Already running"
+      || result == "Same priority running"
+    {
       return .red
-    } else if result.contains("🔄") {
+    } else if result == "Running..." {
       return .orange
     } else {
       return .primary

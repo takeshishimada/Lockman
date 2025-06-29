@@ -234,7 +234,6 @@ struct ConcurrencyLimitedStrategyView: View {
                 Text(download.name)
               }
             }
-            .disabled(download.status == .downloading)
             .frame(width: 120, alignment: .leading)
 
             Spacer()
