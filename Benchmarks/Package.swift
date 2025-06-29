@@ -10,14 +10,13 @@ let package = Package(
   dependencies: [
     .package(path: ".."),
     .package(url: "https://github.com/ordo-one/package-benchmark", from: "1.4.0"),
-    .package(url: "https://github.com/pointfreeco/swift-composable-architecture", exact: "1.17.1"),
+    .package(url: "https://github.com/pointfreeco/swift-composable-architecture", exact: "1.18.0"),
   ],
   targets: [
     .executableTarget(
       name: "LockmanBenchmarks",
       dependencies: [
-        .product(name: "LockmanCore", package: "Lockman"),
-        .product(name: "LockmanComposable", package: "Lockman"),
+        .product(name: "Lockman", package: "Lockman"),
         .product(name: "ComposableArchitecture", package: "swift-composable-architecture"),
         .product(name: "Benchmark", package: "package-benchmark"),
       ],
