@@ -15,6 +15,8 @@ struct ExamplesFeature {
     case path(StackAction<Path.State, Path.Action>)
     case compositeStrategyTapped
     case concurrencyLimitedStrategyTapped
+    case dynamicConditionStrategyTapped
+    case groupCoordinationStrategyTapped
     case priorityBasedStrategyTapped
     case singleExecutionStrategyTapped
     case showCurrentLocksTapped
@@ -29,6 +31,14 @@ struct ExamplesFeature {
 
       case .concurrencyLimitedStrategyTapped:
         state.path.append(.concurrencyLimitedStrategy(ConcurrencyLimitedStrategyFeature.State()))
+        return .none
+
+      case .dynamicConditionStrategyTapped:
+        state.path.append(.dynamicConditionStrategy(DynamicConditionStrategyFeature.State()))
+        return .none
+
+      case .groupCoordinationStrategyTapped:
+        state.path.append(.groupCoordinationStrategy(GroupCoordinationStrategyFeature.State()))
         return .none
 
       case .priorityBasedStrategyTapped:
@@ -63,6 +73,8 @@ struct Path {
   enum State: Equatable {
     case compositeStrategy(CompositeStrategyFeature.State)
     case concurrencyLimitedStrategy(ConcurrencyLimitedStrategyFeature.State)
+    case dynamicConditionStrategy(DynamicConditionStrategyFeature.State)
+    case groupCoordinationStrategy(GroupCoordinationStrategyFeature.State)
     case priorityBasedStrategy(PriorityBasedStrategyFeature.State)
     case singleExecutionStrategy(SingleExecutionStrategyFeature.State)
   }
@@ -70,6 +82,8 @@ struct Path {
   enum Action {
     case compositeStrategy(CompositeStrategyFeature.Action)
     case concurrencyLimitedStrategy(ConcurrencyLimitedStrategyFeature.Action)
+    case dynamicConditionStrategy(DynamicConditionStrategyFeature.Action)
+    case groupCoordinationStrategy(GroupCoordinationStrategyFeature.Action)
     case priorityBasedStrategy(PriorityBasedStrategyFeature.Action)
     case singleExecutionStrategy(SingleExecutionStrategyFeature.Action)
   }
@@ -80,6 +94,12 @@ struct Path {
     }
     Scope(state: \.concurrencyLimitedStrategy, action: \.concurrencyLimitedStrategy) {
       ConcurrencyLimitedStrategyFeature()
+    }
+    Scope(state: \.dynamicConditionStrategy, action: \.dynamicConditionStrategy) {
+      DynamicConditionStrategyFeature()
+    }
+    Scope(state: \.groupCoordinationStrategy, action: \.groupCoordinationStrategy) {
+      GroupCoordinationStrategyFeature()
     }
     Scope(state: \.priorityBasedStrategy, action: \.priorityBasedStrategy) {
       PriorityBasedStrategyFeature()
@@ -155,6 +175,34 @@ struct ExamplesView: View {
           }
           .padding(.vertical, 4)
 
+          // GroupCoordinationStrategy
+          VStack(alignment: .leading, spacing: 4) {
+            Button("GroupCoordinationStrategy") {
+              store.send(.groupCoordinationStrategyTapped)
+            }
+            .foregroundColor(.primary)
+            .font(.headline)
+
+            Text("Coordinates actions within groups with leader/member roles")
+              .font(.caption)
+              .foregroundColor(.secondary)
+          }
+          .padding(.vertical, 4)
+
+          // DynamicConditionStrategy
+          VStack(alignment: .leading, spacing: 4) {
+            Button("DynamicConditionStrategy") {
+              store.send(.dynamicConditionStrategyTapped)
+            }
+            .foregroundColor(.primary)
+            .font(.headline)
+
+            Text("Controls execution based on dynamic runtime conditions")
+              .font(.caption)
+              .foregroundColor(.secondary)
+          }
+          .padding(.vertical, 4)
+
           // CompositeStrategy
           VStack(alignment: .leading, spacing: 4) {
             Button("CompositeStrategy") {
@@ -198,8 +246,22 @@ struct ExamplesView: View {
           CompositeStrategyView(store: store)
         }
       case .concurrencyLimitedStrategy:
-        if let store = store.scope(state: \.concurrencyLimitedStrategy, action: \.concurrencyLimitedStrategy) {
+        if let store = store.scope(
+          state: \.concurrencyLimitedStrategy, action: \.concurrencyLimitedStrategy)
+        {
           ConcurrencyLimitedStrategyView(store: store)
+        }
+      case .dynamicConditionStrategy:
+        if let store = store.scope(
+          state: \.dynamicConditionStrategy, action: \.dynamicConditionStrategy)
+        {
+          DynamicConditionStrategyView(store: store)
+        }
+      case .groupCoordinationStrategy:
+        if let store = store.scope(
+          state: \.groupCoordinationStrategy, action: \.groupCoordinationStrategy)
+        {
+          GroupCoordinationStrategyView(store: store)
         }
       case .priorityBasedStrategy:
         if let store = store.scope(state: \.priorityBasedStrategy, action: \.priorityBasedStrategy)

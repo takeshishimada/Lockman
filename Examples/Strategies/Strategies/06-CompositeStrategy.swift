@@ -82,38 +82,56 @@ struct CompositeStrategyFeature {
     Reduce { state, action in
       switch action {
       case let .view(viewAction):
-        switch viewAction {
-        case .decrementButtonTapped:
-          return .withLock(
-            operation: { send in
-              try? await Task.sleep(nanoseconds: 2_000_000_000)  // 2 seconds
-              await send(.state(.decrement))
-            },
-            action: viewAction,
-            cancelID: CancelID.userAction
-          )
-        case .incrementButtonTapped:
-          state.$isLoggined.withLock { $0 = true }
-          return .withLock(
-            operation: { send in
-              try? await Task.sleep(nanoseconds: 2_000_000_000)  // 2 seconds
-              await send(.state(.increment))
-            },
-            action: viewAction,
-            cancelID: CancelID.userAction
-          )
-        }
+        return handleViewAction(viewAction, state: &state)
 
       case let .state(stateAction):
-        switch stateAction {
-        case .decrement:
-          state.count -= 1
-          return .none
-        case .increment:
-          state.count += 1
-          return .none
-        }
+        return handleStateAction(stateAction, state: &state)
       }
+    }
+  }
+
+  // MARK: - View Action Handler
+  private func handleViewAction(
+    _ action: Action.ViewAction,
+    state: inout State
+  ) -> Effect<Action> {
+    switch action {
+    case .decrementButtonTapped:
+      return .withLock(
+        operation: { send in
+          try? await Task.sleep(nanoseconds: 2_000_000_000)  // 2 seconds
+          await send(.state(.decrement))
+        },
+        action: action,
+        cancelID: CancelID.userAction
+      )
+
+    case .incrementButtonTapped:
+      state.$isLoggined.withLock { $0 = true }
+      return .withLock(
+        operation: { send in
+          try? await Task.sleep(nanoseconds: 2_000_000_000)  // 2 seconds
+          await send(.state(.increment))
+        },
+        action: action,
+        cancelID: CancelID.userAction
+      )
+    }
+  }
+
+  // MARK: - State Action Handler
+  private func handleStateAction(
+    _ action: Action.StateAction,
+    state: inout State
+  ) -> Effect<Action> {
+    switch action {
+    case .decrement:
+      state.count -= 1
+      return .none
+
+    case .increment:
+      state.count += 1
+      return .none
     }
   }
 }

@@ -2,31 +2,6 @@ import ComposableArchitecture
 import Lockman
 import SwiftUI
 
-// MARK: - Errors
-
-enum ProcessError: Error, Equatable {
-  case processFailed
-}
-
-// MARK: - Use Case
-
-struct SampleProcessUseCase {
-  private var executionCount = 0
-
-  mutating func execute() async throws {
-    // Wait for 5 seconds
-    try await Task.sleep(nanoseconds: 5_000_000_000)
-
-    // Increment execution count
-    executionCount += 1
-
-    // Odd number = success, even number = failure
-    if executionCount % 2 == 0 {
-      throw ProcessError.processFailed
-    }
-  }
-}
-
 @Reducer
 struct SingleExecutionStrategyFeature {
   @ObservableState
@@ -45,20 +20,23 @@ struct SingleExecutionStrategyFeature {
 
   @Dependency(\.sampleProcessUseCase) var useCase
 
-  @LockmanSingleExecution
-  enum Action {
-    case startProcessButtonTapped
-    case processStart
-    case processCompleted
-    case handleError(Error)
+  enum Action: ViewAction {
+    case view(ViewAction)
+    case `internal`(InternalAction)
 
-    var lockmanInfo: LockmanSingleExecutionInfo {
-      switch self {
-      case .startProcessButtonTapped:
+    @LockmanSingleExecution
+    enum ViewAction {
+      case startProcessButtonTapped
+
+      var lockmanInfo: LockmanSingleExecutionInfo {
         return .init(actionId: actionName, mode: .boundary)
-      case .processStart, .processCompleted, .handleError:
-        return .init(actionId: actionName, mode: .none)
       }
+    }
+
+    enum InternalAction {
+      case processStart
+      case processCompleted
+      case handleError(Error)
     }
   }
 
@@ -69,56 +47,79 @@ struct SingleExecutionStrategyFeature {
   var body: some Reducer<State, Action> {
     Reduce { state, action in
       switch action {
-      case .startProcessButtonTapped:
-        return .withLock(
-          operation: { send in
-            await send(.processStart)
-            try await useCase.execute()
-            await send(.processCompleted)
-          },
-          catch: { error, send in
-            await send(.handleError(error))
-          },
-          lockFailure: { error, send in
-            await send(.handleError(error))
-          },
-          action: action,
-          cancelID: CancelID.process
-        )
+      case let .view(viewAction):
+        return handleViewAction(viewAction, state: &state)
 
-      case .processStart:
-        state.isProcessing = true
-        state.message = ""
-        state.messageType = .none
-        return .none
-
-      case .processCompleted:
-        state.isProcessing = false
-        state.message = "Process completed successfully"
-        state.messageType = .success
-        return .none
-
-      case .handleError(let error):
-        state.messageType = .error
-
-        if error is LockmanSingleExecutionError {
-          state.previousMessage = state.message
-          state.message = "Process is already running"
-        } else {
-          state.isProcessing = false
-          if error is ProcessError {
-            state.message = "Process failed"
-          } else {
-            state.message = "Unknown error occurred"
-          }
-        }
-
-        return .none
+      case let .internal(internalAction):
+        return handleInternalAction(internalAction, state: &state)
       }
+    }
+  }
+
+  // MARK: - View Action Handler
+  private func handleViewAction(
+    _ action: Action.ViewAction,
+    state: inout State
+  ) -> Effect<Action> {
+    switch action {
+    case .startProcessButtonTapped:
+      return .withLock(
+        operation: { send in
+          await send(.internal(.processStart))
+          try await useCase.execute()
+          await send(.internal(.processCompleted))
+        },
+        catch: { error, send in
+          await send(.internal(.handleError(error)))
+        },
+        lockFailure: { error, send in
+          await send(.internal(.handleError(error)))
+        },
+        action: action,
+        cancelID: CancelID.process
+      )
+    }
+  }
+
+  // MARK: - Internal Action Handler
+  private func handleInternalAction(
+    _ action: Action.InternalAction,
+    state: inout State
+  ) -> Effect<Action> {
+    switch action {
+    case .processStart:
+      state.isProcessing = true
+      state.message = ""
+      state.messageType = .none
+      return .none
+
+    case .processCompleted:
+      state.isProcessing = false
+      state.message = "Process completed successfully"
+      state.messageType = .success
+      return .none
+
+    case .handleError(let error):
+      state.messageType = .error
+
+      if error is LockmanSingleExecutionError {
+        state.previousMessage = state.message
+        state.message = "Process is already running"
+      } else {
+        state.isProcessing = false
+        if error is ProcessError {
+          state.message = "Process failed"
+        } else {
+          state.message = "Unknown error occurred"
+        }
+      }
+
+      return .none
     }
   }
 }
 
+@ViewAction(for: SingleExecutionStrategyFeature.self)
 struct SingleExecutionStrategyView: View {
   @Bindable var store: StoreOf<SingleExecutionStrategyFeature>
 
@@ -147,7 +148,7 @@ struct SingleExecutionStrategyView: View {
       VStack(spacing: 20) {
         // Process execution button
         Button(action: {
-          store.send(.startProcessButtonTapped)
+          send(.startProcessButtonTapped)
         }) {
           HStack(spacing: 10) {
             if store.isProcessing {
@@ -231,6 +232,32 @@ struct SingleExecutionStrategyView: View {
       return .red
     case .success:
       return .green
+    }
+  }
+}
+
+
+// MARK: - Errors
+
+enum ProcessError: Error, Equatable {
+  case processFailed
+}
+
+// MARK: - Use Case
+
+struct SampleProcessUseCase {
+  private var executionCount = 0
+
+  mutating func execute() async throws {
+    // Wait for 5 seconds
+    try await Task.sleep(nanoseconds: 5_000_000_000)
+
+    // Increment execution count
+    executionCount += 1
+
+    // Odd number = success, even number = failure
+    if executionCount % 2 == 0 {
+      throw ProcessError.processFailed
     }
   }
 }

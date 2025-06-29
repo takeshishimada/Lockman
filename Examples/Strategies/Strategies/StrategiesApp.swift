@@ -30,10 +30,13 @@ class AppDelegate: NSObject, UIApplicationDelegate {
     // Register strategies used in examples
     CompositeStrategyInjection.inject()
     registerConcurrencyLimitedStrategies()
-    
+    registerGroupCoordinationStrategy()
+    registerDynamicConditionStrategy()
+    registerPriorityBasedStrategy()
+
     return true
   }
-  
+
   private func registerConcurrencyLimitedStrategies() {
     // Register individual strategies safely (they might already be registered)
     do {
@@ -42,28 +45,75 @@ class AppDelegate: NSObject, UIApplicationDelegate {
     } catch {
       print("⚠️ LockmanConcurrencyLimitedStrategy already registered or error: \(error)")
     }
-    
+
     do {
       try LockmanManager.container.register(LockmanSingleExecutionStrategy.shared)
       print("✅ Registered LockmanSingleExecutionStrategy")
     } catch {
       print("⚠️ LockmanSingleExecutionStrategy already registered or error: \(error)")
     }
-    
+
     // Register the composite strategy used in ConcurrencyLimitedStrategy example
     let compositeStrategy = LockmanCompositeStrategy2(
       strategy1: LockmanConcurrencyLimitedStrategy.shared,
       strategy2: LockmanSingleExecutionStrategy.shared
     )
-    
+
     // Debug: Print the strategy ID being registered
     print("📝 Registering CompositeStrategy2 with ID: \(compositeStrategy.strategyId)")
-    
+
     do {
       try LockmanManager.container.register(compositeStrategy)
       print("✅ Registered CompositeStrategy2 for ConcurrencyLimitedStrategy")
     } catch {
       print("⚠️ CompositeStrategy2 already registered or error: \(error)")
+    }
+  }
+
+  private func registerGroupCoordinationStrategy() {
+    do {
+      try LockmanManager.container.register(LockmanGroupCoordinationStrategy.shared)
+      print("✅ Registered LockmanGroupCoordinationStrategy")
+    } catch {
+      print("⚠️ LockmanGroupCoordinationStrategy already registered or error: \(error)")
+    }
+  }
+
+  private func registerDynamicConditionStrategy() {
+    do {
+      try LockmanManager.container.register(LockmanDynamicConditionStrategy.shared)
+      print("✅ Registered LockmanDynamicConditionStrategy")
+    } catch {
+      print("⚠️ LockmanDynamicConditionStrategy already registered or error: \(error)")
+    }
+  }
+
+  private func registerPriorityBasedStrategy() {
+    // Register individual strategies safely (they might already be registered)
+    do {
+      try LockmanManager.container.register(LockmanPriorityBasedStrategy.shared)
+      print("✅ Registered LockmanPriorityBasedStrategy")
+    } catch {
+      print("⚠️ LockmanPriorityBasedStrategy already registered or error: \(error)")
+    }
+
+    // SingleExecutionStrategy is already registered in registerConcurrencyLimitedStrategies()
+
+    // Register the composite strategy used in PriorityBasedStrategy example
+    let compositeStrategy = LockmanCompositeStrategy2(
+      strategy1: LockmanPriorityBasedStrategy.shared,
+      strategy2: LockmanSingleExecutionStrategy.shared
+    )
+
+    // Debug: Print the strategy ID being registered
+    print(
+      "📝 Registering CompositeStrategy2 for PriorityBased with ID: \(compositeStrategy.strategyId)")
+
+    do {
+      try LockmanManager.container.register(compositeStrategy)
+      print("✅ Registered CompositeStrategy2 for PriorityBasedStrategy")
+    } catch {
+      print("⚠️ CompositeStrategy2 for PriorityBased already registered or error: \(error)")
     }
   }
 }
