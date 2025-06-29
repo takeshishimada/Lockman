@@ -124,7 +124,7 @@ struct PriorityBasedStrategyFeature {
       },
       catch: { error, send in
         await send(.internal(.updateResult(button: buttonType, result: "❌ Cancelled")))
-        await send(.internal(.clearCurrentRunning))
+        // Don't clear current running here if it's not us
       },
       lockFailure: { error, send in
         // Handle different types of lock failures
@@ -137,7 +137,23 @@ struct PriorityBasedStrategyFeature {
             failureMessage = "❌ Same priority running"
           case .blockedBySameAction:
             failureMessage = "❌ Already running"
-          case .precedingActionCancelled:
+          case let .precedingActionCancelled(cancelledInfo):
+            // Update the cancelled task's button to show it was cancelled
+            let cancelledButton: Action.ButtonType
+            switch cancelledInfo.actionId {
+            case "high-priority":
+              cancelledButton = .high
+            case "low-priority":
+              cancelledButton = .low
+            case "none-priority":
+              cancelledButton = .none
+            default:
+              // Fallback - shouldn't happen with our action IDs
+              cancelledButton = .low
+            }
+            await send(
+              .internal(
+                .updateResult(button: cancelledButton, result: "❌ Cancelled by higher priority")))
             failureMessage = "✅ Replaced lower priority"
           }
         } else if error is LockmanSingleExecutionError {
@@ -185,9 +201,9 @@ struct PriorityBasedStrategyView: View {
   let store: StoreOf<PriorityBasedStrategyFeature>
 
   var body: some View {
-    VStack(spacing: 40) {
+    VStack(spacing: 0) {
       // Header
-      VStack(spacing: 10) {
+      VStack(alignment: .leading, spacing: 10) {
         Text("Priority Based Strategy")
           .font(.title2)
           .fontWeight(.bold)
@@ -196,79 +212,89 @@ struct PriorityBasedStrategyView: View {
           .font(.caption)
           .foregroundColor(.secondary)
 
-        if !store.currentRunning.isEmpty {
-          Text("Currently running: \(store.currentRunning)")
+        HStack {
+          Text("Currently running:")
             .font(.caption)
-            .foregroundColor(.blue)
-            .padding(.top, 5)
+          Text(store.currentRunning.isEmpty ? "None" : store.currentRunning)
+            .font(.caption)
+            .fontWeight(.medium)
+            .foregroundColor(store.currentRunning.isEmpty ? .secondary : .blue)
         }
       }
+      .padding()
+      .frame(maxWidth: .infinity, alignment: .leading)
+      .background(Color(.systemGray6))
+      .cornerRadius(10)
 
-      // Buttons with results
-      VStack(spacing: 30) {
-        // High Priority Button
-        VStack(spacing: 8) {
+      // Priority list
+      List {
+        // High Priority
+        HStack {
+          // Button (left column)
           Button(action: { send(.highButtonTapped) }) {
             HStack {
               Image(systemName: "exclamationmark.circle.fill")
+                .foregroundColor(.red)
               Text("High Priority")
             }
-            .frame(width: 200)
-            .padding()
-            .background(Color.red)
-            .foregroundColor(.white)
-            .cornerRadius(10)
           }
+          .disabled(store.highButtonResult.contains("🔄"))
+          .frame(width: 140, alignment: .leading)
 
-          if !store.highButtonResult.isEmpty {
-            Text(store.highButtonResult)
-              .font(.caption)
-              .foregroundColor(resultColor(store.highButtonResult))
-          }
+          Spacer()
+
+          // Status display (right column)
+          Text(store.highButtonResult.isEmpty ? "Ready" : store.highButtonResult)
+            .font(.caption)
+            .foregroundColor(statusColor(store.highButtonResult))
         }
+        .padding(.vertical, 8)
 
-        // Low Priority Button
-        VStack(spacing: 8) {
+        // Low Priority
+        HStack {
+          // Button (left column)
           Button(action: { send(.lowButtonTapped) }) {
             HStack {
               Image(systemName: "minus.circle.fill")
+                .foregroundColor(.orange)
               Text("Low Priority")
             }
-            .frame(width: 200)
-            .padding()
-            .background(Color.orange)
-            .foregroundColor(.white)
-            .cornerRadius(10)
           }
+          .disabled(store.lowButtonResult.contains("🔄"))
+          .frame(width: 140, alignment: .leading)
 
-          if !store.lowButtonResult.isEmpty {
-            Text(store.lowButtonResult)
-              .font(.caption)
-              .foregroundColor(resultColor(store.lowButtonResult))
-          }
+          Spacer()
+
+          // Status display (right column)
+          Text(store.lowButtonResult.isEmpty ? "Ready" : store.lowButtonResult)
+            .font(.caption)
+            .foregroundColor(statusColor(store.lowButtonResult))
         }
+        .padding(.vertical, 8)
 
-        // None Priority Button
-        VStack(spacing: 8) {
+        // No Priority
+        HStack {
+          // Button (left column)
           Button(action: { send(.noneButtonTapped) }) {
             HStack {
               Image(systemName: "circle")
+                .foregroundColor(.gray)
               Text("No Priority")
             }
-            .frame(width: 200)
-            .padding()
-            .background(Color.gray)
-            .foregroundColor(.white)
-            .cornerRadius(10)
           }
+          .disabled(store.noneButtonResult.contains("🔄"))
+          .frame(width: 140, alignment: .leading)
 
-          if !store.noneButtonResult.isEmpty {
-            Text(store.noneButtonResult)
-              .font(.caption)
-              .foregroundColor(resultColor(store.noneButtonResult))
-          }
+          Spacer()
+
+          // Status display (right column)
+          Text(store.noneButtonResult.isEmpty ? "Ready" : store.noneButtonResult)
+            .font(.caption)
+            .foregroundColor(statusColor(store.noneButtonResult))
         }
+        .padding(.vertical, 8)
       }
+      .listStyle(.insetGrouped)
 
       Spacer()
 
@@ -280,24 +306,26 @@ struct PriorityBasedStrategyView: View {
       }) {
         HStack {
           Image(systemName: "lock.doc")
-          Text("Show Current Locks")
+          Text("Show Current Locks in Console")
         }
         .font(.footnote)
         .foregroundColor(.blue)
       }
+      .padding(.top, 20)
     }
-    .padding()
-    .navigationTitle("Priority Based")
+    .navigationTitle("PriorityBasedStrategy")
     .navigationBarTitleDisplayMode(.inline)
   }
 
-  private func resultColor(_ result: String) -> Color {
-    if result.contains("✅") {
+  private func statusColor(_ result: String) -> Color {
+    if result.isEmpty {
+      return .secondary
+    } else if result.contains("✅") {
       return .green
     } else if result.contains("❌") {
       return .red
     } else if result.contains("🔄") {
-      return .blue
+      return .orange
     } else {
       return .primary
     }
