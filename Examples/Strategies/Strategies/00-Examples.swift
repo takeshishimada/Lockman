@@ -13,17 +13,26 @@ struct ExamplesFeature {
   @CasePathable
   enum Action {
     case path(StackAction<Path.State, Path.Action>)
-    case compositeStrategyTapped
+    case concurrencyLimitedStrategyTapped
+    case dynamicConditionStrategyTapped
+    case groupCoordinationStrategyTapped
     case priorityBasedStrategyTapped
     case singleExecutionStrategyTapped
-    case showCurrentLocksTapped
   }
 
   var body: some ReducerOf<Self> {
     Reduce { state, action in
       switch action {
-      case .compositeStrategyTapped:
-        state.path.append(.compositeStrategy(CompositeStrategyFeature.State()))
+      case .concurrencyLimitedStrategyTapped:
+        state.path.append(.concurrencyLimitedStrategy(ConcurrencyLimitedStrategyFeature.State()))
+        return .none
+
+      case .dynamicConditionStrategyTapped:
+        state.path.append(.dynamicConditionStrategy(DynamicConditionStrategyFeature.State()))
+        return .none
+
+      case .groupCoordinationStrategyTapped:
+        state.path.append(.groupCoordinationStrategy(GroupCoordinationStrategyFeature.State()))
         return .none
 
       case .priorityBasedStrategyTapped:
@@ -32,13 +41,6 @@ struct ExamplesFeature {
 
       case .singleExecutionStrategyTapped:
         state.path.append(.singleExecutionStrategy(SingleExecutionStrategyFeature.State()))
-        return .none
-
-      case .showCurrentLocksTapped:
-        // Print current locks to console with compact formatting
-        print("\n📊 Current Lock State:")
-        LockmanManager.debug.printCurrentLocks(options: .compact)
-        print("")
         return .none
 
       case .path:
@@ -56,20 +58,30 @@ struct ExamplesFeature {
 struct Path {
   @ObservableState
   enum State: Equatable {
-    case compositeStrategy(CompositeStrategyFeature.State)
+    case concurrencyLimitedStrategy(ConcurrencyLimitedStrategyFeature.State)
+    case dynamicConditionStrategy(DynamicConditionStrategyFeature.State)
+    case groupCoordinationStrategy(GroupCoordinationStrategyFeature.State)
     case priorityBasedStrategy(PriorityBasedStrategyFeature.State)
     case singleExecutionStrategy(SingleExecutionStrategyFeature.State)
   }
 
   enum Action {
-    case compositeStrategy(CompositeStrategyFeature.Action)
+    case concurrencyLimitedStrategy(ConcurrencyLimitedStrategyFeature.Action)
+    case dynamicConditionStrategy(DynamicConditionStrategyFeature.Action)
+    case groupCoordinationStrategy(GroupCoordinationStrategyFeature.Action)
     case priorityBasedStrategy(PriorityBasedStrategyFeature.Action)
     case singleExecutionStrategy(SingleExecutionStrategyFeature.Action)
   }
 
   var body: some ReducerOf<Self> {
-    Scope(state: \.compositeStrategy, action: \.compositeStrategy) {
-      CompositeStrategyFeature()
+    Scope(state: \.concurrencyLimitedStrategy, action: \.concurrencyLimitedStrategy) {
+      ConcurrencyLimitedStrategyFeature()
+    }
+    Scope(state: \.dynamicConditionStrategy, action: \.dynamicConditionStrategy) {
+      DynamicConditionStrategyFeature()
+    }
+    Scope(state: \.groupCoordinationStrategy, action: \.groupCoordinationStrategy) {
+      GroupCoordinationStrategyFeature()
     }
     Scope(state: \.priorityBasedStrategy, action: \.priorityBasedStrategy) {
       PriorityBasedStrategyFeature()
@@ -125,53 +137,81 @@ struct ExamplesView: View {
             .foregroundColor(.primary)
             .font(.headline)
 
-            Text("Controls action execution order and replacement based on priority levels")
-              .font(.caption)
-              .foregroundColor(.secondary)
+            Text(
+              "Controls action execution order and replacement based on priority levels\n(Uses CompositeStrategy with SingleExecutionStrategy)"
+            )
+            .font(.caption)
+            .foregroundColor(.secondary)
           }
           .padding(.vertical, 4)
 
-          // CompositeStrategy
+          // ConcurrencyLimitedStrategy
           VStack(alignment: .leading, spacing: 4) {
-            Button("CompositeStrategy") {
-              store.send(.compositeStrategyTapped)
+            Button("ConcurrencyLimitedStrategy") {
+              store.send(.concurrencyLimitedStrategyTapped)
             }
             .foregroundColor(.primary)
             .font(.headline)
 
-            Text("Combines multiple strategies to achieve complex control logic")
+            Text(
+              "Limits the number of concurrent executions for resource-intensive operations\n(Uses CompositeStrategy with SingleExecutionStrategy)"
+            )
+            .font(.caption)
+            .foregroundColor(.secondary)
+          }
+          .padding(.vertical, 4)
+
+          // GroupCoordinationStrategy
+          VStack(alignment: .leading, spacing: 4) {
+            Button("GroupCoordinationStrategy") {
+              store.send(.groupCoordinationStrategyTapped)
+            }
+            .foregroundColor(.primary)
+            .font(.headline)
+
+            Text("Coordinates actions within groups with leader/member roles")
               .font(.caption)
               .foregroundColor(.secondary)
           }
           .padding(.vertical, 4)
-        }
 
-        // Debug Section
-        Section("Debug Tools") {
-          Button(action: {
-            store.send(.showCurrentLocksTapped)
-          }) {
-            HStack {
-              Image(systemName: "lock.doc")
-                .foregroundColor(.blue)
-              Text("Show Current Locks")
-                .foregroundColor(.primary)
-              Spacer()
-              Text("Console")
-                .font(.caption)
-                .foregroundColor(.secondary)
+          // DynamicConditionStrategy
+          VStack(alignment: .leading, spacing: 4) {
+            Button("DynamicConditionStrategy") {
+              store.send(.dynamicConditionStrategyTapped)
             }
+            .foregroundColor(.primary)
+            .font(.headline)
+
+            Text("Controls execution based on dynamic runtime conditions")
+              .font(.caption)
+              .foregroundColor(.secondary)
           }
           .padding(.vertical, 4)
+
         }
       }
       .listStyle(.grouped)
       .navigationTitle("Examples")
     } destination: { store in
       switch store.state {
-      case .compositeStrategy:
-        if let store = store.scope(state: \.compositeStrategy, action: \.compositeStrategy) {
-          CompositeStrategyView(store: store)
+      case .concurrencyLimitedStrategy:
+        if let store = store.scope(
+          state: \.concurrencyLimitedStrategy, action: \.concurrencyLimitedStrategy)
+        {
+          ConcurrencyLimitedStrategyView(store: store)
+        }
+      case .dynamicConditionStrategy:
+        if let store = store.scope(
+          state: \.dynamicConditionStrategy, action: \.dynamicConditionStrategy)
+        {
+          DynamicConditionStrategyView(store: store)
+        }
+      case .groupCoordinationStrategy:
+        if let store = store.scope(
+          state: \.groupCoordinationStrategy, action: \.groupCoordinationStrategy)
+        {
+          GroupCoordinationStrategyView(store: store)
         }
       case .priorityBasedStrategy:
         if let store = store.scope(state: \.priorityBasedStrategy, action: \.priorityBasedStrategy)
