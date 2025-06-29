@@ -1,8 +1,7 @@
 import Benchmark
 import ComposableArchitecture
 import Foundation
-import LockmanComposable
-import LockmanCore
+import Lockman
 
 // MARK: - Store Creation
 
@@ -235,7 +234,7 @@ private struct CompositeStrategyFeature {
         actionId: actionName,
         lockmanInfoForStrategy1: LockmanSingleExecutionInfo(actionId: actionName, mode: .boundary),
         lockmanInfoForStrategy2: LockmanDynamicConditionInfo(
-          actionId: actionName, condition: { true })
+          actionId: actionName, condition: { .success })
       )
     }
   }

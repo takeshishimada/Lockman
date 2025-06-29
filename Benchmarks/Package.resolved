@@ -1,5 +1,5 @@
 {
-  "originHash" : "0f5bc770fe5e0d6c95f9b8c80f98bd8f8fc0ce93f002304f2bd560f3d4520ee6",
+  "originHash" : "9bb74415b080c65a623b9d7f16b673b814b532e1af82f955a33888c2aedfc2b1",
   "pins" : [
     {
       "identity" : "combine-schedulers",
@@ -87,8 +87,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/pointfreeco/swift-composable-architecture",
       "state" : {
-        "revision" : "2ebda6ae2b155a5c3d75aff5f6d25c024bc91311",
-        "version" : "1.17.1"
+        "revision" : "76c4411e02cc7768a3f27ca058bd2143c342e5b2",
+        "version" : "1.18.0"
       }
     },
     {

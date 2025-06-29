@@ -24,11 +24,12 @@ swift package benchmark --format influx # InfluxDB format
 ## Benchmark Configuration
 
 ### Test Environment
-- **Platform**: macOS, Darwin Kernel Version 24.3.0
-- **Architecture**: arm64 (Apple Silicon M3 Max)
-- **Processors**: 14 cores
-- **Memory**: 36 GB
-- **Date**: June 15, 2025
+- **Platform**: macOS, Darwin Kernel Version 24.5.0
+- **Architecture**: arm64 (Apple Silicon M1 Pro)
+- **Processors**: 8 cores
+- **Memory**: 16 GB
+- **Date**: June 29, 2025
+- **TCA Version**: 1.18.0
 
 ### Test Scenarios
 
@@ -50,28 +51,28 @@ swift package benchmark --format influx # InfluxDB format
 
 | Strategy | Wall Clock Time | vs Baseline | Throughput | Instructions | Memory |
 |----------|-----------------|-------------|------------|--------------|---------|
-| **.run (baseline)** | 16μs | - | 62K ops/s | 207K | 12MB |
-| **SingleExecution** | 14μs | -12.5% ⚡ | 72K ops/s | 174K | 13MB |
-| **PriorityBased** | 14μs | -12.5% ⚡ | 71K ops/s | 173K | 14MB |
-| **DynamicCondition** | 33μs | +106% | 31K ops/s | 590K | 12MB |
-| **CompositeStrategy** | 33μs | +106% | 30K ops/s | 595K | 12MB |
+| **.run (baseline)** | 16μs | - | 62K ops/s | 209K | 12MB |
+| **SingleExecution** | 22μs | +37.5% | 45K ops/s | 231K | 14MB |
+| **PriorityBased** | 23μs | +43.8% | 44K ops/s | 236K | 14MB |
+| **DynamicCondition** | 38μs | +137.5% | 26K ops/s | 605K | 12MB |
+| **CompositeStrategy** | 38μs | +137.5% | 26K ops/s | 610K | 12MB |
 
 ### 🚀 Burst Load Performance (100 Concurrent Actions)
 
 | Metric | SingleExecution | PriorityBased | Ratio |
 |--------|-----------------|---------------|-------|
-| **Wall Clock Time (median)** | 691μs | 15ms | 22x faster |
-| **Throughput** | 1,449 ops/s | 67 ops/s | 22x higher |
-| **Total CPU Time** | 997μs | 8,520μs | 8.5x less |
-| **Memory Allocated** | 1,392 items | 41K items | 29x less |
-| **Peak Memory** | 14MB | 23MB | 1.6x less |
+| **Wall Clock Time (median)** | 14ms | 15ms | 1.07x slower |
+| **Throughput** | 73 ops/s | 67 ops/s | 1.09x higher |
+| **Total CPU Time** | 6,406μs | 11,000μs | 1.7x less |
+| **Memory Allocated** | 1,679 items | 5,095 items | 3.0x less |
+| **Peak Memory** | 14MB | 21MB | 1.5x less |
 
 ### 📈 Latency Distribution Analysis
 
 #### SingleExecution Burst (microseconds)
 ```
 Percentiles:  p50    p75    p90    p99    p100
-Wall Clock:   691    706    728    818   10,918
+Wall Clock:   14     15     16     20     20
 ```
 
 #### PriorityBased Burst (milliseconds)
@@ -83,14 +84,14 @@ Wall Clock:   15     15     15     16     16
 ## Performance Measurements
 
 ### 1. **SingleExecution Under Load**
-- Processes 100 concurrent actions in **0.69ms**
-- Shows linear scalability
-- Memory footprint: ~1.4K malloc operations
+- Processes 100 concurrent actions in **14ms**
+- Shows good scalability
+- Memory footprint: ~1.7K malloc operations
 
 ### 2. **PriorityBased Performance**
-- 22x slower than SingleExecution
+- Comparable performance to SingleExecution (1.07x slower)
 - Processing time for 100 actions: 15ms
-- Memory usage: 41K malloc operations (priority queue management)
+- Memory usage: 5.1K malloc operations (priority queue management)
 
 ### 3. **Competition Handling**
 - **Medium competition scenario** (10 types × 10 instances):
@@ -99,11 +100,11 @@ Wall Clock:   15     15     15     16     16
 
 ### 4. **Scalability Measurements**
 - **SingleExecution**:
-  - Single action: 14μs
-  - 100 actions: 691μs (6.9μs per action amortized)
+  - Single action: 22μs
+  - 100 actions: 14ms (140μs per action amortized)
   
 - **PriorityBased**:
-  - Single action: 14μs
+  - Single action: 23μs
   - 100 actions: 15ms (150μs per action amortized)
 
 ## Measured Characteristics by Strategy
@@ -111,19 +112,19 @@ Wall Clock:   15     15     15     16     16
 ### 🎖️ SingleExecution
 
 **Measured Performance**
-- Performance under concurrent load: 0.69ms/100 actions
-- Memory footprint: ~1.4K malloc operations
-- Latency distribution: p50=691μs, p99=818μs
-- Scaling: Linear
+- Performance under concurrent load: 14ms/100 actions
+- Memory footprint: ~1.7K malloc operations
+- Latency distribution: p50=14ms, p99=20ms
+- Scaling: Good
 
 **Characteristics**
 - No priority control
 - FIFO ordering
 
 **Burst Load Results**
-- 100 actions: 0.69ms
-- Memory: ~1.4K malloc operations
-- CPU time: 997μs
+- 100 actions: 14ms
+- Memory: ~1.7K malloc operations
+- CPU time: 6,406μs
 
 ### 🏆 PriorityBased
 
@@ -131,7 +132,7 @@ Wall Clock:   15     15     15     16     16
 - Performance under concurrent load: 15ms/100 actions
 - Memory footprint: 41K malloc operations
 - Latency distribution: p50=15ms, p99=16ms
-- CPU time: 8,520μs
+- CPU time: 11,000μs
 
 **Characteristics**
 - Priority-based execution control
@@ -139,15 +140,15 @@ Wall Clock:   15     15     15     16     16
 - Priority inversion prevention
 
 **Comparison to SingleExecution**
-- 22x slower under high load
-- 29x more memory usage
+- 1.07x slower under high load
+- 3.0x more memory usage
 
 ### 🔧 DynamicCondition
 
 **Measured Performance**
-- Wall clock time: 33μs (2.06x baseline)
+- Wall clock time: 38μs (2.38x baseline)
 - Memory allocation: 0 bytes
-- Instructions: 590K
+- Instructions: 605K
 
 **Characteristics**
 - Runtime condition evaluation
@@ -156,9 +157,9 @@ Wall Clock:   15     15     15     16     16
 ### 🔗 CompositeStrategy
 
 **Measured Performance**
-- Wall clock time: 33μs (2.06x baseline)
+- Wall clock time: 38μs (2.38x baseline)
 - Memory: 12MB
-- Instructions: 595K
+- Instructions: 610K
 
 **Characteristics**
 - Combines multiple strategies
@@ -168,7 +169,7 @@ Wall Clock:   15     15     15     16     16
 
 ### High-Frequency Operations
 ```swift
-// SingleExecution measured at 79K ops/s
+// SingleExecution measured at 45K ops/s
 @LockmanSingleExecution
 enum Action {
     case processRequest(id: String)
@@ -201,10 +202,10 @@ enum Action {
 ```swift
 // Configuration based on measured performance
 if expectedConcurrency > 50 && !needsPriority {
-    // SingleExecution: 0.69ms for 100 actions
+    // SingleExecution: 14ms for 100 actions
     useSingleExecutionStrategy()
 } else if needsPriorityControl {
-    // PriorityBased: 15ms for 100 actions
+    // PriorityBased: 15ms for 100 actions (comparable performance)
     usePriorityBasedStrategy()
 }
 ```
@@ -215,17 +216,17 @@ if expectedConcurrency > 50 && !needsPriority {
 
 | Strategy | Measured Latency | Throughput |
 |----------|------------------|------------|
-| SingleExecution | 691μs | 1,449 ops/s |
+| SingleExecution | 14ms | 73 ops/s |
 | PriorityBased | 15ms | 67 ops/s |
-| DynamicCondition | Not measured in burst | 31K ops/s (single) |
-| CompositeStrategy | Not measured in burst | 30K ops/s (single) |
+| DynamicCondition | Not measured in burst | 26K ops/s (single) |
+| CompositeStrategy | Not measured in burst | 26K ops/s (single) |
 
 ### Memory Usage
 
 | Strategy | Memory per 100 Actions | Peak Memory |
 |----------|------------------------|-------------|
-| SingleExecution | 1,392 malloc ops | 14MB |
-| PriorityBased | 41K malloc ops | 23MB |
+| SingleExecution | 1,679 malloc ops | 14MB |
+| PriorityBased | 5,095 malloc ops | 21MB |
 | DynamicCondition | 0 bytes (allocation) | 12MB |
 | CompositeStrategy | Not measured | 12MB |
 
@@ -251,7 +252,7 @@ await withTaskGroup(of: Void.self) { group in
 ```
 
 ### Statistical Reliability
-- Sample sizes: 67-8,848 iterations per test
+- Sample sizes: 66-9,248 iterations per test
 - Consistent results across multiple runs
 - Percentile analysis for outlier detection
 
@@ -259,23 +260,23 @@ await withTaskGroup(of: Void.self) { group in
 
 The following performance characteristics were measured:
 
-1. **SingleExecution** processes 100 concurrent actions in 0.69ms with ~1.4K malloc operations.
+1. **SingleExecution** processes 100 concurrent actions in 14ms with ~1.7K malloc operations.
 
-2. **PriorityBased** processes 100 concurrent actions in 15ms with 41K malloc operations, providing priority-based execution control.
+2. **PriorityBased** processes 100 concurrent actions in 15ms with 5.1K malloc operations, providing priority-based execution control.
 
-3. **Basic operations** show SingleExecution and PriorityBased performing 12.5% faster than baseline.
+3. **Basic operations** show SingleExecution and PriorityBased performing 37.5-43.8% slower than baseline (due to TCA overhead).
 
-4. **Scalability** measurements show linear scaling for SingleExecution and sub-linear scaling for PriorityBased.
+4. **Scalability** measurements show good scaling for both SingleExecution and PriorityBased, with comparable performance under high load.
 
 ### Use Case Reference
 
 | Use Case | Strategy | Measured Performance |
 |----------|----------|---------------------|
-| High-frequency operations | SingleExecution | 0.69ms/100 ops |
-| Conditional execution | DynamicCondition | 33μs/op |
+| High-frequency operations | SingleExecution | 14ms/100 ops |
+| Conditional execution | DynamicCondition | 38μs/op |
 | Priority-based queuing | PriorityBased | 15ms/100 ops |
-| Combined strategies | CompositeStrategy | 33μs/op |
+| Combined strategies | CompositeStrategy | 38μs/op |
 
 ---
 
-*Benchmarks performed on June 15, 2025, using Lockman v1.0 on macOS 24.3.0*
+*Benchmarks performed on June 29, 2025, using TCA 1.18.0 on macOS 24.5.0*
