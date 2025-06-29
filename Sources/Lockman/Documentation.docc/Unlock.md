@@ -4,62 +4,62 @@ Understanding the unlocking mechanism in Lockman.
 
 ## Overview
 
-Lockmanにおけるアンロックは、取得したロックを適切に解除するメカニズムです。ロック取得後の処理完了時、エラー発生時、キャンセル時など、あらゆる状況において確実にリソースを解放し、システムの整合性を維持します。
+Unlocking in Lockman is a mechanism for properly releasing acquired locks. It ensures resource release and maintains system consistency in all situations, including after processing completion, error occurrence, or cancellation.
 
-## 仕様
+## Specifications
 
-### 自動解除
+### Automatic Release
 
-[withLock](<doc:Lock>)の自動解除版では、以下のタイミングで自動的にロックが解除されます：
+In the auto-release version of [withLock](<doc:Lock>), locks are automatically released at the following timings:
 
-- **正常終了時**: 処理が正常に完了した場合
-- **例外発生時**: エラーが発生した場合
-- **キャンセル時**: 処理がキャンセルされた場合
-- **早期リターン時**: 処理が途中で終了した場合
+- **On normal completion**: When processing completes normally
+- **On exception**: When an error occurs
+- **On cancellation**: When processing is cancelled
+- **On early return**: When processing ends prematurely
 
-自動解除はdeferブロックを使用して実装されており、どのような終了パターンでも確実にロックが解除されることが保証されています。
+Automatic release is implemented using defer blocks, ensuring that locks are reliably released regardless of the termination pattern.
 
-### 手動解除
+### Manual Release
 
-[withLock](<doc:Lock>)の手動解除版では、開発者がunlock()関数を明示的に呼び出してロックを解除します。
+In the manual release version of [withLock](<doc:Lock>), developers explicitly call the unlock() function to release locks.
 
-**重要な制約:**
-- 全てのコードパスでunlock()を呼び出す必要があります
-- unlock()の呼び忘れは永続的なロック取得状態を引き起こします
-- 条件分岐やエラーハンドリングにおいても適切な解除が必要です
+**Important constraints:**
+- You must call unlock() in all code paths
+- Forgetting to call unlock() causes permanent lock acquisition state
+- Proper release is necessary even in conditional branches and error handling
 
-**unlockオブジェクトの特徴:**
-- Sendableプロトコルに準拠しているため、別のアクション呼び出し時に渡すことが可能
-- 複数の画面やアクションでの利用を想定した設計
-- アクション間でのロック状態の共有と協調的な解除が可能
+**Unlock object characteristics:**
+- Conforms to the Sendable protocol, allowing it to be passed when calling other actions
+- Designed for use across multiple screens and actions
+- Enables shared lock state and coordinated release between actions
 
-### 解除オプション
+### Release Options
 
-アンロックの実行タイミングはLockmanUnlockOptionで制御できます：
+Unlock execution timing can be controlled with LockmanUnlockOption:
 
-- **immediate**: 処理完了と同時に即座に解除
-- **mainRunLoop**: 次のメインランループサイクルで解除
-- **transition**: プラットフォーム固有の画面遷移アニメーション完了後に解除
-  - iOS: 0.35秒（プッシュ/ポップアニメーション）
-  - macOS: 0.25秒（ウィンドウとビューのアニメーション）
-  - tvOS: 0.4秒（フォーカス駆動の遷移）
-  - watchOS: 0.3秒（ページベースのナビゲーション）
-- **delayed(TimeInterval)**: 指定した時間後に解除
+- **immediate**: Release immediately upon processing completion
+- **mainRunLoop**: Release in the next main run loop cycle
+- **transition**: Release after platform-specific screen transition animation completion
+  - iOS: 0.35 seconds (push/pop animation)
+  - macOS: 0.25 seconds (window and view animation)
+  - tvOS: 0.4 seconds (focus-driven transition)
+  - watchOS: 0.3 seconds (page-based navigation)
+- **delayed(TimeInterval)**: Release after specified time
 
-## メソッド
+## Methods
 
-### 自動解除の使用例
+### Auto-release Usage Example
 
 ```swift
 .withLock(
   operation: { send in
-    // 処理実行
+    // Execute processing
     try await someAsyncWork()
     send(.completed)
-    // ここで自動的にロック解除
+    // Lock is automatically released here
   },
   catch handler: { error, send in
-    // エラー処理後に自動解除
+    // Automatically released after error handling
     send(.failed(error))
   },
   action: action,
@@ -67,9 +67,9 @@ Lockmanにおけるアンロックは、取得したロックを適切に解除�
 )
 ```
 
-### 手動解除の使用例
+### Manual Release Usage Example
 
-基本的な使用例:
+Basic usage example:
 
 ```swift
 .withLock(
@@ -77,16 +77,16 @@ Lockmanにおけるアンロックは、取得したロックを適切に解除�
     try await firstOperation()
     
     if shouldEarlyReturn {
-      unlock() // 早期解除
+      unlock() // Early release
       return
     }
     
     try await secondOperation()
-    unlock() // 必須: 最終解除
+    unlock() // Required: Final release
   },
   catch handler: { error, send, unlock in
-    // エラー処理
-    unlock() // エラー時も解除
+    // Error handling
+    unlock() // Release on error too
     send(.failed(error))
   },
   action: action,
@@ -94,22 +94,22 @@ Lockmanにおけるアンロックは、取得したロックを適切に解除�
 )
 ```
 
-別画面のdelegateでの解除例:
+Example of release in another screen's delegate:
 
 ```swift
 .withLock(
   operation: { send, unlock in
-    // 別画面にunlockオブジェクトを渡して画面遷移
+    // Pass unlock object to another screen and transition
     send(.delegate(unlock: unlock))
   },
   action: action,
   cancelID: cancelID
 )
 
-// Delegate側で受け取って解除
+// Receive and release on the delegate side
 case .modal(.delegate(let unlock)):
   return .run { send in
-    // モーダル処理完了後に解除
+    // Release after modal processing completion
     unlock()
   }
 ```

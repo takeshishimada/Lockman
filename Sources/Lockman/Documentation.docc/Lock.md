@@ -80,13 +80,13 @@ Lockmanは3つの主要なメソッドを提供し、用途に応じて使い分
 
 ```swift
 .concatenateWithLock(
-  unlockOption: .immediate, // オプション: ロック解除タイミング
+  unlockOption: .immediate, // Optional: Lock release timing
   operations: [
-    .run { send in /* 処理1 */ },
-    .run { send in /* 処理2 */ },
-    .run { send in /* 処理3 */ }
+    .run { send in /* Processing 1 */ },
+    .run { send in /* Processing 2 */ },
+    .run { send in /* Processing 3 */ }
   ],
-  lockFailure: { error, send in /* ロック取得失敗処理 */ }, // オプション
+  lockFailure: { error, send in /* Lock acquisition failure handling */ }, // Optional
   action: action,
   cancelID: cancelID
 )

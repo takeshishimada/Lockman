@@ -4,33 +4,33 @@ Control action execution based on priority levels.
 
 ## Overview
 
-PriorityBasedStrategyは、優先度に基づく実行制御を行う戦略です。高優先度の処理が低優先度の処理を中断して実行することで、重要な処理を優先的に処理できます。
+PriorityBasedStrategy is a strategy that performs execution control based on priority. High-priority processing can interrupt low-priority processing to execute, allowing important processing to be handled preferentially.
 
-この戦略は、緊急度の高い処理や重要度に応じた処理制御が必要な場面で使用されます。
+This strategy is used in situations where high-urgency processing or control based on importance is required.
 
-## 優先度システム
+## Priority System
 
-### 優先度レベル
+### Priority Levels
 
-**high** - 高優先度
-- 他の全ての優先度の処理を中断可能
-- システムレベルの緊急処理や重要なユーザー操作
+**high** - High Priority
+- Can interrupt all other priority processing
+- System-level emergency processing or important user operations
 
-**low** - 低優先度  
-- none優先度の処理は中断可能
-- high優先度には中断される
-- 定期的なバックグラウンド処理
+**low** - Low Priority
+- Can interrupt none priority processing
+- Interrupted by high priority
+- Regular background processing
 
-**none** - 優先度なし
-- 優先度システムをバイパス
-- 他の処理に中断されない
-- 基本的な処理や一時的な無効化
+**none** - No Priority
+- Bypasses priority system
+- Not interrupted by other processing
+- Basic processing or temporary disabling
 
-### 同時実行制御
+### Concurrent Execution Control
 
-同一優先度レベル内では、既存処理の同時実行動作設定により制御されます：
+Within the same priority level, control is based on the concurrent execution behavior setting of existing processing:
 
-**exclusive** - 排他的実行
+**exclusive** - Exclusive Execution
 
 ```swift
 LockmanPriorityBasedInfo(
@@ -39,10 +39,10 @@ LockmanPriorityBasedInfo(
 )
 ```
 
-- 同じ優先度の新しい処理を拒否
-- 重要な処理を中断されないよう保護
+- Rejects new processing of the same priority
+- Protects important processing from interruption
 
-**replaceable** - 置換可能実行
+**replaceable** - Replaceable Execution
 
 ```swift
 LockmanPriorityBasedInfo(
@@ -51,12 +51,12 @@ LockmanPriorityBasedInfo(
 )
 ```
 
-- 同じ優先度の新しい処理により中断可能
-- 検索や更新系の処理に適用
+- Can be interrupted by new processing of the same priority
+- Applied to search or update processing
 
-## 使用方法
+## Usage
 
-### 基本的な使用例
+### Basic Usage Example
 
 ```swift
 @LockmanPriorityBased
@@ -87,84 +87,84 @@ enum Action {
 }
 ```
 
-### 同一アクション阻止の設定
+### Same Action Blocking Setting
 
 ```swift
 LockmanPriorityBasedInfo(
     actionId: "criticalUpdate",
     priority: .high(.exclusive),
-    blocksSameAction: true  // 同じアクションIDの重複実行を阻止
+    blocksSameAction: true  // Block duplicate execution of the same action ID
 )
 ```
 
-## 動作例
+## Operation Examples
 
-### 優先度による中断
-
-```
-時刻: 0秒  - low優先度処理開始    → ✅ 実行
-時刻: 2秒  - high優先度処理要求   → ✅ 実行（low処理を中断）
-時刻: 2秒  - low優先度処理        → 🛑 キャンセル
-時刻: 5秒  - high優先度処理完了   → ✅ 完了
-```
-
-### 同一優先度での制御
+### Interruption by Priority
 
 ```
-// exclusive設定の場合
-時刻: 0秒  - high(.exclusive)開始  → ✅ 実行
-時刻: 1秒  - high(.exclusive)要求  → ❌ 拒否
-時刻: 3秒  - 最初の処理完了       → ✅ 完了
-時刻: 4秒  - high(.exclusive)要求  → ✅ 実行
-
-// replaceable設定の場合  
-時刻: 0秒  - high(.replaceable)開始 → ✅ 実行
-時刻: 1秒  - high(.replaceable)要求 → ✅ 実行（前の処理を中断）
-時刻: 1秒  - 最初の処理            → 🛑 キャンセル
+Time: 0s  - Low priority process starts    → ✅ Execute
+Time: 2s  - High priority process request  → ✅ Execute (interrupts low process)
+Time: 2s  - Low priority process           → 🛑 Cancel
+Time: 5s  - High priority process complete → ✅ Complete
 ```
 
-## エラーハンドリング
+### Control at Same Priority
 
-PriorityBasedStrategyで発生する可能性のあるエラーと、その対処法については[Error Handling](<doc:ErrorHandling>)ページの共通パターンも参照してください。
+```
+// Exclusive setting case
+Time: 0s  - high(.exclusive) starts  → ✅ Execute
+Time: 1s  - high(.exclusive) request → ❌ Reject
+Time: 3s  - First process completes  → ✅ Complete
+Time: 4s  - high(.exclusive) request → ✅ Execute
+
+// Replaceable setting case
+Time: 0s  - high(.replaceable) starts  → ✅ Execute
+Time: 1s  - high(.replaceable) request → ✅ Execute (interrupts previous)
+Time: 1s  - First process              → 🛑 Cancel
+```
+
+## Error Handling
+
+For errors that may occur with PriorityBasedStrategy and their solutions, please also refer to the common patterns on the [Error Handling](<doc:ErrorHandling>) page.
 
 ### LockmanPriorityBasedError
 
-**higherPriorityExists** - より高い優先度が実行中
+**higherPriorityExists** - Higher priority is running
 
 ```swift
 lockFailure: { error, send in
     if case .higherPriorityExists(let requested, let current) = error as? LockmanPriorityBasedError {
-        send(.priorityConflict("高優先度処理実行中のため待機中"))
+        send(.priorityConflict("Waiting due to high priority process running"))
     }
 }
 ```
 
-**samePriorityConflict** - 同一優先度での競合
+**samePriorityConflict** - Conflict at same priority
 
 ```swift
 lockFailure: { error, send in
     if case .samePriorityConflict(let priority) = error as? LockmanPriorityBasedError {
-        send(.busyMessage("同じ優先度の処理が実行中です"))
+        send(.busyMessage("Process with same priority is running"))
     }
 }
 ```
 
-**blockedBySameAction** - 同一アクションによる阻止
+**blockedBySameAction** - Blocked by same action
 
 ```swift
 lockFailure: { error, send in
     if case .blockedBySameAction(let existingInfo) = error as? LockmanPriorityBasedError {
-        send(.duplicateAction("同じ処理が既に実行中です"))
+        send(.duplicateAction("Same process is already running"))
     }
 }
 ```
 
-**precedingActionCancelled** - 先行処理のキャンセル
+**precedingActionCancelled** - Preceding action cancelled
 
 ```swift
 catch handler: { error, send in
     if case .precedingActionCancelled(let cancelledInfo) = error as? LockmanPriorityBasedError {
-        send(.processCancelled("高優先度処理により中断されました"))
+        send(.processCancelled("Interrupted by high priority process"))
     }
 }
 ```

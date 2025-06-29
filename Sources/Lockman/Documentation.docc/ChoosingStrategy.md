@@ -4,11 +4,11 @@ Learn how to select the right strategy for your use case.
 
 ## Overview
 
-Lockmanの戦略システムは、アノテーションによる宣言的な戦略選択、複数戦略の組み合わせ、カスタム戦略の実装という3つの主要な特徴を持ちます。
+Lockman's strategy system has three main features: declarative strategy selection through annotations, combining multiple strategies, and implementing custom strategies.
 
-## 戦略の選択
+## Strategy Selection
 
-開発者はアノテーションを使用して、処理の性質に応じた適切な戦略を選択できます。
+Developers can select appropriate strategies based on the nature of processing using annotations.
 
 ```swift
 @LockmanSingleExecution
@@ -21,9 +21,9 @@ enum Action {
 enum Action {
 ```
 
-## 戦略の組み合わせ
+## Combining Strategies
 
-単一戦略では対応できない複雑な要件に対して、複数の戦略を組み合わせることで、より高度な排他制御を実現できます。[`@LockmanCompositeStrategy`](<doc:CompositeStrategy>)アノテーションを使用して、最大5つまでの戦略を組み合わせることが可能です。
+For complex requirements that cannot be addressed by a single strategy, you can achieve more advanced exclusive control by combining multiple strategies. Using the [`@LockmanCompositeStrategy`](<doc:CompositeStrategy>) annotation, you can combine up to 5 strategies.
 
 ```swift
 @LockmanCompositeStrategy(
@@ -33,34 +33,34 @@ enum Action {
 enum Action {
 ```
 
-## 提供されている戦略
+## Available Strategies
 
-Lockmanは以下の5つの標準戦略を提供しています：
+Lockman provides the following 5 standard strategies:
 
-### [SingleExecutionStrategy](<doc:SingleExecutionStrategy>) - 重複実行の防止
+### [SingleExecutionStrategy](<doc:SingleExecutionStrategy>) - Preventing Duplicate Execution
 
-- 同じ処理が重複して実行されることを防ぎます
-- ユーザーのボタン連続タップ防止などに適用
+- Prevents the same processing from being executed multiple times
+- Applied to prevent users from tapping buttons repeatedly
 
-### [PriorityBasedStrategy](<doc:PriorityBasedStrategy>) - 優先度ベースの制御
+### [PriorityBasedStrategy](<doc:PriorityBasedStrategy>) - Priority-Based Control
 
-- 優先度の高い処理が低い処理を中断して実行できます
-- 緊急処理や重要度に応じた処理制御に適用
+- High-priority processing can interrupt and execute over low-priority processing
+- Applied to emergency processing or importance-based processing control
 
-### [GroupCoordinationStrategy](<doc:GroupCoordinationStrategy>) - グループ協調制御
+### [GroupCoordinationStrategy](<doc:GroupCoordinationStrategy>) - Group Coordination Control
 
-- 関連する複数の処理をグループとして協調制御します
-- リーダー・メンバー関係での処理管理に適用
+- Coordinates control of multiple related processes as a group
+- Applied to processing management in leader-member relationships
 
-### [ConcurrencyLimitedStrategy](<doc:ConcurrencyLimitedStrategy>) - 同時実行数の制限
+### [ConcurrencyLimitedStrategy](<doc:ConcurrencyLimitedStrategy>) - Limiting Concurrent Execution
 
-- 指定した数まで同時実行を許可し、超過分は待機または拒否します
-- リソース使用量の制御やパフォーマンス最適化に適用
+- Allows concurrent execution up to a specified number, with excess being queued or rejected
+- Applied to resource usage control and performance optimization
 
-### [DynamicConditionStrategy](<doc:DynamicConditionStrategy>) - 動的条件制御
+### [DynamicConditionStrategy](<doc:DynamicConditionStrategy>) - Dynamic Conditional Control
 
-- 実行時の条件に基づいて動的に制御を行います
-- ビジネスロジックに応じたカスタム制御に適用
+- Performs dynamic control based on runtime conditions
+- Applied to custom control based on business logic
 
-各戦略の詳細な仕様と使用方法については、それぞれの専用ページをご参照ください。
+For detailed specifications and usage of each strategy, please refer to their respective dedicated pages.
 

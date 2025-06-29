@@ -4,73 +4,73 @@ Understand the concept of boundaries in Lockman.
 
 ## Overview
 
-Boundaryとは、Lockmanにおける**排他制御の境界**です。LockmanはTCAのCancelIDをこの境界として利用し、アクションの実行制御を行います。
+A Boundary is the **exclusive control boundary** in Lockman. Lockman uses TCA's CancelID as this boundary to control action execution.
 
 ```swift
-// withLockでCancelIDを境界として指定
+// Specify CancelID as boundary with withLock
 return .withLock(
     operation: { send in
-        // 処理
+        // Processing
     },
     lockFailure: { error, send in
-        // 同じ境界内で既に実行中の場合の処理
+        // Processing when already running within the same boundary
     },
     action: action,
-    cancelID: CancelID.userAction  // このCancelIDがBoundaryとして機能
+    cancelID: CancelID.userAction  // This CancelID functions as a Boundary
 )
 ```
 
-CancelIDを境界として使用することで、以下の利点があります：
+Using CancelID as a boundary provides the following benefits:
 
-1. **TCAとの自然な統合** - 既存のTCAの仕組みを活用
-2. **明確な境界の定義** - CancelIDによって排他制御の範囲が明確になる
+1. **Natural integration with TCA** - Leverages existing TCA mechanisms
+2. **Clear boundary definition** - CancelID clearly defines the scope of exclusive control
 
-## Boundaryの仕様
+## Boundary Specifications
 
-### 1. 境界を超えた排他制御は不可能
+### 1. No exclusive control across boundaries
 
-異なるBoundary間での排他制御はできません：
+Exclusive control between different Boundaries is not possible:
 
 ```swift
-// ❌ できないこと：saveとloadを同時に制御
+// ❌ Not possible: Control save and load simultaneously
 case .saveButtonTapped:
-    // CancelID.saveの境界内でのみ制御
+    // Control only within CancelID.save boundary
     return .withLock(..., cancelID: CancelID.save)
     
 case .loadButtonTapped:
-    // CancelID.loadの境界内でのみ制御（saveとは独立）
+    // Control only within CancelID.load boundary (independent from save)
     return .withLock(..., cancelID: CancelID.load)
 ```
 
-これらは別々の境界として扱われるため、saveの実行中でもloadは実行可能です。
+Since these are treated as separate boundaries, load can be executed even while save is running.
 
-### 2. 一つのアクションに指定できるBoundaryは一つのみ
+### 2. Only one Boundary per action
 
-単一のアクションに複数のBoundaryを指定することはできません：
+You cannot specify multiple Boundaries for a single action:
 
 ```swift
-// ❌ できないこと：複数のBoundaryを同時に指定
+// ❌ Not possible: Specify multiple Boundaries simultaneously
 return .withLock(
     operation: { send in /* ... */ },
     lockFailure: { error, send in /* ... */ },
     action: action,
-    cancelID: [CancelID.save, CancelID.validate]  // 複数指定は不可
+    cancelID: [CancelID.save, CancelID.validate]  // Multiple specification not allowed
 )
 ```
 
-複数の処理を同時に制御したい場合は、共通のBoundaryを定義する必要があります：
+If you want to control multiple processes simultaneously, you need to define a common Boundary:
 
 ```swift
-// ✅ 正しい方法：共通の境界を使用
+// ✅ Correct approach: Use a common boundary
 enum CancelID {
-    case fileOperation  // save, load, validateを含む共通境界
+    case fileOperation  // Common boundary including save, load, validate
 }
 
 case .saveButtonTapped, .loadButtonTapped, .validateButtonTapped:
     return .withLock(..., cancelID: CancelID.fileOperation)
 ```
 
-## まとめ
+## Summary
 
-適切な境界を設定することで、アプリケーションの安定性と応答性を両立できます。
+By setting appropriate boundaries, you can achieve both application stability and responsiveness.
 

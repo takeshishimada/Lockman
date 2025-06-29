@@ -4,23 +4,23 @@ Learn about common error handling patterns in Lockman.
 
 ## Overview
 
-Lockmanでは、各戦略に応じた詳細なエラー情報を提供します。このページでは、すべての戦略に共通するエラーハンドリングパターンと、効果的なエラー処理の実装方法について説明します。
+Lockman provides detailed error information according to each strategy. This page explains error handling patterns common to all strategies and how to implement effective error handling.
 
-## 共通エラーハンドリングパターン
+## Common Error Handling Patterns
 
-### lockFailureハンドラー
+### lockFailure Handler
 
-すべての戦略で使用される基本的なlockFailureハンドラーの構造：
+Basic lockFailure handler structure used in all strategies:
 
 ```swift
 .withLock(
     operation: { send in
-        // 処理実行
+        // Execute processing
     },
     lockFailure: { error, send in
-        // エラーハンドリング
+        // Error handling
         if case .specificError(let info) = error as? StrategySpecificError {
-            send(.userFriendlyMessage("エラーメッセージ"))
+            send(.userFriendlyMessage("Error message"))
         }
     },
     action: action,
@@ -28,13 +28,13 @@ Lockmanでは、各戦略に応じた詳細なエラー情報を提供します�
 )
 ```
 
-**パラメータ:**
-- `error`: 発生したエラー（戦略固有のエラー型）
-- `send`: ユーザーへのフィードバック送信用の関数
+**Parameters:**
+- `error`: The error that occurred (strategy-specific error type)
+- `send`: Function for sending feedback to the user
 
-### catch handlerパターン
+### catch handler Pattern
 
-処理中に発生した一般的なエラーを処理する場合：
+Handling general errors that occur during processing:
 
 ```swift
 catch handler: { error, send in
@@ -42,101 +42,101 @@ catch handler: { error, send in
 }
 ```
 
-このハンドラーは、operation内でスローされたエラーをキャッチし、適切にユーザーに通知します。
+This handler catches errors thrown within the operation and appropriately notifies the user.
 
-## エラーの種類と対処法
+## Types of Errors and Solutions
 
-### 1. ロック取得失敗（Already Locked）
+### 1. Lock Acquisition Failure (Already Locked)
 
-**概念**: 同じ処理や境界が既に実行中の場合に発生
+**Concept**: Occurs when the same processing or boundary is already running
 
-**共通の対処法**:
+**Common solutions**:
 ```swift
 lockFailure: { error, send in
-    // ユーザーに処理中であることを通知
-    send(.showMessage("処理が実行中です"))
+    // Notify user that processing is in progress
+    send(.showMessage("Processing is in progress"))
     
-    // または、UIで視覚的にフィードバック
+    // Or provide visual feedback in UI
     send(.setButtonState(.loading))
 }
 ```
 
-### 2. 権限・優先度の競合（Permission/Priority Conflicts）
+### 2. Permission/Priority Conflicts
 
-**概念**: より高い優先度の処理や、グループルールによる制約で発生
+**Concept**: Occurs due to higher priority processing or group rule constraints
 
-**共通の対処法**:
+**Common solutions**:
 ```swift
 lockFailure: { error, send in
-    // 詳細情報を含むエラーから状況を把握
+    // Understand the situation from errors containing detailed information
     if let conflictInfo = extractConflictInfo(from: error) {
-        send(.showMessage("他の重要な処理を実行中です: \(conflictInfo.description)"))
+        send(.showMessage("Another important process is running: \(conflictInfo.description)"))
     }
 }
 ```
 
-### 3. キャンセル通知（Cancellation）
+### 3. Cancellation Notification
 
-**概念**: 高優先度の処理によって既存処理がキャンセルされた場合
+**Concept**: When existing processing is cancelled by higher priority processing
 
-**共通の対処法**:
+**Common solutions**:
 ```swift
 catch handler: { error, send in
     if error is CancellationError {
-        send(.processCancelled("より重要な処理により中断されました"))
+        send(.processCancelled("Interrupted by a more important process"))
     } else {
         send(.processError(error.localizedDescription))
     }
 }
 ```
 
-## ベストプラクティス
+## Best Practices
 
-### 1. エラー型の適切なキャスト
+### 1. Proper Error Type Casting
 
 ```swift
-// ✅ 良い例：戦略固有のエラー型にキャスト
+// ✅ Good example: Cast to strategy-specific error type
 if case .actionAlreadyRunning(let existingInfo) = error as? LockmanSingleExecutionError {
-    // existingInfoを使用して詳細な情報を提供
+    // Use existingInfo to provide detailed information
 }
 
-// ❌ 悪い例：エラーを文字列として扱う
+// ❌ Bad example: Treat error as string
 send(.showError(error.localizedDescription))
 ```
 
-### 2. ユーザーフレンドリーなメッセージ
+### 2. User-Friendly Messages
 
 ```swift
-// ✅ 良い例：具体的で理解しやすいメッセージ
-send(.showMessage("データの保存中です。しばらくお待ちください。"))
+// ✅ Good example: Specific and easy to understand message
+send(.showMessage("Saving data. Please wait a moment."))
 
-// ❌ 悪い例：技術的なエラーメッセージ
+// ❌ Bad example: Technical error message
 send(.showMessage("LockmanError: boundary locked"))
 ```
 
-### 3. 追加情報の活用
+### 3. Utilizing Additional Information
 
-多くのエラーは追加情報を含んでいます：
+Many errors contain additional information:
 
 ```swift
 lockFailure: { error, send in
     switch error as? LockmanConcurrencyLimitedError {
     case .concurrencyLimitReached(let current, let limit, _):
-        send(.showMessage("同時実行数が上限(\(limit))に達しています（現在: \(current)）"))
+        send(.showMessage("Concurrent execution limit (\(limit)) reached (current: \(current))"))
     default:
-        send(.showMessage("処理を開始できません"))
+        send(.showMessage("Cannot start processing"))
     }
 }
 ```
 
-## 戦略固有のエラー
+## Strategy-Specific Errors
 
-各戦略の詳細なエラー情報については、それぞれのドキュメントを参照してください：
+For detailed error information for each strategy, please refer to their respective documentation:
 
-- [SingleExecutionStrategy](<doc:SingleExecutionStrategy>) - 重複実行エラー
-- [PriorityBasedStrategy](<doc:PriorityBasedStrategy>) - 優先度競合エラー
-- [GroupCoordinationStrategy](<doc:GroupCoordinationStrategy>) - グループルール違反エラー
-- [ConcurrencyLimitedStrategy](<doc:ConcurrencyLimitedStrategy>) - 同時実行数超過エラー
-- [DynamicConditionStrategy](<doc:DynamicConditionStrategy>) - 条件不一致エラー
-- [CompositeStrategy](<doc:CompositeStrategy>) - 複合戦略エラー
+- [SingleExecutionStrategy](<doc:SingleExecutionStrategy>) - Duplicate execution errors
+- [PriorityBasedStrategy](<doc:PriorityBasedStrategy>) - Priority conflict errors
+- [GroupCoordinationStrategy](<doc:GroupCoordinationStrategy>) - Group rule violation errors
+- [ConcurrencyLimitedStrategy](<doc:ConcurrencyLimitedStrategy>) - Concurrent execution limit exceeded errors
+- [DynamicConditionStrategy](<doc:DynamicConditionStrategy>) - Condition mismatch errors
+- [CompositeStrategy](<doc:CompositeStrategy>) - Composite strategy errors
 

@@ -34,9 +34,9 @@ LockmanSingleExecutionInfo(
 )
 ```
 
-- 同一境界内で1つの処理のみ実行可能
-- 画面やコンポーネント単位での排他制御
-- UIの操作全体を制御したい場合に適用
+- Only one process can execute within the same boundary
+- Exclusive control at screen or component level
+- Applied when wanting to control entire UI operations
 
 ### action - アクション単位の排他制御
 

@@ -4,33 +4,33 @@ Combine multiple strategies for complex control scenarios.
 
 ## Overview
 
-CompositeStrategyは、複数の戦略を組み合わせて、より複雑で高度な排他制御を実現する戦略です。単一戦略では対応できない複雑な要件に対して、2つから5つまでの戦略を組み合わせることで、柔軟で強力な制御ロジックを構築できます。
+CompositeStrategy is a strategy that combines multiple strategies to achieve more complex and advanced exclusive control. For complex requirements that cannot be addressed by a single strategy, you can build flexible and powerful control logic by combining 2 to 5 strategies.
 
-この戦略は、複数の制御条件を同時に満たす必要がある高度なユースケースで使用されます。
+This strategy is used in advanced use cases that require satisfying multiple control conditions simultaneously.
 
-## 組み合わせシステム
+## Combination System
 
-### 戦略の組み合わせ数
+### Number of Strategy Combinations
 
-Lockmanは2つから5つまでの戦略組み合わせをサポートしています：
+Lockman supports combinations of 2 to 5 strategies:
 
-### 組み合わせ制御ロジック
+### Combination Control Logic
 
-**すべての戦略で成功が必要**:
-- 全ての構成戦略でロック取得が可能な場合のみ成功
-- 一つでも失敗すると全体が失敗
+**Success required in all strategies**:
+- Success only when lock acquisition is possible in all component strategies
+- If even one fails, the entire operation fails
 
-**先行キャンセルの協調**:
-- いずれかの戦略で先行キャンセルが必要な場合、全体で先行キャンセルを実行
-- 最初に見つかったキャンセルエラーを使用
+**Coordination of preceding cancellation**:
+- When any strategy requires preceding cancellation, execute preceding cancellation for all
+- Use the first cancellation error found
 
-**LIFO（後入れ先出し）解除**:
-- ロック解除は取得の逆順で実行
-- 最後に取得したロックから順に解除
+**LIFO (Last In, First Out) release**:
+- Lock release is executed in reverse order of acquisition
+- Release from the last acquired lock in order
 
-## 使用方法
+## Usage
 
-### 基本的な使用例
+### Basic Usage Example
 
 ```swift
 @LockmanCompositeStrategy(
@@ -65,7 +65,7 @@ enum Action {
 }
 ```
 
-### 3つの戦略組み合わせ
+### Combining 3 Strategies
 
 ```swift
 @LockmanCompositeStrategy(
@@ -79,14 +79,14 @@ enum Action {
     var lockmanInfoForStrategy1: LockmanSingleExecutionInfo {
         LockmanSingleExecutionInfo(
             actionId: actionName,
-            mode: .action // 重複防止
+            mode: .action // Prevent duplication
         )
     }
     
     var lockmanInfoForStrategy2: LockmanPriorityBasedInfo {
         LockmanPriorityBasedInfo(
             actionId: actionName,
-            priority: .low(.replaceable) // 優先度制御
+            priority: .low(.replaceable) // Priority control
         )
     }
     
@@ -94,85 +94,85 @@ enum Action {
         LockmanConcurrencyLimitedInfo(
             actionId: actionName,
             concurrencyId: "downloads",
-            limit: .limited(3) // 同時実行制限
+            limit: .limited(3) // Concurrent execution limit
         )
     }
 }
 ```
 
-## 動作例
+## Operation Examples
 
-### 2戦略組み合わせの動作
+### Operation with 2 Strategy Combination
 
 ```
 戦略1: SingleExecution(.action)
 戦略2: PriorityBased(.high(.exclusive))
 
-時刻: 0秒  - normalSave要求
-  戦略1: ✅ 成功（重複なし）
-  戦略2: ✅ 成功（優先度問題なし）
-  結果: ✅ 実行開始
+Time: 0s  - normalSave request
+  Strategy 1: ✅ Success (no duplication)
+  Strategy 2: ✅ Success (no priority issue)
+  Result: ✅ Start execution
 
-時刻: 1秒  - normalSave要求（重複）
-  戦略1: ❌ 失敗（同じアクション実行中）
-  戦略2: チェックなし（戦略1で失敗）
-  結果: ❌ 全体失敗
+Time: 1s  - normalSave request (duplicate)
+  Strategy 1: ❌ Fail (same action running)
+  Strategy 2: No check (failed at strategy 1)
+  Result: ❌ Overall failure
 
-時刻: 2秒  - criticalSave要求（高優先度）
-  戦略1: ✅ 成功（異なるアクション）
-  戦略2: ✅ 成功（先行キャンセル付き）
-  結果: ✅ 実行開始（normalSaveをキャンセル）
+Time: 2s  - criticalSave request (high priority)
+  Strategy 1: ✅ Success (different action)
+  Strategy 2: ✅ Success (with preceding cancellation)
+  Result: ✅ Start execution (cancel normalSave)
 ```
 
-### 3戦略組み合わせの動作
+### Operation with 3 Strategy Combination
 
 ```
 戦略1: SingleExecution(.action)
 戦略2: PriorityBased(.low(.replaceable))  
 戦略3: ConcurrencyLimited(.limited(2))
 
-現在の状況: download処理が2つ実行中
+Current situation: 2 download processes running
 
-時刻: 0秒  - 新しいdownload要求
-  戦略1: ✅ 成功（異なるファイル）
-  戦略2: ✅ 成功（優先度問題なし）
-  戦略3: ❌ 失敗（同時実行制限到達）
-  結果: ❌ 全体失敗
+Time: 0s  - New download request
+  Strategy 1: ✅ Success (different file)
+  Strategy 2: ✅ Success (no priority issue)
+  Strategy 3: ❌ Fail (concurrent execution limit reached)
+  Result: ❌ Overall failure
 ```
 
-## エラーハンドリング
+## Error Handling
 
-CompositeStrategyで発生する可能性のあるエラーと、その対処法については[Error Handling](<doc:ErrorHandling>)ページの共通パターンも参照してください。
+For errors that may occur with CompositeStrategy and their solutions, please also refer to the common patterns on the [Error Handling](<doc:ErrorHandling>) page.
 
-### 複合戦略でのエラー処理
+### Error Handling in Composite Strategy
 
-複合戦略では、各構成戦略からのエラーが統合されて報告されます。最初に失敗した戦略のエラーが返されるため、エラーの型を確認して適切に処理します：
+In composite strategies, errors from each component strategy are integrated and reported. Since the error from the first failed strategy is returned, check the error type and handle appropriately:
 
 ```swift
 lockFailure: { error, send in
     switch error {
     case let singleError as LockmanSingleExecutionError:
-        send(.singleExecutionConflict("重複実行が検出されました"))
+        send(.singleExecutionConflict("Duplicate execution detected"))
         
     case let priorityError as LockmanPriorityBasedError:
-        send(.priorityConflict("優先度の競合が発生しました"))
+        send(.priorityConflict("Priority conflict occurred"))
         
     case let concurrencyError as LockmanConcurrencyLimitedError:
-        send(.concurrencyLimitReached("同時実行制限に到達しました"))
+        send(.concurrencyLimitReached("Concurrent execution limit reached"))
         
     default:
-        send(.unknownLockFailure("ロック取得に失敗しました"))
+        send(.unknownLockFailure("Failed to acquire lock"))
     }
 }
 ```
 
-## 設計指針
+## Design Guidelines
 
-### 戦略選択の順序
+### Strategy Selection Order
 
-1. **基本制御から開始**: SingleExecutionから始める
-2. **優先度が必要なら追加**: PriorityBasedを組み合わせ
-3. **リソース制御が必要なら追加**: ConcurrencyLimitedを組み合わせ
-4. **協調制御が必要なら追加**: GroupCoordinationを組み合わせ
-5. **カスタムロジックが必要なら追加**: DynamicConditionを組み合わせ
+1. **Start with basic control**: Begin with SingleExecution
+2. **Add if priority is needed**: Combine PriorityBased
+3. **Add if resource control is needed**: Combine ConcurrencyLimited
+4. **Add if coordination control is needed**: Combine GroupCoordination
+5. **Add if custom logic is needed**: Combine DynamicCondition
 

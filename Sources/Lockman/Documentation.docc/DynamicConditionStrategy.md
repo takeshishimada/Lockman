@@ -4,19 +4,19 @@ Control actions based on runtime conditions.
 
 ## Overview
 
-DynamicConditionStrategyは、実行時の状態や条件に基づいて動的にロック制御を行う戦略です。カスタムロジックによる条件判定により、ビジネスルールに応じた柔軟な排他制御を実現できます。
+DynamicConditionStrategy is a strategy that dynamically controls locks based on runtime state and conditions. Through condition evaluation with custom logic, it enables flexible exclusive control according to business rules.
 
-この戦略は、標準戦略では表現できない複雑なビジネス条件や、アプリケーション状態に応じた動的な制御が必要な場面で使用されます。
+This strategy is used in situations where complex business conditions that cannot be expressed with standard strategies or dynamic control based on application state is required.
 
-## 条件評価システム
+## Condition Evaluation System
 
-### 基本的な条件指定
+### Basic Condition Specification
 
 ```swift
 LockmanDynamicConditionInfo(
     actionId: "payment",
     condition: {
-        // カスタム条件ロジック
+        // Custom condition logic
         guard userIsAuthenticated else {
             return .failure(AuthenticationError.notLoggedIn)
         }
@@ -28,9 +28,9 @@ LockmanDynamicConditionInfo(
 )
 ```
 
-### ReduceWithLockによる高度な制御
+### Advanced Control with ReduceWithLock
 
-ReduceWithLockを使用することで、現在の状態とアクションに基づいたより高度な条件評価が可能です：
+Using ReduceWithLock enables more advanced condition evaluation based on current state and action:
 
 ```swift
 ReduceWithLock { state, action in
@@ -46,7 +46,7 @@ ReduceWithLock { state, action in
             lockAction: PaymentAction.makePayment,
             cancelID: CancelID.payment,
             lockCondition: { state, action in
-                // アクションレベルの条件
+                // Action-level condition
                 guard state.balance >= amount else {
                     return .failure(PaymentError.insufficientFunds(
                         required: amount, 
@@ -58,7 +58,7 @@ ReduceWithLock { state, action in
         )
     }
 } lockCondition: { state, _ in
-    // リデューサーレベルの条件
+    // Reducer-level condition
     guard state.isAuthenticated else {
         return .failure(AuthenticationError.notLoggedIn)
     }
@@ -66,9 +66,9 @@ ReduceWithLock { state, action in
 }
 ```
 
-## 使用方法
+## Usage
 
-### 基本的な使用例
+### Basic Usage Example
 
 ```swift
 @LockmanDynamicCondition
@@ -82,11 +82,11 @@ enum Action {
             return LockmanDynamicConditionInfo(
                 actionId: actionName,
                 condition: {
-                    // 営業時間チェック
+                    // Business hours check
                     guard BusinessHours.isOpen else {
                         return .failure(BankError.outsideBusinessHours)
                     }
-                    // 金額制限チェック
+                    // Amount limit check
                     guard amount <= transferLimit else {
                         return .failure(BankError.transferLimitExceeded)
                     }
@@ -97,7 +97,7 @@ enum Action {
             return LockmanDynamicConditionInfo(
                 actionId: actionName,
                 condition: {
-                    // ATM利用可能性チェック
+                    // ATM availability check
                     guard ATMService.isAvailable else {
                         return .failure(BankError.atmUnavailable)
                     }
@@ -109,13 +109,13 @@ enum Action {
 }
 ```
 
-### 多段階条件評価
+### Multi-Stage Condition Evaluation
 
-ReduceWithLockは3段階の条件評価を提供します：
+ReduceWithLock provides three stages of condition evaluation:
 
-1. **アクションレベル条件**: 特定の操作に対する条件
-2. **リデューサーレベル条件**: 全体的な前提条件
-3. **従来のロック戦略**: 標準的な排他制御
+1. **Action-level conditions**: Conditions for specific operations
+2. **Reducer-level conditions**: Overall prerequisite conditions
+3. **Traditional lock strategies**: Standard exclusive control
 
 ```swift
 ReduceWithLock { state, action in
@@ -128,10 +128,10 @@ ReduceWithLock { state, action in
                 try await performCriticalOperation()
                 send(.operationCompleted)
             },
-            lockAction: CriticalAction.execute, // 3. 従来戦略（SingleExecution等）
+            lockAction: CriticalAction.execute, // 3. Traditional strategy (SingleExecution, etc.)
             cancelID: CancelID.critical,
             lockCondition: { state, _ in
-                // 1. アクションレベル条件
+                // 1. Action-level condition
                 guard state.systemStatus == .ready else {
                     return .failure(SystemError.notReady)
                 }
@@ -140,7 +140,7 @@ ReduceWithLock { state, action in
         )
     }
 } lockCondition: { state, _ in
-    // 2. リデューサーレベル条件
+    // 2. Reducer-level condition
     guard state.maintenanceMode == false else {
         return .failure(SystemError.maintenanceMode)
     }
@@ -148,48 +148,48 @@ ReduceWithLock { state, action in
 }
 ```
 
-## 動作例
+## Operation Examples
 
-### 基本的な条件判定
-
-```
-時刻: 9:00  - transfer($1000)要求
-  条件1: 営業時間チェック → ✅ 営業中
-  条件2: 金額制限チェック → ✅ 制限内
-  結果: ✅ 実行
-
-時刻: 18:00 - transfer($1000)要求  
-  条件1: 営業時間チェック → ❌ 営業時間外
-  結果: ❌ 拒否（BankError.outsideBusinessHours）
-
-時刻: 10:00 - transfer($50000)要求
-  条件1: 営業時間チェック → ✅ 営業中
-  条件2: 金額制限チェック → ❌ 制限超過
-  結果: ❌ 拒否（BankError.transferLimitExceeded）
-```
-
-### 多段階評価の動作
+### Basic Condition Evaluation
 
 ```
-criticalOperation要求:
+Time: 9:00  - transfer($1000) request
+  Condition 1: Business hours check → ✅ Open
+  Condition 2: Amount limit check → ✅ Within limit
+  Result: ✅ Execute
 
-Step 1: リデューサーレベル条件
-  maintenanceMode == false → ✅ 通過
+Time: 18:00 - transfer($1000) request  
+  Condition 1: Business hours check → ❌ Outside hours
+  Result: ❌ Reject (BankError.outsideBusinessHours)
 
-Step 2: アクションレベル条件  
-  systemStatus == .ready → ✅ 通過
-
-Step 3: 従来戦略（例：SingleExecution）
-  重複実行チェック → ✅ 通過
-
-結果: ✅ 全段階通過で実行開始
+Time: 10:00 - transfer($50000) request
+  Condition 1: Business hours check → ✅ Open
+  Condition 2: Amount limit check → ❌ Exceeds limit
+  Result: ❌ Reject (BankError.transferLimitExceeded)
 ```
 
-## エラーハンドリング
+### Multi-Stage Evaluation Operation
 
-DynamicConditionStrategyで発生する可能性のあるエラーと、その対処法については[Error Handling](<doc:ErrorHandling>)ページの共通パターンも参照してください。
+```
+criticalOperation request:
 
-### カスタムエラーの活用
+Step 1: Reducer-level condition
+  maintenanceMode == false → ✅ Pass
+
+Step 2: Action-level condition  
+  systemStatus == .ready → ✅ Pass
+
+Step 3: Traditional strategy (e.g., SingleExecution)
+  Duplicate execution check → ✅ Pass
+
+Result: ✅ All stages passed, start execution
+```
+
+## Error Handling
+
+For errors that may occur with DynamicConditionStrategy and their solutions, please also refer to the common patterns on the [Error Handling](<doc:ErrorHandling>) page.
+
+### Utilizing Custom Errors
 
 ```swift
 enum BusinessError: Error {
@@ -202,19 +202,19 @@ enum BusinessError: Error {
 lockFailure: { error, send in
     switch error as? BusinessError {
     case .insufficientFunds(let required, let available):
-        send(.showError("残高不足: 必要額¥\(required)、残高¥\(available)"))
+        send(.showError("Insufficient funds: Required ¥\(required), Available ¥\(available)"))
         
     case .dailyLimitExceeded(let limit):
-        send(.showError("1日の利用限度額¥\(limit)を超過しています"))
+        send(.showError("Daily limit of ¥\(limit) exceeded"))
         
     case .accountSuspended(let reason):
-        send(.showError("アカウントが停止されています: \(reason)"))
+        send(.showError("Account suspended: \(reason)"))
         
     case .outsideBusinessHours:
-        send(.showError("営業時間外です（平日9:00-17:00）"))
+        send(.showError("Outside business hours (Weekdays 9:00-17:00)"))
         
     default:
-        send(.showError("操作を実行できません"))
+        send(.showError("Cannot perform operation"))
     }
 }
 ```

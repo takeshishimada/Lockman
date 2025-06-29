@@ -4,87 +4,87 @@ Configure Lockman for your application's needs.
 
 ## Overview
 
-LockmanManagerは、アプリケーション全体で使用されるLockmanの動作を設定するための設定機能を提供します。これらの設定により、デフォルトのロック解除タイミングやエラーハンドリングの動作をカスタマイズできます。
+LockmanManager provides configuration functionality to set Lockman's behavior throughout the application. These settings allow you to customize default lock release timing and error handling behavior.
 
-設定は一度行えばアプリケーション全体に適用され、個別の[`withLock`](<doc:Lock>)呼び出し時にオーバーライドすることも可能です。
+Once configured, settings apply application-wide and can be overridden in individual [`withLock`](<doc:Lock>) calls.
 
-## 設定項目
+## Configuration Options
 
 ### defaultUnlockOption
 
-ロック解除のデフォルトタイミングを設定します。
+Sets the default timing for lock release.
 
 ```swift
-// アプリケーション初期化時に設定
+// Configure during application initialization
 LockmanManager.config.defaultUnlockOption = .immediate
 ```
 
-**設定可能な値**:
-- **`.immediate`**: 処理完了と同時に即座に解除（デフォルト）
-- **`.mainRunLoop`**: メインループの次のサイクルで解除
-- **`.transition`**: プラットフォーム固有の画面遷移アニメーション完了後に解除
-- **`.delayed(TimeInterval)`**: 指定した時間間隔後に解除
+**Available values**:
+- **`.immediate`**: Release immediately upon completion (default)
+- **`.mainRunLoop`**: Release on the next main loop cycle
+- **`.transition`**: Release after platform-specific screen transition animation
+- **`.delayed(TimeInterval)`**: Release after the specified time interval
 
-**用途**:
-- UI遷移を考慮した解除タイミングの統一
-- アプリケーション全体での一貫した動作設定
-- パフォーマンス最適化のための調整
+**Use cases**:
+- Unified release timing considering UI transitions
+- Consistent behavior settings across the application
+- Adjustments for performance optimization
 
 ### handleCancellationErrors
 
-キャンセルエラーの処理方法を設定します。
+Sets how to handle cancellation errors.
 
 ```swift
-// キャンセルエラーを無視する（デフォルト）
+// Ignore cancellation errors (default)
 LockmanManager.config.handleCancellationErrors = false
 
-// キャンセルエラーもエラーハンドラに渡す
+// Pass cancellation errors to error handler
 LockmanManager.config.handleCancellationErrors = true
 ```
 
-**設定値**:
-- **`false`**: キャンセルエラーを無視し、エラーハンドラに渡さない（デフォルト）
-- **`true`**: キャンセルエラーもエラーハンドラに渡す
+**Values**:
+- **`false`**: Ignore cancellation errors and don't pass to error handler (default)
+- **`true`**: Pass cancellation errors to error handler
 
-**用途**:
-- キャンセル処理のログ記録
-- デバッグ時のキャンセル状況の追跡
-- 統計情報の収集
+**Use cases**:
+- Logging cancellation processing
+- Tracking cancellation situations during debugging
+- Collecting statistical information
 
-## 設定例
+## Configuration Examples
 
-### アプリケーション初期化時の設定
+### Configuration during Application Initialization
 
 ```swift
-// AppDelegateまたはApp構造体で設定
+// Configure in AppDelegate or App struct
 func applicationDidFinishLaunching() {
-    // UI遷移を考慮した解除タイミングに設定
+    // Set release timing considering UI transitions
     LockmanManager.config.defaultUnlockOption = .transition
     
-    // 開発時はキャンセルエラーもログに記録
+    // Log cancellation errors during development
     #if DEBUG
     LockmanManager.config.handleCancellationErrors = true
     #endif
 }
 ```
 
-### 個別オーバーライド
+### Individual Override
 
 ```swift
-// グローバル設定を個別にオーバーライド
+// Override global settings individually
 .withLock(
-    unlockOption: .immediate, // グローバル設定をオーバーライド
+    unlockOption: .immediate, // Override global setting
     operation: { send in
-        // 即座に解除が必要な処理
+        // Processing that requires immediate release
     },
     action: action,
     cancelID: cancelID
 )
 ```
 
-## 注意事項
+## Notes
 
-- 設定変更はアプリケーション全体に影響するため、初期化時に行うことを推奨
-- 実行時の設定変更は可能ですが、予期しない動作を避けるため慎重に行ってください
-- テスト時は設定をリセットして、テスト間の影響を避けることを推奨
+- Since configuration changes affect the entire application, it's recommended to configure during initialization
+- Runtime configuration changes are possible but should be done carefully to avoid unexpected behavior
+- During testing, it's recommended to reset settings to avoid effects between tests
 

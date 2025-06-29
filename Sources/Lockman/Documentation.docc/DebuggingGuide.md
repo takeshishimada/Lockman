@@ -4,22 +4,22 @@ Learn how to debug Lockman-related issues in your application.
 
 ## Overview
 
-Lockmanを使用したアプリケーションで発生する問題のデバッグは、排他制御の複雑さから従来のデバッグとは異なるアプローチが必要です。LockmanManagerは、開発者がロック状態を監視し、問題を特定するための強力なデバッグ機能を提供しています。
+Debugging issues in applications using Lockman requires a different approach from traditional debugging due to the complexity of exclusive control. LockmanManager provides powerful debugging features for developers to monitor lock states and identify problems.
 
-適切なデバッグツールの活用により、ロックの競合、デッドロック、パフォーマンス問題などを効率的に特定し、解決できます。
+By utilizing appropriate debugging tools, you can efficiently identify and resolve lock conflicts, deadlocks, performance issues, and more.
 
-## LockmanManagerデバッグ機能
+## LockmanManager Debug Features
 
-### デバッグログの有効化
+### Enabling Debug Logs
 
-Lockmanは詳細なロック操作ログを提供します：
+Lockman provides detailed lock operation logs:
 
 ```swift
-// デバッグログを有効化（DEBUGビルドでのみ動作）
+// Enable debug logs (only works in DEBUG builds)
 LockmanManager.debug.isLoggingEnabled = true
 ```
 
-**ログ出力例**:
+**Log output example**:
 ```
 ✅ [Lockman] canLock succeeded - Strategy: SingleExecution, BoundaryId: process, Info: LockmanSingleExecutionInfo(actionId: 'startProcessButtonTapped', uniqueId: 7BFC785A-3D25-4722-B9BC-A3A63A7F49FC, mode: boundary)
 
@@ -28,16 +28,16 @@ LockmanManager.debug.isLoggingEnabled = true
 ⚠️ [Lockman] canLock succeeded with cancellation - Strategy: PriorityBased, BoundaryId: sync, Info: LockmanPriorityBasedInfo(...), Cancelled: 'backgroundSync' (uniqueId: 123e4567-e89b-12d3-a456-426614174000), Error: precedingActionCancelled
 ```
 
-### 現在のロック状態表示
+### Current Lock State Display
 
-テーブル形式でロック状態を表示できます：
+You can display lock states in table format:
 
 ```swift
-// 現在のロック状態を表示
+// Display current lock state
 LockmanManager.debug.printCurrentLocks()
 ```
 
-**出力例**:
+**Output example**:
 ```
 ┌─────────────────┬──────────────────┬──────────────────────────────────────┬─────────────────┐
 │ Strategy        │ BoundaryId       │ ActionId/UniqueId                    │ Additional Info │
@@ -50,18 +50,18 @@ LockmanManager.debug.printCurrentLocks()
 └─────────────────┴──────────────────┴──────────────────────────────────────┴─────────────────┘
 ```
 
-### フォーマットオプション
+### Format Options
 
-表示形式をカスタマイズできます：
+You can customize the display format:
 
 ```swift
-// コンパクト表示（狭いターミナル用）
+// Compact display (for narrow terminals)
 LockmanManager.debug.printCurrentLocks(options: .compact)
 
-// 詳細表示
+// Detailed display
 LockmanManager.debug.printCurrentLocks(options: .detailed)
 
-// カスタムフォーマット
+// Custom format
 let customOptions = LockmanManager.debug.FormatOptions(
     useShortStrategyNames: true,
     simplifyBoundaryIds: true,
@@ -71,15 +71,15 @@ let customOptions = LockmanManager.debug.FormatOptions(
 LockmanManager.debug.printCurrentLocks(options: customOptions)
 ```
 
-### cleanup機能
+### Cleanup Feature
 
-問題のあるロック状態をリセットできます：
+You can reset problematic lock states:
 
 ```swift
-// 全戦略の全ロックをクリーンアップ
+// Clean up all locks from all strategies
 LockmanManager.cleanup.all()
 
-// 特定境界のロックのみクリーンアップ
+// Clean up locks only for specific boundary
 LockmanManager.cleanup.boundary(CancelID.userAction)
 ```
 

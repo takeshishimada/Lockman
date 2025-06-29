@@ -4,7 +4,7 @@ Learn how to integrate Lockman into your TCA application.
 
 ## Overview
 
-このガイドでは、LockmanをThe Composable Architecture (TCA)プロジェクトに統合し、最初の機能を実装する方法を学びます。
+This guide will teach you how to integrate Lockman into your The Composable Architecture (TCA) project and implement your first feature.
 
 ## Adding Lockman as a dependency
 
@@ -30,11 +30,11 @@ And add `Lockman` as a dependency of your package's target:
 
 ## Writing your first feature
 
-[`@LockmanSingleExecution`](<doc:SingleExecutionStrategy>)マクロを使用して、処理の重複実行を防ぐ機能を実装してみましょう。
+Let's implement a feature that prevents duplicate execution of processes using the [`@LockmanSingleExecution`](<doc:SingleExecutionStrategy>) macro.
 
-### Step 1: Reducerを定義する
+### Step 1: Define the Reducer
 
-まず、基本的なReducerの構造を定義します：
+First, define the basic Reducer structure:
 
 ```swift
 import ComposableArchitecture
@@ -45,9 +45,9 @@ struct ProcessFeature {
 }
 ```
 
-### Step 2: StateとActionを定義する
+### Step 2: Define State and Action
 
-処理状態を管理するStateと、実行可能なアクションを定義します：
+Define the State to manage the processing status and the available actions:
 
 ```swift
 @Reducer
@@ -76,17 +76,17 @@ struct ProcessFeature {
 }
 ```
 
-ここで重要なのは：
+Key points:
 
-- [`@LockmanSingleExecution`](<doc:SingleExecutionStrategy>)マクロをAction enumに適用することで、このenumが`LockmanSingleExecutionAction`プロトコルに準拠します
-- `lockmanInfo`プロパティは各アクションのロック制御方法を定義します
-  - 制御パラメータの設定: 戦略固有の動作設定（優先度、同時実行数制限、グループ協調ルール等）を指定します
-  - アクション識別: ロック管理システム内でのアクション識別子を提供します
-  - 戦略間の連携: 複合戦略使用時に、各戦略へ渡すパラメータを個別に定義します
+- Applying the [`@LockmanSingleExecution`](<doc:SingleExecutionStrategy>) macro to the Action enum makes it conform to the `LockmanSingleExecutionAction` protocol
+- The `lockmanInfo` property defines how each action is controlled for locking:
+  - Control parameter configuration: Specifies strategy-specific behavior settings (priority, concurrency limits, group coordination rules, etc.)
+  - Action identification: Provides the action identifier within the lock management system
+  - Inter-strategy coordination: Defines parameters to pass to each strategy when using composite strategies
 
-### Step 3: CancelIDを定義する
+### Step 3: Define CancelID
 
-Effectのキャンセル識別子として使用する`CancelID`を定義します：
+Define a `CancelID` to use as the cancellation identifier for Effects:
 
 ```swift
 extension ProcessFeature {
@@ -96,11 +96,11 @@ extension ProcessFeature {
 }
 ```
 
-`CancelID`はEffectのキャンセルとロック境界の識別に使用されます。
+`CancelID` is used for Effect cancellation and lock boundary identification.
 
-### Step 4: Reducer本体を実装する
+### Step 4: Implement the Reducer body
 
-[`withLock`](<doc:Lock>)メソッドを使用して、排他制御を伴う処理を実装します：
+Implement processing with exclusive control using the [`withLock`](<doc:Lock>) method:
 
 ```swift
 var body: some Reducer<State, Action> {
@@ -110,13 +110,13 @@ var body: some Reducer<State, Action> {
             return .withLock(
                 operation: { send in
                     await send(.processStart)
-                    // 重い処理をシミュレート
+                    // Simulate heavy processing
                     try await Task.sleep(nanoseconds: 3_000_000_000)
                     await send(.processCompleted)
                 },
                 lockFailure: { error, send in
-                    // すでに処理が実行中の場合
-                    state.message = "処理は既に実行中です"
+                    // When processing is already in progress
+                    state.message = "Processing is already in progress"
                 },
                 action: action,
                 cancelID: CancelID.userAction
@@ -124,24 +124,24 @@ var body: some Reducer<State, Action> {
             
         case .processStart:
             state.isProcessing = true
-            state.message = "処理を開始しました..."
+            state.message = "Processing started..."
             return .none
             
         case .processCompleted:
             state.isProcessing = false
-            state.message = "処理が完了しました"
+            state.message = "Processing completed"
             return .none
         }
     }
 }
 ```
 
-[`withLock`](<doc:Lock>)メソッドの重要なポイント：
+Key points about the [`withLock`](<doc:Lock>) method:
 
-- `operation`：排他制御下で実行される処理を定義します
-- `lockFailure`：すでに同じ処理が実行中の場合に呼ばれるハンドラーです
-- `action`：現在処理中のアクションを渡します
-- `cancelID`：Effectのキャンセルとロック境界の識別子を指定します
+- `operation`: Defines the processing to be executed under exclusive control
+- `lockFailure`: Handler called when the same processing is already in progress
+- `action`: Passes the currently processing action
+- `cancelID`: Specifies the identifier for Effect cancellation and lock boundary
 
-これで、`startProcessButtonTapped`アクションは処理中に再度実行されることがなくなり、ユーザーが誤って複数回ボタンをタップしても安全です。
+With this implementation, the `startProcessButtonTapped` action will not be executed again while processing, making it safe even if the user accidentally taps the button multiple times.
 

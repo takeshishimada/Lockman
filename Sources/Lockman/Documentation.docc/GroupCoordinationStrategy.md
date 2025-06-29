@@ -4,15 +4,15 @@ Coordinate actions through leader/member group roles.
 
 ## Overview
 
-GroupCoordinationStrategyは、関連する処理をグループとして協調制御する戦略です。リーダー・メンバーの役割分担により、複数の処理が適切な順序と条件で実行されることを保証します。
+GroupCoordinationStrategy is a strategy that coordinates related processing as a group. Through leader-member role assignment, it ensures that multiple processes execute in appropriate order and conditions.
 
-この戦略は、複数の関連処理が協調して動作する必要がある場面で使用されます。
+This strategy is used in situations where multiple related processes need to work cooperatively.
 
-## グループシステム
+## Group System
 
-### 協調役割
+### Coordination Roles
 
-**none** - 非排他的参加者
+**none** - Non-exclusive Participant
 
 ```swift
 LockmanGroupCoordinatedInfo(
@@ -22,11 +22,11 @@ LockmanGroupCoordinatedInfo(
 )
 ```
 
-- グループの状態に関係なく参加可能
-- 他の参加者の実行を妨げない
-- UI更新やログ記録などの補助的処理
+- Can participate regardless of group state
+- Does not hinder execution of other participants
+- Auxiliary processing such as UI updates or logging
 
-**leader** - グループリーダー
+**leader** - Group Leader
 
 ```swift
 LockmanGroupCoordinatedInfo(
@@ -36,11 +36,11 @@ LockmanGroupCoordinatedInfo(
 )
 ```
 
-- グループの活動を開始する役割
-- エントリーポリシーに従って参加条件を制御
-- メンバーの参加を可能にする
+- Role to start group activities
+- Controls participation conditions according to entry policy
+- Enables member participation
 
-**member** - グループメンバー
+**member** - Group Member
 
 ```swift
 LockmanGroupCoordinatedInfo(
@@ -50,45 +50,45 @@ LockmanGroupCoordinatedInfo(
 )
 ```
 
-- アクティブなグループにのみ参加可能
-- リーダーまたは他の参加者がいる場合に実行
-- 協調的な処理を担当
+- Can only participate in active groups
+- Executes when leader or other participants are present
+- Responsible for coordinated processing
 
-### リーダーエントリーポリシー
+### Leader Entry Policy
 
-**emptyGroup** - 空グループでのみ開始
+**emptyGroup** - Start only in empty group
 
 ```swift
 .leader(.emptyGroup)
 ```
 
-- グループが完全に空の場合のみ参加可能
-- 新しい活動サイクルを開始
-- 最も厳格な制御
+- Can only participate when group is completely empty
+- Starts new activity cycle
+- Most strict control
 
-**withoutMembers** - メンバーなしで開始
+**withoutMembers** - Start without members
 
 ```swift
 .leader(.withoutMembers)
 ```
 
-- メンバーがいない場合に参加可能
-- 他のリーダーは許可
-- リーダー間の協調を可能
+- Can participate when no members are present
+- Other leaders are allowed
+- Enables coordination between leaders
 
-**withoutLeader** - リーダーなしで開始
+**withoutLeader** - Start without leader
 
 ```swift
 .leader(.withoutLeader)
 ```
 
-- 他のリーダーがいない場合に参加可能
-- メンバーは許可
-- リーダー権限の排他制御
+- Can participate when no other leaders are present
+- Members are allowed
+- Exclusive control of leader authority
 
-## 使用方法
+## Usage
 
-### 基本的な使用例
+### Basic Usage Example
 
 ```swift
 @LockmanGroupCoordination
@@ -122,7 +122,7 @@ enum Action {
 }
 ```
 
-### 複数グループでの協調
+### Coordination with Multiple Groups
 
 ```swift
 LockmanGroupCoordinatedInfo(
@@ -132,67 +132,67 @@ LockmanGroupCoordinatedInfo(
 )
 ```
 
-## 動作例
+## Operation Examples
 
-### リーダー・メンバー協調
-
-```
-時刻: 0秒  - leader(.emptyGroup)開始     → ✅ 実行（グループ空）
-時刻: 1秒  - member参加要求             → ✅ 実行（リーダー存在）
-時刻: 1秒  - member参加要求             → ✅ 実行（グループアクティブ）
-時刻: 2秒  - leader(.emptyGroup)要求    → ❌ 拒否（グループアクティブ）
-時刻: 5秒  - 全参加者完了               → 🔓 グループ解散
-時刻: 6秒  - leader(.emptyGroup)要求    → ✅ 実行（グループ空）
-```
-
-### エントリーポリシーの違い
+### Leader-Member Coordination
 
 ```
-// .emptyGroup の場合
-グループ状態: [空] → leader要求 → ✅ 許可
-グループ状態: [member] → leader要求 → ❌ 拒否
-
-// .withoutMembers の場合  
-グループ状態: [leader] → leader要求 → ✅ 許可
-グループ状態: [member] → leader要求 → ❌ 拒否
-
-// .withoutLeader の場合
-グループ状態: [member] → leader要求 → ✅ 許可
-グループ状態: [leader] → leader要求 → ❌ 拒否
+Time: 0s  - leader(.emptyGroup) starts     → ✅ Execute (group empty)
+Time: 1s  - member join request            → ✅ Execute (leader exists)
+Time: 1s  - member join request            → ✅ Execute (group active)
+Time: 2s  - leader(.emptyGroup) request    → ❌ Reject (group active)
+Time: 5s  - All participants complete      → 🔓 Group dissolves
+Time: 6s  - leader(.emptyGroup) request    → ✅ Execute (group empty)
 ```
 
-## エラーハンドリング
+### Entry Policy Differences
 
-GroupCoordinationStrategyで発生する可能性のあるエラーと、その対処法については[Error Handling](<doc:ErrorHandling>)ページの共通パターンも参照してください。
+```
+// .emptyGroup case
+Group state: [empty] → leader request → ✅ Allow
+Group state: [member] → leader request → ❌ Reject
+
+// .withoutMembers case
+Group state: [leader] → leader request → ✅ Allow
+Group state: [member] → leader request → ❌ Reject
+
+// .withoutLeader case
+Group state: [member] → leader request → ✅ Allow
+Group state: [leader] → leader request → ❌ Reject
+```
+
+## Error Handling
+
+For errors that may occur with GroupCoordinationStrategy and their solutions, please also refer to the common patterns on the [Error Handling](<doc:ErrorHandling>) page.
 
 ### LockmanGroupCoordinationError
 
-**actionAlreadyInGroup** - アクションが既にグループに参加
+**actionAlreadyInGroup** - Action already in group
 
 ```swift
 lockFailure: { error, send in
     if case .actionAlreadyInGroup(let existingInfo, let groupIds) = error as? LockmanGroupCoordinationError {
-        send(.alreadyActive("処理が既に実行中です"))
+        send(.alreadyActive("Process is already running"))
     }
 }
 ```
 
-**leaderCannotJoinNonEmptyGroup** - リーダーが空でないグループに参加拒否
+**leaderCannotJoinNonEmptyGroup** - Leader cannot join non-empty group
 
 ```swift
 lockFailure: { error, send in
     if case .leaderCannotJoinNonEmptyGroup(let groupIds) = error as? LockmanGroupCoordinationError {
-        send(.groupBusy("他の処理が実行中のため開始できません"))
+        send(.groupBusy("Cannot start because other processing is running"))
     }
 }
 ```
 
-**memberCannotJoinEmptyGroup** - メンバーが空グループに参加拒否
+**memberCannotJoinEmptyGroup** - Member cannot join empty group
 
 ```swift
 lockFailure: { error, send in
     if case .memberCannotJoinEmptyGroup(let groupIds) = error as? LockmanGroupCoordinationError {
-        send(.noActiveGroup("アクティブなグループがありません"))
+        send(.noActiveGroup("No active group"))
     }
 }
 ```
