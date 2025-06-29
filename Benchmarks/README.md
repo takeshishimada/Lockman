@@ -4,10 +4,11 @@
 
 Comprehensive performance benchmarks of the Lockman library have been conducted, including both basic operations and high-load burst scenarios with 100 concurrent actions. The measurements cover different strategies and their performance characteristics under various load conditions.
 
-### TCA 1.19.0 Performance Update
-- Test suite execution time: **59 seconds** (all tests passing)
-- Build performance: Stable with TCA 1.19.0's internal optimizations
+### TCA 1.20.1 Performance Update
+- Test suite execution time: **56 seconds** (all tests passing)
+- Build performance: Stable with TCA 1.20.1's bug fixes and improvements
 - No breaking changes or performance regressions detected
+- Benchmark results remain consistent with previous versions
 
 ## How to Run Benchmarks
 
@@ -34,7 +35,7 @@ swift package benchmark --format influx # InfluxDB format
 - **Processors**: 8 cores
 - **Memory**: 16 GB
 - **Date**: June 29, 2025
-- **TCA Version**: 1.19.0
+- **TCA Version**: 1.20.1
 
 ### Test Scenarios
 
@@ -263,11 +264,11 @@ await withTaskGroup(of: Void.self) { group in
 
 ## Summary
 
-### TCA 1.19.0 Compatibility Notes
-- **TCA 1.19.0** introduced significant internal store rewrites for performance improvements
+### TCA 1.20.1 Compatibility Notes
+- **TCA 1.20.1** includes bug fixes and improvements over 1.19.x series
 - All Lockman strategies remain fully compatible without code changes
-- Store now conforms to `ObservableObject` (does not affect Lockman usage)
 - Performance characteristics remain consistent with previous measurements
+- No API changes or breaking changes detected
 
 The following performance characteristics were measured:
 
@@ -290,4 +291,4 @@ The following performance characteristics were measured:
 
 ---
 
-*Benchmarks performed on June 29, 2025, using TCA 1.19.0 on macOS 24.5.0*
+*Benchmarks performed on June 29, 2025, using TCA 1.20.1 on macOS 24.5.0*
