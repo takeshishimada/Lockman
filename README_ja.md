@@ -58,19 +58,22 @@ struct ProcessFeature {
         var message = ""
     }
     
-    @LockmanSingleExecution
-    enum Action {
-        case startProcessButtonTapped
-        case processStart
-        case processCompleted
+    enum Action: ViewAction {
+        case view(ViewAction)
+        case `internal`(InternalAction)
         
-        var lockmanInfo: LockmanSingleExecutionInfo {
-            switch self {
-            case .startProcessButtonTapped:
-                return .init(actionId: actionName, mode: .boundary)
-            case .processStart, .processCompleted:
-                return .init(actionId: actionName, mode: .none)
+        @LockmanSingleExecution
+        enum ViewAction {
+            case startProcessButtonTapped
+            
+            var lockmanInfo: LockmanSingleExecutionInfo {
+                .init(actionId: actionName, mode: .boundary)
             }
+        }
+        
+        enum InternalAction {
+            case processStart
+            case processCompleted
         }
     }
     
@@ -81,31 +84,37 @@ struct ProcessFeature {
     var body: some Reducer<State, Action> {
         Reduce { state, action in
             switch action {
-            case .startProcessButtonTapped:
-                return .withLock(
-                    operation: { send in
-                        await send(.processStart)
-                        // 重い処理をシミュレート
-                        try await Task.sleep(nanoseconds: 3_000_000_000)
-                        await send(.processCompleted)
-                    },
-                    lockFailure: { error, send in
-                        // すでに処理が実行中の場合
-                        state.message = "処理は既に実行中です"
-                    },
-                    action: action,
-                    cancelID: CancelID.userAction
-                )
+            case let .view(viewAction):
+                switch viewAction {
+                case .startProcessButtonTapped:
+                    return .withLock(
+                        operation: { send in
+                            await send(.internal(.processStart))
+                            // 重い処理をシミュレート
+                            try await Task.sleep(nanoseconds: 3_000_000_000)
+                            await send(.internal(.processCompleted))
+                        },
+                        lockFailure: { error, send in
+                            // すでに処理が実行中の場合
+                            state.message = "処理は既に実行中です"
+                        },
+                        action: viewAction,
+                        cancelID: CancelID.userAction
+                    )
+                }
                 
-            case .processStart:
-                state.isProcessing = true
-                state.message = "処理を開始しました..."
-                return .none
-                
-            case .processCompleted:
-                state.isProcessing = false
-                state.message = "処理が完了しました"
-                return .none
+            case let .internal(internalAction):
+                switch internalAction {
+                case .processStart:
+                    state.isProcessing = true
+                    state.message = "処理を開始しました..."
+                    return .none
+                    
+                case .processCompleted:
+                    state.isProcessing = false
+                    state.message = "処理が完了しました"
+                    return .none
+                }
             }
         }
     }
@@ -156,13 +165,11 @@ struct ProcessFeature {
 
 ライブラリをより深く理解するために、以下のドキュメントが役立つでしょう：
 
-### はじめに
+### Essentials
 * [Getting Started](https://takeshishimada.github.io/Lockman/main/documentation/lockman/gettingstarted) - LockmanをTCAアプリケーションに統合する方法
 * [Boundary Overview](https://takeshishimada.github.io/Lockman/main/documentation/lockman/boundaryoverview) - Lockmanにおける境界の概念を理解する
 * [Lock](https://takeshishimada.github.io/Lockman/main/documentation/lockman/lock) - ロック機構の理解
 * [Unlock](https://takeshishimada.github.io/Lockman/main/documentation/lockman/unlock) - アンロック機構の理解
-
-### 設定とデバッグ
 * [Choosing a Strategy](https://takeshishimada.github.io/Lockman/main/documentation/lockman/choosingstrategy) - ユースケースに適した戦略を選択する
 * [Configuration](https://takeshishimada.github.io/Lockman/main/documentation/lockman/configuration) - アプリケーションのニーズに合わせてLockmanを設定する
 * [Error Handling](https://takeshishimada.github.io/Lockman/main/documentation/lockman/errorhandling) - 一般的なエラーハンドリングパターンを学ぶ
