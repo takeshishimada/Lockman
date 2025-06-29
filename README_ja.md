@@ -44,7 +44,77 @@ Lockmanは以下の制御戦略を提供し、実際のアプリ開発で頻繁�
 
 ## 基本例
 
-単一実行アクション制御の例：
+`@LockmanSingleExecution`マクロを使用して、処理の重複実行を防ぐ機能を実装する方法：
+
+```swift
+import ComposableArchitecture
+import Lockman
+
+@Reducer
+struct ProcessFeature {
+    @ObservableState
+    struct State: Equatable {
+        var isProcessing = false
+        var message = ""
+    }
+    
+    @LockmanSingleExecution
+    enum Action {
+        case startProcessButtonTapped
+        case processStart
+        case processCompleted
+        
+        var lockmanInfo: LockmanSingleExecutionInfo {
+            switch self {
+            case .startProcessButtonTapped:
+                return .init(actionId: actionName, mode: .boundary)
+            case .processStart, .processCompleted:
+                return .init(actionId: actionName, mode: .none)
+            }
+        }
+    }
+    
+    enum CancelID {
+        case userAction
+    }
+    
+    var body: some Reducer<State, Action> {
+        Reduce { state, action in
+            switch action {
+            case .startProcessButtonTapped:
+                return .withLock(
+                    operation: { send in
+                        await send(.processStart)
+                        // 重い処理をシミュレート
+                        try await Task.sleep(nanoseconds: 3_000_000_000)
+                        await send(.processCompleted)
+                    },
+                    lockFailure: { error, send in
+                        // すでに処理が実行中の場合
+                        state.message = "処理は既に実行中です"
+                    },
+                    action: action,
+                    cancelID: CancelID.userAction
+                )
+                
+            case .processStart:
+                state.isProcessing = true
+                state.message = "処理を開始しました..."
+                return .none
+                
+            case .processCompleted:
+                state.isProcessing = false
+                state.message = "処理が完了しました"
+                return .none
+            }
+        }
+    }
+}
+```
+
+`withLock`メソッドにより、`startProcessButtonTapped`アクションは処理中に再度実行されることがなくなり、ユーザーが誤って複数回ボタンをタップしても安全です。
+
+### デバッグ出力例
 
 ![01-SingleExecutionStrategy](https://github.com/user-attachments/assets/3f630c51-94c9-4404-b06a-0f565e1bedd3)
 
@@ -83,6 +153,28 @@ Lockmanは以下の制御戦略を提供し、実際のアプリ開発で頻繁�
 * [0.3.0](https://takeshishimada.github.io/Lockman/0.3.0/documentation/lockman/)
 
 </details>
+
+ライブラリをより深く理解するために、以下のドキュメントが役立つでしょう：
+
+### はじめに
+* [Getting Started](https://takeshishimada.github.io/Lockman/main/documentation/lockman/gettingstarted) - LockmanをTCAアプリケーションに統合する方法
+* [Boundary Overview](https://takeshishimada.github.io/Lockman/main/documentation/lockman/boundaryoverview) - Lockmanにおける境界の概念を理解する
+* [Lock](https://takeshishimada.github.io/Lockman/main/documentation/lockman/lock) - ロック機構の理解
+* [Unlock](https://takeshishimada.github.io/Lockman/main/documentation/lockman/unlock) - アンロック機構の理解
+
+### 設定とデバッグ
+* [Choosing a Strategy](https://takeshishimada.github.io/Lockman/main/documentation/lockman/choosingstrategy) - ユースケースに適した戦略を選択する
+* [Configuration](https://takeshishimada.github.io/Lockman/main/documentation/lockman/configuration) - アプリケーションのニーズに合わせてLockmanを設定する
+* [Error Handling](https://takeshishimada.github.io/Lockman/main/documentation/lockman/errorhandling) - 一般的なエラーハンドリングパターンを学ぶ
+* [Debugging Guide](https://takeshishimada.github.io/Lockman/main/documentation/lockman/debuggingguide) - アプリケーションのLockman関連の問題をデバッグする
+
+### 戦略
+* [Single Execution Strategy](https://takeshishimada.github.io/Lockman/main/documentation/lockman/singleexecutionstrategy) - 重複実行を防止
+* [Priority Based Strategy](https://takeshishimada.github.io/Lockman/main/documentation/lockman/prioritybasedstrategy) - 優先度に基づく制御
+* [Concurrency Limited Strategy](https://takeshishimada.github.io/Lockman/main/documentation/lockman/concurrencylimitedstrategy) - 同時実行数を制限
+* [Group Coordination Strategy](https://takeshishimada.github.io/Lockman/main/documentation/lockman/groupcoordinationstrategy) - 関連するアクションを協調
+* [Dynamic Condition Strategy](https://takeshishimada.github.io/Lockman/main/documentation/lockman/dynamicconditionstrategy) - 動的なランタイム制御
+* [Composite Strategy](https://takeshishimada.github.io/Lockman/main/documentation/lockman/compositestrategy) - 複数の戦略を組み合わせる
 
 ## インストール
 

@@ -44,7 +44,77 @@ Lockman provides the following control strategies to address common problems in 
 
 ## Basic Example
 
-Example of single-execution action control:
+Here's how to implement a feature that prevents duplicate execution of processes using the `@LockmanSingleExecution` macro:
+
+```swift
+import ComposableArchitecture
+import Lockman
+
+@Reducer
+struct ProcessFeature {
+    @ObservableState
+    struct State: Equatable {
+        var isProcessing = false
+        var message = ""
+    }
+    
+    @LockmanSingleExecution
+    enum Action {
+        case startProcessButtonTapped
+        case processStart
+        case processCompleted
+        
+        var lockmanInfo: LockmanSingleExecutionInfo {
+            switch self {
+            case .startProcessButtonTapped:
+                return .init(actionId: actionName, mode: .boundary)
+            case .processStart, .processCompleted:
+                return .init(actionId: actionName, mode: .none)
+            }
+        }
+    }
+    
+    enum CancelID {
+        case userAction
+    }
+    
+    var body: some Reducer<State, Action> {
+        Reduce { state, action in
+            switch action {
+            case .startProcessButtonTapped:
+                return .withLock(
+                    operation: { send in
+                        await send(.processStart)
+                        // Simulate heavy processing
+                        try await Task.sleep(nanoseconds: 3_000_000_000)
+                        await send(.processCompleted)
+                    },
+                    lockFailure: { error, send in
+                        // When processing is already in progress
+                        state.message = "Processing is already in progress"
+                    },
+                    action: action,
+                    cancelID: CancelID.userAction
+                )
+                
+            case .processStart:
+                state.isProcessing = true
+                state.message = "Processing started..."
+                return .none
+                
+            case .processCompleted:
+                state.isProcessing = false
+                state.message = "Processing completed"
+                return .none
+            }
+        }
+    }
+}
+```
+
+The `withLock` method ensures that `startProcessButtonTapped` won't execute while processing is in progress, preventing duplicate operations even if the user taps the button multiple times.
+
+### Debug Output Example
 
 ![01-SingleExecutionStrategy](https://github.com/user-attachments/assets/3f630c51-94c9-4404-b06a-0f565e1bedd3)
 
@@ -83,6 +153,28 @@ The documentation for releases and `main` are available here:
 * [0.3.0](https://takeshishimada.github.io/Lockman/0.3.0/documentation/lockman/)
 
 </details>
+
+There are a number of articles in the documentation that you may find helpful as you become more comfortable with the library:
+
+### Getting Started
+* [Getting Started](https://takeshishimada.github.io/Lockman/main/documentation/lockman/gettingstarted) - Learn how to integrate Lockman into your TCA application
+* [Boundary Overview](https://takeshishimada.github.io/Lockman/main/documentation/lockman/boundaryoverview) - Understand the concept of boundaries in Lockman
+* [Lock](https://takeshishimada.github.io/Lockman/main/documentation/lockman/lock) - Understanding the locking mechanism
+* [Unlock](https://takeshishimada.github.io/Lockman/main/documentation/lockman/unlock) - Understanding the unlocking mechanism
+
+### Configuration & Debugging
+* [Choosing a Strategy](https://takeshishimada.github.io/Lockman/main/documentation/lockman/choosingstrategy) - Select the right strategy for your use case
+* [Configuration](https://takeshishimada.github.io/Lockman/main/documentation/lockman/configuration) - Configure Lockman for your application's needs
+* [Error Handling](https://takeshishimada.github.io/Lockman/main/documentation/lockman/errorhandling) - Learn about common error handling patterns
+* [Debugging Guide](https://takeshishimada.github.io/Lockman/main/documentation/lockman/debuggingguide) - Debug Lockman-related issues in your application
+
+### Strategies
+* [Single Execution Strategy](https://takeshishimada.github.io/Lockman/main/documentation/lockman/singleexecutionstrategy) - Prevent duplicate execution
+* [Priority Based Strategy](https://takeshishimada.github.io/Lockman/main/documentation/lockman/prioritybasedstrategy) - Control based on priority
+* [Concurrency Limited Strategy](https://takeshishimada.github.io/Lockman/main/documentation/lockman/concurrencylimitedstrategy) - Limit concurrent executions
+* [Group Coordination Strategy](https://takeshishimada.github.io/Lockman/main/documentation/lockman/groupcoordinationstrategy) - Coordinate related actions
+* [Dynamic Condition Strategy](https://takeshishimada.github.io/Lockman/main/documentation/lockman/dynamicconditionstrategy) - Dynamic runtime control
+* [Composite Strategy](https://takeshishimada.github.io/Lockman/main/documentation/lockman/compositestrategy) - Combine multiple strategies
 
 ## Installation
 
