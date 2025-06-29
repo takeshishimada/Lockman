@@ -30,7 +30,7 @@ And add `Lockman` as a dependency of your package's target:
 
 ## Writing your first feature
 
-`@LockmanSingleExecution`マクロを使用して、処理の重複実行を防ぐ機能を実装してみましょう。
+[`@LockmanSingleExecution`](<doc:SingleExecutionStrategy>)マクロを使用して、処理の重複実行を防ぐ機能を実装してみましょう。
 
 ### Step 1: Reducerを定義する
 
@@ -78,7 +78,7 @@ struct ProcessFeature {
 
 ここで重要なのは：
 
-- `@LockmanSingleExecution`マクロをAction enumに適用することで、このenumが`LockmanSingleExecutionAction`プロトコルに準拠します
+- [`@LockmanSingleExecution`](<doc:SingleExecutionStrategy>)マクロをAction enumに適用することで、このenumが`LockmanSingleExecutionAction`プロトコルに準拠します
 - `lockmanInfo`プロパティは各アクションのロック制御方法を定義します
   - 制御パラメータの設定: 戦略固有の動作設定（優先度、同時実行数制限、グループ協調ルール等）を指定します
   - アクション識別: ロック管理システム内でのアクション識別子を提供します
@@ -86,7 +86,7 @@ struct ProcessFeature {
 
 ### Step 3: Reducer本体を実装する
 
-`withLock`メソッドを使用して、排他制御を伴う処理を実装します：
+[`withLock`](<doc:Lock>)メソッドを使用して、排他制御を伴う処理を実装します：
 
 ```swift
 var body: some Reducer<State, Action> {
@@ -121,7 +121,7 @@ var body: some Reducer<State, Action> {
 }
 ```
 
-`withLock`メソッドの重要なポイント：
+[`withLock`](<doc:Lock>)メソッドの重要なポイント：
 
 - `operation`：排他制御下で実行される処理を定義します
 - `lockFailure`：すでに同じ処理が実行中の場合に呼ばれるハンドラーです

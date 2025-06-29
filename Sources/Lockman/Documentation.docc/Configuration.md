@@ -6,7 +6,7 @@ Configure Lockman for your application's needs.
 
 LockmanManagerは、アプリケーション全体で使用されるLockmanの動作を設定するための設定機能を提供します。これらの設定により、デフォルトのロック解除タイミングやエラーハンドリングの動作をカスタマイズできます。
 
-設定は一度行えばアプリケーション全体に適用され、個別の`withLock`呼び出し時にオーバーライドすることも可能です。
+設定は一度行えばアプリケーション全体に適用され、個別の[`withLock`](<doc:Lock>)呼び出し時にオーバーライドすることも可能です。
 
 ## 設定項目
 
@@ -90,6 +90,6 @@ func applicationDidFinishLaunching() {
 
 ## ガイド
 
-次のステップ <doc:DebuggingGuide>
+次のステップ [Debugging](<doc:DebuggingGuide>)
 
 前のステップ <doc:ChoosingStrategy>

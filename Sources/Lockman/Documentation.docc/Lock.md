@@ -6,15 +6,15 @@ Understanding the locking mechanism in Lockman.
 
 Lockmanにおけるロックは、戦略ベースの排他制御システムです。従来の単純なON/OFF制御とは異なり、選択した戦略によって以下のような多様な制御が可能になります。
 
-- **実行の防止**: 重複実行の阻止
-- **実行の優先**: 既存処理を中断した新しい処理の優先実行
-- **実行の協調**: 関連する処理グループの協調的な調整
-- **実行の制限**: 同時実行数の制限
-- **実行の条件付き制御**: カスタムロジックによる動的な条件制御
+- **実行の防止**: 重複実行の阻止（[SingleExecutionStrategy](<doc:SingleExecutionStrategy>)）
+- **実行の優先**: 既存処理を中断した新しい処理の優先実行（[PriorityBasedStrategy](<doc:PriorityBasedStrategy>)）
+- **実行の協調**: 関連する処理グループの協調的な調整（[GroupCoordinationStrategy](<doc:GroupCoordinationStrategy>)）
+- **実行の制限**: 同時実行数の制限（[ConcurrencyLimitedStrategy](<doc:ConcurrencyLimitedStrategy>)）
+- **実行の条件付き制御**: カスタムロジックによる動的な条件制御（[DynamicConditionStrategy](<doc:DynamicConditionStrategy>)）
 
 ## 仕様
 
-Lockmanは戦略に基づいてロック取得の成否を判定し、その結果に応じて処理を実行します。ロック取得の判定プロセスは、指定された戦略のルールに従って行われ、複数戦略が指定されている場合は、すべての戦略でロック取得が可能である場合のみ成功となります。
+Lockmanは戦略に基づいてロック取得の成否を判定し、その結果に応じて処理を実行します。ロック取得の判定プロセスは、指定された戦略のルールに従って行われ、[CompositeStrategy](<doc:CompositeStrategy>)で複数戦略が指定されている場合は、すべての戦略でロック取得が可能である場合のみ成功となります。
 
 ## メソッド
 
@@ -59,7 +59,7 @@ Lockmanは3つの主要なメソッドを提供し、用途に応じて使い分
 **特徴:**
 - 明示的なロック解除制御
 - より細かい制御が可能
-- **重要**: 必ず全てのコードパスでunlock()を呼び出す必要があります
+- **重要**: 必ず全てのコードパスでunlock()を呼び出す必要があります（詳細は[Unlock](<doc:Unlock>)ページを参照）
 
 ### concatenateWithLock
 
