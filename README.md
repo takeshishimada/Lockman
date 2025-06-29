@@ -58,19 +58,22 @@ struct ProcessFeature {
         var message = ""
     }
     
-    @LockmanSingleExecution
-    enum Action {
-        case startProcessButtonTapped
-        case processStart
-        case processCompleted
+    enum Action: ViewAction {
+        case view(ViewAction)
+        case `internal`(InternalAction)
         
-        var lockmanInfo: LockmanSingleExecutionInfo {
-            switch self {
-            case .startProcessButtonTapped:
-                return .init(actionId: actionName, mode: .boundary)
-            case .processStart, .processCompleted:
-                return .init(actionId: actionName, mode: .none)
+        @LockmanSingleExecution
+        enum ViewAction {
+            case startProcessButtonTapped
+            
+            var lockmanInfo: LockmanSingleExecutionInfo {
+                .init(actionId: actionName, mode: .boundary)
             }
+        }
+        
+        enum InternalAction {
+            case processStart
+            case processCompleted
         }
     }
     
@@ -81,31 +84,37 @@ struct ProcessFeature {
     var body: some Reducer<State, Action> {
         Reduce { state, action in
             switch action {
-            case .startProcessButtonTapped:
-                return .withLock(
-                    operation: { send in
-                        await send(.processStart)
-                        // Simulate heavy processing
-                        try await Task.sleep(nanoseconds: 3_000_000_000)
-                        await send(.processCompleted)
-                    },
-                    lockFailure: { error, send in
-                        // When processing is already in progress
-                        state.message = "Processing is already in progress"
-                    },
-                    action: action,
-                    cancelID: CancelID.userAction
-                )
+            case let .view(viewAction):
+                switch viewAction {
+                case .startProcessButtonTapped:
+                    return .withLock(
+                        operation: { send in
+                            await send(.internal(.processStart))
+                            // Simulate heavy processing
+                            try await Task.sleep(nanoseconds: 3_000_000_000)
+                            await send(.internal(.processCompleted))
+                        },
+                        lockFailure: { error, send in
+                            // When processing is already in progress
+                            state.message = "Processing is already in progress"
+                        },
+                        action: viewAction,
+                        cancelID: CancelID.userAction
+                    )
+                }
                 
-            case .processStart:
-                state.isProcessing = true
-                state.message = "Processing started..."
-                return .none
-                
-            case .processCompleted:
-                state.isProcessing = false
-                state.message = "Processing completed"
-                return .none
+            case let .internal(internalAction):
+                switch internalAction {
+                case .processStart:
+                    state.isProcessing = true
+                    state.message = "Processing started..."
+                    return .none
+                    
+                case .processCompleted:
+                    state.isProcessing = false
+                    state.message = "Processing completed"
+                    return .none
+                }
             }
         }
     }
@@ -156,13 +165,11 @@ The documentation for releases and `main` are available here:
 
 There are a number of articles in the documentation that you may find helpful as you become more comfortable with the library:
 
-### Getting Started
+### Essentials
 * [Getting Started](https://takeshishimada.github.io/Lockman/main/documentation/lockman/gettingstarted) - Learn how to integrate Lockman into your TCA application
 * [Boundary Overview](https://takeshishimada.github.io/Lockman/main/documentation/lockman/boundaryoverview) - Understand the concept of boundaries in Lockman
 * [Lock](https://takeshishimada.github.io/Lockman/main/documentation/lockman/lock) - Understanding the locking mechanism
 * [Unlock](https://takeshishimada.github.io/Lockman/main/documentation/lockman/unlock) - Understanding the unlocking mechanism
-
-### Configuration & Debugging
 * [Choosing a Strategy](https://takeshishimada.github.io/Lockman/main/documentation/lockman/choosingstrategy) - Select the right strategy for your use case
 * [Configuration](https://takeshishimada.github.io/Lockman/main/documentation/lockman/configuration) - Configure Lockman for your application's needs
 * [Error Handling](https://takeshishimada.github.io/Lockman/main/documentation/lockman/errorhandling) - Learn about common error handling patterns
