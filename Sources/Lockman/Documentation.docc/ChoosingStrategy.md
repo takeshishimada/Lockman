@@ -8,7 +8,7 @@ Lockmanの戦略システムは、アノテーションによる宣言的な戦�
 
 ## 戦略の選択
 
-開発者はアノテーションを使用して、処理の性質に応じた適切な戦略を選択できます。重複防止が必要な場合は[`@LockmanSingleExecution`](<doc:SingleExecutionStrategy>)、優先度制御が必要な場合は[`@LockmanPriorityBased`](<doc:PriorityBasedStrategy>)、グループ協調が必要な場合は[`@LockmanGroupCoordination`](<doc:GroupCoordinationStrategy>)など、目的に応じて戦略を宣言的に指定します。
+開発者はアノテーションを使用して、処理の性質に応じた適切な戦略を選択できます。
 
 ```swift
 @LockmanSingleExecution

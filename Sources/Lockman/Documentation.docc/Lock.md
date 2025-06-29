@@ -53,18 +53,17 @@ Lockmanは3つの主要なメソッドを提供し、用途に応じて使い分
 
 ### withLock（手動解除版）
 
-ロックの解除タイミングを手動で制御したい場合に使用します。
+ロックの解除タイミングを手動で制御したい場合に使用します。パラメータは自動解除版と同じですが、`operation`と`catch handler`にunlockパラメータが追加されます。
 
 ```swift
 .withLock(
-  priority: .userInitiated, // オプション: タスク優先度
-  unlockOption: .immediate, // オプション: ロック解除タイミング
   operation: { send, unlock in 
     /* 処理 */
     unlock() // 手動解除
   },
-  catch handler: { error, send, unlock in /* エラー処理 */ }, // オプション
-  lockFailure: { error, send in /* ロック取得失敗処理 */ }, // オプション
+  catch handler: { error, send, unlock in 
+    unlock() // エラー時も解除
+  },
   action: action,
   cancelID: cancelID
 )
