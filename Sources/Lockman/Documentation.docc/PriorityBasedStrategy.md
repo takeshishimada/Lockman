@@ -26,9 +26,9 @@ This strategy is used in situations where high-urgency processing or control bas
 - Not interrupted by other processing
 - Basic processing or temporary disabling
 
-### Concurrent Execution Control
+### Exclusive Execution Control
 
-Within the same priority level, control is based on the concurrent execution behavior setting of existing processing:
+Within the same priority level, control is based on the exclusive execution behavior setting of existing processing:
 
 **exclusive** - Exclusive Execution
 

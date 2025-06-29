@@ -106,7 +106,7 @@ struct ExamplesView: View {
             Text("Lockman Strategy Examples")
               .font(.headline)
             Text(
-              "Lockman is a Swift library for controlling concurrent action execution. These examples demonstrate how to manage action execution using different strategy patterns."
+              "Lockman is a Swift library for controlling exclusive action execution. These examples demonstrate how to manage action execution using different strategy patterns."
             )
             .font(.caption)
             .foregroundColor(.secondary)

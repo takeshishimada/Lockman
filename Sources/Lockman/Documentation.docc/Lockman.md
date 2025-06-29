@@ -23,7 +23,7 @@ Users expect some form of feedback even when pressing buttons simultaneously. It
 
 ## Overview
 
-Lockman provides a comprehensive solution for managing exclusive control over user actions in applications built with The Composable Architecture (TCA). It offers various strategies to handle concurrent operations, prevent duplicate executions, and maintain consistent application state.
+Lockman provides a comprehensive solution for managing exclusive control over user actions in applications built with The Composable Architecture (TCA). It offers various strategies to handle exclusive operations, prevent duplicate executions, and maintain consistent application state.
 
 ## Topics
 
