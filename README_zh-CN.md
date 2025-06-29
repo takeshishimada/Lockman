@@ -157,6 +157,7 @@ struct ProcessFeature {
 发布版本和 `main` 分支的文档可在此处获取：
 
 * [`main`](https://takeshishimada.github.io/Lockman/main/documentation/lockman/)
+* [0.10.0](https://takeshishimada.github.io/Lockman/0.10.0/documentation/lockman/)
 * [0.9.0](https://takeshishimada.github.io/Lockman/0.9.0/documentation/lockman/)
 * [0.8.0](https://takeshishimada.github.io/Lockman/0.8.0/documentation/lockman/)
 
@@ -211,7 +212,7 @@ https://github.com/takeshishimada/Lockman
 
 ```swift
 dependencies: [
-  .package(url: "https://github.com/takeshishimada/Lockman", from: "0.9.0")
+  .package(url: "https://github.com/takeshishimada/Lockman", from: "0.10.0")
 ]
 ```
 
@@ -239,6 +240,7 @@ dependencies: [
 
 | Lockman | The Composable Architecture |
 |---------|----------------------------|
+| 0.10.0  | 1.19.0                     |
 | 0.9.0   | 1.18.0                     |
 
 <details>
