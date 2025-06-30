@@ -157,7 +157,7 @@ struct ProcessFeature {
 출시된 버전과 `main`에 대한 문서는 여기에서 사용할 수 있습니다:
 
 * [`main`](https://takeshishimada.github.io/Lockman/main/documentation/lockman/)
-* [0.11.0](https://takeshishimada.github.io/Lockman/0.11.0/documentation/lockman/)
+* [0.12.0](https://takeshishimada.github.io/Lockman/0.12.0/documentation/lockman/)
 * [0.10.0](https://takeshishimada.github.io/Lockman/0.10.0/documentation/lockman/)
 * [0.9.0](https://takeshishimada.github.io/Lockman/0.9.0/documentation/lockman/)
 * [0.8.0](https://takeshishimada.github.io/Lockman/0.8.0/documentation/lockman/)
@@ -213,7 +213,7 @@ Package.swift 파일에 종속성을 추가하세요:
 
 ```swift
 dependencies: [
-  .package(url: "https://github.com/takeshishimada/Lockman", from: "0.11.0")
+  .package(url: "https://github.com/takeshishimada/Lockman", from: "0.12.0")
 ]
 ```
 
@@ -241,7 +241,7 @@ dependencies: [
 
 | Lockman | The Composable Architecture |
 |---------|----------------------------|
-| 0.11.0  | 1.19.1                     |
+| 0.12.0  | 1.19.1                     |
 | 0.10.0  | 1.19.0                     |
 | 0.9.0   | 1.18.0                     |
 
