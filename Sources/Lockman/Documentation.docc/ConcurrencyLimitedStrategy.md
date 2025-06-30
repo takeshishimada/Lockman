@@ -65,7 +65,7 @@ LockmanConcurrencyLimitedInfo(
 
 ```swift
 @LockmanConcurrencyLimited
-enum Action {
+enum ViewAction {
     case downloadFile(URL)
     case uploadFile(URL)
     case processImage(UIImage)

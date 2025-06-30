@@ -72,7 +72,7 @@ ReduceWithLock { state, action in
 
 ```swift
 @LockmanDynamicCondition
-enum Action {
+enum ViewAction {
     case transfer(amount: Double)
     case withdraw(amount: Double)
     

@@ -37,30 +37,25 @@ Lockman supports combinations of 2 to 5 strategies:
     LockmanSingleExecutionStrategy.self,
     LockmanPriorityBasedStrategy.self
 )
-enum Action {
+enum ViewAction {
     case criticalSave
     case normalSave
     
-    var lockmanInfoForStrategy1: LockmanSingleExecutionInfo {
-        LockmanSingleExecutionInfo(
+    var lockmanInfo: LockmanCompositeInfo2<LockmanSingleExecutionInfo, LockmanPriorityBasedInfo> {
+        LockmanCompositeInfo2(
             actionId: actionName,
-            mode: .action
+            lockmanInfoForStrategy1: LockmanSingleExecutionInfo(
+                actionId: actionName,
+                mode: .action
+            ),
+            lockmanInfoForStrategy2: LockmanPriorityBasedInfo(
+                actionId: actionName,
+                priority: switch self {
+                    case .criticalSave: .high(.exclusive)
+                    case .normalSave: .low(.replaceable)
+                }
+            )
         )
-    }
-    
-    var lockmanInfoForStrategy2: LockmanPriorityBasedInfo {
-        switch self {
-        case .criticalSave:
-            return LockmanPriorityBasedInfo(
-                actionId: actionName,
-                priority: .high(.exclusive)
-            )
-        case .normalSave:
-            return LockmanPriorityBasedInfo(
-                actionId: actionName,
-                priority: .low(.replaceable)
-            )
-        }
     }
 }
 ```
@@ -76,25 +71,22 @@ enum Action {
 enum Action {
     case downloadFile
     
-    var lockmanInfoForStrategy1: LockmanSingleExecutionInfo {
-        LockmanSingleExecutionInfo(
+    var lockmanInfo: LockmanCompositeInfo3<LockmanSingleExecutionInfo, LockmanPriorityBasedInfo, LockmanConcurrencyLimitedInfo> {
+        LockmanCompositeInfo3(
             actionId: actionName,
-            mode: .action // Prevent duplication
-        )
-    }
-    
-    var lockmanInfoForStrategy2: LockmanPriorityBasedInfo {
-        LockmanPriorityBasedInfo(
-            actionId: actionName,
-            priority: .low(.replaceable) // Priority control
-        )
-    }
-    
-    var lockmanInfoForStrategy3: LockmanConcurrencyLimitedInfo {
-        LockmanConcurrencyLimitedInfo(
-            actionId: actionName,
-            concurrencyId: "downloads",
-            limit: .limited(3) // Concurrent execution limit
+            lockmanInfoForStrategy1: LockmanSingleExecutionInfo(
+                actionId: actionName,
+                mode: .action // Prevent duplication
+            ),
+            lockmanInfoForStrategy2: LockmanPriorityBasedInfo(
+                actionId: actionName,
+                priority: .low(.replaceable) // Priority control
+            ),
+            lockmanInfoForStrategy3: LockmanConcurrencyLimitedInfo(
+                actionId: actionName,
+                concurrencyId: "downloads",
+                limit: .limited(3) // Concurrent execution limit
+            )
         )
     }
 }
@@ -106,9 +98,9 @@ enum Action {
 
 ```
 Strategy 1: SingleExecution(.action)
-Strategy 2: PriorityBased(.high(.exclusive))
+Strategy 2: PriorityBased(varies by action)
 
-Time: 0s  - normalSave request
+Time: 0s  - normalSave request (.low(.replaceable))
   Strategy 1: ✅ Success (no duplication)
   Strategy 2: ✅ Success (no priority issue)
   Result: ✅ Start execution
@@ -118,7 +110,7 @@ Time: 1s  - normalSave request (duplicate)
   Strategy 2: No check (failed at strategy 1)
   Result: ❌ Overall failure
 
-Time: 2s  - criticalSave request (high priority)
+Time: 2s  - criticalSave request (.high(.exclusive))
   Strategy 1: ✅ Success (different action)
   Strategy 2: ✅ Success (with preceding cancellation)
   Result: ✅ Start execution (cancel normalSave)
@@ -129,12 +121,12 @@ Time: 2s  - criticalSave request (high priority)
 ```
 Strategy 1: SingleExecution(.action)
 Strategy 2: PriorityBased(.low(.replaceable))  
-Strategy 3: ConcurrencyLimited(.limited(2))
+Strategy 3: ConcurrencyLimited(.limited(3))
 
-Current situation: 2 download processes running
+Current situation: 3 download processes running
 
-Time: 0s  - New download request
-  Strategy 1: ✅ Success (different file)
+Time: 0s  - New downloadFile request
+  Strategy 1: ✅ Success (no duplication)
   Strategy 2: ✅ Success (no priority issue)
   Strategy 3: ❌ Fail (concurrent execution limit reached)
   Result: ❌ Overall failure
