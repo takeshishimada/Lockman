@@ -31,7 +31,7 @@ The most basic and recommended usage. Automatically manages lock acquisition and
   operation: { send in /* Processing */ },
   catch handler: { error, send in /* Error handling */ }, // Optional
   lockFailure: { error, send in /* Lock acquisition failure handling */ }, // Optional
-  action: viewAction,
+  action: action,
   cancelID: cancelID
 )
 ```
@@ -64,7 +64,7 @@ Used when you want to manually control the lock release timing. Parameters are t
   catch handler: { error, send, unlock in 
     unlock() // Release on error too
   },
-  action: viewAction,
+  action: action,
   cancelID: cancelID
 )
 ```
@@ -87,7 +87,7 @@ Maintains the same lock while executing multiple Effects sequentially.
     .run { send in /* Processing 3 */ }
   ],
   lockFailure: { error, send in /* Lock acquisition failure handling */ }, // Optional
-  action: viewAction,
+  action: action,
   cancelID: cancelID
 )
 ```

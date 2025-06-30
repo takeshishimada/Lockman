@@ -72,15 +72,14 @@ func applicationDidFinishLaunching() {
 
 ```swift
 // Override global settings individually
-case .view(.someAction):
-    return .withLock(
-        unlockOption: .immediate, // Override global setting
-        operation: { send in
-            // Processing that requires immediate release
-        },
-        action: \.view..someAction,
-        cancelID: cancelID
-    )
+return .withLock(
+    unlockOption: .immediate, // Override global setting
+    operation: { send in
+        // Processing that requires immediate release
+    },
+    action: \.view..someAction,
+    cancelID: cancelID
+)
 ```
 
 ## Notes
