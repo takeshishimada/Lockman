@@ -58,19 +58,22 @@ struct ProcessFeature {
         var message = ""
     }
     
-    @LockmanSingleExecution
-    enum Action {
-        case startProcessButtonTapped
-        case processStart
-        case processCompleted
+    enum Action: ViewAction {
+        case view(View)
+        case internal(Internal)
         
-        var lockmanInfo: LockmanSingleExecutionInfo {
-            switch self {
-            case .startProcessButtonTapped:
+        @LockmanSingleExecution
+        enum View {
+            case startProcessButtonTapped
+            
+            var lockmanInfo: LockmanSingleExecutionInfo {
                 return .init(actionId: actionName, mode: .boundary)
-            case .processStart, .processCompleted:
-                return .init(actionId: actionName, mode: .none)
             }
+        }
+        
+        enum Internal {
+            case processStart
+            case processCompleted
         }
     }
 }
