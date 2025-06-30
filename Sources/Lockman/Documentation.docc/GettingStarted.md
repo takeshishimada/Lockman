@@ -12,7 +12,7 @@ To use Lockman in a Swift Package Manager project, add it to the dependencies in
 
 ```swift
 dependencies: [
-  .package(url: "https://github.com/takeshishimada/Lockman", from: "0.12.0")
+  .package(url: "https://github.com/takeshishimada/Lockman", from: "0.13.0")
 ]
 ```
 
