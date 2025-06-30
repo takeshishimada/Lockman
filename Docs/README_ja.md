@@ -157,7 +157,9 @@ struct ProcessFeature {
 リリース版とmainのドキュメントはこちらで利用できます：
 
 * [`main`](https://takeshishimada.github.io/Lockman/main/documentation/lockman/)
+* [0.13.0](https://takeshishimada.github.io/Lockman/0.13.0/documentation/lockman/)
 * [0.12.0](https://takeshishimada.github.io/Lockman/0.12.0/documentation/lockman/)
+* [0.11.0](https://takeshishimada.github.io/Lockman/0.11.0/documentation/lockman/)
 * [0.10.0](https://takeshishimada.github.io/Lockman/0.10.0/documentation/lockman/)
 * [0.9.0](https://takeshishimada.github.io/Lockman/0.9.0/documentation/lockman/)
 * [0.8.0](https://takeshishimada.github.io/Lockman/0.8.0/documentation/lockman/)
@@ -211,7 +213,7 @@ Package.swiftファイルに依存関係を追加：
 
 ```swift
 dependencies: [
-  .package(url: "https://github.com/takeshishimada/Lockman", from: "0.12.0")
+  .package(url: "https://github.com/takeshishimada/Lockman", from: "0.13.0")
 ]
 ```
 
@@ -239,16 +241,18 @@ dependencies: [
 
 | Lockman | The Composable Architecture |
 |---------|----------------------------|
-| 0.12.0  | 1.19.1                     |
+| 0.13.0  | 1.20.2                     |
+| 0.12.0  | 1.20.1                     |
+| 0.11.0  | 1.19.1                     |
 | 0.10.0  | 1.19.0                     |
 | 0.9.0   | 1.18.0                     |
+| 0.8.0   | 1.17.1                     |
 
 <details>
 <summary>その他のバージョン</summary>
 
 | Lockman | The Composable Architecture |
 |---------|----------------------------|
-| 0.8.0   | 1.17.1                     |
 | 0.7.0   | 1.17.1                     |
 | 0.6.0   | 1.17.1                     |
 | 0.5.0   | 1.17.1                     |
