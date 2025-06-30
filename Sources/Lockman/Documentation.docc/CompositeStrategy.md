@@ -42,34 +42,20 @@ enum ViewAction {
     case normalSave
     
     var lockmanInfo: LockmanCompositeInfo2<LockmanSingleExecutionInfo, LockmanPriorityBasedInfo> {
-        switch self {
-        case .criticalSave:
-            return LockmanCompositeInfo2(
-                strategyId: strategyId,
-                actionId: actionId,
-                lockmanInfoForStrategy1: LockmanSingleExecutionInfo(
-                    actionId: actionId,
-                    mode: .action
-                ),
-                lockmanInfoForStrategy2: LockmanPriorityBasedInfo(
-                    actionId: actionId,
-                    priority: .high(.exclusive)
-                )
+        LockmanCompositeInfo2(
+            actionId: actionName,
+            lockmanInfoForStrategy1: LockmanSingleExecutionInfo(
+                actionId: actionName,
+                mode: .action
+            ),
+            lockmanInfoForStrategy2: LockmanPriorityBasedInfo(
+                actionId: actionName,
+                priority: switch self {
+                    case .criticalSave: .high(.exclusive)
+                    case .normalSave: .low(.replaceable)
+                }
             )
-        case .normalSave:
-            return LockmanCompositeInfo2(
-                strategyId: strategyId,
-                actionId: actionId,
-                lockmanInfoForStrategy1: LockmanSingleExecutionInfo(
-                    actionId: actionId,
-                    mode: .action
-                ),
-                lockmanInfoForStrategy2: LockmanPriorityBasedInfo(
-                    actionId: actionId,
-                    priority: .low(.replaceable)
-                )
-            )
-        }
+        )
     }
 }
 ```
@@ -87,18 +73,17 @@ enum Action {
     
     var lockmanInfo: LockmanCompositeInfo3<LockmanSingleExecutionInfo, LockmanPriorityBasedInfo, LockmanConcurrencyLimitedInfo> {
         LockmanCompositeInfo3(
-            strategyId: strategyId,
-            actionId: actionId,
+            actionId: actionName,
             lockmanInfoForStrategy1: LockmanSingleExecutionInfo(
-                actionId: actionId,
+                actionId: actionName,
                 mode: .action // Prevent duplication
             ),
             lockmanInfoForStrategy2: LockmanPriorityBasedInfo(
-                actionId: actionId,
+                actionId: actionName,
                 priority: .low(.replaceable) // Priority control
             ),
             lockmanInfoForStrategy3: LockmanConcurrencyLimitedInfo(
-                actionId: actionId,
+                actionId: actionName,
                 concurrencyId: "downloads",
                 limit: .limited(3) // Concurrent execution limit
             )
