@@ -23,7 +23,7 @@ Basic lockFailure handler structure used in all strategies:
             state.errorMessage = "Error message"
         }
     },
-    action: viewAction,
+    action: action,
     cancelID: cancelID
 )
 ```

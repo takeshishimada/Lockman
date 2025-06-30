@@ -8,17 +8,16 @@ A Boundary is the **exclusive control boundary** in Lockman. Lockman uses TCA's 
 
 ```swift
 // Specify CancelID as boundary with withLock
-case .view(.userAction):
-    return .withLock(
-        operation: { send in
-            // Processing
-        },
-        lockFailure: { error, send in
-            // Processing when already running within the same boundary
-        },
-        action: \.view..userAction,
-        cancelID: CancelID.userAction  // This CancelID functions as a Boundary
-    )
+return .withLock(
+    operation: { send in
+        // Processing
+    },
+    lockFailure: { error, send in
+        // Processing when already running within the same boundary
+    },
+    action: action,
+    cancelID: CancelID.userAction  // This CancelID functions as a Boundary
+)
 ```
 
 Using CancelID as a boundary provides the following benefits:
@@ -34,13 +33,11 @@ Exclusive control between different Boundaries is not possible:
 
 ```swift
 // ❌ Not possible: Control save and load simultaneously
-case .view(.saveButtonTapped):
-    // Control only within CancelID.save boundary
-    return .withLock(..., action: \.view..saveButtonTapped, cancelID: CancelID.save)
+// Control only within CancelID.save boundary
+return .withLock(..., action: action, cancelID: CancelID.save)
     
-case .view(.loadButtonTapped):
-    // Control only within CancelID.load boundary (independent from save)
-    return .withLock(..., action: \.view..loadButtonTapped, cancelID: CancelID.load)
+// Control only within CancelID.load boundary (independent from save)
+return .withLock(..., action: action, cancelID: CancelID.load)
 ```
 
 Since these are treated as separate boundaries, load can be executed even while save is running.
@@ -51,13 +48,12 @@ You cannot specify multiple Boundaries for a single action:
 
 ```swift
 // ❌ Not possible: Specify multiple Boundaries simultaneously
-case .view(.someAction):
-    return .withLock(
-        operation: { send in /* ... */ },
-        lockFailure: { error, send in /* ... */ },
-        action: \.view..someAction,
-        cancelID: [CancelID.save, CancelID.validate]  // Multiple specification not allowed
-    )
+return .withLock(
+    operation: { send in /* ... */ },
+    lockFailure: { error, send in /* ... */ },
+    action: action,
+    cancelID: [CancelID.save, CancelID.validate]  // Multiple specification not allowed
+)
 ```
 
 If you want to control multiple processes simultaneously, you need to define a common Boundary:
@@ -68,8 +64,7 @@ enum CancelID {
     case fileOperation  // Common boundary including save, load, validate
 }
 
-case .view(.saveButtonTapped), .view(.loadButtonTapped), .view(.validateButtonTapped):
-    return .withLock(..., action: action, cancelID: CancelID.fileOperation)
+return .withLock(..., action: action, cancelID: CancelID.fileOperation)
 ```
 
 ## Summary
