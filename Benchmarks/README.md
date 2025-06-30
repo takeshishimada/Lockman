@@ -4,9 +4,9 @@
 
 Comprehensive performance benchmarks of the Lockman library have been conducted, including both basic operations and high-load burst scenarios with 100 concurrent actions. The measurements cover different strategies and their performance characteristics under various load conditions.
 
-### TCA 1.20.1 Performance Update
-- Test suite execution time: **56 seconds** (all tests passing)
-- Build performance: Stable with TCA 1.20.1's bug fixes and improvements
+### TCA 1.20.2 Performance Update
+- Test suite execution time: **All tests passing** on both macOS and iOS
+- Build performance: Stable with TCA 1.20.2's improved SwiftSyntax compatibility
 - No breaking changes or performance regressions detected
 - Benchmark results remain consistent with previous versions
 
@@ -34,8 +34,8 @@ swift package benchmark --format influx # InfluxDB format
 - **Architecture**: arm64 (Apple Silicon M1 Pro)
 - **Processors**: 8 cores
 - **Memory**: 16 GB
-- **Date**: June 29, 2025
-- **TCA Version**: 1.20.1
+- **Date**: June 30, 2025
+- **TCA Version**: 1.20.2
 
 ### Test Scenarios
 
@@ -264,8 +264,8 @@ await withTaskGroup(of: Void.self) { group in
 
 ## Summary
 
-### TCA 1.20.1 Compatibility Notes
-- **TCA 1.20.1** includes bug fixes and improvements over 1.19.x series
+### TCA 1.20.2 Compatibility Notes
+- **TCA 1.20.2** includes improved SwiftSyntax compatibility over 1.20.1
 - All Lockman strategies remain fully compatible without code changes
 - Performance characteristics remain consistent with previous measurements
 - No API changes or breaking changes detected
@@ -291,4 +291,4 @@ The following performance characteristics were measured:
 
 ---
 
-*Benchmarks performed on June 29, 2025, using TCA 1.20.1 on macOS 24.5.0*
+*Benchmarks performed on June 30, 2025, using TCA 1.20.2 on macOS 24.5.0*
