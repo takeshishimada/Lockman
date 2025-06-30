@@ -158,15 +158,15 @@ La documentation pour les versions publiées et `main` est disponible ici :
 
 * [`main`](https://takeshishimada.github.io/Lockman/main/documentation/lockman/)
 * [0.13.0](https://takeshishimada.github.io/Lockman/0.13.0/documentation/lockman/)
+
+<details>
+<summary>Autres versions</summary>
+
 * [0.12.0](https://takeshishimada.github.io/Lockman/0.12.0/documentation/lockman/)
 * [0.11.0](https://takeshishimada.github.io/Lockman/0.11.0/documentation/lockman/)
 * [0.10.0](https://takeshishimada.github.io/Lockman/0.10.0/documentation/lockman/)
 * [0.9.0](https://takeshishimada.github.io/Lockman/0.9.0/documentation/lockman/)
 * [0.8.0](https://takeshishimada.github.io/Lockman/0.8.0/documentation/lockman/)
-
-<details>
-<summary>Autres versions</summary>
-
 * [0.7.0](https://takeshishimada.github.io/Lockman/0.7.0/documentation/lockman/)
 * [0.6.0](https://takeshishimada.github.io/Lockman/0.6.0/documentation/lockman/)
 * [0.5.0](https://takeshishimada.github.io/Lockman/0.5.0/documentation/lockman/)
