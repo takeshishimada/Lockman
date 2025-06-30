@@ -98,9 +98,9 @@ enum Action {
 
 ```
 Strategy 1: SingleExecution(.action)
-Strategy 2: PriorityBased(.high(.exclusive))
+Strategy 2: PriorityBased(varies by action)
 
-Time: 0s  - normalSave request
+Time: 0s  - normalSave request (.low(.replaceable))
   Strategy 1: ✅ Success (no duplication)
   Strategy 2: ✅ Success (no priority issue)
   Result: ✅ Start execution
@@ -110,7 +110,7 @@ Time: 1s  - normalSave request (duplicate)
   Strategy 2: No check (failed at strategy 1)
   Result: ❌ Overall failure
 
-Time: 2s  - criticalSave request (high priority)
+Time: 2s  - criticalSave request (.high(.exclusive))
   Strategy 1: ✅ Success (different action)
   Strategy 2: ✅ Success (with preceding cancellation)
   Result: ✅ Start execution (cancel normalSave)
@@ -121,12 +121,12 @@ Time: 2s  - criticalSave request (high priority)
 ```
 Strategy 1: SingleExecution(.action)
 Strategy 2: PriorityBased(.low(.replaceable))  
-Strategy 3: ConcurrencyLimited(.limited(2))
+Strategy 3: ConcurrencyLimited(.limited(3))
 
-Current situation: 2 download processes running
+Current situation: 3 download processes running
 
-Time: 0s  - New download request
-  Strategy 1: ✅ Success (different file)
+Time: 0s  - New downloadFile request
+  Strategy 1: ✅ Success (no duplication)
   Strategy 2: ✅ Success (no priority issue)
   Strategy 3: ❌ Fail (concurrent execution limit reached)
   Result: ❌ Overall failure
