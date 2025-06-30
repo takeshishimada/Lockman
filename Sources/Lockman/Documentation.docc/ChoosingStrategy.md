@@ -12,13 +12,13 @@ Developers can select appropriate strategies based on the nature of processing u
 
 ```swift
 @LockmanSingleExecution
-enum Action {
+enum ViewAction {
 
 @LockmanPriorityBased  
-enum Action {
+enum ViewAction {
 
 @LockmanGroupCoordination
-enum Action {
+enum ViewAction {
 ```
 
 ## Combining Strategies
@@ -30,7 +30,7 @@ For complex requirements that cannot be addressed by a single strategy, you can 
   LockmanSingleExecutionStrategy.self,
   LockmanPriorityBasedStrategy.self
 )
-enum Action {
+enum ViewAction {
 ```
 
 ## Available Strategies

@@ -60,7 +60,7 @@ LockmanPriorityBasedInfo(
 
 ```swift
 @LockmanPriorityBased
-enum Action {
+enum ViewAction {
     case emergencySync
     case normalSync
     case backgroundTask

@@ -57,7 +57,7 @@ LockmanSingleExecutionInfo(
 
 ```swift
 @LockmanSingleExecution
-enum Action {
+enum ViewAction {
     case save
     case load
     

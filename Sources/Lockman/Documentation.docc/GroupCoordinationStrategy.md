@@ -92,7 +92,7 @@ LockmanGroupCoordinatedInfo(
 
 ```swift
 @LockmanGroupCoordination
-enum Action {
+enum ViewAction {
     case startDataSync
     case processChunk
     case showProgress

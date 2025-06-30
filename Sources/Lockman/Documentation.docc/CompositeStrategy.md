@@ -37,30 +37,25 @@ Lockman supports combinations of 2 to 5 strategies:
     LockmanSingleExecutionStrategy.self,
     LockmanPriorityBasedStrategy.self
 )
-enum Action {
+enum ViewAction {
     case criticalSave
     case normalSave
     
-    var lockmanInfoForStrategy1: LockmanSingleExecutionInfo {
-        LockmanSingleExecutionInfo(
+    var lockmanInfo: LockmanCompositeInfo2<LockmanSingleExecutionInfo, LockmanPriorityBasedInfo> {
+        LockmanCompositeInfo2(
             actionId: actionName,
-            mode: .action
+            lockmanInfoForStrategy1: LockmanSingleExecutionInfo(
+                actionId: actionName,
+                mode: .action
+            ),
+            lockmanInfoForStrategy2: LockmanPriorityBasedInfo(
+                actionId: actionName,
+                priority: switch self {
+                    case .criticalSave: .high(.exclusive)
+                    case .normalSave: .low(.replaceable)
+                }
+            )
         )
-    }
-    
-    var lockmanInfoForStrategy2: LockmanPriorityBasedInfo {
-        switch self {
-        case .criticalSave:
-            return LockmanPriorityBasedInfo(
-                actionId: actionName,
-                priority: .high(.exclusive)
-            )
-        case .normalSave:
-            return LockmanPriorityBasedInfo(
-                actionId: actionName,
-                priority: .low(.replaceable)
-            )
-        }
     }
 }
 ```
@@ -76,25 +71,22 @@ enum Action {
 enum Action {
     case downloadFile
     
-    var lockmanInfoForStrategy1: LockmanSingleExecutionInfo {
-        LockmanSingleExecutionInfo(
+    var lockmanInfo: LockmanCompositeInfo3<LockmanSingleExecutionInfo, LockmanPriorityBasedInfo, LockmanConcurrencyLimitedInfo> {
+        LockmanCompositeInfo3(
             actionId: actionName,
-            mode: .action // Prevent duplication
-        )
-    }
-    
-    var lockmanInfoForStrategy2: LockmanPriorityBasedInfo {
-        LockmanPriorityBasedInfo(
-            actionId: actionName,
-            priority: .low(.replaceable) // Priority control
-        )
-    }
-    
-    var lockmanInfoForStrategy3: LockmanConcurrencyLimitedInfo {
-        LockmanConcurrencyLimitedInfo(
-            actionId: actionName,
-            concurrencyId: "downloads",
-            limit: .limited(3) // Concurrent execution limit
+            lockmanInfoForStrategy1: LockmanSingleExecutionInfo(
+                actionId: actionName,
+                mode: .action // Prevent duplication
+            ),
+            lockmanInfoForStrategy2: LockmanPriorityBasedInfo(
+                actionId: actionName,
+                priority: .low(.replaceable) // Priority control
+            ),
+            lockmanInfoForStrategy3: LockmanConcurrencyLimitedInfo(
+                actionId: actionName,
+                concurrencyId: "downloads",
+                limit: .limited(3) // Concurrent execution limit
+            )
         )
     }
 }
