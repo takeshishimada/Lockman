@@ -2,11 +2,11 @@ version: 1
 builder:
   configs:
   - platform: ios
-    scheme: Lockman
+    scheme: Lockman-Package
   - platform: macos-xcodebuild
-    scheme: Lockman
+    scheme: Lockman-Package
   - platform: tvos
-    scheme: Lockman
+    scheme: Lockman-Package
   - platform: watchos
-    scheme: Lockman
+    scheme: Lockman-Package
   - documentation_targets: [Lockman]
