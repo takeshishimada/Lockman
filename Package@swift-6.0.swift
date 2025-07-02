@@ -44,13 +44,7 @@ let package = Package(
       ]
     ),
     .testTarget(
-      name: "LockmanCoreTests",
-      dependencies: [
-        "Lockman"
-      ]
-    ),
-    .testTarget(
-      name: "LockmanComposableTests",
+      name: "LockmanTests",
       dependencies: [
         "Lockman"
       ]
