@@ -109,7 +109,6 @@
 			mainGroup = 3E4F83BA2DFE6AA5005B5C65;
 			minimizedProjectReferenceProxies = 1;
 			packageReferences = (
-				8278B5532E0059D20096EE15 /* XCLocalSwiftPackageReference "../../../Lockman" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 3E4F83C42DFE6AA5005B5C65 /* Products */;
@@ -343,13 +342,6 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
-
-/* Begin XCLocalSwiftPackageReference section */
-		8278B5532E0059D20096EE15 /* XCLocalSwiftPackageReference "../../../Lockman" */ = {
-			isa = XCLocalSwiftPackageReference;
-			relativePath = ../../../Lockman;
-		};
-/* End XCLocalSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
 		8278B5542E0059D20096EE15 /* Lockman */ = {
