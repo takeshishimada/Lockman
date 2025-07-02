@@ -6,10 +6,6 @@
 	objectVersion = 77;
 	objects = {
 
-/* Begin PBXBuildFile section */
-		8278B5552E0059D20096EE15 /* Lockman in Frameworks */ = {isa = PBXBuildFile; productRef = 8278B5542E0059D20096EE15 /* Lockman */; };
-/* End PBXBuildFile section */
-
 /* Begin PBXFileReference section */
 		3E4F83C32DFE6AA5005B5C65 /* Strategies.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Strategies.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
@@ -27,7 +23,6 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				8278B5552E0059D20096EE15 /* Lockman in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -109,7 +104,7 @@
 			mainGroup = 3E4F83BA2DFE6AA5005B5C65;
 			minimizedProjectReferenceProxies = 1;
 			packageReferences = (
-				8278B5532E0059D20096EE15 /* XCLocalSwiftPackageReference "../../../Lockman" */,
+				8297F4202E15D392004BE9A6 /* XCLocalSwiftPackageReference "../../../Lockman" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 3E4F83C42DFE6AA5005B5C65 /* Products */;
@@ -345,7 +340,7 @@
 /* End XCConfigurationList section */
 
 /* Begin XCLocalSwiftPackageReference section */
-		8278B5532E0059D20096EE15 /* XCLocalSwiftPackageReference "../../../Lockman" */ = {
+		8297F4202E15D392004BE9A6 /* XCLocalSwiftPackageReference "../../../Lockman" */ = {
 			isa = XCLocalSwiftPackageReference;
 			relativePath = ../../../Lockman;
 		};
