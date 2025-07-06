@@ -13,62 +13,68 @@ import Foundation
 ///
 /// ## Usage Examples
 ///
-/// ### Reducer-level condition
+/// ### With method chain API
 /// ```swift
-/// ReduceWithLock { state, action in
-///   switch action {
-///   case .fetchData:
-///     return self.withLock(
-///       state: state,
-///       action: action,
-///       operation: { send in
-///         // Async operation
-///       },
-///       lockAction: LockmanSingleExecutionAction(actionName: "fetch"),
-///       boundaryId: CancelID()
-///     )
-///   default:
-///     return .none
+/// var body: some ReducerOf<Self> {
+///   Reduce { state, action in
+///     switch action {
+///     case .fetchData:
+///       return self.withLock(
+///         state: state,
+///         action: action,
+///         operation: { send in
+///           // Async operation
+///         },
+///         lockAction: FetchAction(),
+///         boundaryId: CancelID.fetch
+///       )
+///     default:
+///       return .none
+///     }
 ///   }
-/// } lockCondition: { state, action in
-///   // Evaluate state to determine if lock should be acquired
-///   guard state.isEnabled else {
-///     return .failure(MyError.featureDisabled)
+///   .withLock { state, action in
+///     // Evaluate state to determine if lock should be acquired
+///     guard state.isEnabled else {
+///       return .failure(MyError.featureDisabled)
+///     }
+///     return .success
 ///   }
-///   return .success
 /// }
 /// ```
 ///
-/// ### Combined conditions
+/// ### Combined conditions with method chain
 /// ```swift
-/// ReduceWithLock { state, action in
-///   switch action {
-///   case .purchase(let amount):
-///     return self.withLock(
-///       state: state,
-///       action: action,
-///       operation: { send in
-///         // Purchase operation
-///       },
-///       lockAction: LockmanSingleExecutionAction(actionName: "purchase"),
-///       boundaryId: CancelID(),
-///       lockCondition: { state, _ in
-///         // Action-level condition
-///         guard state.balance >= amount else {
-///           return .failure(MyError.insufficientBalance(required: amount, available: state.balance))
+/// var body: some ReducerOf<Self> {
+///   Reduce { state, action in
+///     switch action {
+///     case .purchase(let amount):
+///       return self.withLock(
+///         state: state,
+///         action: action,
+///         operation: { send in
+///           // Purchase operation
+///         },
+///         lockAction: PurchaseAction(),
+///         boundaryId: CancelID.payment,
+///         lockCondition: { state, _ in
+///           // Action-level condition
+///           guard state.balance >= amount else {
+///             return .failure(MyError.insufficientBalance(required: amount, available: state.balance))
+///           }
+///           return .success
 ///         }
-///         return .success
-///       }
-///     )
-///   default:
-///     return .none
+///       )
+///     default:
+///       return .none
+///     }
 ///   }
-/// } lockCondition: { state, _ in
-///   // Reducer-level condition
-///   guard state.isLoggedIn else {
-///     return .failure(MyError.notAuthenticated)
+///   .withLock { state, _ in
+///     // Reducer-level condition
+///     guard state.isLoggedIn else {
+///       return .failure(MyError.notAuthenticated)
+///     }
+///     return .success
 ///   }
-///   return .success
 /// }
 /// ```
 public struct ReduceWithLock<State: Sendable, Action: Sendable>: Reducer {

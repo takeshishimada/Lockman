@@ -78,6 +78,65 @@ public struct LockmanReducer<Base: Reducer>: Reducer {
 // MARK: - Reducer Extension
 
 extension Reducer {
+  /// Applies dynamic lock management to this reducer with conditional evaluation.
+  ///
+  /// This method enables dynamic lock condition evaluation based on the current state and action,
+  /// allowing for fine-grained control over when locks should be acquired.
+  ///
+  /// ## Overview
+  /// This method wraps the reducer with a `ReduceWithLock` that provides two levels of lock condition control:
+  /// - **Reducer-level**: Condition specified in this method that applies to all actions
+  /// - **Action-level**: Condition specified per `withLock` call for specific actions within the reducer
+  ///
+  /// ## Example
+  /// ```swift
+  /// var body: some ReducerOf<Self> {
+  ///   Reduce { state, action in
+  ///     switch action {
+  ///     case .purchase(let amount):
+  ///       return self.withLock(
+  ///         state: state,
+  ///         action: action,
+  ///         operation: { send in
+  ///           // Purchase operation
+  ///         },
+  ///         lockAction: PurchaseAction(),
+  ///         boundaryId: CancelID.payment,
+  ///         lockCondition: { state, _ in
+  ///           // Action-level condition
+  ///           guard state.balance >= amount else {
+  ///             return .failure(InsufficientFundsError())
+  ///           }
+  ///           return .success
+  ///         }
+  ///       )
+  ///     }
+  ///   }
+  ///   .withLock { state, _ in
+  ///     // Reducer-level condition
+  ///     guard state.isAuthenticated else {
+  ///       return .failure(NotAuthenticatedError())
+  ///     }
+  ///     return .success
+  ///   }
+  /// }
+  /// ```
+  ///
+  /// - Parameter lockCondition: Optional function that evaluates the current state and action
+  ///                           to determine if a lock should be acquired. If nil, no reducer-level
+  ///                           condition is applied.
+  /// - Returns: A `ReduceWithLock` reducer that evaluates conditions before acquiring locks
+  public func withLock(
+    _ lockCondition: (@Sendable (_ state: State, _ action: Action) -> LockmanResult)? = nil
+  ) -> ReduceWithLock<State, Action> where State: Sendable, Action: Sendable {
+    ReduceWithLock(
+      base: Reduce { state, action in
+        self.reduce(into: &state, action: action)
+      },
+      lockCondition: lockCondition
+    )
+  }
+
   /// Applies Lockman locking to effects produced by this reducer.
   ///
   /// This method wraps the reducer to automatically apply locking to any effects
