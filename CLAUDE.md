@@ -38,6 +38,15 @@ Develop a library to implement exclusive control of user actions in application 
 
 ## Pull Request
 
+### Development Workflow Requirements
+- **ALL changes must be made through Pull Requests** - No exceptions
+- Direct commits to main branch are strictly prohibited
+- This ensures:
+  - All changes are properly reviewed
+  - CI/CD tests run on all changes
+  - Release notes are automatically generated with complete change history
+  - Consistent development practices across all contributors
+
 ### Pre-PR Checklist
 1. **Run Tests**: Execute tests ONLY if Swift code has been modified. For documentation-only changes, skip testing
 2. **Fix All Test Failures**: All tests must pass before creating a PR (when tests are run)
