@@ -226,3 +226,51 @@ You can specify the platform using the PLATFORM variable:
 ### Configuration Options
 - `make CONFIG=Debug` (default)
 - `make CONFIG=Release`
+
+## Release Process
+
+### Pre-Release Checklist
+1. **Ensure main branch is clean**: All PRs should be merged and CI passing
+2. **Run full test suite**: Execute tests on all supported platforms
+3. **Review changes**: Confirm changes to be included in the release
+
+### Release Steps
+1. **Create Release PR**
+   ```bash
+   git checkout -b release/0.x.x
+   # Update the following in README.md:
+   # - Installation section: Update from: "0.x.x" to new version
+   # - Version Compatibility table: Add new version, move old patch versions to Other versions
+   # - Documentation section: No update needed for patch version changes only
+   git add -A
+   git commit -m "chore: prepare for 0.x.x release"
+   gh pr create --title "chore: prepare for 0.x.x release" --body "Prepare for version 0.x.x release"
+   ```
+
+2. **After PR is merged, create and push tag**
+   ```bash
+   git checkout main
+   git pull origin main
+   git tag -a 0.x.x -m "Release version 0.x.x"
+   git push origin 0.x.x
+   ```
+
+3. **Create GitHub Release**
+   - Go to GitHub Releases page
+   - Click "Create a new release"
+   - Select the tag you just created
+   - Title: "0.x.x"
+   - Generate release notes from previous tag
+   - Review and edit the auto-generated notes
+   - Publish release
+
+### Release Notes Template
+```
+## What's Changed
+- Feature: Description of new features
+- Fix: Description of bug fixes
+- Improvement: Description of improvements
+
+## Full Changelog
+https://github.com/takeshishimada/Lockman/compare/0.x.x...0.x.x
+```
