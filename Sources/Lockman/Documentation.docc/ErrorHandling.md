@@ -8,25 +8,36 @@ Lockman provides detailed error information according to each strategy. This pag
 
 ## Common Error Handling Patterns
 
-### lockFailure Handler
+### lockFailure Handler with Reducer.lock()
 
 Basic lockFailure handler structure used in all strategies:
 
 ```swift
-.withLock(
-    operation: { send in
-        // Execute processing
-    },
-    lockFailure: { error, send in
-        // Error handling
-        if case .specificError(let info) = error as? StrategySpecificError {
-            send(.userFriendlyMessage("Error message"))
+var body: some ReducerOf<Self> {
+    Reduce { state, action in
+        // Your reducer logic
+    }
+    .lock(
+        boundaryId: CancelID.feature,
+        lockFailure: { error, send in
+            // Centralized error handling for all locked actions
+            switch error {
+            case let singleExecError as LockmanSingleExecutionError:
+                await send(.showBusyMessage("Process already running"))
+            case let priorityError as LockmanPriorityBasedError:
+                await send(.showMessage("Higher priority task is running"))
+            default:
+                await send(.showMessage("Cannot start process"))
+            }
         }
-    },
-    action: action,
-    boundaryId: cancelID
-)
+    )
+}
 ```
+
+**Benefits of centralized error handling:**
+- Consistent error handling across all actions
+- Single place to update error messages
+- Easier to maintain and test
 
 **Parameters:**
 - `error`: The error that occurred (strategy-specific error type)
@@ -37,9 +48,15 @@ Basic lockFailure handler structure used in all strategies:
 Handling general errors that occur during processing:
 
 ```swift
-catch handler: { error, send in
-    send(.operationError(error.localizedDescription))
+// With Effect.lock() or individual effects
+return .run { send in
+    try await performOperation()
+    await send(.operationCompleted)
 }
+.catch { error, send in
+    await send(.operationError(error.localizedDescription))
+}
+.lock(action: action, boundaryId: CancelID.feature)
 ```
 
 This handler catches errors thrown within the operation and appropriately notifies the user.
@@ -119,14 +136,18 @@ send(.showMessage("LockmanError: boundary locked"))
 Many errors contain additional information:
 
 ```swift
-lockFailure: { error, send in
-    switch error as? LockmanConcurrencyLimitedError {
-    case .concurrencyLimitReached(let current, let limit, _):
-        send(.showMessage("Concurrent execution limit (\(limit)) reached (current: \(current))"))
-    default:
-        send(.showMessage("Cannot start processing"))
+// In Reducer.lock()
+.lock(
+    boundaryId: CancelID.feature,
+    lockFailure: { error, send in
+        switch error as? LockmanConcurrencyLimitedError {
+        case .concurrencyLimitReached(let current, let limit, _):
+            await send(.showMessage("Concurrent execution limit (\(limit)) reached (current: \(current))"))
+        default:
+            await send(.showMessage("Cannot start processing"))
+        }
     }
-}
+)
 ```
 
 ## Strategy-Specific Errors

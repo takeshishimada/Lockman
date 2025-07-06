@@ -103,27 +103,19 @@ extension ProcessFeature {
 
 ### Step 4: Implement the Reducer body
 
-Implement processing with exclusive control using the [`withLock`](<doc:Lock>) method:
+Implement processing with exclusive control using the [`Reducer.lock`](<doc:Lock>) modifier:
 
 ```swift
-var body: some Reducer<State, Action> {
+var body: some ReducerOf<Self> {
     Reduce { state, action in
         switch action {
         case .startProcessButtonTapped:
-            return .withLock(
-                operation: { send in
-                    await send(.processStart)
-                    // Simulate heavy processing
-                    try await Task.sleep(nanoseconds: 3_000_000_000)
-                    await send(.processCompleted)
-                },
-                lockFailure: { error, send in
-                    // When processing is already in progress
-                    state.message = "Processing is already in progress"
-                },
-                action: action,
-                boundaryId: CancelID.userAction
-            )
+            return .run { send in
+                await send(.processStart)
+                // Simulate heavy processing
+                try await Task.sleep(nanoseconds: 3_000_000_000)
+                await send(.processCompleted)
+            }
             
         case .processStart:
             state.isProcessing = true
@@ -136,15 +128,24 @@ var body: some Reducer<State, Action> {
             return .none
         }
     }
+    .lock(
+        boundaryId: CancelID.userAction,
+        lockFailure: { error, send in
+            // When processing is already in progress
+            if error is LockmanSingleExecutionError {
+                await send(.internal(.updateMessage("Processing is already in progress")))
+            }
+        }
+    )
 }
 ```
 
-Key points about the [`withLock`](<doc:Lock>) method:
+Key points about the [`Reducer.lock`](<doc:Lock>) modifier:
 
-- `operation`: Defines the processing to be executed under exclusive control
-- `lockFailure`: Handler called when the same processing is already in progress
-- `action`: Passes the currently processing action
-- `cancelID`: Specifies the identifier for Effect cancellation and lock boundary
+- Automatically applies lock management to all actions that implement `LockmanAction`
+- `boundaryId`: Specifies the identifier for Effect cancellation and lock boundary
+- `lockFailure`: Common handler for lock acquisition failures across all actions
+- Effects from non-LockmanAction actions pass through unchanged
 
 With this implementation, the `startProcessButtonTapped` action will not be executed again while processing, making it safe even if the user accidentally taps the button multiple times.
 
@@ -152,7 +153,7 @@ With this implementation, the `startProcessButtonTapped` action will not be exec
 
 ### Using Effect.lock() Method Chain
 
-Lockman also provides a method chain API that can be more concise for simple cases:
+For individual effects that need locking, you can use the method chain API:
 
 ```swift
 case .startProcessButtonTapped:
@@ -170,23 +171,34 @@ case .startProcessButtonTapped:
     )
 ```
 
-### Using Reducer.lock() for Automatic Lock Management
+### Using withLock for Fine-Grained Control
 
-For reducers where many actions need locking, you can use the `Reducer.lock()` modifier to automatically apply locking to all actions that implement `LockmanAction`:
+When you need more control over lock lifecycle or want to handle errors differently:
 
 ```swift
-var body: some ReducerOf<Self> {
-    Reduce { state, action in
-        // Your reducer logic
-    }
-    .lock(
-        boundaryId: CancelID.userAction,
+case .startProcessButtonTapped:
+    return .withLock(
+        operation: { send in
+            await send(.processStart)
+            // Simulate heavy processing
+            try await Task.sleep(nanoseconds: 3_000_000_000)
+            await send(.processCompleted)
+        },
+        catch handler: { error, send in
+            // Handle errors during operation
+            await send(.processError(error.localizedDescription))
+        },
         lockFailure: { error, send in
-            // Common lock failure handler for all actions
-        }
+            // When processing is already in progress
+            state.message = "Processing is already in progress"
+        },
+        action: action,
+        boundaryId: CancelID.userAction
     )
-}
 ```
 
-This approach automatically manages locks for any action that conforms to `LockmanAction`, reducing boilerplate code.
+This approach provides:
+- Separate error handlers for operation errors and lock failures
+- Manual unlock control option
+- More detailed configuration options
 
