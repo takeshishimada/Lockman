@@ -250,17 +250,17 @@ final class LockmanGroupCoordinatedActionTests: XCTestCase {
 
     // Leader can start
     let startInfo = startAction.lockmanInfo
-    XCTAssertEqual(strategy.canLock(id: boundaryId, info: startInfo), .success)
-    strategy.lock(id: boundaryId, info: startInfo)
+    XCTAssertEqual(strategy.canLock(boundaryId: boundaryId, info: startInfo), .success)
+    strategy.lock(boundaryId: boundaryId, info: startInfo)
 
     // Member can join
     let progressInfo = progressAction.lockmanInfo
-    XCTAssertEqual(strategy.canLock(id: boundaryId, info: progressInfo), .success)
-    strategy.lock(id: boundaryId, info: progressInfo)
+    XCTAssertEqual(strategy.canLock(boundaryId: boundaryId, info: progressInfo), .success)
+    strategy.lock(boundaryId: boundaryId, info: progressInfo)
 
     // Clean up
-    strategy.unlock(id: boundaryId, info: startInfo)
-    strategy.unlock(id: boundaryId, info: progressInfo)
+    strategy.unlock(boundaryId: boundaryId, info: startInfo)
+    strategy.unlock(boundaryId: boundaryId, info: progressInfo)
   }
 
   func testParameterizedActionsCreateIsolatedGroups() {
@@ -279,18 +279,20 @@ final class LockmanGroupCoordinatedActionTests: XCTestCase {
     XCTAssertEqual(detailInfo.groupIds, [AnyLockmanGroupId("navigation-detail")])
     XCTAssertEqual(settingsInfo.groupIds, [AnyLockmanGroupId("navigation-settings")])
 
-    XCTAssertEqual(strategy.canLock(id: boundaryId, info: detailInfo), .success)
-    strategy.lock(id: boundaryId, info: detailInfo)
+    XCTAssertEqual(strategy.canLock(boundaryId: boundaryId, info: detailInfo), .success)
+    strategy.lock(boundaryId: boundaryId, info: detailInfo)
 
-    XCTAssertEqual(strategy.canLock(id: boundaryId, info: settingsInfo), .success)
-    strategy.lock(id: boundaryId, info: settingsInfo)
+    XCTAssertEqual(strategy.canLock(boundaryId: boundaryId, info: settingsInfo), .success)
+    strategy.lock(boundaryId: boundaryId, info: settingsInfo)
 
     // Members join correct groups
     let animateDetail = NavigationAction.animateTransition(screenId: "detail")
     let animateSettings = NavigationAction.animateTransition(screenId: "settings")
 
-    XCTAssertEqual(strategy.canLock(id: boundaryId, info: animateDetail.lockmanInfo), .success)
-    XCTAssertEqual(strategy.canLock(id: boundaryId, info: animateSettings.lockmanInfo), .success)
+    XCTAssertEqual(
+      strategy.canLock(boundaryId: boundaryId, info: animateDetail.lockmanInfo), .success)
+    XCTAssertEqual(
+      strategy.canLock(boundaryId: boundaryId, info: animateSettings.lockmanInfo), .success)
   }
 
   // MARK: - Multiple Groups Tests

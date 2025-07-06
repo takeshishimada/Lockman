@@ -18,7 +18,7 @@ extension Effect {
   ///   - handler: Optional error handler receiving error and send function
   ///   - lockFailure: Optional handler for lock acquisition failures
   ///   - action: LockmanAction providing lock information and strategy type
-  ///   - cancelID: Unique identifier for effect cancellation and lock boundary
+  ///   - boundaryId: Unique identifier for effect cancellation and lock boundary
   ///   - fileID: Source file ID for debugging (auto-populated)
   ///   - filePath: Source file path for debugging (auto-populated)
   ///   - line: Source line number for debugging (auto-populated)
@@ -47,7 +47,7 @@ extension Effect {
       @Sendable (_ error: any Error, _ send: Send<Action>) async -> Void
     )? = nil,
     action: A,
-    cancelID: B,
+    boundaryId: B,
     fileID: StaticString = #fileID,
     filePath: StaticString = #filePath,
     line: UInt = #line,
@@ -55,7 +55,7 @@ extension Effect {
   ) -> Self {
     withLockCommon(
       action: action,
-      cancelID: cancelID,
+      boundaryId: boundaryId,
       unlockOption: unlockOption ?? action.unlockOption,
       fileID: fileID,
       filePath: filePath,
@@ -71,7 +71,7 @@ extension Effect {
             defer { unlockToken() }
 
             // Execute operation with cancellation support
-            try await withTaskCancellation(id: cancelID) {
+            try await withTaskCancellation(id: boundaryId) {
               try await operation(send)
             }
           } catch {
@@ -99,7 +99,7 @@ extension Effect {
         line: line,
         column: column
       )
-      .cancellable(id: cancelID)
+      .cancellable(id: boundaryId)
     }
   }
 
@@ -119,7 +119,7 @@ extension Effect {
   ///   - handler: Optional error handler receiving error, send, and unlock functions
   ///   - lockFailure: Optional handler for lock acquisition failures
   ///   - action: LockmanAction providing lock information and strategy type
-  ///   - cancelID: Unique identifier for effect cancellation and lock boundary
+  ///   - boundaryId: Unique identifier for effect cancellation and lock boundary
   ///   - fileID: Source file ID for debugging (auto-populated)
   ///   - filePath: Source file path for debugging (auto-populated)
   ///   - line: Source line number for debugging (auto-populated)
@@ -147,7 +147,7 @@ extension Effect {
       @Sendable (_ error: any Error, _ send: Send<Action>) async -> Void
     )? = nil,
     action: A,
-    cancelID: B,
+    boundaryId: B,
     fileID: StaticString = #fileID,
     filePath: StaticString = #filePath,
     line: UInt = #line,
@@ -156,7 +156,7 @@ extension Effect {
     // Pass the lockFailure handler to withLockCommon for lock acquisition errors
     withLockCommon(
       action: action,
-      cancelID: cancelID,
+      boundaryId: boundaryId,
       unlockOption: unlockOption ?? action.unlockOption,
       fileID: fileID,
       filePath: filePath,
@@ -169,7 +169,7 @@ extension Effect {
         operation: { send in
           do {
             // Execute operation with manual unlock control
-            try await withTaskCancellation(id: cancelID) {
+            try await withTaskCancellation(id: boundaryId) {
               try await operation(send, unlockToken)
             }
           } catch {
@@ -195,7 +195,7 @@ extension Effect {
         line: line,
         column: column
       )
-      .cancellable(id: cancelID)
+      .cancellable(id: boundaryId)
     }
   }
 
@@ -223,7 +223,7 @@ extension Effect {
   ///   - operations: Array of effects to execute sequentially while lock is held
   ///   - lockFailure: Optional handler for lock acquisition failures
   ///   - action: LockmanAction providing lock information and strategy type
-  ///   - cancelID: Unique identifier for effect cancellation and lock boundary
+  ///   - boundaryId: Unique identifier for effect cancellation and lock boundary
   ///   - fileID: Source file ID for debugging (auto-populated)
   ///   - filePath: Source file path for debugging (auto-populated)
   ///   - line: Source line number for debugging (auto-populated)
@@ -234,7 +234,7 @@ extension Effect {
     operations: [Effect<Action>],
     lockFailure: (@Sendable (_ error: any Error, _ send: Send<Action>) async -> Void)? = nil,
     action: A,
-    cancelID: B,
+    boundaryId: B,
     fileID: StaticString = #fileID,
     filePath: StaticString = #filePath,
     line: UInt = #line,
@@ -248,7 +248,7 @@ extension Effect {
       )
       let lockmanInfo = action.lockmanInfo
       let unlockToken = LockmanUnlock(
-        id: cancelID,
+        id: boundaryId,
         info: lockmanInfo,
         strategy: strategy,
         unlockOption: unlockOption ?? action.unlockOption
@@ -272,7 +272,7 @@ extension Effect {
       let lockResult = lock(
         lockmanInfo: lockmanInfo,
         strategy: strategy,
-        cancelID: cancelID
+        boundaryId: boundaryId
       )
 
       // Handle lock acquisition result
@@ -286,11 +286,11 @@ extension Effect {
         if let lockFailure = lockFailure {
           return .concatenate(
             .run { send in await lockFailure(error, send) },
-            .cancel(id: cancelID),
+            .cancel(id: boundaryId),
             builtEffect
           )
         }
-        return .concatenate(.cancel(id: cancelID), builtEffect)
+        return .concatenate(.cancel(id: boundaryId), builtEffect)
 
       case .failure(let error):
         // Lock acquisition failed
@@ -351,14 +351,14 @@ extension Effect {
   ///
   /// - Parameters:
   ///   - action: LockmanAction providing lock information and strategy type
-  ///   - cancelID: Unique identifier for cancellation and lock boundary
+  ///   - boundaryId: Unique identifier for cancellation and lock boundary
   ///   - unlockOption: Unlock option configuration for when to execute the unlock
   ///   - fileID, filePath, line, column: Source location for error reporting
   ///   - effectBuilder: Closure that receives unlock token and returns built effect
   /// - Returns: Built effect, or `.none` if setup fails
   static func withLockCommon<B: LockmanBoundaryId, A: LockmanAction>(
     action: A,
-    cancelID: B,
+    boundaryId: B,
     unlockOption: LockmanUnlockOption,
     fileID: StaticString,
     filePath: StaticString,
@@ -377,7 +377,7 @@ extension Effect {
 
       // Create unlock token for this specific lock acquisition with option
       let unlockToken = LockmanUnlock(
-        id: cancelID,
+        id: boundaryId,
         info: lockmanInfo,
         strategy: strategy,
         unlockOption: unlockOption
@@ -387,7 +387,7 @@ extension Effect {
       let lockResult = lock(
         lockmanInfo: lockmanInfo,
         strategy: strategy,
-        cancelID: cancelID
+        boundaryId: boundaryId
       )
 
       // Handle lock acquisition result
@@ -402,11 +402,11 @@ extension Effect {
         if let handler = handler {
           return .concatenate(
             .run { send in await handler(error, send) },
-            .cancel(id: cancelID),
+            .cancel(id: boundaryId),
             effectBuilder(unlockToken)
           )
         }
-        return .concatenate(.cancel(id: cancelID), effectBuilder(unlockToken))
+        return .concatenate(.cancel(id: boundaryId), effectBuilder(unlockToken))
 
       case .failure(let error):
         // Lock acquisition failed
@@ -452,7 +452,7 @@ extension Effect {
   ///
   /// ## Cancellation Strategy
   /// When `canLock` returns `.successWithPrecedingCancellation`:
-  /// 1. A cancellation effect is created for the specified cancelID
+  /// 1. A cancellation effect is created for the specified boundaryId
   /// 2. The cancellation effect is concatenated BEFORE the main effect
   /// 3. This ensures proper ordering: cancel existing → execute new
   ///
@@ -464,18 +464,18 @@ extension Effect {
   /// - Parameters:
   ///   - lockmanInfo: Lock information for the strategy (action ID, unique ID, etc.)
   ///   - strategy: Type-erased strategy to use for lock operations
-  ///   - cancelID: Boundary identifier for this lock and cancellation
+  ///   - boundaryId: Boundary identifier for this lock and cancellation
   ///   - effect: Effect to execute if lock acquisition succeeds
   /// - Returns: Effect to execute, or `.none` if lock acquisition fails
   static func lock<B: LockmanBoundaryId, I: LockmanInfo>(
     lockmanInfo: I,
     strategy: AnyLockmanStrategy<I>,
-    cancelID: B
+    boundaryId: B
   ) -> LockmanResult {
-    LockmanManager.withBoundaryLock(for: cancelID) {
+    LockmanManager.withBoundaryLock(for: boundaryId) {
       // Check if lock can be acquired
       let result = strategy.canLock(
-        id: cancelID,
+        boundaryId: boundaryId,
         info: lockmanInfo
       )
 
@@ -486,7 +486,7 @@ extension Effect {
 
       // Actually acquire the lock
       strategy.lock(
-        id: cancelID,
+        boundaryId: boundaryId,
         info: lockmanInfo
       )
 

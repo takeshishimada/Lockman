@@ -51,15 +51,16 @@ final class EffectLockmanErrorTests: XCTestCase {
       LockmanStrategyId("MockUnregisteredStrategy")
     }
 
-    func canLock<B: LockmanBoundaryId>(id _: B, info _: LockmanSingleExecutionInfo) -> LockmanResult
+    func canLock<B: LockmanBoundaryId>(boundaryId _: B, info _: LockmanSingleExecutionInfo)
+      -> LockmanResult
     {
       .success
     }
 
-    func lock<B: LockmanBoundaryId>(id _: B, info _: LockmanSingleExecutionInfo) {}
-    func unlock<B: LockmanBoundaryId>(id _: B, info _: LockmanSingleExecutionInfo) {}
+    func lock<B: LockmanBoundaryId>(boundaryId _: B, info _: LockmanSingleExecutionInfo) {}
+    func unlock<B: LockmanBoundaryId>(boundaryId _: B, info _: LockmanSingleExecutionInfo) {}
     func cleanUp() {}
-    func cleanUp<B: LockmanBoundaryId>(id _: B) {}
+    func cleanUp<B: LockmanBoundaryId>(boundaryId _: B) {}
     func getCurrentLocks() -> [AnyLockmanBoundaryId: [any LockmanInfo]] { [:] }
   }
 
@@ -84,7 +85,7 @@ final class EffectLockmanErrorTests: XCTestCase {
             operationExecuted.setValue(true)
           },
           action: action,
-          cancelID: cancelID
+          boundaryId: cancelID
         )
 
         // Effect should be created (error handling is internal)
@@ -113,7 +114,7 @@ final class EffectLockmanErrorTests: XCTestCase {
           // This operation would execute in a real environment
         },
         action: action,
-        cancelID: cancelID
+        boundaryId: cancelID
       )
 
       // Effect should be created successfully
@@ -138,7 +139,7 @@ final class EffectLockmanErrorTests: XCTestCase {
             XCTFail("Operation should not execute with unregistered strategy")
           },
           action: action,
-          cancelID: cancelID
+          boundaryId: cancelID
         )
 
         XCTAssertNotNil(effect)
@@ -166,7 +167,7 @@ final class EffectLockmanErrorTests: XCTestCase {
         let effect = Effect<Never>.concatenateWithLock(
           operations: operations,
           action: action,
-          cancelID: cancelID
+          boundaryId: cancelID
         )
 
         // Effect should handle the error gracefully
@@ -251,7 +252,7 @@ final class EffectLockmanErrorTests: XCTestCase {
             // Error handling would occur here in real usage
           },
           action: action,
-          cancelID: cancelID
+          boundaryId: cancelID
         )
 
         XCTAssertNotNil(effect)
@@ -275,7 +276,7 @@ final class EffectLockmanErrorTests: XCTestCase {
               XCTFail("No operations should execute")
             },
             action: action,
-            cancelID: "multi-error-test"
+            boundaryId: "multi-error-test"
           )
 
           XCTAssertNotNil(effect)
@@ -300,7 +301,7 @@ final class EffectLockmanErrorTests: XCTestCase {
             XCTFail("Should fail without registration")
           },
           action: action,
-          cancelID: cancelID
+          boundaryId: cancelID
         )
 
         XCTAssertNotNil(effect1)
@@ -320,7 +321,7 @@ final class EffectLockmanErrorTests: XCTestCase {
           // This would execute successfully in real environment
         },
         action: action,
-        cancelID: cancelID
+        boundaryId: cancelID
       )
 
       XCTAssertNotNil(effect2)

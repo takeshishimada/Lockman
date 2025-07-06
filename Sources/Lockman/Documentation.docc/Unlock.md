@@ -63,7 +63,7 @@ Unlock execution timing can be controlled with LockmanUnlockOption:
     send(.failed(error))
   },
   action: action,
-  cancelID: cancelID
+  boundaryId: cancelID
 )
 ```
 
@@ -90,7 +90,7 @@ Basic usage example:
     send(.failed(error))
   },
   action: action,
-  cancelID: cancelID
+  boundaryId: cancelID
 )
 ```
 
@@ -103,7 +103,7 @@ Example of release in another screen's delegate:
     send(.delegate(unlock: unlock))
   },
   action: action,
-  cancelID: cancelID
+  boundaryId: cancelID
 )
 
 // Receive and release on the delegate side

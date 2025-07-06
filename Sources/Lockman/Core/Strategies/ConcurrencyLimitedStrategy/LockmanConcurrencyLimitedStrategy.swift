@@ -29,11 +29,11 @@ public final class LockmanConcurrencyLimitedStrategy: LockmanStrategy, @unchecke
 
   /// Checks if a lock can be acquired based on concurrency limits.
   public func canLock<B: LockmanBoundaryId>(
-    id: B,
+    boundaryId: B,
     info: LockmanConcurrencyLimitedInfo
   ) -> LockmanResult {
     // Use the key-based query for efficient lookup
-    let currentCount = state.count(id: id, key: info.concurrencyId)
+    let currentCount = state.count(id: boundaryId, key: info.concurrencyId)
 
     let result: LockmanResult
     var failureReason: String?
@@ -41,7 +41,7 @@ public final class LockmanConcurrencyLimitedStrategy: LockmanStrategy, @unchecke
     if info.limit.isExceeded(currentCount: currentCount) {
       if case .limited(let limit) = info.limit {
         // Get existing infos in the same concurrency group
-        let existingInfos = state.currents(id: id, key: info.concurrencyId)
+        let existingInfos = state.currents(id: boundaryId, key: info.concurrencyId)
 
         result = .failure(
           LockmanConcurrencyLimitedError.concurrencyLimitReached(
@@ -63,7 +63,7 @@ public final class LockmanConcurrencyLimitedStrategy: LockmanStrategy, @unchecke
     LockmanLogger.shared.logCanLock(
       result: result,
       strategy: "ConcurrencyLimited",
-      boundaryId: String(describing: id),
+      boundaryId: String(describing: boundaryId),
       info: info,
       reason: failureReason
     )
@@ -73,28 +73,28 @@ public final class LockmanConcurrencyLimitedStrategy: LockmanStrategy, @unchecke
 
   /// Adds the lock to the state.
   public func lock<B: LockmanBoundaryId>(
-    id: B,
+    boundaryId: B,
     info: LockmanConcurrencyLimitedInfo
   ) {
-    state.add(id: id, info: info)
+    state.add(id: boundaryId, info: info)
   }
 
   /// Removes the lock from the state.
   public func unlock<B: LockmanBoundaryId>(
-    id: B,
+    boundaryId: B,
     info: LockmanConcurrencyLimitedInfo
   ) {
-    state.remove(id: id, info: info)
+    state.remove(id: boundaryId, info: info)
   }
 
   /// Removes all locks for a specific boundary.
   public func cleanUp<B: LockmanBoundaryId>(
-    id: B
+    boundaryId: B
   ) {
     // Get all locks for this boundary and remove them one by one
-    let currentLocks = state.currents(id: id)
+    let currentLocks = state.currents(id: boundaryId)
     for info in currentLocks {
-      state.remove(id: id, info: info)
+      state.remove(id: boundaryId, info: info)
     }
   }
 

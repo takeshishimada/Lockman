@@ -159,7 +159,7 @@ struct PriorityBasedStrategyFeature {
         await send(.internal(.updateResult(button: buttonType, result: failureMessage)))
       },
       action: action,
-      cancelID: CancelID.priorityOperation
+      boundaryId: CancelID.priorityOperation
     )
   }
 

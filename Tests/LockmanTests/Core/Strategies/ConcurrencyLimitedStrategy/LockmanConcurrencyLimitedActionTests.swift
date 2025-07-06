@@ -138,11 +138,11 @@ final class LockmanConcurrencyLimitedActionTests: XCTestCase {
     let info = action.lockmanInfo
 
     // First lock should succeed
-    let result = strategy.canLock(id: boundary, info: info)
+    let result = strategy.canLock(boundaryId: boundary, info: info)
     XCTAssertEqual(result, .success)
 
     // Clean up
-    strategy.cleanUp(id: boundary)
+    strategy.cleanUp(boundaryId: boundary)
   }
 
   func testMultipleActionsRespectConcurrencyLimits() {
@@ -153,14 +153,14 @@ final class LockmanConcurrencyLimitedActionTests: XCTestCase {
     let action1 = TestAction.processData
     let action2 = TestAction.processData
 
-    strategy.lock(id: boundary, info: action1.lockmanInfo)
+    strategy.lock(boundaryId: boundary, info: action1.lockmanInfo)
 
     // Second should fail
-    let result = strategy.canLock(id: boundary, info: action2.lockmanInfo)
+    let result = strategy.canLock(boundaryId: boundary, info: action2.lockmanInfo)
     XCTAssertLockFailure(result)
 
     // Clean up
-    strategy.cleanUp(id: boundary)
+    strategy.cleanUp(boundaryId: boundary)
   }
 
   // MARK: - Type Safety Tests
@@ -211,12 +211,12 @@ extension LockmanConcurrencyLimitedActionTests {
     // Lock many unlimited actions
     for i in 0..<100 {
       let action = i % 2 == 0 ? UnlimitedTestAction.refreshUI : UnlimitedTestAction.updateCache
-      let result = strategy.canLock(id: boundary, info: action.lockmanInfo)
+      let result = strategy.canLock(boundaryId: boundary, info: action.lockmanInfo)
       XCTAssertEqual(result, .success)
-      strategy.lock(id: boundary, info: action.lockmanInfo)
+      strategy.lock(boundaryId: boundary, info: action.lockmanInfo)
     }
 
     // Clean up
-    strategy.cleanUp(id: boundary)
+    strategy.cleanUp(boundaryId: boundary)
   }
 }

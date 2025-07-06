@@ -154,7 +154,7 @@ final class EffectWithLockPrecedingCancellationTests: XCTestCase {
               }
             },
             action: PriorityBasedAction.lowPriority,
-            cancelID: CancelID.task
+            boundaryId: CancelID.task
           )
 
         case .startHighPriority:
@@ -172,7 +172,7 @@ final class EffectWithLockPrecedingCancellationTests: XCTestCase {
               }
             },
             action: PriorityBasedAction.highExclusive,
-            cancelID: CancelID.task
+            boundaryId: CancelID.task
           )
 
         case .taskCompleted(let priority):

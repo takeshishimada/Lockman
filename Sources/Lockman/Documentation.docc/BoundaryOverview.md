@@ -16,7 +16,7 @@ return .withLock(
         // Processing when already running within the same boundary
     },
     action: action,
-    cancelID: CancelID.userAction  // This CancelID functions as a Boundary
+    boundaryId: CancelID.userAction  // This CancelID functions as a Boundary
 )
 ```
 
@@ -35,11 +35,11 @@ Exclusive control between different Boundaries is not possible:
 // ❌ Not possible: Control save and load simultaneously
 case .saveButtonTapped:
     // Control only within CancelID.save boundary
-    return .withLock(..., cancelID: CancelID.save)
+    return .withLock(..., boundaryId: CancelID.save)
     
 case .loadButtonTapped:
     // Control only within CancelID.load boundary (independent from save)
-    return .withLock(..., cancelID: CancelID.load)
+    return .withLock(..., boundaryId: CancelID.load)
 ```
 
 Since these are treated as separate boundaries, load can be executed even while save is running.
@@ -54,7 +54,7 @@ return .withLock(
     operation: { send in /* ... */ },
     lockFailure: { error, send in /* ... */ },
     action: action,
-    cancelID: [CancelID.save, CancelID.validate]  // Multiple specification not allowed
+    boundaryId: [CancelID.save, CancelID.validate]  // Multiple specification not allowed
 )
 ```
 
@@ -67,7 +67,7 @@ enum CancelID {
 }
 
 case .saveButtonTapped, .loadButtonTapped, .validateButtonTapped:
-    return .withLock(..., cancelID: CancelID.fileOperation)
+    return .withLock(..., boundaryId: CancelID.fileOperation)
 ```
 
 ## Summary

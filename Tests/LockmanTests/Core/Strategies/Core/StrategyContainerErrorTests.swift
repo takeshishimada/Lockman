@@ -11,12 +11,13 @@ final class StrategyContainerErrorTests: XCTestCase {
     typealias I = LockmanSingleExecutionInfo
     var strategyId: LockmanStrategyId { LockmanStrategyId(type: Self.self) }
     static func makeStrategyId() -> LockmanStrategyId { LockmanStrategyId(type: Self.self) }
-    func canLock<B: LockmanBoundaryId>(id _: B, info _: LockmanSingleExecutionInfo) -> LockmanResult
+    func canLock<B: LockmanBoundaryId>(boundaryId _: B, info _: LockmanSingleExecutionInfo)
+      -> LockmanResult
     { .success }
-    func lock<B: LockmanBoundaryId>(id _: B, info _: LockmanSingleExecutionInfo) {}
-    func unlock<B: LockmanBoundaryId>(id _: B, info _: LockmanSingleExecutionInfo) {}
+    func lock<B: LockmanBoundaryId>(boundaryId _: B, info _: LockmanSingleExecutionInfo) {}
+    func unlock<B: LockmanBoundaryId>(boundaryId _: B, info _: LockmanSingleExecutionInfo) {}
     func cleanUp() {}
-    func cleanUp<B: LockmanBoundaryId>(id _: B) {}
+    func cleanUp<B: LockmanBoundaryId>(boundaryId _: B) {}
     func getCurrentLocks() -> [AnyLockmanBoundaryId: [any LockmanInfo]] { [:] }
   }
 
@@ -24,13 +25,15 @@ final class StrategyContainerErrorTests: XCTestCase {
     typealias I = LockmanPriorityBasedInfo
     var strategyId: LockmanStrategyId { LockmanStrategyId(type: Self.self) }
     static func makeStrategyId() -> LockmanStrategyId { LockmanStrategyId(type: Self.self) }
-    func canLock<B: LockmanBoundaryId>(id _: B, info _: LockmanPriorityBasedInfo) -> LockmanResult {
+    func canLock<B: LockmanBoundaryId>(boundaryId _: B, info _: LockmanPriorityBasedInfo)
+      -> LockmanResult
+    {
       .success
     }
-    func lock<B: LockmanBoundaryId>(id _: B, info _: LockmanPriorityBasedInfo) {}
-    func unlock<B: LockmanBoundaryId>(id _: B, info _: LockmanPriorityBasedInfo) {}
+    func lock<B: LockmanBoundaryId>(boundaryId _: B, info _: LockmanPriorityBasedInfo) {}
+    func unlock<B: LockmanBoundaryId>(boundaryId _: B, info _: LockmanPriorityBasedInfo) {}
     func cleanUp() {}
-    func cleanUp<B: LockmanBoundaryId>(id _: B) {}
+    func cleanUp<B: LockmanBoundaryId>(boundaryId _: B) {}
     func getCurrentLocks() -> [AnyLockmanBoundaryId: [any LockmanInfo]] { [:] }
   }
 
@@ -38,12 +41,13 @@ final class StrategyContainerErrorTests: XCTestCase {
     typealias I = LockmanSingleExecutionInfo
     var strategyId: LockmanStrategyId { LockmanStrategyId(type: Self.self) }
     static func makeStrategyId() -> LockmanStrategyId { LockmanStrategyId(type: Self.self) }
-    func canLock<B: LockmanBoundaryId>(id _: B, info _: LockmanSingleExecutionInfo) -> LockmanResult
+    func canLock<B: LockmanBoundaryId>(boundaryId _: B, info _: LockmanSingleExecutionInfo)
+      -> LockmanResult
     { .success }
-    func lock<B: LockmanBoundaryId>(id _: B, info _: LockmanSingleExecutionInfo) {}
-    func unlock<B: LockmanBoundaryId>(id _: B, info _: LockmanSingleExecutionInfo) {}
+    func lock<B: LockmanBoundaryId>(boundaryId _: B, info _: LockmanSingleExecutionInfo) {}
+    func unlock<B: LockmanBoundaryId>(boundaryId _: B, info _: LockmanSingleExecutionInfo) {}
     func cleanUp() {}
-    func cleanUp<B: LockmanBoundaryId>(id _: B) {}
+    func cleanUp<B: LockmanBoundaryId>(boundaryId _: B) {}
     func getCurrentLocks() -> [AnyLockmanBoundaryId: [any LockmanInfo]] { [:] }
   }
 
@@ -471,6 +475,6 @@ final class StrategyContainerErrorTests: XCTestCase {
 
     // Cleanup should not crash
     container.cleanUp()
-    container.cleanUp(id: "test-boundary")
+    container.cleanUp(boundaryId: "test-boundary")
   }
 }

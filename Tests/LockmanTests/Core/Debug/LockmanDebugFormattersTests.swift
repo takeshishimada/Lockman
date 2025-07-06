@@ -28,11 +28,12 @@ final class LockmanDebugFormattersTests: XCTestCase {
     let longBoundaryId = "VeryLongBoundaryIdForTestingColumnWidth"
 
     // Lock with both strategies
-    _ = LockmanDynamicConditionStrategy.shared.canLock(id: shortBoundaryId, info: dynamicInfo)
-    LockmanDynamicConditionStrategy.shared.lock(id: shortBoundaryId, info: dynamicInfo)
+    _ = LockmanDynamicConditionStrategy.shared.canLock(
+      boundaryId: shortBoundaryId, info: dynamicInfo)
+    LockmanDynamicConditionStrategy.shared.lock(boundaryId: shortBoundaryId, info: dynamicInfo)
 
-    _ = LockmanSingleExecutionStrategy.shared.canLock(id: longBoundaryId, info: singleInfo)
-    LockmanSingleExecutionStrategy.shared.lock(id: longBoundaryId, info: singleInfo)
+    _ = LockmanSingleExecutionStrategy.shared.canLock(boundaryId: longBoundaryId, info: singleInfo)
+    LockmanSingleExecutionStrategy.shared.lock(boundaryId: longBoundaryId, info: singleInfo)
 
     // Capture output
     let originalStdout = dup(STDOUT_FILENO)

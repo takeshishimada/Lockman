@@ -154,7 +154,7 @@ private struct SingleExecutionFeature {
             await send(.increment)
           },
           action: action,
-          cancelID: CancelID.userAction
+          boundaryId: CancelID.userAction
         )
 
       case .increment:
@@ -201,7 +201,7 @@ private struct PriorityBasedFeature {
             await send(.increment)
           },
           action: action,
-          cancelID: CancelID.userAction
+          boundaryId: CancelID.userAction
         )
 
       case .increment:
@@ -257,7 +257,7 @@ private struct CompositeStrategyFeature {
             await send(.increment)
           },
           action: action,
-          cancelID: CancelID.userAction
+          boundaryId: CancelID.userAction
         )
 
       case .increment:
@@ -301,7 +301,7 @@ private struct DynamicConditionFeature {
             await send(.increment)
           },
           action: action,
-          cancelID: CancelID.userAction
+          boundaryId: CancelID.userAction
         )
 
       case .increment:
@@ -360,7 +360,7 @@ private struct SingleExecutionBurstFeature {
             await send(.process(id: id, startTime: startTime))
           },
           action: action,
-          cancelID: CancelID.burst
+          boundaryId: CancelID.burst
         )
 
       case .process(let id, let startTime):
@@ -432,7 +432,7 @@ private struct PriorityBasedBurstFeature {
             await send(.process(id: id, startTime: startTime))
           },
           action: action,
-          cancelID: CancelID.burst
+          boundaryId: CancelID.burst
         )
 
       case .process(let id, let startTime):

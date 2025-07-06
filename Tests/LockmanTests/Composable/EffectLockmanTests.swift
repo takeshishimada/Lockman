@@ -50,9 +50,9 @@ final class EffectWithLockSingleExecutionStrategyTests: XCTestCase {
       )
 
       // Use correct API for locking
-      let result = strategy.canLock(id: id, info: info)
+      let result = strategy.canLock(boundaryId: id, info: info)
       XCTAssertEqual(result, .success)
-      strategy.lock(id: id, info: info)
+      strategy.lock(boundaryId: id, info: info)
 
       // When: Attempting to execute the same action
       await store.send(.tapIncrement)
@@ -62,7 +62,7 @@ final class EffectWithLockSingleExecutionStrategyTests: XCTestCase {
       // State remains unchanged (count is still 0)
 
       // Clean up: Release the lock for next tests
-      strategy.unlock(id: id, info: info)
+      strategy.unlock(boundaryId: id, info: info)
     }
   }
 
@@ -85,9 +85,9 @@ final class EffectWithLockSingleExecutionStrategyTests: XCTestCase {
       )
 
       // Given: Pre-existing lock
-      let lockResult = strategy.canLock(id: id, info: info)
+      let lockResult = strategy.canLock(boundaryId: id, info: info)
       XCTAssertEqual(lockResult, .success)
-      strategy.lock(id: id, info: info)
+      strategy.lock(boundaryId: id, info: info)
 
       // When: First attempt is blocked
       await store.send(.tapIncrement)
@@ -95,7 +95,7 @@ final class EffectWithLockSingleExecutionStrategyTests: XCTestCase {
       // State remains unchanged at this point
 
       // And: Lock is released
-      strategy.unlock(id: id, info: info)
+      strategy.unlock(boundaryId: id, info: info)
 
       // When: Second attempt after unlock
       await store.send(.tapIncrement)
@@ -126,9 +126,9 @@ final class EffectWithLockSingleExecutionStrategyTests: XCTestCase {
         actionId: TestSingleExecutionFeature.Action.tapIncrement.actionName,
         mode: .boundary
       )
-      let lockResult = strategy.canLock(id: id, info: incrementInfo)
+      let lockResult = strategy.canLock(boundaryId: id, info: incrementInfo)
       XCTAssertEqual(lockResult, .success)
-      strategy.lock(id: id, info: incrementInfo)
+      strategy.lock(boundaryId: id, info: incrementInfo)
 
       // When: tapIncrement is blocked
       await store.send(.tapIncrement)
@@ -136,7 +136,7 @@ final class EffectWithLockSingleExecutionStrategyTests: XCTestCase {
       // State remains unchanged (count is still 0)
 
       // Clean up: Release the lock
-      strategy.unlock(id: id, info: incrementInfo)
+      strategy.unlock(boundaryId: id, info: incrementInfo)
 
       // But: tapDecrement should work (different action name)
       await store.send(.tapDecrement)
@@ -164,9 +164,9 @@ final class EffectWithLockSingleExecutionStrategyTests: XCTestCase {
       // Given: Pre-existing lock
       let id = TestSingleExecutionFeature.CancelID.userAction
       let info = LockmanSingleExecutionInfo(actionId: "tapIncrement", mode: .boundary)
-      let lockResult = strategy.canLock(id: id, info: info)
+      let lockResult = strategy.canLock(boundaryId: id, info: info)
       XCTAssertEqual(lockResult, .success)
-      strategy.lock(id: id, info: info)
+      strategy.lock(boundaryId: id, info: info)
 
       // When: Attempting action that will fail to acquire lock
       await store.send(.tapIncrement)
@@ -176,7 +176,7 @@ final class EffectWithLockSingleExecutionStrategyTests: XCTestCase {
       // State remains unchanged (count is still 0)
 
       // Clean up: Release the lock
-      strategy.unlock(id: id, info: info)
+      strategy.unlock(boundaryId: id, info: info)
     }
   }
 
@@ -343,9 +343,9 @@ final class EffectConcatenateWithLockTests: XCTestCase {
         actionId: TestConcatenateWithLockFeature.Action.executeConcatenateWithLock.actionName,
         mode: .boundary
       )
-      let result = strategy.canLock(id: id, info: info)
+      let result = strategy.canLock(boundaryId: id, info: info)
       XCTAssertEqual(result, .success)
-      strategy.lock(id: id, info: info)
+      strategy.lock(boundaryId: id, info: info)
 
       // When: Attempting to execute the same action
       await store.send(.executeConcatenateWithLock)
@@ -355,7 +355,7 @@ final class EffectConcatenateWithLockTests: XCTestCase {
       // State remains unchanged (count is still 0)
 
       // Clean up: Release the lock for next tests
-      strategy.unlock(id: id, info: info)
+      strategy.unlock(boundaryId: id, info: info)
 
       // Verify that after unlock, action can execute normally
       await store.send(.executeConcatenateWithLock)
@@ -494,7 +494,7 @@ private struct TestConcatenateWithLockFeature {
             .send(.increment),
           ],
           action: action,
-          cancelID: CancelID.userAction
+          boundaryId: CancelID.userAction
         )
 
       case .executeConcatenateWithLockWithFailure:
@@ -504,7 +504,7 @@ private struct TestConcatenateWithLockFeature {
             .send(.operationFailed)
           ],
           action: action,
-          cancelID: CancelID.userAction
+          boundaryId: CancelID.userAction
         )
 
       case .executeConcatenateWithLockWithCancel:
@@ -514,7 +514,7 @@ private struct TestConcatenateWithLockFeature {
             .send(.operationCanceled)
           ],
           action: action,
-          cancelID: CancelID.userAction
+          boundaryId: CancelID.userAction
         )
 
       case .executeConcatenateWithLockEmpty:
@@ -522,7 +522,7 @@ private struct TestConcatenateWithLockFeature {
           unlockOption: .immediate,
           operations: [],
           action: action,
-          cancelID: CancelID.userAction
+          boundaryId: CancelID.userAction
         )
 
       case .increment:
@@ -591,7 +591,7 @@ private struct TestSingleExecutionFeature {
             await send(.increment)
           },
           action: action,
-          cancelID: CancelID.userAction
+          boundaryId: CancelID.userAction
         )
 
       case .tapDecrement:
@@ -601,7 +601,7 @@ private struct TestSingleExecutionFeature {
             await send(.decrement)
           },
           action: action,
-          cancelID: CancelID.userAction
+          boundaryId: CancelID.userAction
         )
 
       case .increment:
@@ -661,7 +661,7 @@ private struct TestMultiIdFeature {
             await send(.increment)
           },
           action: action,
-          cancelID: CancelID.id1
+          boundaryId: CancelID.id1
         )
 
       case .actionWithId2:
@@ -672,7 +672,7 @@ private struct TestMultiIdFeature {
             unlock()
           },
           action: action,
-          cancelID: CancelID.id2
+          boundaryId: CancelID.id2
         )
 
       case .increment:

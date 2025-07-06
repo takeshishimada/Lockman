@@ -25,7 +25,7 @@ import Foundation
 ///         // Async operation
 ///       },
 ///       lockAction: LockmanSingleExecutionAction(actionName: "fetch"),
-///       cancelID: CancelID()
+///       boundaryId: CancelID()
 ///     )
 ///   default:
 ///     return .none
@@ -51,7 +51,7 @@ import Foundation
 ///         // Purchase operation
 ///       },
 ///       lockAction: LockmanSingleExecutionAction(actionName: "purchase"),
-///       cancelID: CancelID(),
+///       boundaryId: CancelID(),
 ///       lockCondition: { state, _ in
 ///         // Action-level condition
 ///         guard state.balance >= amount else {
@@ -136,7 +136,7 @@ extension ReduceWithLock {
     state: State,
     action: Action,
     actionId: LockmanActionId,
-    cancelID: B,
+    boundaryId: B,
     lockCondition: (@Sendable (_ state: State, _ action: Action) -> LockmanResult)?,
     reducerCondition: (@Sendable (_ state: State, _ action: Action) -> LockmanResult)?,
     lockFailure: (@Sendable (_ error: any Error, _ send: Send<Action>) async -> Void)?,
@@ -156,7 +156,7 @@ extension ReduceWithLock {
       )
       // Create unlock token inline
       unlockToken = LockmanUnlock(
-        id: cancelID,
+        id: boundaryId,
         info: LockmanDynamicConditionInfo(actionId: actionId),
         strategy: strategy,
         unlockOption: .immediate
@@ -185,7 +185,7 @@ extension ReduceWithLock {
       condition: lockCondition,
       strategy: strategy,
       actionId: actionId,
-      cancelID: cancelID
+      boundaryId: boundaryId
     )
 
     if !step1Success {
@@ -205,7 +205,7 @@ extension ReduceWithLock {
       condition: reducerCondition,
       strategy: strategy,
       actionId: actionId,
-      cancelID: cancelID
+      boundaryId: boundaryId
     )
 
     if !step2Success {
@@ -230,7 +230,7 @@ extension ReduceWithLock {
     unlockOption: LockmanUnlockOption?,
     handleCancellationErrors: Bool?,
     action: A,
-    cancelID: B,
+    boundaryId: B,
     unlockToken: LockmanUnlock<B, LockmanDynamicConditionInfo>,
     lockFailure: (@Sendable (_ error: any Error, _ send: Send<Action>) async -> Void)?,
     fileID: StaticString,
@@ -277,7 +277,7 @@ extension ReduceWithLock {
         catch: handler,
         lockFailure: wrappedLockFailure,
         action: lockAction,
-        cancelID: cancelID,
+        boundaryId: boundaryId,
         fileID: fileID,
         filePath: filePath,
         line: line,
@@ -312,7 +312,7 @@ extension ReduceWithLock {
         catch: handler,
         lockFailure: wrappedLockFailure,
         action: lockAction,
-        cancelID: cancelID,
+        boundaryId: boundaryId,
         fileID: fileID,
         filePath: filePath,
         line: line,
@@ -329,7 +329,7 @@ extension ReduceWithLock {
     condition: (@Sendable (_ state: State, _ action: Action) -> LockmanResult)?,
     strategy: AnyLockmanStrategy<LockmanDynamicConditionInfo>,
     actionId: LockmanActionId,
-    cancelID: B
+    boundaryId: B
   ) -> (success: Bool, error: (any Error)?) {
     // If no condition provided, consider it successful
     guard let condition = condition else {
@@ -346,7 +346,7 @@ extension ReduceWithLock {
     let result = Effect<Action>.lock(
       lockmanInfo: dynamicInfo,
       strategy: strategy,
-      cancelID: cancelID
+      boundaryId: boundaryId
     )
 
     // Handle result
@@ -383,7 +383,7 @@ extension ReduceWithLock {
   ///   - handler: Optional error handler receiving error and send function
   ///   - lockFailure: Optional handler for lock acquisition failures
   ///   - lockAction: LockmanAction providing lock information and strategy type
-  ///   - cancelID: Unique identifier for effect cancellation and lock boundary
+  ///   - boundaryId: Unique identifier for effect cancellation and lock boundary
   ///   - lockCondition: Optional action-level condition that supplements the reducer-level condition
   ///   - fileID: Source file identifier for debugging (auto-populated)
   ///   - filePath: Source file path for debugging (auto-populated)
@@ -404,7 +404,7 @@ extension ReduceWithLock {
       @Sendable (_ error: any Error, _ send: Send<Action>) async -> Void
     )? = nil,
     lockAction: some LockmanAction,
-    cancelID: B,
+    boundaryId: B,
     lockCondition: (@Sendable (_ state: State, _ action: Action) -> LockmanResult)? = nil,
     fileID: StaticString = #fileID,
     filePath: StaticString = #filePath,
@@ -419,7 +419,7 @@ extension ReduceWithLock {
       state: state,
       action: action,
       actionId: actionId,
-      cancelID: cancelID,
+      boundaryId: boundaryId,
       lockCondition: lockCondition,
       reducerCondition: reducerLevelCondition,
       lockFailure: lockFailure,
@@ -434,7 +434,7 @@ extension ReduceWithLock {
         unlockOption: unlockOption,
         handleCancellationErrors: handleCancellationErrors,
         action: lockAction,
-        cancelID: cancelID,
+        boundaryId: boundaryId,
         unlockToken: unlockToken,
         lockFailure: lockFailure,
         fileID: fileID,
@@ -475,7 +475,7 @@ extension ReduceWithLock {
   ///   - handler: Optional error handler (`catch` parameter) receiving error, send, and unlock functions
   ///   - lockFailure: Optional handler for lock acquisition failures (no unlock token)
   ///   - lockAction: LockmanAction providing lock information and strategy type
-  ///   - cancelID: Unique identifier for effect cancellation and lock boundary
+  ///   - boundaryId: Unique identifier for effect cancellation and lock boundary
   ///   - lockCondition: Optional action-level condition that supplements the reducer-level condition
   ///   - fileID: Source file identifier for debugging (auto-populated)
   ///   - filePath: Source file path for debugging (auto-populated)
@@ -501,7 +501,7 @@ extension ReduceWithLock {
       @Sendable (_ error: any Error, _ send: Send<Action>) async -> Void
     )? = nil,
     lockAction: A,
-    cancelID: B,
+    boundaryId: B,
     lockCondition: (@Sendable (_ state: State, _ action: Action) -> LockmanResult)? = nil,
     fileID: StaticString = #fileID,
     filePath: StaticString = #filePath,
@@ -516,7 +516,7 @@ extension ReduceWithLock {
       state: state,
       action: action,
       actionId: actionId,
-      cancelID: cancelID,
+      boundaryId: boundaryId,
       lockCondition: lockCondition,
       reducerCondition: reducerLevelCondition,
       lockFailure: lockFailure,
@@ -531,7 +531,7 @@ extension ReduceWithLock {
         unlockOption: unlockOption,
         handleCancellationErrors: handleCancellationErrors,
         action: lockAction,
-        cancelID: cancelID,
+        boundaryId: boundaryId,
         unlockToken: unlockToken,
         lockFailure: lockFailure,
         fileID: fileID,

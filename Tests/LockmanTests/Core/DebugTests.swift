@@ -41,14 +41,14 @@ final class DebugTests: XCTestCase {
     let info1 = LockmanSingleExecutionInfo(actionId: "testAction1", mode: .boundary)
 
     // Acquire locks
-    XCTAssertEqual(strategy.canLock(id: boundaryId, info: info1), .success)
-    strategy.lock(id: boundaryId, info: info1)
+    XCTAssertEqual(strategy.canLock(boundaryId: boundaryId, info: info1), .success)
+    strategy.lock(boundaryId: boundaryId, info: info1)
 
     // This should print a table with the active lock
     LockmanManager.debug.printCurrentLocks()
 
     // Clean up
-    strategy.unlock(id: boundaryId, info: info1)
+    strategy.unlock(boundaryId: boundaryId, info: info1)
   }
 
   func testDebugDescriptionForAllInfoTypes() {

@@ -10,12 +10,12 @@ extension AnyLockmanStrategy {
     id: B,
     info: I
   ) -> LockmanResult {
-    let result = canLock(id: id, info: info)
+    let result = canLock(boundaryId: id, info: info)
     switch result {
     case .success:
-      lock(id: id, info: info)
+      lock(boundaryId: id, info: info)
     case .successWithPrecedingCancellation:
-      lock(id: id, info: info)
+      lock(boundaryId: id, info: info)
     case .failure(_):
       break
     }
@@ -55,18 +55,18 @@ private final class MockLockmanStrategy: LockmanStrategy, @unchecked Sendable {
   private let lock = NSLock()
 
   func canLock<B: LockmanBoundaryId>(
-    id _: B,
+    boundaryId _: B,
     info _: MockLockmanInfo
   ) -> LockmanResult {
     .success
   }
 
   func lock<B: LockmanBoundaryId>(
-    id _: B,
+    boundaryId _: B,
     info _: MockLockmanInfo
   ) {}
 
-  func unlock<B: LockmanBoundaryId>(id _: B, info _: MockLockmanInfo) {}
+  func unlock<B: LockmanBoundaryId>(boundaryId _: B, info _: MockLockmanInfo) {}
 
   func cleanUp() {
     lock.withLock {
@@ -74,10 +74,10 @@ private final class MockLockmanStrategy: LockmanStrategy, @unchecked Sendable {
     }
   }
 
-  func cleanUp<B: LockmanBoundaryId>(id: B) {
+  func cleanUp<B: LockmanBoundaryId>(boundaryId: B) {
     lock.withLock {
       cleanUpWithIdCallCount += 1
-      lastCleanUpId = id
+      lastCleanUpId = boundaryId
     }
   }
 
@@ -408,13 +408,13 @@ final class LockmanFacadeTests: XCTestCase {
       XCTAssertEqual(result, .success)
 
       // Test individual operations
-      let canLockResult = resolvedStrategy.canLock(id: boundaryId, info: info)
+      let canLockResult = resolvedStrategy.canLock(boundaryId: boundaryId, info: info)
       XCTAssertEqual(canLockResult, .success)
 
-      resolvedStrategy.lock(id: boundaryId, info: info)
-      resolvedStrategy.unlock(id: boundaryId, info: info)
+      resolvedStrategy.lock(boundaryId: boundaryId, info: info)
+      resolvedStrategy.unlock(boundaryId: boundaryId, info: info)
       resolvedStrategy.cleanUp()
-      resolvedStrategy.cleanUp(id: boundaryId)
+      resolvedStrategy.cleanUp(boundaryId: boundaryId)
 
       // Verify calls were made
       XCTAssertEqual(mockStrategy.getCleanUpCallCount(), 1)
@@ -488,7 +488,7 @@ final class LockmanIntegrationTests: XCTestCase {
           do {
             let resolved = try container.resolve(MockLockmanStrategy.self)
             let result = resolved.canLock(
-              id: MockBoundaryId(value: "test"),
+              boundaryId: MockBoundaryId(value: "test"),
               info: MockLockmanInfo(actionId: "test")
             )
             return result == .success

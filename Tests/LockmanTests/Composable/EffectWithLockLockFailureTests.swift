@@ -47,7 +47,7 @@ final class EffectWithLockLockFailureTests: XCTestCase {
           let strategy = LockmanSingleExecutionStrategy.shared
 
           // Manually lock it first to cause failure on second attempt
-          strategy.lock(id: TestBoundaryId.testBoundary, info: lockInfo)
+          strategy.lock(boundaryId: TestBoundaryId.testBoundary, info: lockInfo)
 
           return .withLock(
             operation: { send, unlock in
@@ -65,7 +65,7 @@ final class EffectWithLockLockFailureTests: XCTestCase {
               await send(.lockFailureOccurred(error.localizedDescription))
             },
             action: lockAction,
-            cancelID: TestBoundaryId.testBoundary
+            boundaryId: TestBoundaryId.testBoundary
           )
 
         case .testManualUnlockWithOperationError:
@@ -88,7 +88,7 @@ final class EffectWithLockLockFailureTests: XCTestCase {
               await send(.lockFailureOccurred("Should not be called"))
             },
             action: TestAction(),
-            cancelID: TestBoundaryId.testBoundary2
+            boundaryId: TestBoundaryId.testBoundary2
           )
 
         case .lockFailureOccurred(let errorMessage):
@@ -208,7 +208,7 @@ final class EffectWithLockLockFailureTests: XCTestCase {
             // No catch handler
             // No lockFailure handler
             action: EffectWithLockLockFailureTests.TestAction(),
-            cancelID: EffectWithLockLockFailureTests.TestBoundaryId.testBoundary
+            boundaryId: EffectWithLockLockFailureTests.TestBoundaryId.testBoundary
           )
 
         case .completed:

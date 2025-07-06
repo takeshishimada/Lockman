@@ -128,7 +128,7 @@ final class ReduceWithLockIntegrationTests: XCTestCase {
             await send(.setLockAcquired(true))
           },
           lockAction: TestLockAction(),
-          cancelID: cancelID,
+          boundaryId: cancelID,
           lockCondition: { _, _ in
             // Action-level condition
             return .success
@@ -194,8 +194,8 @@ final class ReduceWithLockIntegrationTests: XCTestCase {
     )
 
     // Acquire both locks
-    dynamicStrategy.lock(id: boundary, info: info1)
-    dynamicStrategy.lock(id: boundary, info: info2)
+    dynamicStrategy.lock(boundaryId: boundary, info: info1)
+    dynamicStrategy.lock(boundaryId: boundary, info: info2)
 
     // Verify both locks exist (different uniqueIds)
     let locks = dynamicStrategy.getCurrentLocks()[AnyLockmanBoundaryId(boundary)] ?? []
@@ -203,7 +203,7 @@ final class ReduceWithLockIntegrationTests: XCTestCase {
     XCTAssertEqual(locksWithActionId.count, 2, "Should have 2 locks with same actionId")
 
     // Unlock removes ALL locks with same actionId
-    dynamicStrategy.unlock(id: boundary, info: info1)
+    dynamicStrategy.unlock(boundaryId: boundary, info: info1)
 
     // Verify all locks with the actionId are removed
     let remainingLocks = dynamicStrategy.getCurrentLocks()[AnyLockmanBoundaryId(boundary)] ?? []
@@ -248,7 +248,7 @@ final class ReduceWithLockIntegrationTests: XCTestCase {
               tracker.errorHandlerCalled = true
             },
             lockAction: TestLockAction(),
-            cancelID: TestLockAction().lockmanInfo.actionId,
+            boundaryId: TestLockAction().lockmanInfo.actionId,
             lockCondition: { _, _ in
               // Failing condition
               return .failure(
@@ -325,7 +325,7 @@ final class ReduceWithLockIntegrationTests: XCTestCase {
               await send(.setLockAcquired(true))
             },
             lockAction: TestLockAction(),
-            cancelID: TestLockAction().lockmanInfo.actionId
+            boundaryId: TestLockAction().lockmanInfo.actionId
           )
         case .setLockAcquired(let value):
           state.lockAcquired = value
@@ -385,7 +385,7 @@ final class ReduceWithLockIntegrationTests: XCTestCase {
               unlock()
             },
             lockAction: TestLockAction(),
-            cancelID: TestLockAction().lockmanInfo.actionId
+            boundaryId: TestLockAction().lockmanInfo.actionId
           )
         default:
           return .none
@@ -442,7 +442,7 @@ final class ReduceWithLockIntegrationTests: XCTestCase {
               await send(.setLockAcquired(true))
             },
             lockAction: TestLockAction(),
-            cancelID: TestLockAction().lockmanInfo.actionId,
+            boundaryId: TestLockAction().lockmanInfo.actionId,
             lockCondition: { _, _ in
               // Action-level condition
               return .success
@@ -490,7 +490,7 @@ final class ReduceWithLockIntegrationTests: XCTestCase {
 
     // Create another lock to simulate step 3 failing
     singleExecutionStrategy.lock(
-      id: cancelID,
+      boundaryId: cancelID,
       info: LockmanSingleExecutionInfo(actionId: cancelID, mode: .boundary)
     )
 
@@ -514,7 +514,7 @@ final class ReduceWithLockIntegrationTests: XCTestCase {
               XCTFail("Operation should not execute when step 3 fails")
             },
             lockAction: TestLockAction(),
-            cancelID: TestLockAction().lockmanInfo.actionId,
+            boundaryId: TestLockAction().lockmanInfo.actionId,
             lockCondition: { _, _ in
               tracker.step2Evaluated = true
               return .success  // Step 2 also passes
@@ -549,7 +549,7 @@ final class ReduceWithLockIntegrationTests: XCTestCase {
 
     // Clean up the test lock
     singleExecutionStrategy.unlock(
-      id: cancelID,
+      boundaryId: cancelID,
       info: LockmanSingleExecutionInfo(actionId: cancelID, mode: .boundary)
     )
   }
