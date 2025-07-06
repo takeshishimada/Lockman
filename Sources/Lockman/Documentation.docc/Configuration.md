@@ -25,6 +25,11 @@ LockmanManager.config.defaultUnlockOption = .immediate
 - **`.transition`**: Release after platform-specific screen transition animation
 - **`.delayed(TimeInterval)`**: Release after the specified time interval
 
+**Priority order**:
+1. Explicitly specified in `withLock` call (highest priority)
+2. Action's `unlockOption` property (if implementing `LockmanAction`)
+3. `LockmanManager.config.defaultUnlockOption` (lowest priority)
+
 **Use cases**:
 - Unified release timing considering UI transitions
 - Consistent behavior settings across the application

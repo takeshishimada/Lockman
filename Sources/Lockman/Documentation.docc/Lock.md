@@ -38,7 +38,7 @@ The most basic and recommended usage. Automatically manages lock acquisition and
 
 **Parameters:**
 - `priority`: Task priority (optional)
-- `unlockOption`: Lock release timing (optional, default is configured value)
+- `unlockOption`: Lock release timing (optional, uses priority order: withLock parameter > action's unlockOption > config default)
 - `handleCancellationErrors`: Handling of cancellation errors (optional, default is configured value)
 - `operation`: Processing to execute under exclusive control
 - `catch handler`: Error handler (optional)
@@ -96,4 +96,33 @@ Maintains the same lock while executing multiple Effects sequentially.
 - Maintains the same lock across multiple Effects
 - Suitable for transactional processing
 - If any one fails, the entire process is interrupted
+
+## UnlockOption Priority
+
+When determining the unlock timing, Lockman follows this priority order:
+
+1. **Explicitly specified in method call** (highest priority)
+   ```swift
+   .withLock(
+     unlockOption: .transition, // This takes precedence
+     operation: { send in /* ... */ },
+     action: action,
+     cancelID: cancelID
+   )
+   ```
+
+2. **Action's unlockOption property**
+   ```swift
+   struct MyAction: LockmanAction {
+     var unlockOption: LockmanUnlockOption { .mainRunLoop }
+     // ...
+   }
+   ```
+
+3. **Global configuration** (lowest priority)
+   ```swift
+   LockmanManager.config.defaultUnlockOption = .immediate
+   ```
+
+This allows flexible control from global defaults to action-specific and call-specific overrides.
 
