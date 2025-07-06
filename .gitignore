@@ -10,3 +10,4 @@ xcuserdata/
 .claude/settings.local.json
 build/
 coverage.xcresult/
+Package.resolved
