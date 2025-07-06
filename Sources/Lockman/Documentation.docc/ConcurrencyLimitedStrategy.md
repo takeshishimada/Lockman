@@ -164,7 +164,7 @@ ConcurrencyLimitedStrategyで発生する可能性のあるエラーと、その
 ```swift
 lockFailure: { error, send in
     if case .concurrencyLimitReached(let requestedInfo, let existingInfos, let current) = error as? LockmanConcurrencyLimitedError {
-        send(.concurrencyLimitReached(
+        await send(.concurrencyLimitReached(
             "同時実行制限に到達しました (\(current)/\(requestedInfo.limit))"
         ))
     }

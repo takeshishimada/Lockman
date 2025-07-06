@@ -10,7 +10,7 @@ Unlocking in Lockman is a mechanism for properly releasing acquired locks. It en
 
 ### Automatic Release
 
-In the auto-release version of [withLock](<doc:Lock>), locks are automatically released at the following timings:
+When using [Reducer.lock](<doc:Lock>), [Effect.lock](<doc:Lock>), or the auto-release version of [withLock](<doc:Lock>), locks are automatically released at the following timings:
 
 - **On normal completion**: When processing completes normally
 - **On exception**: When an error occurs
@@ -21,7 +21,7 @@ Automatic release is implemented using defer blocks, ensuring that locks are rel
 
 ### Manual Release
 
-In the manual release version of [withLock](<doc:Lock>), developers explicitly call the unlock() function to release locks.
+Manual release is only available in the manual release version of [withLock](<doc:Lock>). When using [Reducer.lock](<doc:Lock>) or [Effect.lock](<doc:Lock>), locks are always automatically managed.
 
 **Important constraints:**
 - You must call unlock() in all code paths
@@ -48,22 +48,66 @@ Unlock execution timing can be controlled with LockmanUnlockOption:
 
 ## Methods
 
-### Auto-release Usage Example
+### Auto-release with Reducer.lock (Recommended)
+
+```swift
+var body: some ReducerOf<Self> {
+    Reduce { state, action in
+        switch action {
+        case .startWork:
+            return .run { send in
+                try await someAsyncWork()
+                await send(.completed)
+                // Lock is automatically released here
+            }
+            .catch { error, send in
+                await send(.failed(error))
+                // Automatically released after error handling
+            }
+        }
+    }
+    .lock(
+        boundaryId: CancelID.feature,
+        unlockOption: .immediate  // Configure unlock timing
+    )
+}
+```
+
+### Auto-release with Effect.lock
+
+```swift
+return .run { send in
+    try await someAsyncWork()
+    await send(.completed)
+    // Lock is automatically released here
+}
+.catch { error, send in
+    await send(.failed(error))
+    // Automatically released after error handling
+}
+.lock(
+    action: action,
+    boundaryId: CancelID.feature,
+    unlockOption: .transition  // Configure unlock timing
+)
+```
+
+### Auto-release with withLock
 
 ```swift
 .withLock(
   operation: { send in
     // Execute processing
     try await someAsyncWork()
-    send(.completed)
+    await send(.completed)
     // Lock is automatically released here
   },
   catch handler: { error, send in
     // Automatically released after error handling
-    send(.failed(error))
+    await send(.failed(error))
   },
   action: action,
-  boundaryId: cancelID
+  boundaryId: CancelID.feature
 )
 ```
 
