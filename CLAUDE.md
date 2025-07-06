@@ -1,7 +1,16 @@
 # CLAUDE.md
 
+## Session Start Analysis
+When starting a new session for Lockman development, you MUST first analyze the core source files in the Sources directory:
+1. Read and understand the main implementation files in Sources/Lockman/
+2. Pay special attention to protocol definitions, public APIs, and core functionality
+3. This ensures consistency with existing code patterns and architecture
+
 ## Purpose
 Develop a library to implement exclusive control of user actions in application development using TCA
+
+## Current Work Items
+See CLAUDE_WIP.md for v1.0 roadmap and work in progress tasks
 
 ## Development Guidelines
 - Swift versions: 6.0, 5.10, 5.9
