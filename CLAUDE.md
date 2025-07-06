@@ -215,9 +215,6 @@ When building example projects, use the following flags to skip macro validation
 ```bash
 # Skip macro validation for Strategies example
 xcodebuild build -scheme Strategies -configuration Debug -destination "platform=iOS Simulator,name=iPhone 16" -workspace Examples/Strategies/Strategies.xcodeproj/project.xcworkspace -skipMacroValidation
-
-# Skip macro validation for GitHubClient example  
-xcodebuild build -scheme GitHubClient -configuration Debug -destination "platform=iOS Simulator,name=iPhone 16" -workspace Examples/GitHubClient/GitHubClient.xcodeproj/project.xcworkspace -skipMacroValidation
 ```
 
 Note: The `-skipMacroValidation` flag prevents build failures due to macro approval requirements when building from command line.

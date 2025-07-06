@@ -14,7 +14,7 @@ DESTINATION = platform="$(PLATFORM_$(PLATFORM))"
 
 PLATFORM_ID = $(shell echo "$(DESTINATION)" | sed -E "s/.+,id=(.+)/\1/")
 
-SCHEME = Lockman-Package
+SCHEME = Lockman
 
 WORKSPACE = Lockman.xcworkspace
 
