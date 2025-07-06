@@ -79,7 +79,7 @@ final class EffectLockMethodTests: XCTestCase {
     try? container.register(strategy)
 
     await LockmanManager.withTestContainer(container) {
-      let store = TestStore(
+      let store = await TestStore(
         initialState: TestFeature.State()
       ) {
         TestFeature()
@@ -138,7 +138,7 @@ final class EffectLockMethodTests: XCTestCase {
     try? container.register(strategy)
 
     await LockmanManager.withTestContainer(container) {
-      let store = TestStore(
+      let store = await TestStore(
         initialState: TestFeature.State()
       ) {
         TestFeatureWithLockFailure()
