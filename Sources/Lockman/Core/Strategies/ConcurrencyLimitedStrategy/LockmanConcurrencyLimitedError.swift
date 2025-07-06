@@ -13,7 +13,7 @@ public enum LockmanConcurrencyLimitedError: LockmanError {
 
   public var errorDescription: String? {
     switch self {
-    case let .concurrencyLimitReached(requestedInfo, _, current):
+    case .concurrencyLimitReached(let requestedInfo, _, let current):
       return
         "Concurrency limit reached for '\(requestedInfo.concurrencyId)': \(current)/\(requestedInfo.limit)"
     }

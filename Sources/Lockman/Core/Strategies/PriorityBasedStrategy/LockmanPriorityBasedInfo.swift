@@ -114,9 +114,9 @@ public struct LockmanPriorityBasedInfo: LockmanInfo, Sendable, Equatable {
     switch priority {
     case .none:
       priorityStr = ".none"
-    case let .high(behavior):
+    case .high(let behavior):
       priorityStr = ".high(.\(behavior))"
-    case let .low(behavior):
+    case .low(let behavior):
       priorityStr = ".low(.\(behavior))"
     }
 
@@ -249,8 +249,8 @@ extension LockmanPriorityBasedInfo.Priority {
     switch self {
     case .none:
       return nil
-    case let .high(behavior),
-      let .low(behavior):
+    case .high(let behavior),
+      .low(let behavior):
       return behavior
     }
   }

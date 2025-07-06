@@ -99,10 +99,10 @@ struct ConcurrencyLimitedStrategyFeature {
   var body: some ReducerOf<Self> {
     Reduce { state, action in
       switch action {
-      case let .view(viewAction):
+      case .view(let viewAction):
         return handleViewAction(viewAction, state: &state)
 
-      case let .internal(internalAction):
+      case .internal(let internalAction):
         return handleInternalAction(internalAction, state: &state)
       }
     }
@@ -114,7 +114,7 @@ struct ConcurrencyLimitedStrategyFeature {
     state: inout State
   ) -> Effect<Action> {
     switch action {
-    case let .downloadButtonTapped(id):
+    case .downloadButtonTapped(let id):
       guard state.downloads[id: id] != nil else { return .none }
 
       // SingleExecutionStrategy will handle duplicate prevention
@@ -149,28 +149,28 @@ struct ConcurrencyLimitedStrategyFeature {
     state: inout State
   ) -> Effect<Action> {
     switch action {
-    case let .downloadStarted(id):
+    case .downloadStarted(let id):
       state.downloads[id: id]?.status = .downloading
       state.downloads[id: id]?.progress = 0
       state.currentExecutionCount += 1
       return .none
 
-    case let .downloadProgress(id: id, progress: progress):
+    case .downloadProgress(let id, let progress):
       state.downloads[id: id]?.progress = progress
       return .none
 
-    case let .downloadCompleted(id):
+    case .downloadCompleted(let id):
       state.downloads[id: id]?.status = .completed
       state.downloads[id: id]?.progress = 1.0
       state.currentExecutionCount -= 1
       return .none
 
-    case let .downloadFailed(id: id, error: error):
+    case .downloadFailed(let id, let error):
       state.downloads[id: id]?.status = .failed(error)
       state.currentExecutionCount -= 1
       return .none
 
-    case let .downloadRejected(id: id, reason: reason):
+    case .downloadRejected(let id, let reason):
       // Reset progress if was previously downloading/completed
       if state.downloads[id: id] != nil {
         state.downloads[id: id]?.status = .rejected(reason)
@@ -178,7 +178,7 @@ struct ConcurrencyLimitedStrategyFeature {
       }
       return .none
 
-    case let .handleLockFailure(id: id, error: error):
+    case .handleLockFailure(let id, let error):
       // Handle errors from both strategies
       let reason: String
       if let concurrencyError = error as? LockmanConcurrencyLimitedError,

@@ -91,11 +91,11 @@ final class EffectWithLockLockFailureTests: XCTestCase {
             cancelID: TestBoundaryId.testBoundary2
           )
 
-        case let .lockFailureOccurred(errorMessage):
+        case .lockFailureOccurred(let errorMessage):
           state.lockFailureErrorMessage = errorMessage
           return .none
 
-        case let .operationErrorOccurred(errorMessage):
+        case .operationErrorOccurred(let errorMessage):
           state.operationErrorMessage = errorMessage
           return .none
 

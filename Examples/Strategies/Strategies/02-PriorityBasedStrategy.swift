@@ -76,10 +76,10 @@ struct PriorityBasedStrategyFeature {
   var body: some Reducer<State, Action> {
     Reduce { state, action in
       switch action {
-      case let .view(viewAction):
+      case .view(let viewAction):
         return handleViewAction(viewAction, state: &state)
 
-      case let .internal(internalAction):
+      case .internal(let internalAction):
         return handleInternalAction(internalAction, state: &state)
       }
     }
@@ -130,7 +130,7 @@ struct PriorityBasedStrategyFeature {
             failureMessage = "Blocked by higher priority"
           case .samePriorityConflict:
             failureMessage = "Same priority running"
-          case let .precedingActionCancelled(cancelledInfo):
+          case .precedingActionCancelled(let cancelledInfo):
             // Update the cancelled task's button to show it was cancelled
             let cancelledButton: Action.ButtonType
             switch cancelledInfo.actionId {
@@ -169,7 +169,7 @@ struct PriorityBasedStrategyFeature {
     state: inout State
   ) -> Effect<Action> {
     switch action {
-    case let .updateResult(button: button, result: result):
+    case .updateResult(let button, let result):
       switch button {
       case .high:
         state.highButtonResult = result

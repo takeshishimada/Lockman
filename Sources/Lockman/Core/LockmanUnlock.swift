@@ -61,7 +61,7 @@ public struct LockmanUnlock<B: LockmanBoundaryId, I: LockmanInfo>: Sendable {
         self.performUnlockImmediately()
       }
 
-    case let .delayed(interval):
+    case .delayed(let interval):
       DispatchQueue.main.asyncAfter(deadline: .now() + interval) {
         self.performUnlockImmediately()
       }

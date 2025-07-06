@@ -29,7 +29,7 @@ final class LockmanConfigurationTests: XCTestCase {
 
     // Change to delayed
     LockmanManager.config.defaultUnlockOption = .delayed(0.5)
-    if case let .delayed(interval) = LockmanManager.config.defaultUnlockOption {
+    if case .delayed(let interval) = LockmanManager.config.defaultUnlockOption {
       XCTAssertEqual(interval, 0.5)
     } else {
       XCTFail("Expected delayed unlock option")
@@ -98,7 +98,7 @@ final class LockmanConfigurationTests: XCTestCase {
 
     // Access multiple times
     for _ in 0..<10 {
-      if case let .delayed(interval) = LockmanManager.config.defaultUnlockOption {
+      if case .delayed(let interval) = LockmanManager.config.defaultUnlockOption {
         XCTAssertEqual(interval, 1.0)
       } else {
         XCTFail("Expected delayed unlock option with 1.0 second interval")

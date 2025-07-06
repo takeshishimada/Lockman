@@ -31,7 +31,7 @@ Develop a library to implement exclusive control of user actions in application 
 1. Make your code changes
 2. Run `make format` to format all Swift files
 3. Review the formatting changes and stage all modified files
-4. Run tests using `xcodebuild test -configuration Debug -scheme "Lockman-Package" -destination "platform=macOS,name=My Mac" -workspace .github/package.xcworkspace -skipMacroValidation` for macOS or `make xcodebuild` for iOS
+4. Run tests using `xcodebuild test -configuration Debug -scheme "Lockman" -destination "platform=macOS,name=My Mac" -workspace .github/package.xcworkspace -skipMacroValidation` for macOS or `make xcodebuild` for iOS
 5. Fix any test failures before proceeding
 6. Create your commit with a semantic commit message
 7. Push to your feature branch
@@ -167,7 +167,7 @@ Every PR must have at least one label from each applicable category:
 
 **For macOS (Recommended - no simulator needed):**
 ```bash
-xcodebuild test -configuration Debug -scheme "Lockman-Package" -destination "platform=macOS,name=My Mac" -workspace .github/package.xcworkspace -skipMacroValidation
+xcodebuild test -configuration Debug -scheme "Lockman" -destination "platform=macOS,name=My Mac" -workspace .github/package.xcworkspace -skipMacroValidation
 ```
 
 **For iOS using Makefile:**
@@ -189,7 +189,7 @@ Note: The Makefile has a known issue with macOS destination specification. Use t
 xcrun simctl list devices available | grep iPhone
 
 # Then use a specific simulator (example with iPhone 16):
-xcodebuild test -configuration Debug -scheme "Lockman-Package" -destination "platform=iOS Simulator,name=iPhone 16" -workspace .github/package.xcworkspace -skipMacroValidation
+xcodebuild test -configuration Debug -scheme "Lockman" -destination "platform=iOS Simulator,name=iPhone 16" -workspace .github/package.xcworkspace -skipMacroValidation
 ```
 
 ## Building Examples

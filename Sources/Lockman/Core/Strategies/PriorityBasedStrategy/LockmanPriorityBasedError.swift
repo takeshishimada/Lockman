@@ -29,12 +29,12 @@ public enum LockmanPriorityBasedError: LockmanError {
 
   public var errorDescription: String? {
     switch self {
-    case let .higherPriorityExists(requested, currentHighest):
+    case .higherPriorityExists(let requested, let currentHighest):
       return
         "Cannot acquire lock: requested priority \(requested) is lower than current highest priority \(currentHighest)."
-    case let .samePriorityConflict(priority):
+    case .samePriorityConflict(let priority):
       return "Cannot acquire lock: another action with priority \(priority) is already running."
-    case let .precedingActionCancelled(cancelledInfo):
+    case .precedingActionCancelled(let cancelledInfo):
       return
         "Lock acquired, preceding action '\(cancelledInfo.actionId)' will be cancelled."
     }

@@ -337,7 +337,7 @@ private struct SingleExecutionBurstFeature {
 
     var lockmanInfo: LockmanSingleExecutionInfo {
       switch self {
-      case let .burst(id), let .process(id, _), let .complete(id, _):
+      case .burst(let id), .process(let id, _), .complete(let id, _):
         // Use action ID to create competition
         return .init(actionId: "action-\(id)", mode: .boundary)
       }
@@ -351,7 +351,7 @@ private struct SingleExecutionBurstFeature {
   var body: some ReducerOf<Self> {
     Reduce { state, action in
       switch action {
-      case let .burst(id):
+      case .burst(let id):
         state.activeCount += 1
         let startTime = Date()
 
@@ -363,14 +363,14 @@ private struct SingleExecutionBurstFeature {
           cancelID: CancelID.burst
         )
 
-      case let .process(id, startTime):
+      case .process(let id, let startTime):
         // Simulate some work (5-10ms)
         return .run { send in
           try? await Task.sleep(nanoseconds: UInt64.random(in: 5_000_000...10_000_000))
           await send(.complete(id: id, startTime: startTime))
         }
 
-      case let .complete(id, _):
+      case .complete(let id, _):
         state.completedCount += 1
         state.activeCount -= 1
         state.results[id] = Date()
@@ -397,7 +397,7 @@ private struct PriorityBasedBurstFeature {
 
     var lockmanInfo: LockmanPriorityBasedInfo {
       switch self {
-      case let .burst(id, priority):
+      case .burst(let id, let priority):
         let lockmanPriority: LockmanPriorityBasedInfo.Priority
         switch priority {
         case .high:
@@ -409,7 +409,7 @@ private struct PriorityBasedBurstFeature {
         }
         return .init(actionId: "action-\(id)", priority: lockmanPriority)
 
-      case let .process(id, _), let .complete(id, _):
+      case .process(let id, _), .complete(let id, _):
         // Default to low for internal actions
         return .init(actionId: "action-\(id)", priority: .low(.replaceable))
       }
@@ -423,7 +423,7 @@ private struct PriorityBasedBurstFeature {
   var body: some ReducerOf<Self> {
     Reduce { state, action in
       switch action {
-      case let .burst(id, _):
+      case .burst(let id, _):
         state.activeCount += 1
         let startTime = Date()
 
@@ -435,14 +435,14 @@ private struct PriorityBasedBurstFeature {
           cancelID: CancelID.burst
         )
 
-      case let .process(id, startTime):
+      case .process(let id, let startTime):
         // Simulate some work (5-10ms)
         return .run { send in
           try? await Task.sleep(nanoseconds: UInt64.random(in: 5_000_000...10_000_000))
           await send(.complete(id: id, startTime: startTime))
         }
 
-      case let .complete(id, _):
+      case .complete(let id, _):
         state.completedCount += 1
         state.activeCount -= 1
         state.results[id] = Date()

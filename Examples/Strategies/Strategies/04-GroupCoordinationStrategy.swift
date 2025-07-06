@@ -92,10 +92,10 @@ struct GroupCoordinationStrategyFeature {
   var body: some ReducerOf<Self> {
     Reduce { state, action in
       switch action {
-      case let .view(viewAction):
+      case .view(let viewAction):
         return handleViewAction(viewAction, state: &state)
 
-      case let .internal(internalAction):
+      case .internal(let internalAction):
         return handleInternalAction(internalAction, state: &state)
       }
     }
@@ -232,7 +232,7 @@ struct GroupCoordinationStrategyFeature {
       }
       return .none
 
-    case let .syncFailed(error):
+    case .syncFailed(let error):
       state.syncStatus = .failed(error)
       state.activeOperations.remove("Sync")
       if state.activeOperations.isEmpty {
@@ -244,20 +244,20 @@ struct GroupCoordinationStrategyFeature {
       state.processingProgress = 0
       return .none
 
-    case let .operationStarted(operation):
+    case .operationStarted(let operation):
       state.activeOperations.insert(operation)
       return .none
 
-    case let .operationCompleted(operation):
+    case .operationCompleted(let operation):
       state.activeOperations.remove(operation)
       return .none
 
-    case let .operationFailed(operation: operation, error: error):
+    case .operationFailed(let operation, let error):
       state.activeOperations.remove(operation)
       state.syncStatus = .failed("\(operation) failed: \(error)")
       return .none
 
-    case let .updateProgress(operation: operation, progress: progress):
+    case .updateProgress(let operation, let progress):
       switch operation {
       case "Upload":
         state.uploadProgress = progress
@@ -270,7 +270,7 @@ struct GroupCoordinationStrategyFeature {
       }
       return .none
 
-    case let .handleLockFailure(operation: operation, error: error):
+    case .handleLockFailure(let operation, let error):
       if let groupError = error as? LockmanGroupCoordinationError {
         switch groupError {
         case .memberCannotJoinEmptyGroup:
@@ -438,7 +438,7 @@ struct GroupCoordinationStrategyView: View {
     case .completed:
       Label("Completed", systemImage: "checkmark.circle.fill")
         .foregroundColor(.green)
-    case let .failed(error):
+    case .failed(let error):
       Text(error)
         .foregroundColor(.red)
         .font(.caption)

@@ -278,7 +278,7 @@ private func extractStrategyTypeNames(
   from attributeNode: AttributeSyntax,
   expectedCount: Int
 ) throws -> [String] {
-  guard case let .argumentList(arguments) = attributeNode.arguments else {
+  guard case .argumentList(let arguments) = attributeNode.arguments else {
     throw LockmanMacroError.invalidArguments(
       "@LockmanCompositeStrategy requires \(expectedCount) strategy arguments."
     )

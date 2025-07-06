@@ -24,11 +24,11 @@ final class LockmanSingleExecutionActionTests: XCTestCase {
 
     var actionName: String {
       switch self {
-      case let .fetchUser(id):
+      case .fetchUser(let id):
         return "fetchUser_\(id)"
-      case let .updateProfile(userId, _):
+      case .updateProfile(let userId, _):
         return "updateProfile_\(userId)"
-      case let .deletePost(postId):
+      case .deletePost(let postId):
         return "deletePost_\(postId)"
       }
     }

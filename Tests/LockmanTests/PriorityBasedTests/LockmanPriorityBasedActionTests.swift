@@ -278,7 +278,7 @@ final class LockmanPriorityBasedActionTests: XCTestCase {
         _ = try emptyContainer.resolve(action.strategyType)
         XCTFail("Should have thrown an error")
       } catch let error as LockmanRegistrationError {
-        if case let .strategyNotRegistered(strategyName) = error {
+        if case .strategyNotRegistered(let strategyName) = error {
           XCTAssertTrue(strategyName.contains("LockmanPriorityBasedStrategy"))
         } else {
           XCTFail("Wrong error case")

@@ -345,7 +345,7 @@ final class EffectLockmanErrorTests: XCTestCase {
 
     // Test that error details are accessible
     switch originalError {
-    case let .strategyNotRegistered(strategyType):
+    case .strategyNotRegistered(let strategyType):
       XCTAssertEqual(strategyType, "DetailedStrategyName")
     default:
       XCTFail("Expected strategyNotRegistered error")

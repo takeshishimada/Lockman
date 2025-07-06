@@ -257,7 +257,7 @@ final class LockmanMainTests: XCTestCase {
         XCTFail("Should throw for unregistered strategy")
       } catch let error as LockmanRegistrationError {
         switch error {
-        case let .strategyNotRegistered(type):
+        case .strategyNotRegistered(let type):
           XCTAssertTrue(type.contains("LockmanSingleExecutionStrategy"))
         default:
           XCTFail("Wrong error type")
@@ -281,7 +281,7 @@ final class LockmanMainTests: XCTestCase {
       XCTFail("Should throw for duplicate registration")
     } catch let error as LockmanRegistrationError {
       switch error {
-      case let .strategyAlreadyRegistered(type):
+      case .strategyAlreadyRegistered(let type):
         XCTAssertTrue(type.contains("LockmanSingleExecutionStrategy"))
       default:
         XCTFail("Wrong error type")

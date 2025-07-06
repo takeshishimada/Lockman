@@ -102,7 +102,7 @@ final class LockmanErrorEnhancedTests: XCTestCase {
 
     // Same error type with same value should be equal
     switch (error1a, error1b) {
-    case let (.strategyNotRegistered(a), .strategyNotRegistered(b)):
+    case (.strategyNotRegistered(let a), .strategyNotRegistered(let b)):
       XCTAssertEqual(a, b)
     default:
       XCTFail("Expected strategyNotRegistered errors")
@@ -110,7 +110,7 @@ final class LockmanErrorEnhancedTests: XCTestCase {
 
     // Same error type with different values should not be equal
     switch (error1a, error1c) {
-    case let (.strategyNotRegistered(a), .strategyNotRegistered(c)):
+    case (.strategyNotRegistered(let a), .strategyNotRegistered(let c)):
       XCTAssertNotEqual(a, c)
     default:
       XCTFail("Expected strategyNotRegistered errors")
@@ -142,7 +142,7 @@ final class LockmanErrorEnhancedTests: XCTestCase {
         try container.register(strategy)
       } catch let error as LockmanRegistrationError {
         switch error {
-        case let .strategyAlreadyRegistered(strategyType):
+        case .strategyAlreadyRegistered(let strategyType):
           XCTAssertTrue(strategyType.contains("LockmanSingleExecutionStrategy"))
         default:
           XCTFail("Expected strategyAlreadyRegistered error")
@@ -185,7 +185,7 @@ final class LockmanErrorEnhancedTests: XCTestCase {
       XCTFail("Should have thrown an error")
     } catch let error as LockmanRegistrationError {
       switch error {
-      case let .strategyNotRegistered(strategyType):
+      case .strategyNotRegistered(let strategyType):
         XCTAssertTrue(strategyType.contains("LockmanPriorityBasedStrategy"))
         XCTAssertGreaterThan(strategyType.count, 10)  // Should be descriptive
       default:

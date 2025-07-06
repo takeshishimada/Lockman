@@ -99,10 +99,10 @@ struct DynamicConditionStrategyFeature {
   var body: some ReducerOf<Self> {
     Reduce { state, action in
       switch action {
-      case let .view(viewAction):
+      case .view(let viewAction):
         return handleViewAction(viewAction, state: &state)
 
-      case let .internal(internalAction):
+      case .internal(let internalAction):
         return handleInternalAction(internalAction, state: &state)
       }
     }
@@ -194,7 +194,7 @@ struct DynamicConditionStrategyFeature {
         cancelID: CancelID.maintenance
       )
 
-    case let .setHour(hour):
+    case .setHour(let hour):
       state.currentHour = hour
       return .none
 
@@ -236,7 +236,7 @@ struct DynamicConditionStrategyFeature {
         cancelID: CancelID.report
       )
 
-    case let .selectDay(day):
+    case .selectDay(let day):
       state.selectedDay = day
       return .none
     }
@@ -272,7 +272,7 @@ struct DynamicConditionStrategyFeature {
       state.reportResult = "✅ Report generated for \(state.selectedDay.name)"
       return .none
 
-    case let .operationFailed(operation: operation, error: error):
+    case .operationFailed(let operation, let error):
       switch operation {
       case "Sync":
         state.syncResult = "❌ \(error)"

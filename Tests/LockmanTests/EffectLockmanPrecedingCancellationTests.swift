@@ -175,7 +175,7 @@ final class EffectWithLockPrecedingCancellationTests: XCTestCase {
             cancelID: CancelID.task
           )
 
-        case let .taskCompleted(priority):
+        case .taskCompleted(let priority):
           switch priority {
           case .low:
             state.lowPriorityRunning = false
@@ -184,7 +184,7 @@ final class EffectWithLockPrecedingCancellationTests: XCTestCase {
           }
           return .none
 
-        case let .lockFailureOccurred(actionId):
+        case .lockFailureOccurred(let actionId):
           state.lastCancelledActionId = actionId
           state.lockFailureCallCount += 1
           return .none

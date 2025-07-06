@@ -47,10 +47,10 @@ struct SingleExecutionStrategyFeature {
   var body: some Reducer<State, Action> {
     Reduce { state, action in
       switch action {
-      case let .view(viewAction):
+      case .view(let viewAction):
         return handleViewAction(viewAction, state: &state)
 
-      case let .internal(internalAction):
+      case .internal(let internalAction):
         return handleInternalAction(internalAction, state: &state)
       }
     }

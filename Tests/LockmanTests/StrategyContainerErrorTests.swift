@@ -67,7 +67,7 @@ final class StrategyContainerErrorTests: XCTestCase {
       XCTFail("Should have thrown error")
     } catch let error as LockmanRegistrationError {
       switch error {
-      case let .strategyAlreadyRegistered(strategyType):
+      case .strategyAlreadyRegistered(let strategyType):
         XCTAssertTrue(strategyType.contains("MockStrategyA"))
       default:
         XCTFail("Expected strategyAlreadyRegistered error")
@@ -105,7 +105,7 @@ final class StrategyContainerErrorTests: XCTestCase {
       XCTFail("Should have thrown error")
     } catch let error as LockmanRegistrationError {
       switch error {
-      case let .strategyAlreadyRegistered(strategyType):
+      case .strategyAlreadyRegistered(let strategyType):
         XCTAssertTrue(strategyType.contains("LockmanSingleExecutionStrategy"))
         XCTAssertGreaterThan(strategyType.count, 10)  // Should be descriptive
       default:
@@ -188,7 +188,7 @@ final class StrategyContainerErrorTests: XCTestCase {
       XCTFail("Should have thrown error")
     } catch let error as LockmanRegistrationError {
       switch error {
-      case let .strategyNotRegistered(strategyType):
+      case .strategyNotRegistered(let strategyType):
         XCTAssertTrue(strategyType.contains("MockStrategyA"))
         XCTAssertGreaterThan(strategyType.count, 5)  // Should be descriptive
       default:
@@ -228,7 +228,7 @@ final class StrategyContainerErrorTests: XCTestCase {
         XCTFail("Should have thrown error for \(strategyType)")
       } catch let error as LockmanRegistrationError {
         switch error {
-        case let .strategyNotRegistered(name):
+        case .strategyNotRegistered(let name):
           XCTAssertGreaterThan(name.count, 10)  // Should be descriptive
           XCTAssertTrue(name.contains("Strategy"))  // Should contain strategy identifier
         default:

@@ -537,7 +537,7 @@ extension Effect {
     // Check if the error is a known LockmanRegistrationError type
     if let error = error as? LockmanRegistrationError {
       switch error {
-      case let .strategyNotRegistered(strategyType):
+      case .strategyNotRegistered(let strategyType):
         reportIssue(
           "Effect.withLock strategy '\(strategyType)' not registered. Register before use.",
           fileID: fileID,
@@ -546,7 +546,7 @@ extension Effect {
           column: column
         )
 
-      case let .strategyAlreadyRegistered(strategyType):
+      case .strategyAlreadyRegistered(let strategyType):
         reportIssue(
           "Effect.withLock strategy '\(strategyType)' already registered.",
           fileID: fileID,

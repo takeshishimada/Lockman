@@ -32,16 +32,16 @@ public enum LockmanGroupCoordinationError: LockmanError {
 
   public var errorDescription: String? {
     switch self {
-    case let .leaderCannotJoinNonEmptyGroup(groupIds):
+    case .leaderCannotJoinNonEmptyGroup(let groupIds):
       return
         "Cannot acquire lock: leader cannot join non-empty groups \(groupIds.map { "\($0)" }.sorted())."
-    case let .memberCannotJoinEmptyGroup(groupIds):
+    case .memberCannotJoinEmptyGroup(let groupIds):
       return
         "Cannot acquire lock: member cannot join empty groups \(groupIds.map { "\($0)" }.sorted())."
-    case let .actionAlreadyInGroup(existingInfo, groupIds):
+    case .actionAlreadyInGroup(let existingInfo, let groupIds):
       return
         "Cannot acquire lock: action '\(existingInfo.actionId)' is already in groups \(groupIds.map { "\($0)" }.sorted())."
-    case let .blockedByExclusiveLeader(leaderInfo, groupId, entryPolicy):
+    case .blockedByExclusiveLeader(let leaderInfo, let groupId, let entryPolicy):
       return
         "Cannot acquire lock: blocked by exclusive leader '\(leaderInfo.actionId)' in group '\(groupId)' (policy: \(entryPolicy))."
     }

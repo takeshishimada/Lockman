@@ -54,15 +54,15 @@ public enum LockmanMacroError: Error, CustomStringConvertible {
   /// what went wrong and how to fix their code.
   public var description: String {
     switch self {
-    case let .invalidDeclaration(message):
+    case .invalidDeclaration(let message):
       return message
-    case let .invalidCaseName(message):
+    case .invalidCaseName(let message):
       return message
-    case let .invalidArguments(message):
+    case .invalidArguments(let message):
       return message
-    case let .unsupportedStrategyCount(count):
+    case .unsupportedStrategyCount(let count):
       return "@LockmanCompositeStrategy supports 2-5 strategies, but \(count) were provided."
-    case let .strategyResolutionFailed(message):
+    case .strategyResolutionFailed(let message):
       return "Failed to resolve strategy: \(message)"
     }
   }

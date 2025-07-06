@@ -20,11 +20,11 @@ public enum LockmanRegistrationError: LockmanError {
   /// A localized message describing what error occurred.
   public var errorDescription: String? {
     switch self {
-    case let .strategyAlreadyRegistered(strategyType):
+    case .strategyAlreadyRegistered(let strategyType):
       return
         "Strategy '\(strategyType)' is already registered. Each strategy type can only be registered once."
 
-    case let .strategyNotRegistered(strategyType):
+    case .strategyNotRegistered(let strategyType):
       return
         "Strategy '\(strategyType)' is not registered. Please register the strategy before attempting to resolve it."
     }
@@ -46,11 +46,11 @@ public enum LockmanRegistrationError: LockmanError {
   /// A localized message describing how one might recover from the failure.
   public var recoverySuggestion: String? {
     switch self {
-    case let .strategyAlreadyRegistered(strategyType):
+    case .strategyAlreadyRegistered(let strategyType):
       return
         "Check if '\(strategyType)' is being registered multiple times. Use container.isRegistered(_:) to check before registration, or ensure registration happens only once during app startup."
 
-    case let .strategyNotRegistered(strategyType):
+    case .strategyNotRegistered(let strategyType):
       return
         "Add 'try LockmanManager.container.register(\(strategyType).shared)' to your app startup code, or verify that registration is happening before this resolution attempt."
     }

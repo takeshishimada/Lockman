@@ -231,7 +231,7 @@ final class LockmanStrategyContainerTests: XCTestCase {
       XCTFail("Should have thrown an error")
     } catch let error as LockmanRegistrationError {
       switch error {
-      case let .strategyNotRegistered(strategyType):
+      case .strategyNotRegistered(let strategyType):
         XCTAssertTrue(strategyType.contains("MockLockmanStrategy"))
       default:
         XCTFail("Wrong error type")
@@ -265,7 +265,7 @@ final class LockmanStrategyContainerTests: XCTestCase {
       XCTFail("Should have thrown an error")
     } catch let error as LockmanRegistrationError {
       switch error {
-      case let .strategyAlreadyRegistered(strategyType):
+      case .strategyAlreadyRegistered(let strategyType):
         XCTAssertTrue(strategyType.contains("MockLockmanStrategy"))
       default:
         XCTFail("Wrong error type")
