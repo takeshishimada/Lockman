@@ -78,22 +78,58 @@ enum ViewAction {
 }
 ```
 
-### Usage within Effects
+### Usage with Reducer.lock()
+
+```swift
+var body: some ReducerOf<Self> {
+    Reduce { state, action in
+        switch action {
+        case .saveButtonTapped:
+            return .run { send in
+                try await saveUserData()
+                await send(.saveCompleted)
+            }
+            .catch { error, send in
+                await send(.saveError(error.localizedDescription))
+            }
+            
+        case .loadButtonTapped:
+            return .run { send in
+                let data = try await loadUserData()
+                await send(.loadCompleted(data))
+            }
+            // Other cases...
+        }
+    }
+    .lock(
+        boundaryId: CancelID.userAction,
+        lockFailure: { error, send in
+            if case .actionAlreadyRunning(let info) = error as? LockmanSingleExecutionError {
+                await send(.showBusyMessage("\(info.actionId) is currently running"))
+            }
+        }
+    )
+}
+```
+
+### Advanced Usage with withLock
+
+For cases requiring fine-grained control:
 
 ```swift
 case .saveButtonTapped:
     return .withLock(
         operation: { send in
             try await saveUserData()
-            send(.saveCompleted)
+            await send(.saveCompleted)
         },
         catch handler: { error, send in
-            send(.saveError(error.localizedDescription))
+            await send(.saveError(error.localizedDescription))
         },
         lockFailure: { error, send in
-            send(.saveBusy("Save process is currently running"))
+            await send(.saveBusy("Save process is currently running"))
         },
-        action: .save,
+        action: action,
         boundaryId: CancelID.userAction
     )
 ```

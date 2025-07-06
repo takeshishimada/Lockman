@@ -213,19 +213,19 @@ enum BusinessError: Error {
 lockFailure: { error, send in
     switch error as? BusinessError {
     case .insufficientFunds(let required, let available):
-        send(.showError("Insufficient funds: Required ¥\(required), Available ¥\(available)"))
+        await send(.showError("Insufficient funds: Required ¥\(required), Available ¥\(available)"))
         
     case .dailyLimitExceeded(let limit):
-        send(.showError("Daily limit of ¥\(limit) exceeded"))
+        await send(.showError("Daily limit of ¥\(limit) exceeded"))
         
     case .accountSuspended(let reason):
-        send(.showError("Account suspended: \(reason)"))
+        await send(.showError("Account suspended: \(reason)"))
         
     case .outsideBusinessHours:
-        send(.showError("Outside business hours (Weekdays 9:00-17:00)"))
+        await send(.showError("Outside business hours (Weekdays 9:00-17:00)"))
         
     default:
-        send(.showError("Cannot perform operation"))
+        await send(.showError("Cannot perform operation"))
     }
 }
 ```

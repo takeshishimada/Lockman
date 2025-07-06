@@ -18,7 +18,81 @@ Lockman determines the success or failure of lock acquisition based on the strat
 
 ## Methods
 
-Lockman provides three main methods that can be used according to different purposes.
+Lockman provides several methods that can be used according to different purposes.
+
+### Reducer.lock (Automatic Lock Management)
+
+The recommended approach for most use cases. Applies automatic lock management to all effects produced by actions implementing `LockmanAction`.
+
+```swift
+@Reducer
+struct Feature {
+  var body: some ReducerOf<Self> {
+    Reduce { state, action in
+      switch action {
+      case .fetch:
+        return .run { send in
+          // This effect will be automatically locked
+          let data = try await fetchData()
+          await send(.fetchResponse(.success(data)))
+        }
+      case .fetchResponse:
+        return .none
+      }
+    }
+    .lock(
+      boundaryId: CancelID.feature,
+      unlockOption: .immediate, // Optional
+      lockFailure: { error, send in // Optional
+        await send(.lockFailed)
+      }
+    )
+  }
+}
+```
+
+**Parameters:**
+- `boundaryId`: Boundary identifier for all locked actions
+- `unlockOption`: Default lock release timing (optional)
+- `lockFailure`: Handler for lock acquisition failures (optional)
+
+**Features:**
+- Automatic lock management for LockmanAction effects
+- Non-LockmanAction effects pass through unchanged
+- Centralized error handling
+- Seamless integration with existing reducers
+
+### Effect.lock (Method Chain Style)
+
+A method chain API that applies lock management to an existing effect.
+
+```swift
+return .run { send in
+  // async operation
+  let data = try await fetchData()
+  await send(.fetchResponse(data))
+}
+.lock(
+  action: action,
+  boundaryId: Feature.self,
+  unlockOption: .immediate, // Optional
+  lockFailure: { error, send in // Optional
+    await send(.lockFailed)
+  }
+)
+```
+
+**Parameters:**
+- `action`: Current action implementing LockmanAction
+- `boundaryId`: Effect cancellation identifier
+- `unlockOption`: Lock release timing (optional)
+- `handleCancellationErrors`: Handling of cancellation errors (optional)
+- `lockFailure`: Handler for lock acquisition failure (optional)
+
+**Features:**
+- Method chain style for natural TCA integration
+- Internally uses `concatenateWithLock`
+- Same lock management guarantees as `withLock`
 
 ### withLock (Auto-release Version)
 
@@ -96,6 +170,7 @@ Maintains the same lock while executing multiple Effects sequentially.
 - Maintains the same lock across multiple Effects
 - Suitable for transactional processing
 - If any one fails, the entire process is interrupted
+
 
 ## UnlockOption Priority
 
