@@ -28,41 +28,47 @@ LockmanDynamicConditionInfo(
 )
 ```
 
-### Advanced Control with ReduceWithLock
+### Advanced Control with Reducer.lock
 
-Using ReduceWithLock enables more advanced condition evaluation based on current state and action:
+Using the method chain API enables more advanced condition evaluation based on current state and action:
 
 ```swift
-ReduceWithLock { state, action in
-    switch action {
-    case .makePayment(let amount):
-        return self.withLock(
-            state: state,
-            action: action,
-            operation: { send in
-                try await processPayment(amount)
-                send(.paymentCompleted)
-            },
-            lockAction: PaymentAction.makePayment,
-            boundaryId: CancelID.payment,
-            lockCondition: { state, action in
-                // Action-level condition
-                guard state.balance >= amount else {
-                    return .failure(PaymentError.insufficientFunds(
-                        required: amount, 
-                        available: state.balance
-                    ))
+var body: some ReducerOf<Self> {
+    Reduce { state, action in
+        switch action {
+        case .makePayment(let amount):
+            // Create a temporary reducer with dynamic conditions
+            let tempReducer = Reduce<State, Action> { _, _ in .none }
+                .lock { state, _ in
+                    // Reducer-level condition
+                    guard state.isAuthenticated else {
+                        return .failure(AuthenticationError.notLoggedIn)
+                    }
+                    return .success
                 }
-                return .success
-            }
-        )
+            
+            return tempReducer.lock(
+                state: state,
+                action: action,
+                operation: { send in
+                    try await processPayment(amount)
+                    await send(.paymentCompleted)
+                },
+                lockAction: PaymentAction(),
+                boundaryId: CancelID.payment,
+                lockCondition: { state, _ in
+                    // Action-level condition
+                    guard state.balance >= amount else {
+                        return .failure(PaymentError.insufficientFunds(
+                            required: amount,
+                            available: state.balance
+                        ))
+                    }
+                    return .success
+                }
+            )
+        }
     }
-} lockCondition: { state, _ in
-    // Reducer-level condition
-    guard state.isAuthenticated else {
-        return .failure(AuthenticationError.notLoggedIn)
-    }
-    return .success
 }
 ```
 
@@ -111,40 +117,45 @@ enum ViewAction {
 
 ### Multi-Stage Condition Evaluation
 
-ReduceWithLock provides three stages of condition evaluation:
+The method chain API provides three stages of condition evaluation:
 
 1. **Action-level conditions**: Conditions for specific operations
 2. **Reducer-level conditions**: Overall prerequisite conditions
 3. **Traditional lock strategies**: Standard exclusive control
 
 ```swift
-ReduceWithLock { state, action in
-    switch action {
-    case .criticalOperation:
-        return self.withLock(
-            state: state,
-            action: action,
-            operation: { send in
-                try await performCriticalOperation()
-                send(.operationCompleted)
-            },
-            lockAction: CriticalAction.execute, // 3. Traditional strategy (SingleExecution, etc.)
-            boundaryId: CancelID.critical,
-            lockCondition: { state, _ in
-                // 1. Action-level condition
-                guard state.systemStatus == .ready else {
-                    return .failure(SystemError.notReady)
+var body: some ReducerOf<Self> {
+    Reduce { state, action in
+        switch action {
+        case .criticalOperation:
+            let tempReducer = Reduce<State, Action> { _, _ in .none }
+                .lock { state, _ in
+                    // 2. Reducer-level condition
+                    guard state.maintenanceMode == false else {
+                        return .failure(SystemError.maintenanceMode)
+                    }
+                    return .success
                 }
-                return .success
-            }
-        )
+            
+            return tempReducer.lock(
+                state: state,
+                action: action,
+                operation: { send in
+                    try await performCriticalOperation()
+                    await send(.operationCompleted)
+                },
+                lockAction: CriticalAction(), // 3. Traditional strategy (SingleExecution, etc.)
+                boundaryId: CancelID.critical,
+                lockCondition: { state, _ in
+                    // 1. Action-level condition
+                    guard state.systemStatus == .ready else {
+                        return .failure(SystemError.notReady)
+                    }
+                    return .success
+                }
+            )
+        }
     }
-} lockCondition: { state, _ in
-    // 2. Reducer-level condition
-    guard state.maintenanceMode == false else {
-        return .failure(SystemError.maintenanceMode)
-    }
-    return .success
 }
 ```
 
