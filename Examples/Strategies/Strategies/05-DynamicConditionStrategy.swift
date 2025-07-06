@@ -106,6 +106,14 @@ struct DynamicConditionStrategyFeature {
         return handleInternalAction(internalAction, state: &state)
       }
     }
+    .lock(
+      boundaryId: CancelID.sync,
+      lockFailure: { error, send in
+        // Handle lock errors from DynamicConditionStrategy
+        await send(
+          .internal(.operationFailed(operation: "Operation", error: error.localizedDescription)))
+      }
+    )
   }
 
   // MARK: - View Action Handler
@@ -126,31 +134,18 @@ struct DynamicConditionStrategyFeature {
             )))
       }
 
-      return .withLock(
-        operation: { send in
-          await send(.internal(.syncStarted))
-          try await Task.sleep(nanoseconds: 2_000_000_000)  // 2 seconds
-          await send(.internal(.syncCompleted))
-        },
-        catch: { error, send in
-          await send(
-            .internal(
-              .operationFailed(
-                operation: "Sync",
-                error: error.localizedDescription
-              )))
-        },
-        lockFailure: { error, send in
-          await send(
-            .internal(
-              .operationFailed(
-                operation: "Sync",
-                error: error.localizedDescription
-              )))
-        },
-        action: action,
-        boundaryId: CancelID.sync
-      )
+      return .run { send in
+        await send(.internal(.syncStarted))
+        try await Task.sleep(nanoseconds: 2_000_000_000)  // 2 seconds
+        await send(.internal(.syncCompleted))
+      } catch: { error, send in
+        await send(
+          .internal(
+            .operationFailed(
+              operation: "Sync",
+              error: error.localizedDescription
+            )))
+      }
 
     case .toggleLoginTapped:
       state.$isLoggedIn.withLock { $0.toggle() }
@@ -168,31 +163,18 @@ struct DynamicConditionStrategyFeature {
             )))
       }
 
-      return .withLock(
-        operation: { send in
-          await send(.internal(.maintenanceStarted))
-          try await Task.sleep(nanoseconds: 2_000_000_000)  // 2 seconds
-          await send(.internal(.maintenanceCompleted))
-        },
-        catch: { error, send in
-          await send(
-            .internal(
-              .operationFailed(
-                operation: "Maintenance",
-                error: error.localizedDescription
-              )))
-        },
-        lockFailure: { error, send in
-          await send(
-            .internal(
-              .operationFailed(
-                operation: "Maintenance",
-                error: error.localizedDescription
-              )))
-        },
-        action: action,
-        boundaryId: CancelID.maintenance
-      )
+      return .run { send in
+        await send(.internal(.maintenanceStarted))
+        try await Task.sleep(nanoseconds: 2_000_000_000)  // 2 seconds
+        await send(.internal(.maintenanceCompleted))
+      } catch: { error, send in
+        await send(
+          .internal(
+            .operationFailed(
+              operation: "Maintenance",
+              error: error.localizedDescription
+            )))
+      }
 
     case .setHour(let hour):
       state.currentHour = hour
@@ -210,31 +192,18 @@ struct DynamicConditionStrategyFeature {
             )))
       }
 
-      return .withLock(
-        operation: { send in
-          await send(.internal(.reportStarted))
-          try await Task.sleep(nanoseconds: 3_000_000_000)  // 3 seconds
-          await send(.internal(.reportCompleted))
-        },
-        catch: { error, send in
-          await send(
-            .internal(
-              .operationFailed(
-                operation: "Report",
-                error: error.localizedDescription
-              )))
-        },
-        lockFailure: { error, send in
-          await send(
-            .internal(
-              .operationFailed(
-                operation: "Report",
-                error: error.localizedDescription
-              )))
-        },
-        action: action,
-        boundaryId: CancelID.report
-      )
+      return .run { send in
+        await send(.internal(.reportStarted))
+        try await Task.sleep(nanoseconds: 3_000_000_000)  // 3 seconds
+        await send(.internal(.reportCompleted))
+      } catch: { error, send in
+        await send(
+          .internal(
+            .operationFailed(
+              operation: "Report",
+              error: error.localizedDescription
+            )))
+      }
 
     case .selectDay(let day):
       state.selectedDay = day

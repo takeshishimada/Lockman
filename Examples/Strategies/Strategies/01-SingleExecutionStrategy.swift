@@ -54,6 +54,15 @@ struct SingleExecutionStrategyFeature {
         return handleInternalAction(internalAction, state: &state)
       }
     }
+    .lock(
+      boundaryId: CancelID.process,
+      lockFailure: { error, send in
+        print("🔒 Lock failure detected: \(error)")
+        print("  Error type: \(type(of: error))")
+        print("  Error description: \(error.localizedDescription)")
+        await send(.internal(.handleLockFailure(error)))
+      }
+    )
   }
 
   // MARK: - View Action Handler
@@ -63,24 +72,13 @@ struct SingleExecutionStrategyFeature {
   ) -> Effect<Action> {
     switch action {
     case .startProcessButtonTapped:
-      return .withLock(
-        operation: { send in
-          await send(.internal(.processStart))
-          try await Task.sleep(nanoseconds: 5_000_000_000)  // 5 seconds
-          await send(.internal(.processCompleted))
-        },
-        catch: { error, send in
-          await send(.internal(.handleError(error)))
-        },
-        lockFailure: { error, send in
-          print("🔒 Lock failure detected: \(error)")
-          print("  Error type: \(type(of: error))")
-          print("  Error description: \(error.localizedDescription)")
-          await send(.internal(.handleLockFailure(error)))
-        },
-        action: action,
-        boundaryId: CancelID.process
-      )
+      return .run { send in
+        await send(.internal(.processStart))
+        try await Task.sleep(nanoseconds: 5_000_000_000)  // 5 seconds
+        await send(.internal(.processCompleted))
+      } catch: { error, send in
+        await send(.internal(.handleError(error)))
+      }
     }
   }
 

@@ -78,7 +78,6 @@ struct GroupCoordinationStrategyFeature {
       case operationCompleted(String)
       case operationFailed(operation: String, error: String)
       case updateProgress(operation: String, progress: Double)
-      case handleLockFailure(operation: String, error: Error)
     }
   }
 
@@ -99,6 +98,25 @@ struct GroupCoordinationStrategyFeature {
         return handleInternalAction(internalAction, state: &state)
       }
     }
+    .lock(
+      boundaryId: CancelID.sync,
+      lockFailure: { error, send in
+        // Handle group coordination errors at reducer level
+        if let groupError = error as? LockmanGroupCoordinationError {
+          let operation = "Operation"  // Generic name for reducer-level errors
+          switch groupError {
+          case .memberCannotJoinEmptyGroup:
+            await send(.internal(.syncFailed("No active sync session")))
+          case .leaderCannotJoinNonEmptyGroup:
+            await send(.internal(.syncFailed("Another sync is already active")))
+          case .actionAlreadyInGroup:
+            await send(.internal(.syncFailed("Operation already running")))
+          case .blockedByExclusiveLeader:
+            await send(.internal(.syncFailed("Blocked by exclusive leader")))
+          }
+        }
+      }
+    )
   }
 
   // MARK: - View Action Handler
@@ -108,97 +126,65 @@ struct GroupCoordinationStrategyFeature {
   ) -> Effect<Action> {
     switch action {
     case .startSyncTapped:
-      return .withLock(
-        operation: { send in
-          await send(.internal(.syncStarted))
+      return .run { send in
+        await send(.internal(.syncStarted))
 
-          // Simulate sync process
-          try await Task.sleep(nanoseconds: 5_000_000_000)  // 5 seconds
+        // Simulate sync process
+        try await Task.sleep(nanoseconds: 5_000_000_000)  // 5 seconds
 
-          await send(.internal(.syncCompleted))
-        },
-        catch: { error, send in
-          await send(.internal(.syncFailed(error.localizedDescription)))
-        },
-        lockFailure: { error, send in
-          await send(.internal(.handleLockFailure(operation: "Start Sync", error: error)))
-        },
-        action: action,
-        boundaryId: CancelID.sync
-      )
+        await send(.internal(.syncCompleted))
+      } catch: { error, send in
+        await send(.internal(.syncFailed(error.localizedDescription)))
+      }
 
     case .uploadDataTapped:
-      return .withLock(
-        operation: { send in
-          await send(.internal(.operationStarted("Upload")))
+      return .run { send in
+        await send(.internal(.operationStarted("Upload")))
 
-          // Simulate upload with progress
-          for i in 1...10 {
-            try await Task.sleep(nanoseconds: 300_000_000)  // 0.3 seconds
-            await send(.internal(.updateProgress(operation: "Upload", progress: Double(i) / 10.0)))
-          }
+        // Simulate upload with progress
+        for i in 1...10 {
+          try await Task.sleep(nanoseconds: 300_000_000)  // 0.3 seconds
+          await send(.internal(.updateProgress(operation: "Upload", progress: Double(i) / 10.0)))
+        }
 
-          await send(.internal(.operationCompleted("Upload")))
-        },
-        catch: { error, send in
-          await send(
-            .internal(.operationFailed(operation: "Upload", error: error.localizedDescription)))
-        },
-        lockFailure: { error, send in
-          await send(.internal(.handleLockFailure(operation: "Upload", error: error)))
-        },
-        action: action,
-        boundaryId: CancelID.upload
-      )
+        await send(.internal(.operationCompleted("Upload")))
+      } catch: { error, send in
+        await send(
+          .internal(.operationFailed(operation: "Upload", error: error.localizedDescription)))
+      }
 
     case .downloadDataTapped:
-      return .withLock(
-        operation: { send in
-          await send(.internal(.operationStarted("Download")))
+      return .run { send in
+        await send(.internal(.operationStarted("Download")))
 
-          // Simulate download with progress
-          for i in 1...10 {
-            try await Task.sleep(nanoseconds: 200_000_000)  // 0.2 seconds
-            await send(
-              .internal(.updateProgress(operation: "Download", progress: Double(i) / 10.0)))
-          }
-
-          await send(.internal(.operationCompleted("Download")))
-        },
-        catch: { error, send in
+        // Simulate download with progress
+        for i in 1...10 {
+          try await Task.sleep(nanoseconds: 200_000_000)  // 0.2 seconds
           await send(
-            .internal(.operationFailed(operation: "Download", error: error.localizedDescription)))
-        },
-        lockFailure: { error, send in
-          await send(.internal(.handleLockFailure(operation: "Download", error: error)))
-        },
-        action: action,
-        boundaryId: CancelID.download
-      )
+            .internal(.updateProgress(operation: "Download", progress: Double(i) / 10.0)))
+        }
+
+        await send(.internal(.operationCompleted("Download")))
+      } catch: { error, send in
+        await send(
+          .internal(.operationFailed(operation: "Download", error: error.localizedDescription)))
+      }
 
     case .processDataTapped:
-      return .withLock(
-        operation: { send in
-          await send(.internal(.operationStarted("Process")))
+      return .run { send in
+        await send(.internal(.operationStarted("Process")))
 
-          // Simulate processing with progress
-          for i in 1...10 {
-            try await Task.sleep(nanoseconds: 400_000_000)  // 0.4 seconds
-            await send(.internal(.updateProgress(operation: "Process", progress: Double(i) / 10.0)))
-          }
+        // Simulate processing with progress
+        for i in 1...10 {
+          try await Task.sleep(nanoseconds: 400_000_000)  // 0.4 seconds
+          await send(.internal(.updateProgress(operation: "Process", progress: Double(i) / 10.0)))
+        }
 
-          await send(.internal(.operationCompleted("Process")))
-        },
-        catch: { error, send in
-          await send(
-            .internal(.operationFailed(operation: "Process", error: error.localizedDescription)))
-        },
-        lockFailure: { error, send in
-          await send(.internal(.handleLockFailure(operation: "Process", error: error)))
-        },
-        action: action,
-        boundaryId: CancelID.process
-      )
+        await send(.internal(.operationCompleted("Process")))
+      } catch: { error, send in
+        await send(
+          .internal(.operationFailed(operation: "Process", error: error.localizedDescription)))
+      }
 
     case .cancelSyncTapped:
       // Cancel all operations
@@ -267,23 +253,6 @@ struct GroupCoordinationStrategyFeature {
         state.processingProgress = progress
       default:
         break
-      }
-      return .none
-
-    case .handleLockFailure(let operation, let error):
-      if let groupError = error as? LockmanGroupCoordinationError {
-        switch groupError {
-        case .memberCannotJoinEmptyGroup:
-          state.syncStatus = .failed("\(operation) failed: No active sync session")
-        case .leaderCannotJoinNonEmptyGroup:
-          state.syncStatus = .failed("\(operation) failed: Another sync is already active")
-        case .actionAlreadyInGroup:
-          state.syncStatus = .failed("\(operation) failed: Operation already running")
-        case .blockedByExclusiveLeader:
-          state.syncStatus = .failed("\(operation) failed: Blocked by exclusive leader")
-        }
-      } else {
-        state.syncStatus = .failed("\(operation) failed: \(error.localizedDescription)")
       }
       return .none
     }
