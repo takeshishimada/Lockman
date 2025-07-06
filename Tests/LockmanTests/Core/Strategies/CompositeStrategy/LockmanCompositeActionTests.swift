@@ -156,11 +156,11 @@ final class LockmanCompositeActionTests: XCTestCase {
     let boundaryId = "test-boundary"
     let info = action.lockmanInfo
 
-    XCTAssertEqual(compositeStrategy.canLock(id: boundaryId, info: info), .success)
-    compositeStrategy.lock(id: boundaryId, info: info)
-    XCTAssertLockFailure(compositeStrategy.canLock(id: boundaryId, info: info))
-    compositeStrategy.unlock(id: boundaryId, info: info)
-    XCTAssertEqual(compositeStrategy.canLock(id: boundaryId, info: info), .success)
+    XCTAssertEqual(compositeStrategy.canLock(boundaryId: boundaryId, info: info), .success)
+    compositeStrategy.lock(boundaryId: boundaryId, info: info)
+    XCTAssertLockFailure(compositeStrategy.canLock(boundaryId: boundaryId, info: info))
+    compositeStrategy.unlock(boundaryId: boundaryId, info: info)
+    XCTAssertEqual(compositeStrategy.canLock(boundaryId: boundaryId, info: info), .success)
   }
 
   // MARK: - CompositeAction3 Tests
@@ -202,8 +202,8 @@ final class LockmanCompositeActionTests: XCTestCase {
     let boundaryId = "test-boundary"
     let info = action.lockmanInfo
 
-    XCTAssertEqual(compositeStrategy.canLock(id: boundaryId, info: info), .success)
-    compositeStrategy.lock(id: boundaryId, info: info)
+    XCTAssertEqual(compositeStrategy.canLock(boundaryId: boundaryId, info: info), .success)
+    compositeStrategy.lock(boundaryId: boundaryId, info: info)
     compositeStrategy.cleanUp()
   }
 
@@ -245,7 +245,7 @@ final class LockmanCompositeActionTests: XCTestCase {
     let boundaryId = "test-boundary"
     let info = action.lockmanInfo
 
-    XCTAssertEqual(compositeStrategy.canLock(id: boundaryId, info: info), .success)
+    XCTAssertEqual(compositeStrategy.canLock(boundaryId: boundaryId, info: info), .success)
   }
 
   // MARK: - CompositeAction5 Tests
@@ -289,11 +289,11 @@ final class LockmanCompositeActionTests: XCTestCase {
     let boundaryId = "test-boundary"
     let info = action.lockmanInfo
 
-    let result = compositeStrategy.canLock(id: boundaryId, info: info)
+    let result = compositeStrategy.canLock(boundaryId: boundaryId, info: info)
     XCTAssertEqual(result, .success)
 
     // Cleanup
-    compositeStrategy.cleanUp(id: boundaryId)
+    compositeStrategy.cleanUp(boundaryId: boundaryId)
   }
 
   // MARK: - LockmanAction Protocol Tests

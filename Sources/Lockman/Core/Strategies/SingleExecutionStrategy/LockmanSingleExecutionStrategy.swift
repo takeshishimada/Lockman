@@ -68,7 +68,7 @@ public final class LockmanSingleExecutionStrategy: LockmanStrategy, @unchecked S
   /// - `.action`: Returns `.failure` if a lock with the same action ID exists
   ///
   /// - Parameters:
-  ///   - id: A unique boundary identifier conforming to `LockmanBoundaryId`
+  ///   - boundaryId: A unique boundary identifier conforming to `LockmanBoundaryId`
   ///   - info: The lock information containing the action ID and execution mode
   /// - Returns:
   ///   - `.success` if the lock can be acquired
@@ -80,11 +80,11 @@ public final class LockmanSingleExecutionStrategy: LockmanStrategy, @unchecked S
   /// let info1 = LockmanSingleExecutionInfo(mode: .boundary)
   /// let info2 = LockmanSingleExecutionInfo(mode: .action)
   ///
-  /// strategy.lock(id: boundary, info: info1)
-  /// strategy.canLock(id: boundary, info: info2) // Result depends on mode and actionId
+  /// strategy.lock(boundaryId: boundary, info: info1)
+  /// strategy.canLock(boundaryId: boundary, info: info2) // Result depends on mode and actionId
   /// ```
   public func canLock<B: LockmanBoundaryId>(
-    id: B,
+    boundaryId: B,
     info: LockmanSingleExecutionInfo
   ) -> LockmanResult {
     let result: LockmanResult
@@ -97,21 +97,21 @@ public final class LockmanSingleExecutionStrategy: LockmanStrategy, @unchecked S
 
     case .boundary:
       // Exclusive per boundary - check if any lock exists
-      let currentLocks = state.currents(id: id)
+      let currentLocks = state.currents(id: boundaryId)
       if currentLocks.isEmpty {
         result = .success
       } else {
         let existingInfo = currentLocks.first!
         result = .failure(
           LockmanSingleExecutionError.boundaryAlreadyLocked(
-            boundaryId: String(describing: id), existingInfo: existingInfo))
-        failureReason = "Boundary '\(id)' already has an active lock"
+            boundaryId: String(describing: boundaryId), existingInfo: existingInfo))
+        failureReason = "Boundary '\(boundaryId)' already has an active lock"
       }
 
     case .action:
       // Exclusive per action - check if same actionId exists
-      if state.contains(id: id, key: info.actionId) {
-        let existingInfo = state.currents(id: id, key: info.actionId).first!
+      if state.contains(id: boundaryId, key: info.actionId) {
+        let existingInfo = state.currents(id: boundaryId, key: info.actionId).first!
         result = .failure(
           LockmanSingleExecutionError.actionAlreadyRunning(existingInfo: existingInfo))
         failureReason = "Action '\(info.actionId)' is already locked"
@@ -124,7 +124,7 @@ public final class LockmanSingleExecutionStrategy: LockmanStrategy, @unchecked S
     LockmanLogger.shared.logCanLock(
       result: result,
       strategy: "SingleExecution",
-      boundaryId: String(describing: id),
+      boundaryId: String(describing: boundaryId),
       info: info,
       reason: failureReason
     )
@@ -142,23 +142,23 @@ public final class LockmanSingleExecutionStrategy: LockmanStrategy, @unchecked S
   /// precise removal during unlock operations.
   ///
   /// - Parameters:
-  ///   - id: A unique boundary identifier conforming to `LockmanBoundaryId`
+  ///   - boundaryId: A unique boundary identifier conforming to `LockmanBoundaryId`
   ///   - info: The lock information to register as active
   ///
   /// ## Example
   /// ```swift
   /// let info = LockmanSingleExecutionInfo(actionId: "processPayment")
   ///
-  /// if strategy.canLock(id: boundary, info: info) == .success {
-  ///   strategy.lock(id: boundary, info: info)
+  /// if strategy.canLock(boundaryId: boundary, info: info) == .success {
+  ///   strategy.lock(boundaryId: boundary, info: info)
   ///   // info is now tracked with its specific uniqueId
   /// }
   /// ```
   public func lock<B: LockmanBoundaryId>(
-    id: B,
+    boundaryId: B,
     info: LockmanSingleExecutionInfo
   ) {
-    state.add(id: id, info: info)
+    state.add(id: boundaryId, info: info)
   }
 
   /// Releases a previously acquired lock for the specified boundary and action.
@@ -173,7 +173,7 @@ public final class LockmanSingleExecutionStrategy: LockmanStrategy, @unchecked S
   /// remain unaffected.
   ///
   /// - Parameters:
-  ///   - id: The boundary identifier whose lock should be released
+  ///   - boundaryId: The boundary identifier whose lock should be released
   ///   - info: The exact lock information that was used when acquiring the lock
   ///
   /// ## Rationale for uniqueId-based Removal
@@ -189,18 +189,18 @@ public final class LockmanSingleExecutionStrategy: LockmanStrategy, @unchecked S
   /// let info2 = LockmanSingleExecutionInfo(actionId: "sync")  // Same actionId, different uniqueId
   ///
   /// // Hypothetical scenario where both could be locked on different boundaries
-  /// strategy.lock(id: boundary1, info: info1)
-  /// strategy.lock(id: boundary2, info: info2)
+  /// strategy.lock(boundaryId: boundary1, info: info1)
+  /// strategy.lock(boundaryId: boundary2, info: info2)
   ///
   /// // Unlock only removes the specific instance
-  /// strategy.unlock(id: boundary1, info: info1)  // Only removes info1
+  /// strategy.unlock(boundaryId: boundary1, info: info1)  // Only removes info1
   /// // info2 remains locked on boundary2
   /// ```
   public func unlock<B: LockmanBoundaryId>(
-    id: B,
+    boundaryId: B,
     info: LockmanSingleExecutionInfo
   ) {
-    state.remove(id: id, info: info)
+    state.remove(id: boundaryId, info: info)
   }
 
   /// Removes all active locks across all boundaries.
@@ -222,9 +222,9 @@ public final class LockmanSingleExecutionStrategy: LockmanStrategy, @unchecked S
   /// - User session cleanup
   /// - Targeted state resets
   ///
-  /// - Parameter id: The boundary identifier whose locks should be removed
-  public func cleanUp<B: LockmanBoundaryId>(id: B) {
-    state.removeAll(id: id)
+  /// - Parameter boundaryId: The boundary identifier whose locks should be removed
+  public func cleanUp<B: LockmanBoundaryId>(boundaryId: B) {
+    state.removeAll(id: boundaryId)
   }
 
   /// Returns current locks information for debugging.

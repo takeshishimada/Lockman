@@ -137,12 +137,12 @@ enum LockTestHelpers {
     boundaryId: B,
     info: S.I
   ) throws {
-    let result = strategy.canLock(id: boundaryId, info: info)
+    let result = strategy.canLock(boundaryId: boundaryId, info: info)
     XCTAssertEqual(result, .success, "Should be able to acquire lock")
 
-    strategy.lock(id: boundaryId, info: info)
+    strategy.lock(boundaryId: boundaryId, info: info)
 
-    let lockedResult = strategy.canLock(id: boundaryId, info: info)
+    let lockedResult = strategy.canLock(boundaryId: boundaryId, info: info)
     // Check if it's a failure (with or without error)
     if case .failure = lockedResult {
       // Success - it's a failure as expected
@@ -150,9 +150,9 @@ enum LockTestHelpers {
       XCTFail("Should not be able to acquire locked resource")
     }
 
-    strategy.unlock(id: boundaryId, info: info)
+    strategy.unlock(boundaryId: boundaryId, info: info)
 
-    let unlockedResult = strategy.canLock(id: boundaryId, info: info)
+    let unlockedResult = strategy.canLock(boundaryId: boundaryId, info: info)
     XCTAssertEqual(unlockedResult, .success, "Should be able to acquire after unlock")
   }
 
@@ -164,7 +164,7 @@ enum LockTestHelpers {
     attempts: Int = 5
   ) async throws -> (successful: Int, failed: Int) {
     let results = try await AsyncTestHelpers.runConcurrentOperations(count: attempts) { _ in
-      strategy.canLock(id: boundaryId, info: info)
+      strategy.canLock(boundaryId: boundaryId, info: info)
     }
 
     let successful = results.filter {
@@ -190,7 +190,7 @@ enum LockTestHelpers {
     info: S.I,
     expectedLocked: Bool
   ) {
-    let result = strategy.canLock(id: boundaryId, info: info)
+    let result = strategy.canLock(boundaryId: boundaryId, info: info)
 
     if expectedLocked {
       // Check if it's a failure (with or without error)

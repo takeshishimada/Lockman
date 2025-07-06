@@ -83,7 +83,7 @@ func applicationDidFinishLaunching() {
         // Processing that requires immediate release
     },
     action: action,
-    cancelID: cancelID
+    boundaryId: cancelID
 )
 ```
 

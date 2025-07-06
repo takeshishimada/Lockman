@@ -18,11 +18,11 @@ final class LockmanCompositeBasicTests: XCTestCase {
     )
 
     // Test basic lock workflow
-    XCTAssertEqual(composite.canLock(id: boundaryId, info: info), .success)
-    composite.lock(id: boundaryId, info: info)
-    XCTAssertLockFailure(composite.canLock(id: boundaryId, info: info))
-    composite.unlock(id: boundaryId, info: info)
-    XCTAssertEqual(composite.canLock(id: boundaryId, info: info), .success)
+    XCTAssertEqual(composite.canLock(boundaryId: boundaryId, info: info), .success)
+    composite.lock(boundaryId: boundaryId, info: info)
+    XCTAssertLockFailure(composite.canLock(boundaryId: boundaryId, info: info))
+    composite.unlock(boundaryId: boundaryId, info: info)
+    XCTAssertEqual(composite.canLock(boundaryId: boundaryId, info: info), .success)
 
     // Cleanup
     composite.cleanUp()
@@ -48,11 +48,11 @@ final class LockmanCompositeBasicTests: XCTestCase {
     )
 
     // Test basic lock workflow
-    XCTAssertEqual(composite.canLock(id: boundaryId, info: info), .success)
-    composite.lock(id: boundaryId, info: info)
-    XCTAssertLockFailure(composite.canLock(id: boundaryId, info: info))
-    composite.unlock(id: boundaryId, info: info)
-    XCTAssertEqual(composite.canLock(id: boundaryId, info: info), .success)
+    XCTAssertEqual(composite.canLock(boundaryId: boundaryId, info: info), .success)
+    composite.lock(boundaryId: boundaryId, info: info)
+    XCTAssertLockFailure(composite.canLock(boundaryId: boundaryId, info: info))
+    composite.unlock(boundaryId: boundaryId, info: info)
+    XCTAssertEqual(composite.canLock(boundaryId: boundaryId, info: info), .success)
 
     // Cleanup
     composite.cleanUp()
@@ -129,17 +129,17 @@ final class LockmanCompositeBasicTests: XCTestCase {
     )
 
     // Lock and verify it's active
-    composite.lock(id: boundaryId, info: info)
-    XCTAssertLockFailure(composite.canLock(id: boundaryId, info: info))
+    composite.lock(boundaryId: boundaryId, info: info)
+    XCTAssertLockFailure(composite.canLock(boundaryId: boundaryId, info: info))
 
     // Global cleanup
     composite.cleanUp()
-    XCTAssertEqual(composite.canLock(id: boundaryId, info: info), .success)
+    XCTAssertEqual(composite.canLock(boundaryId: boundaryId, info: info), .success)
 
     // Test boundary-specific cleanup
-    composite.lock(id: boundaryId, info: info)
-    composite.cleanUp(id: boundaryId)
-    XCTAssertEqual(composite.canLock(id: boundaryId, info: info), .success)
+    composite.lock(boundaryId: boundaryId, info: info)
+    composite.cleanUp(boundaryId: boundaryId)
+    XCTAssertEqual(composite.canLock(boundaryId: boundaryId, info: info), .success)
   }
 
   func testcoordinationLogicTesting() {
@@ -152,7 +152,7 @@ final class LockmanCompositeBasicTests: XCTestCase {
     // Setup a lower priority lock
     let lowPriorityInfo1 = LockmanPriorityBasedInfo(
       actionId: "low-action", priority: .low(.exclusive))
-    priority.lock(id: boundaryId, info: lowPriorityInfo1)
+    priority.lock(boundaryId: boundaryId, info: lowPriorityInfo1)
 
     // Create composite info that should trigger cancellation
     let info = LockmanCompositeInfo2(
@@ -162,7 +162,7 @@ final class LockmanCompositeBasicTests: XCTestCase {
       lockmanInfoForStrategy2: LockmanSingleExecutionInfo(actionId: "test-action", mode: .boundary)
     )
 
-    let result = composite.canLock(id: boundaryId, info: info)
+    let result = composite.canLock(boundaryId: boundaryId, info: info)
     if case .successWithPrecedingCancellation = result {
       // Success - precedingActionCancelled is expected
     } else {
@@ -170,7 +170,7 @@ final class LockmanCompositeBasicTests: XCTestCase {
     }
 
     // Cleanup
-    priority.cleanUp(id: boundaryId)
-    single.cleanUp(id: boundaryId)
+    priority.cleanUp(boundaryId: boundaryId)
+    single.cleanUp(boundaryId: boundaryId)
   }
 }

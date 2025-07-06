@@ -44,7 +44,7 @@ ReduceWithLock { state, action in
                 send(.paymentCompleted)
             },
             lockAction: PaymentAction.makePayment,
-            cancelID: CancelID.payment,
+            boundaryId: CancelID.payment,
             lockCondition: { state, action in
                 // Action-level condition
                 guard state.balance >= amount else {
@@ -129,7 +129,7 @@ ReduceWithLock { state, action in
                 send(.operationCompleted)
             },
             lockAction: CriticalAction.execute, // 3. Traditional strategy (SingleExecution, etc.)
-            cancelID: CancelID.critical,
+            boundaryId: CancelID.critical,
             lockCondition: { state, _ in
                 // 1. Action-level condition
                 guard state.systemStatus == .ready else {

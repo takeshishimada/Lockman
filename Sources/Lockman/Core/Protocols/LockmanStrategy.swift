@@ -123,12 +123,12 @@ public protocol LockmanStrategy<I>: Sendable {
   /// scenarios appropriately.
   ///
   /// - Parameters:
-  ///   - id: A unique boundary identifier conforming to `LockmanBoundaryId`
+  ///   - boundaryId: A unique boundary identifier conforming to `LockmanBoundaryId`
   ///   - info: Lock information of type `I` containing action details
   /// - Returns: A `LockmanResult` indicating whether the lock can be acquired,
   ///   any required actions (such as canceling existing operations), and
   ///   detailed error information if the lock cannot be acquired
-  func canLock<B: LockmanBoundaryId>(id: B, info: I) -> LockmanResult
+  func canLock<B: LockmanBoundaryId>(boundaryId: B, info: I) -> LockmanResult
 
   /// Attempts to acquire a lock for the given boundary and information.
   ///
@@ -146,9 +146,9 @@ public protocol LockmanStrategy<I>: Sendable {
   /// access to internal state appropriately.
   ///
   /// - Parameters:
-  ///   - id: A unique boundary identifier conforming to `LockmanBoundaryId`
+  ///   - boundaryId: A unique boundary identifier conforming to `LockmanBoundaryId`
   ///   - info: Lock information of type `I` to be registered as active
-  func lock<B: LockmanBoundaryId>(id: B, info: I)
+  func lock<B: LockmanBoundaryId>(boundaryId: B, info: I)
 
   /// Releases a previously acquired lock.
   ///
@@ -167,9 +167,9 @@ public protocol LockmanStrategy<I>: Sendable {
   /// may require exact instance matching.
   ///
   /// - Parameters:
-  ///   - id: The boundary identifier for which the lock should be released
+  ///   - boundaryId: The boundary identifier for which the lock should be released
   ///   - info: The same lock information of type `I` that was used when acquiring the lock
-  func unlock<B: LockmanBoundaryId>(id: B, info: I)
+  func unlock<B: LockmanBoundaryId>(boundaryId: B, info: I)
 
   /// Removes all lock information across all boundaries.
   ///
@@ -203,8 +203,8 @@ public protocol LockmanStrategy<I>: Sendable {
   /// - Should not fail if no locks exist for the boundary
   /// - Should preserve locks for other boundaries
   ///
-  /// - Parameter id: The identifier whose lock information should be removed
-  func cleanUp<B: LockmanBoundaryId>(id: B)
+  /// - Parameter boundaryId: The identifier whose lock information should be removed
+  func cleanUp<B: LockmanBoundaryId>(boundaryId: B)
 
   /// Returns current locks information for debugging purposes.
   ///

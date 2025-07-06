@@ -61,30 +61,30 @@ where S1.I == I1, S2.I == I2 {
 
   /// Checks if locks can be acquired from all component strategies.
   public func canLock<B: LockmanBoundaryId>(
-    id: B,
+    boundaryId: B,
     info: LockmanCompositeInfo2<I1, I2>
   ) -> LockmanResult {
     // Early return pattern for performance optimization
-    let result1 = strategy1.canLock(id: id, info: info.lockmanInfoForStrategy1)
+    let result1 = strategy1.canLock(boundaryId: boundaryId, info: info.lockmanInfoForStrategy1)
     if case .failure(let error) = result1 {
       let result = LockmanResult.failure(error)
       LockmanLogger.shared.logCanLock(
         result: result,
         strategy: "Composite",
-        boundaryId: String(describing: id),
+        boundaryId: String(describing: boundaryId),
         info: info,
         reason: "Strategy1 failed"
       )
       return result
     }
 
-    let result2 = strategy2.canLock(id: id, info: info.lockmanInfoForStrategy2)
+    let result2 = strategy2.canLock(boundaryId: boundaryId, info: info.lockmanInfoForStrategy2)
     if case .failure(let error) = result2 {
       let result = LockmanResult.failure(error)
       LockmanLogger.shared.logCanLock(
         result: result,
         strategy: "Composite",
-        boundaryId: String(describing: id),
+        boundaryId: String(describing: boundaryId),
         info: info,
         reason: "Strategy2 failed"
       )
@@ -96,7 +96,7 @@ where S1.I == I1, S2.I == I2 {
     LockmanLogger.shared.logCanLock(
       result: result,
       strategy: "Composite",
-      boundaryId: String(describing: id),
+      boundaryId: String(describing: boundaryId),
       info: info,
       reason: nil
     )
@@ -109,23 +109,23 @@ where S1.I == I1, S2.I == I2 {
   /// All strategies will acquire their locks in the order they were specified.
   ///
   /// - Parameters:
-  ///   - id: A unique boundary identifier conforming to `LockmanBoundaryId`
+  ///   - boundaryId: A unique boundary identifier conforming to `LockmanBoundaryId`
   ///   - info: Composite lock information containing details for both strategies
   public func lock<B: LockmanBoundaryId>(
-    id: B,
+    boundaryId: B,
     info: LockmanCompositeInfo2<I1, I2>
   ) {
-    strategy1.lock(id: id, info: info.lockmanInfoForStrategy1)
-    strategy2.lock(id: id, info: info.lockmanInfoForStrategy2)
+    strategy1.lock(boundaryId: boundaryId, info: info.lockmanInfoForStrategy1)
+    strategy2.lock(boundaryId: boundaryId, info: info.lockmanInfoForStrategy2)
   }
 
   public func unlock<B: LockmanBoundaryId>(
-    id: B,
+    boundaryId: B,
     info: LockmanCompositeInfo2<I1, I2>
   ) {
     // Release in reverse order (LIFO)
-    strategy2.unlock(id: id, info: info.lockmanInfoForStrategy2)
-    strategy1.unlock(id: id, info: info.lockmanInfoForStrategy1)
+    strategy2.unlock(boundaryId: boundaryId, info: info.lockmanInfoForStrategy2)
+    strategy1.unlock(boundaryId: boundaryId, info: info.lockmanInfoForStrategy1)
   }
 
   public func cleanUp() {
@@ -133,9 +133,9 @@ where S1.I == I1, S2.I == I2 {
     strategy2.cleanUp()
   }
 
-  public func cleanUp<B: LockmanBoundaryId>(id: B) {
-    strategy1.cleanUp(id: id)
-    strategy2.cleanUp(id: id)
+  public func cleanUp<B: LockmanBoundaryId>(boundaryId: B) {
+    strategy1.cleanUp(boundaryId: boundaryId)
+    strategy2.cleanUp(boundaryId: boundaryId)
   }
 
   /// Returns current locks information for debugging.
@@ -247,43 +247,43 @@ where S1.I == I1, S2.I == I2, S3.I == I3 {
   }
 
   public func canLock<B: LockmanBoundaryId>(
-    id: B,
+    boundaryId: B,
     info: LockmanCompositeInfo3<I1, I2, I3>
   ) -> LockmanResult {
     // Early return pattern for performance optimization
-    let result1 = strategy1.canLock(id: id, info: info.lockmanInfoForStrategy1)
+    let result1 = strategy1.canLock(boundaryId: boundaryId, info: info.lockmanInfoForStrategy1)
     if case .failure(let error) = result1 {
       let result = LockmanResult.failure(error)
       LockmanLogger.shared.logCanLock(
         result: result,
         strategy: "Composite",
-        boundaryId: String(describing: id),
+        boundaryId: String(describing: boundaryId),
         info: info,
         reason: "Strategy1 failed"
       )
       return result
     }
 
-    let result2 = strategy2.canLock(id: id, info: info.lockmanInfoForStrategy2)
+    let result2 = strategy2.canLock(boundaryId: boundaryId, info: info.lockmanInfoForStrategy2)
     if case .failure(let error) = result2 {
       let result = LockmanResult.failure(error)
       LockmanLogger.shared.logCanLock(
         result: result,
         strategy: "Composite",
-        boundaryId: String(describing: id),
+        boundaryId: String(describing: boundaryId),
         info: info,
         reason: "Strategy2 failed"
       )
       return result
     }
 
-    let result3 = strategy3.canLock(id: id, info: info.lockmanInfoForStrategy3)
+    let result3 = strategy3.canLock(boundaryId: boundaryId, info: info.lockmanInfoForStrategy3)
     if case .failure(let error) = result3 {
       let result = LockmanResult.failure(error)
       LockmanLogger.shared.logCanLock(
         result: result,
         strategy: "Composite",
-        boundaryId: String(describing: id),
+        boundaryId: String(describing: boundaryId),
         info: info,
         reason: "Strategy3 failed"
       )
@@ -295,7 +295,7 @@ where S1.I == I1, S2.I == I2, S3.I == I3 {
     LockmanLogger.shared.logCanLock(
       result: result,
       strategy: "Composite",
-      boundaryId: String(describing: id),
+      boundaryId: String(describing: boundaryId),
       info: info,
       reason: nil
     )
@@ -304,23 +304,23 @@ where S1.I == I1, S2.I == I2, S3.I == I3 {
   }
 
   public func lock<B: LockmanBoundaryId>(
-    id: B,
+    boundaryId: B,
     info: LockmanCompositeInfo3<I1, I2, I3>
   ) {
-    strategy1.lock(id: id, info: info.lockmanInfoForStrategy1)
-    strategy2.lock(id: id, info: info.lockmanInfoForStrategy2)
-    strategy3.lock(id: id, info: info.lockmanInfoForStrategy3)
+    strategy1.lock(boundaryId: boundaryId, info: info.lockmanInfoForStrategy1)
+    strategy2.lock(boundaryId: boundaryId, info: info.lockmanInfoForStrategy2)
+    strategy3.lock(boundaryId: boundaryId, info: info.lockmanInfoForStrategy3)
   }
 
   /// Releases locks from all component strategies in reverse order.
   public func unlock<B: LockmanBoundaryId>(
-    id: B,
+    boundaryId: B,
     info: LockmanCompositeInfo3<I1, I2, I3>
   ) {
     // Release in reverse order (LIFO)
-    strategy3.unlock(id: id, info: info.lockmanInfoForStrategy3)
-    strategy2.unlock(id: id, info: info.lockmanInfoForStrategy2)
-    strategy1.unlock(id: id, info: info.lockmanInfoForStrategy1)
+    strategy3.unlock(boundaryId: boundaryId, info: info.lockmanInfoForStrategy3)
+    strategy2.unlock(boundaryId: boundaryId, info: info.lockmanInfoForStrategy2)
+    strategy1.unlock(boundaryId: boundaryId, info: info.lockmanInfoForStrategy1)
   }
 
   public func cleanUp() {
@@ -329,10 +329,10 @@ where S1.I == I1, S2.I == I2, S3.I == I3 {
     strategy3.cleanUp()
   }
 
-  public func cleanUp<B: LockmanBoundaryId>(id: B) {
-    strategy1.cleanUp(id: id)
-    strategy2.cleanUp(id: id)
-    strategy3.cleanUp(id: id)
+  public func cleanUp<B: LockmanBoundaryId>(boundaryId: B) {
+    strategy1.cleanUp(boundaryId: boundaryId)
+    strategy2.cleanUp(boundaryId: boundaryId)
+    strategy3.cleanUp(boundaryId: boundaryId)
   }
 
   /// Returns current locks information for debugging.
@@ -432,56 +432,56 @@ where S1.I == I1, S2.I == I2, S3.I == I3, S4.I == I4 {
   }
 
   public func canLock<B: LockmanBoundaryId>(
-    id: B,
+    boundaryId: B,
     info: LockmanCompositeInfo4<I1, I2, I3, I4>
   ) -> LockmanResult {
     // Early return pattern for performance optimization
-    let result1 = strategy1.canLock(id: id, info: info.lockmanInfoForStrategy1)
+    let result1 = strategy1.canLock(boundaryId: boundaryId, info: info.lockmanInfoForStrategy1)
     if case .failure(let error) = result1 {
       let result = LockmanResult.failure(error)
       LockmanLogger.shared.logCanLock(
         result: result,
         strategy: "Composite",
-        boundaryId: String(describing: id),
+        boundaryId: String(describing: boundaryId),
         info: info,
         reason: "Strategy1 failed"
       )
       return result
     }
 
-    let result2 = strategy2.canLock(id: id, info: info.lockmanInfoForStrategy2)
+    let result2 = strategy2.canLock(boundaryId: boundaryId, info: info.lockmanInfoForStrategy2)
     if case .failure(let error) = result2 {
       let result = LockmanResult.failure(error)
       LockmanLogger.shared.logCanLock(
         result: result,
         strategy: "Composite",
-        boundaryId: String(describing: id),
+        boundaryId: String(describing: boundaryId),
         info: info,
         reason: "Strategy2 failed"
       )
       return result
     }
 
-    let result3 = strategy3.canLock(id: id, info: info.lockmanInfoForStrategy3)
+    let result3 = strategy3.canLock(boundaryId: boundaryId, info: info.lockmanInfoForStrategy3)
     if case .failure(let error) = result3 {
       let result = LockmanResult.failure(error)
       LockmanLogger.shared.logCanLock(
         result: result,
         strategy: "Composite",
-        boundaryId: String(describing: id),
+        boundaryId: String(describing: boundaryId),
         info: info,
         reason: "Strategy3 failed"
       )
       return result
     }
 
-    let result4 = strategy4.canLock(id: id, info: info.lockmanInfoForStrategy4)
+    let result4 = strategy4.canLock(boundaryId: boundaryId, info: info.lockmanInfoForStrategy4)
     if case .failure(let error) = result4 {
       let result = LockmanResult.failure(error)
       LockmanLogger.shared.logCanLock(
         result: result,
         strategy: "Composite",
-        boundaryId: String(describing: id),
+        boundaryId: String(describing: boundaryId),
         info: info,
         reason: "Strategy4 failed"
       )
@@ -493,7 +493,7 @@ where S1.I == I1, S2.I == I2, S3.I == I3, S4.I == I4 {
     LockmanLogger.shared.logCanLock(
       result: result,
       strategy: "Composite",
-      boundaryId: String(describing: id),
+      boundaryId: String(describing: boundaryId),
       info: info,
       reason: nil
     )
@@ -502,24 +502,24 @@ where S1.I == I1, S2.I == I2, S3.I == I3, S4.I == I4 {
   }
 
   public func lock<B: LockmanBoundaryId>(
-    id: B,
+    boundaryId: B,
     info: LockmanCompositeInfo4<I1, I2, I3, I4>
   ) {
-    strategy1.lock(id: id, info: info.lockmanInfoForStrategy1)
-    strategy2.lock(id: id, info: info.lockmanInfoForStrategy2)
-    strategy3.lock(id: id, info: info.lockmanInfoForStrategy3)
-    strategy4.lock(id: id, info: info.lockmanInfoForStrategy4)
+    strategy1.lock(boundaryId: boundaryId, info: info.lockmanInfoForStrategy1)
+    strategy2.lock(boundaryId: boundaryId, info: info.lockmanInfoForStrategy2)
+    strategy3.lock(boundaryId: boundaryId, info: info.lockmanInfoForStrategy3)
+    strategy4.lock(boundaryId: boundaryId, info: info.lockmanInfoForStrategy4)
   }
 
   public func unlock<B: LockmanBoundaryId>(
-    id: B,
+    boundaryId: B,
     info: LockmanCompositeInfo4<I1, I2, I3, I4>
   ) {
     // Release in reverse order (LIFO)
-    strategy4.unlock(id: id, info: info.lockmanInfoForStrategy4)
-    strategy3.unlock(id: id, info: info.lockmanInfoForStrategy3)
-    strategy2.unlock(id: id, info: info.lockmanInfoForStrategy2)
-    strategy1.unlock(id: id, info: info.lockmanInfoForStrategy1)
+    strategy4.unlock(boundaryId: boundaryId, info: info.lockmanInfoForStrategy4)
+    strategy3.unlock(boundaryId: boundaryId, info: info.lockmanInfoForStrategy3)
+    strategy2.unlock(boundaryId: boundaryId, info: info.lockmanInfoForStrategy2)
+    strategy1.unlock(boundaryId: boundaryId, info: info.lockmanInfoForStrategy1)
   }
 
   public func cleanUp() {
@@ -529,11 +529,11 @@ where S1.I == I1, S2.I == I2, S3.I == I3, S4.I == I4 {
     strategy4.cleanUp()
   }
 
-  public func cleanUp<B: LockmanBoundaryId>(id: B) {
-    strategy1.cleanUp(id: id)
-    strategy2.cleanUp(id: id)
-    strategy3.cleanUp(id: id)
-    strategy4.cleanUp(id: id)
+  public func cleanUp<B: LockmanBoundaryId>(boundaryId: B) {
+    strategy1.cleanUp(boundaryId: boundaryId)
+    strategy2.cleanUp(boundaryId: boundaryId)
+    strategy3.cleanUp(boundaryId: boundaryId)
+    strategy4.cleanUp(boundaryId: boundaryId)
   }
 
   /// Returns current locks information for debugging.
@@ -648,69 +648,69 @@ where S1.I == I1, S2.I == I2, S3.I == I3, S4.I == I4, S5.I == I5 {
   }
 
   public func canLock<B: LockmanBoundaryId>(
-    id: B,
+    boundaryId: B,
     info: LockmanCompositeInfo5<I1, I2, I3, I4, I5>
   ) -> LockmanResult {
     // Early return pattern for performance optimization
-    let result1 = strategy1.canLock(id: id, info: info.lockmanInfoForStrategy1)
+    let result1 = strategy1.canLock(boundaryId: boundaryId, info: info.lockmanInfoForStrategy1)
     if case .failure(let error) = result1 {
       let result = LockmanResult.failure(error)
       LockmanLogger.shared.logCanLock(
         result: result,
         strategy: "Composite",
-        boundaryId: String(describing: id),
+        boundaryId: String(describing: boundaryId),
         info: info,
         reason: "Strategy1 failed"
       )
       return result
     }
 
-    let result2 = strategy2.canLock(id: id, info: info.lockmanInfoForStrategy2)
+    let result2 = strategy2.canLock(boundaryId: boundaryId, info: info.lockmanInfoForStrategy2)
     if case .failure(let error) = result2 {
       let result = LockmanResult.failure(error)
       LockmanLogger.shared.logCanLock(
         result: result,
         strategy: "Composite",
-        boundaryId: String(describing: id),
+        boundaryId: String(describing: boundaryId),
         info: info,
         reason: "Strategy2 failed"
       )
       return result
     }
 
-    let result3 = strategy3.canLock(id: id, info: info.lockmanInfoForStrategy3)
+    let result3 = strategy3.canLock(boundaryId: boundaryId, info: info.lockmanInfoForStrategy3)
     if case .failure(let error) = result3 {
       let result = LockmanResult.failure(error)
       LockmanLogger.shared.logCanLock(
         result: result,
         strategy: "Composite",
-        boundaryId: String(describing: id),
+        boundaryId: String(describing: boundaryId),
         info: info,
         reason: "Strategy3 failed"
       )
       return result
     }
 
-    let result4 = strategy4.canLock(id: id, info: info.lockmanInfoForStrategy4)
+    let result4 = strategy4.canLock(boundaryId: boundaryId, info: info.lockmanInfoForStrategy4)
     if case .failure(let error) = result4 {
       let result = LockmanResult.failure(error)
       LockmanLogger.shared.logCanLock(
         result: result,
         strategy: "Composite",
-        boundaryId: String(describing: id),
+        boundaryId: String(describing: boundaryId),
         info: info,
         reason: "Strategy4 failed"
       )
       return result
     }
 
-    let result5 = strategy5.canLock(id: id, info: info.lockmanInfoForStrategy5)
+    let result5 = strategy5.canLock(boundaryId: boundaryId, info: info.lockmanInfoForStrategy5)
     if case .failure(let error) = result5 {
       let result = LockmanResult.failure(error)
       LockmanLogger.shared.logCanLock(
         result: result,
         strategy: "Composite",
-        boundaryId: String(describing: id),
+        boundaryId: String(describing: boundaryId),
         info: info,
         reason: "Strategy5 failed"
       )
@@ -722,7 +722,7 @@ where S1.I == I1, S2.I == I2, S3.I == I3, S4.I == I4, S5.I == I5 {
     LockmanLogger.shared.logCanLock(
       result: result,
       strategy: "Composite",
-      boundaryId: String(describing: id),
+      boundaryId: String(describing: boundaryId),
       info: info,
       reason: nil
     )
@@ -731,26 +731,26 @@ where S1.I == I1, S2.I == I2, S3.I == I3, S4.I == I4, S5.I == I5 {
   }
 
   public func lock<B: LockmanBoundaryId>(
-    id: B,
+    boundaryId: B,
     info: LockmanCompositeInfo5<I1, I2, I3, I4, I5>
   ) {
-    strategy1.lock(id: id, info: info.lockmanInfoForStrategy1)
-    strategy2.lock(id: id, info: info.lockmanInfoForStrategy2)
-    strategy3.lock(id: id, info: info.lockmanInfoForStrategy3)
-    strategy4.lock(id: id, info: info.lockmanInfoForStrategy4)
-    strategy5.lock(id: id, info: info.lockmanInfoForStrategy5)
+    strategy1.lock(boundaryId: boundaryId, info: info.lockmanInfoForStrategy1)
+    strategy2.lock(boundaryId: boundaryId, info: info.lockmanInfoForStrategy2)
+    strategy3.lock(boundaryId: boundaryId, info: info.lockmanInfoForStrategy3)
+    strategy4.lock(boundaryId: boundaryId, info: info.lockmanInfoForStrategy4)
+    strategy5.lock(boundaryId: boundaryId, info: info.lockmanInfoForStrategy5)
   }
 
   public func unlock<B: LockmanBoundaryId>(
-    id: B,
+    boundaryId: B,
     info: LockmanCompositeInfo5<I1, I2, I3, I4, I5>
   ) {
     // Release in reverse order (LIFO)
-    strategy5.unlock(id: id, info: info.lockmanInfoForStrategy5)
-    strategy4.unlock(id: id, info: info.lockmanInfoForStrategy4)
-    strategy3.unlock(id: id, info: info.lockmanInfoForStrategy3)
-    strategy2.unlock(id: id, info: info.lockmanInfoForStrategy2)
-    strategy1.unlock(id: id, info: info.lockmanInfoForStrategy1)
+    strategy5.unlock(boundaryId: boundaryId, info: info.lockmanInfoForStrategy5)
+    strategy4.unlock(boundaryId: boundaryId, info: info.lockmanInfoForStrategy4)
+    strategy3.unlock(boundaryId: boundaryId, info: info.lockmanInfoForStrategy3)
+    strategy2.unlock(boundaryId: boundaryId, info: info.lockmanInfoForStrategy2)
+    strategy1.unlock(boundaryId: boundaryId, info: info.lockmanInfoForStrategy1)
   }
 
   public func cleanUp() {
@@ -761,12 +761,12 @@ where S1.I == I1, S2.I == I2, S3.I == I3, S4.I == I4, S5.I == I5 {
     strategy5.cleanUp()
   }
 
-  public func cleanUp<B: LockmanBoundaryId>(id: B) {
-    strategy1.cleanUp(id: id)
-    strategy2.cleanUp(id: id)
-    strategy3.cleanUp(id: id)
-    strategy4.cleanUp(id: id)
-    strategy5.cleanUp(id: id)
+  public func cleanUp<B: LockmanBoundaryId>(boundaryId: B) {
+    strategy1.cleanUp(boundaryId: boundaryId)
+    strategy2.cleanUp(boundaryId: boundaryId)
+    strategy3.cleanUp(boundaryId: boundaryId)
+    strategy4.cleanUp(boundaryId: boundaryId)
+    strategy5.cleanUp(boundaryId: boundaryId)
   }
 
   /// Returns current locks information for debugging.

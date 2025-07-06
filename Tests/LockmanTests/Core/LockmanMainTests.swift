@@ -309,14 +309,14 @@ final class LockmanMainTests: XCTestCase {
         let singleBoundary = TestBoundaryId("single")
         let singleInfo = LockmanSingleExecutionInfo(actionId: "test-action", mode: .boundary)
 
-        let canLockSingle = singleStrategy.canLock(id: singleBoundary, info: singleInfo)
+        let canLockSingle = singleStrategy.canLock(boundaryId: singleBoundary, info: singleInfo)
         XCTAssertEqual(canLockSingle, .success)
 
-        singleStrategy.lock(id: singleBoundary, info: singleInfo)
-        let canLockAgain = singleStrategy.canLock(id: singleBoundary, info: singleInfo)
+        singleStrategy.lock(boundaryId: singleBoundary, info: singleInfo)
+        let canLockAgain = singleStrategy.canLock(boundaryId: singleBoundary, info: singleInfo)
         XCTAssertLockFailure(canLockAgain)
 
-        singleStrategy.unlock(id: singleBoundary, info: singleInfo)
+        singleStrategy.unlock(boundaryId: singleBoundary, info: singleInfo)
 
         // 3. Test priority based strategy
         let priorityBoundary = TestBoundaryId("priority")
@@ -325,8 +325,9 @@ final class LockmanMainTests: XCTestCase {
         let lowPriorityInfo = LockmanPriorityBasedInfo(
           actionId: "low", priority: .low(.replaceable))
 
-        priorityStrategy.lock(id: priorityBoundary, info: lowPriorityInfo)
-        let canLockHigh = priorityStrategy.canLock(id: priorityBoundary, info: highPriorityInfo)
+        priorityStrategy.lock(boundaryId: priorityBoundary, info: lowPriorityInfo)
+        let canLockHigh = priorityStrategy.canLock(
+          boundaryId: priorityBoundary, info: highPriorityInfo)
         if case .successWithPrecedingCancellation = canLockHigh {
           // Success - precedingActionCancelled is expected
         } else {

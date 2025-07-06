@@ -66,7 +66,7 @@ public final class LockmanStrategyContainer: @unchecked Sendable {
       self.typeName = String(describing: S.self)
       self.registeredAt = Date()
       self.cleanUp = { anyStrategy.cleanUp() }
-      self.cleanUpById = { id in anyStrategy.cleanUp(id: id) }
+      self.cleanUpById = { id in anyStrategy.cleanUp(boundaryId: id) }
     }
   }
 
@@ -404,10 +404,10 @@ public final class LockmanStrategyContainer: @unchecked Sendable {
   ///
   /// ## Complexity
   /// O(n) where n is the number of registered strategies
-  public func cleanUp<B: LockmanBoundaryId>(id: B) {
+  public func cleanUp<B: LockmanBoundaryId>(boundaryId: B) {
     storage.withCriticalRegion { storage in
       for (_, entry) in storage {
-        entry.cleanUpById(id)
+        entry.cleanUpById(boundaryId)
       }
     }
   }

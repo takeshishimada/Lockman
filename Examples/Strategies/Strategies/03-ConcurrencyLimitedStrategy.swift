@@ -138,7 +138,7 @@ struct ConcurrencyLimitedStrategyFeature {
           await send(.internal(.handleLockFailure(id: id, error: error)))
         },
         action: Action.ViewAction.downloadButtonTapped(id),
-        cancelID: CancelID.downloads
+        boundaryId: CancelID.downloads
       )
     }
   }

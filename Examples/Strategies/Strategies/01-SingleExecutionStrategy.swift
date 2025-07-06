@@ -79,7 +79,7 @@ struct SingleExecutionStrategyFeature {
           await send(.internal(.handleLockFailure(error)))
         },
         action: action,
-        cancelID: CancelID.process
+        boundaryId: CancelID.process
       )
     }
   }

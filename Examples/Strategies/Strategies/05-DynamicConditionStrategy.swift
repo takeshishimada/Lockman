@@ -149,7 +149,7 @@ struct DynamicConditionStrategyFeature {
               )))
         },
         action: action,
-        cancelID: CancelID.sync
+        boundaryId: CancelID.sync
       )
 
     case .toggleLoginTapped:
@@ -191,7 +191,7 @@ struct DynamicConditionStrategyFeature {
               )))
         },
         action: action,
-        cancelID: CancelID.maintenance
+        boundaryId: CancelID.maintenance
       )
 
     case .setHour(let hour):
@@ -233,7 +233,7 @@ struct DynamicConditionStrategyFeature {
               )))
         },
         action: action,
-        cancelID: CancelID.report
+        boundaryId: CancelID.report
       )
 
     case .selectDay(let day):

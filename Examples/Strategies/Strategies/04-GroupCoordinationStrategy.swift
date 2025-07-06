@@ -124,7 +124,7 @@ struct GroupCoordinationStrategyFeature {
           await send(.internal(.handleLockFailure(operation: "Start Sync", error: error)))
         },
         action: action,
-        cancelID: CancelID.sync
+        boundaryId: CancelID.sync
       )
 
     case .uploadDataTapped:
@@ -148,7 +148,7 @@ struct GroupCoordinationStrategyFeature {
           await send(.internal(.handleLockFailure(operation: "Upload", error: error)))
         },
         action: action,
-        cancelID: CancelID.upload
+        boundaryId: CancelID.upload
       )
 
     case .downloadDataTapped:
@@ -173,7 +173,7 @@ struct GroupCoordinationStrategyFeature {
           await send(.internal(.handleLockFailure(operation: "Download", error: error)))
         },
         action: action,
-        cancelID: CancelID.download
+        boundaryId: CancelID.download
       )
 
     case .processDataTapped:
@@ -197,7 +197,7 @@ struct GroupCoordinationStrategyFeature {
           await send(.internal(.handleLockFailure(operation: "Process", error: error)))
         },
         action: action,
-        cancelID: CancelID.process
+        boundaryId: CancelID.process
       )
 
     case .cancelSyncTapped:

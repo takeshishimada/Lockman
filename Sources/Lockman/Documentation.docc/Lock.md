@@ -32,7 +32,7 @@ The most basic and recommended usage. Automatically manages lock acquisition and
   catch handler: { error, send in /* Error handling */ }, // Optional
   lockFailure: { error, send in /* Lock acquisition failure handling */ }, // Optional
   action: action,
-  cancelID: cancelID
+  boundaryId: cancelID
 )
 ```
 
@@ -65,7 +65,7 @@ Used when you want to manually control the lock release timing. Parameters are t
     unlock() // Release on error too
   },
   action: action,
-  cancelID: cancelID
+  boundaryId: cancelID
 )
 ```
 
@@ -88,7 +88,7 @@ Maintains the same lock while executing multiple Effects sequentially.
   ],
   lockFailure: { error, send in /* Lock acquisition failure handling */ }, // Optional
   action: action,
-  cancelID: cancelID
+  boundaryId: cancelID
 )
 ```
 
@@ -107,7 +107,7 @@ When determining the unlock timing, Lockman follows this priority order:
      unlockOption: .transition, // This takes precedence
      operation: { send in /* ... */ },
      action: action,
-     cancelID: cancelID
+     boundaryId: cancelID
    )
    ```
 

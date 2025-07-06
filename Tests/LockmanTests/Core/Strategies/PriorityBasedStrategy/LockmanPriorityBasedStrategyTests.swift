@@ -87,9 +87,9 @@ final class LockmanPriorityBasedStrategyTests: XCTestCase {
 
     // Verify state isolation
     let info = TestInfoFactory.highExclusive("test")
-    strategy1.lock(id: TestBoundaryId.default, info: info)
+    strategy1.lock(boundaryId: TestBoundaryId.default, info: info)
 
-    XCTAssertEqual(strategy2.canLock(id: TestBoundaryId.default, info: info), .success)
+    XCTAssertEqual(strategy2.canLock(boundaryId: TestBoundaryId.default, info: info), .success)
 
     strategy1.cleanUp()
   }
@@ -118,13 +118,13 @@ final class LockmanPriorityBasedStrategyTests: XCTestCase {
     let highInfo = TestInfoFactory.highExclusive("blocker")
 
     // None priority succeeds on empty state
-    XCTAssertEqual(strategy.canLock(id: id, info: noneInfo), .success)
+    XCTAssertEqual(strategy.canLock(boundaryId: id, info: noneInfo), .success)
 
     // Lock with high priority to create contention
-    strategy.lock(id: id, info: highInfo)
+    strategy.lock(boundaryId: id, info: highInfo)
 
     // None priority should still succeed
-    XCTAssertEqual(strategy.canLock(id: id, info: noneInfo), .success)
+    XCTAssertEqual(strategy.canLock(boundaryId: id, info: noneInfo), .success)
 
     strategy.cleanUp()
   }
@@ -139,9 +139,9 @@ final class LockmanPriorityBasedStrategyTests: XCTestCase {
     ]
 
     for info in testCases {
-      XCTAssertEqual(strategy.canLock(id: id, info: info), .success)
-      strategy.lock(id: id, info: info)
-      strategy.unlock(id: id, info: info)
+      XCTAssertEqual(strategy.canLock(boundaryId: id, info: info), .success)
+      strategy.lock(boundaryId: id, info: info)
+      strategy.unlock(boundaryId: id, info: info)
     }
   }
 
@@ -151,10 +151,10 @@ final class LockmanPriorityBasedStrategyTests: XCTestCase {
     let info1 = TestInfoFactory.highExclusive("duplicate")
     let info2 = TestInfoFactory.highExclusive("duplicate")  // Same action ID
 
-    strategy.lock(id: id, info: info1)
-    XCTAssertLockFailure(strategy.canLock(id: id, info: info2))
+    strategy.lock(boundaryId: id, info: info1)
+    XCTAssertLockFailure(strategy.canLock(boundaryId: id, info: info2))
 
-    strategy.unlock(id: id, info: info1)
+    strategy.unlock(boundaryId: id, info: info1)
   }
 
   // MARK: - Priority Hierarchy
@@ -169,8 +169,9 @@ final class LockmanPriorityBasedStrategyTests: XCTestCase {
     ]
 
     for (lowerInfo, higherInfo) in testCases {
-      strategy.lock(id: id, info: lowerInfo)
-      if case .successWithPrecedingCancellation = strategy.canLock(id: id, info: higherInfo) {
+      strategy.lock(boundaryId: id, info: lowerInfo)
+      if case .successWithPrecedingCancellation = strategy.canLock(boundaryId: id, info: higherInfo)
+      {
         // Success - expected behavior
       } else {
         XCTFail("Expected successWithPrecedingCancellation")
@@ -189,8 +190,8 @@ final class LockmanPriorityBasedStrategyTests: XCTestCase {
     ]
 
     for (higherInfo, lowerInfo) in testCases {
-      strategy.lock(id: id, info: higherInfo)
-      XCTAssertLockFailure(strategy.canLock(id: id, info: lowerInfo))
+      strategy.lock(boundaryId: id, info: higherInfo)
+      XCTAssertLockFailure(strategy.canLock(boundaryId: id, info: lowerInfo))
       strategy.cleanUp()
     }
   }
@@ -207,9 +208,9 @@ final class LockmanPriorityBasedStrategyTests: XCTestCase {
     ]
 
     for (firstInfo, secondInfo) in testCases {
-      strategy.lock(id: id, info: firstInfo)
+      strategy.lock(boundaryId: id, info: firstInfo)
       // Second action follows first action's exclusive behavior
-      XCTAssertLockFailure(strategy.canLock(id: id, info: secondInfo))
+      XCTAssertLockFailure(strategy.canLock(boundaryId: id, info: secondInfo))
       strategy.cleanUp()
     }
   }
@@ -224,9 +225,10 @@ final class LockmanPriorityBasedStrategyTests: XCTestCase {
     ]
 
     for (firstInfo, secondInfo) in testCases {
-      strategy.lock(id: id, info: firstInfo)
+      strategy.lock(boundaryId: id, info: firstInfo)
       // Second action follows first action's replaceable behavior
-      if case .successWithPrecedingCancellation = strategy.canLock(id: id, info: secondInfo) {
+      if case .successWithPrecedingCancellation = strategy.canLock(boundaryId: id, info: secondInfo)
+      {
         // Success - expected behavior
       } else {
         XCTFail("Expected successWithPrecedingCancellation")
@@ -242,12 +244,12 @@ final class LockmanPriorityBasedStrategyTests: XCTestCase {
     let id = TestBoundaryId.default
     let info = TestInfoFactory.highExclusive("test")
 
-    XCTAssertEqual(strategy.canLock(id: id, info: info), .success)
-    strategy.lock(id: id, info: info)
-    XCTAssertLockFailure(strategy.canLock(id: id, info: info))
+    XCTAssertEqual(strategy.canLock(boundaryId: id, info: info), .success)
+    strategy.lock(boundaryId: id, info: info)
+    XCTAssertLockFailure(strategy.canLock(boundaryId: id, info: info))
 
-    strategy.unlock(id: id, info: info)
-    XCTAssertEqual(strategy.canLock(id: id, info: info), .success)
+    strategy.unlock(boundaryId: id, info: info)
+    XCTAssertEqual(strategy.canLock(boundaryId: id, info: info), .success)
   }
 
   func testUnlockWithNonePriorityIsSafeNoop() {
@@ -256,12 +258,12 @@ final class LockmanPriorityBasedStrategyTests: XCTestCase {
     let noneInfo = TestInfoFactory.none()
     let highInfo = TestInfoFactory.highExclusive("high")
 
-    strategy.lock(id: id, info: highInfo)
-    strategy.unlock(id: id, info: noneInfo)  // Should not affect state
+    strategy.lock(boundaryId: id, info: highInfo)
+    strategy.unlock(boundaryId: id, info: noneInfo)  // Should not affect state
 
-    XCTAssertLockFailure(strategy.canLock(id: id, info: highInfo))
+    XCTAssertLockFailure(strategy.canLock(boundaryId: id, info: highInfo))
 
-    strategy.unlock(id: id, info: highInfo)
+    strategy.unlock(boundaryId: id, info: highInfo)
   }
 
   // MARK: - Boundary Isolation
@@ -273,14 +275,14 @@ final class LockmanPriorityBasedStrategyTests: XCTestCase {
     let info = TestInfoFactory.highExclusive("shared")
 
     // Same info can be locked on different boundaries
-    strategy.lock(id: id1, info: info)
-    XCTAssertEqual(strategy.canLock(id: id2, info: info), .success)
-    strategy.lock(id: id2, info: info)
+    strategy.lock(boundaryId: id1, info: info)
+    XCTAssertEqual(strategy.canLock(boundaryId: id2, info: info), .success)
+    strategy.lock(boundaryId: id2, info: info)
 
     // Unlock only affects specific boundary
-    strategy.unlock(id: id1, info: info)
-    XCTAssertEqual(strategy.canLock(id: id1, info: info), .success)
-    XCTAssertLockFailure(strategy.canLock(id: id2, info: info))
+    strategy.unlock(boundaryId: id1, info: info)
+    XCTAssertEqual(strategy.canLock(boundaryId: id1, info: info), .success)
+    XCTAssertLockFailure(strategy.canLock(boundaryId: id2, info: info))
 
     strategy.cleanUp()
   }
@@ -293,13 +295,13 @@ final class LockmanPriorityBasedStrategyTests: XCTestCase {
     let id2 = TestBoundaryId.boundary2
     let info = TestInfoFactory.highExclusive("action")
 
-    strategy.lock(id: id1, info: info)
-    strategy.lock(id: id2, info: info)
+    strategy.lock(boundaryId: id1, info: info)
+    strategy.lock(boundaryId: id2, info: info)
 
     strategy.cleanUp()
 
-    XCTAssertEqual(strategy.canLock(id: id1, info: info), .success)
-    XCTAssertEqual(strategy.canLock(id: id2, info: info), .success)
+    XCTAssertEqual(strategy.canLock(boundaryId: id1, info: info), .success)
+    XCTAssertEqual(strategy.canLock(boundaryId: id2, info: info), .success)
   }
 
   func testBoundarySpecificCleanupPreservesOtherBoundaries() {
@@ -308,13 +310,13 @@ final class LockmanPriorityBasedStrategyTests: XCTestCase {
     let id2 = TestBoundaryId.boundary2
     let info = TestInfoFactory.highExclusive("action")
 
-    strategy.lock(id: id1, info: info)
-    strategy.lock(id: id2, info: info)
+    strategy.lock(boundaryId: id1, info: info)
+    strategy.lock(boundaryId: id2, info: info)
 
-    strategy.cleanUp(id: id1)
+    strategy.cleanUp(boundaryId: id1)
 
-    XCTAssertEqual(strategy.canLock(id: id1, info: info), .success)
-    XCTAssertLockFailure(strategy.canLock(id: id2, info: info))
+    XCTAssertEqual(strategy.canLock(boundaryId: id1, info: info), .success)
+    XCTAssertLockFailure(strategy.canLock(boundaryId: id2, info: info))
 
     strategy.cleanUp()
   }
@@ -329,21 +331,21 @@ final class LockmanPriorityBasedStrategyTests: XCTestCase {
     let highInfo = TestInfoFactory.highExclusive("high")
 
     // Start with low priority
-    strategy.lock(id: id, info: lowInfo)
+    strategy.lock(boundaryId: id, info: lowInfo)
 
     // None priority always succeeds
-    XCTAssertEqual(strategy.canLock(id: id, info: noneInfo), .success)
+    XCTAssertEqual(strategy.canLock(boundaryId: id, info: noneInfo), .success)
 
     // High priority preempts low priority
-    if case .successWithPrecedingCancellation = strategy.canLock(id: id, info: highInfo) {
+    if case .successWithPrecedingCancellation = strategy.canLock(boundaryId: id, info: highInfo) {
       // Success - expected behavior
     } else {
       XCTFail("Expected successWithPrecedingCancellation")
     }
-    strategy.lock(id: id, info: highInfo)
+    strategy.lock(boundaryId: id, info: highInfo)
 
     // Low priority now fails against high priority
-    XCTAssertLockFailure(strategy.canLock(id: id, info: lowInfo))
+    XCTAssertLockFailure(strategy.canLock(boundaryId: id, info: lowInfo))
 
     strategy.cleanUp()
   }
@@ -358,26 +360,31 @@ final class LockmanPriorityBasedStrategyTests: XCTestCase {
     let highExclusive = TestInfoFactory.highExclusive("high2")
 
     // Start with low replaceable
-    strategy.lock(id: id, info: lowReplaceable)
+    strategy.lock(boundaryId: id, info: lowReplaceable)
 
     // Low exclusive can replace low replaceable
-    if case .successWithPrecedingCancellation = strategy.canLock(id: id, info: lowExclusive) {
+    if case .successWithPrecedingCancellation = strategy.canLock(boundaryId: id, info: lowExclusive)
+    {
       // Success - expected behavior
     } else {
       XCTFail("Expected successWithPrecedingCancellation")
     }
-    strategy.lock(id: id, info: lowExclusive)
+    strategy.lock(boundaryId: id, info: lowExclusive)
 
     // High replaceable preempts low exclusive
-    if case .successWithPrecedingCancellation = strategy.canLock(id: id, info: highReplaceable) {
+    if case .successWithPrecedingCancellation = strategy.canLock(
+      boundaryId: id, info: highReplaceable)
+    {
       // Success - expected behavior
     } else {
       XCTFail("Expected successWithPrecedingCancellation")
     }
-    strategy.lock(id: id, info: highReplaceable)
+    strategy.lock(boundaryId: id, info: highReplaceable)
 
     // High exclusive can replace high replaceable
-    if case .successWithPrecedingCancellation = strategy.canLock(id: id, info: highExclusive) {
+    if case .successWithPrecedingCancellation = strategy.canLock(
+      boundaryId: id, info: highExclusive)
+    {
       // Success - expected behavior
     } else {
       XCTFail("Expected successWithPrecedingCancellation")
@@ -398,7 +405,7 @@ final class LockmanPriorityBasedStrategyTests: XCTestCase {
       for i in 0..<10 {
         group.addTask {
           let info = TestInfoFactory.highExclusive("action\(i)")
-          return strategy.canLock(id: id, info: info)
+          return strategy.canLock(boundaryId: id, info: info)
         }
       }
 
@@ -425,17 +432,17 @@ final class LockmanPriorityBasedStrategyTests: XCTestCase {
     ) { group in
       group.addTask {
         let info = TestInfoFactory.lowReplaceable("low")
-        return ("low", strategy.canLock(id: id, info: info))
+        return ("low", strategy.canLock(boundaryId: id, info: info))
       }
 
       group.addTask {
         let info = TestInfoFactory.highExclusive("high")
-        return ("high", strategy.canLock(id: id, info: info))
+        return ("high", strategy.canLock(boundaryId: id, info: info))
       }
 
       group.addTask {
         let info = TestInfoFactory.none("none")
-        return ("none", strategy.canLock(id: id, info: info))
+        return ("none", strategy.canLock(boundaryId: id, info: info))
       }
 
       var results: [(String, LockmanResult)] = []
@@ -474,18 +481,19 @@ final class LockmanPriorityBasedStrategyTests: XCTestCase {
     let lowExclusive = TestInfoFactory.lowExclusive("lowExcl")
 
     // Lock with replaceable behavior
-    strategy.lock(id: id, info: lowReplaceable)
+    strategy.lock(boundaryId: id, info: lowReplaceable)
 
     // Exclusive can replace replaceable
-    if case .successWithPrecedingCancellation = strategy.canLock(id: id, info: lowExclusive) {
+    if case .successWithPrecedingCancellation = strategy.canLock(boundaryId: id, info: lowExclusive)
+    {
       // Success - expected behavior
     } else {
       XCTFail("Expected successWithPrecedingCancellation")
     }
-    strategy.lock(id: id, info: lowExclusive)
+    strategy.lock(boundaryId: id, info: lowExclusive)
 
     // Now replaceable cannot replace exclusive
-    XCTAssertLockFailure(strategy.canLock(id: id, info: lowReplaceable))
+    XCTAssertLockFailure(strategy.canLock(boundaryId: id, info: lowReplaceable))
 
     strategy.cleanUp()
   }
@@ -498,11 +506,11 @@ final class LockmanPriorityBasedStrategyTests: XCTestCase {
 
     // Lock a low priority action
     let lowAction = TestInfoFactory.lowExclusive("lowAction")
-    strategy.lock(id: id, info: lowAction)
+    strategy.lock(boundaryId: id, info: lowAction)
 
     // Try to lock a high priority action
     let highAction = TestInfoFactory.highExclusive("highAction")
-    let result = strategy.canLock(id: id, info: highAction)
+    let result = strategy.canLock(boundaryId: id, info: highAction)
 
     // Should succeed with preceding cancellation
     switch result {
@@ -533,11 +541,11 @@ final class LockmanPriorityBasedStrategyTests: XCTestCase {
 
     // Lock a replaceable action
     let replaceableAction = TestInfoFactory.lowReplaceable("replaceableAction")
-    strategy.lock(id: id, info: replaceableAction)
+    strategy.lock(boundaryId: id, info: replaceableAction)
 
     // Try to lock another low priority action (should replace the existing one)
     let newAction = TestInfoFactory.lowExclusive("newAction")
-    let result = strategy.canLock(id: id, info: newAction)
+    let result = strategy.canLock(boundaryId: id, info: newAction)
 
     // Should succeed with preceding cancellation
     switch result {

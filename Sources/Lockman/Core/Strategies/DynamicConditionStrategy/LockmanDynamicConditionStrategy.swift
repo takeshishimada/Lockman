@@ -65,11 +65,11 @@ public final class LockmanDynamicConditionStrategy: LockmanStrategy, @unchecked 
   /// business logic defined at runtime.
   ///
   /// - Parameters:
-  ///   - id: The boundary identifier
+  ///   - boundaryId: The boundary identifier
   ///   - info: The lock information containing the dynamic condition
   /// - Returns: The result from evaluating the dynamic condition
   public func canLock<B: LockmanBoundaryId>(
-    id: B,
+    boundaryId: B,
     info: LockmanDynamicConditionInfo
   ) -> LockmanResult {
     // Evaluate the condition and get the result directly
@@ -84,7 +84,7 @@ public final class LockmanDynamicConditionStrategy: LockmanStrategy, @unchecked 
     LockmanLogger.shared.logCanLock(
       result: result,
       strategy: "DynamicCondition",
-      boundaryId: String(describing: id),
+      boundaryId: String(describing: boundaryId),
       info: info,
       reason: failureReason
     )
@@ -95,13 +95,13 @@ public final class LockmanDynamicConditionStrategy: LockmanStrategy, @unchecked 
   /// Acquires a lock for the specified boundary and action.
   ///
   /// - Parameters:
-  ///   - id: The boundary identifier
+  ///   - boundaryId: The boundary identifier
   ///   - info: The lock information to register
   public func lock<B: LockmanBoundaryId>(
-    id: B,
+    boundaryId: B,
     info: LockmanDynamicConditionInfo
   ) {
-    state.add(id: id, info: info)
+    state.add(id: boundaryId, info: info)
   }
 
   /// Releases all locks with the same actionId.
@@ -111,14 +111,14 @@ public final class LockmanDynamicConditionStrategy: LockmanStrategy, @unchecked 
   /// actionId exist (e.g., from ReduceWithLock's multi-step locking).
   ///
   /// - Parameters:
-  ///   - id: The boundary identifier
+  ///   - boundaryId: The boundary identifier
   ///   - info: The lock information containing the actionId to remove
   public func unlock<B: LockmanBoundaryId>(
-    id: B,
+    boundaryId: B,
     info: LockmanDynamicConditionInfo
   ) {
     // Remove all locks with the same actionId
-    state.removeAll(id: id, key: info.actionId)
+    state.removeAll(id: boundaryId, key: info.actionId)
   }
 
   /// Removes all active locks across all boundaries.
@@ -128,9 +128,9 @@ public final class LockmanDynamicConditionStrategy: LockmanStrategy, @unchecked 
 
   /// Removes all active locks for the specified boundary.
   ///
-  /// - Parameter id: The boundary identifier whose locks should be removed
-  public func cleanUp<B: LockmanBoundaryId>(id: B) {
-    state.removeAll(id: id)
+  /// - Parameter boundaryId: The boundary identifier whose locks should be removed
+  public func cleanUp<B: LockmanBoundaryId>(boundaryId: B) {
+    state.removeAll(id: boundaryId)
   }
 
   /// Returns current locks information for debugging.

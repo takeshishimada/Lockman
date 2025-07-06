@@ -443,15 +443,15 @@ final class LockmanPriorityBasedInfoIntegrationTests: XCTestCase {
       }
 
       // Test basic locking behavior
-      XCTAssertEqual(resolvedStrategy.canLock(id: boundaryId, info: info1), .success)
-      resolvedStrategy.lock(id: boundaryId, info: info1)
+      XCTAssertEqual(resolvedStrategy.canLock(boundaryId: boundaryId, info: info1), .success)
+      resolvedStrategy.lock(boundaryId: boundaryId, info: info1)
 
       // None priority always succeeds
-      XCTAssertEqual(resolvedStrategy.canLock(id: boundaryId, info: info3), .success)
+      XCTAssertEqual(resolvedStrategy.canLock(boundaryId: boundaryId, info: info3), .success)
 
       // Higher priority preempts lower priority
       if case .successWithPrecedingCancellation = resolvedStrategy.canLock(
-        id: boundaryId, info: info2)
+        boundaryId: boundaryId, info: info2)
       {
         // Success - expected behavior
       } else {
@@ -472,27 +472,27 @@ final class LockmanPriorityBasedInfoIntegrationTests: XCTestCase {
     let anotherLowInfo = TestInfoFactory.lowExclusive("lowExc2")
 
     // None priority always succeeds
-    XCTAssertEqual(strategy.canLock(id: boundaryId, info: noneInfo), .success)
+    XCTAssertEqual(strategy.canLock(boundaryId: boundaryId, info: noneInfo), .success)
 
     // First low priority succeeds
-    XCTAssertEqual(strategy.canLock(id: boundaryId, info: lowExclusiveInfo), .success)
-    strategy.lock(id: boundaryId, info: lowExclusiveInfo)
+    XCTAssertEqual(strategy.canLock(boundaryId: boundaryId, info: lowExclusiveInfo), .success)
+    strategy.lock(boundaryId: boundaryId, info: lowExclusiveInfo)
 
     // High priority preempts low priority
     if case .successWithPrecedingCancellation = strategy.canLock(
-      id: boundaryId, info: highReplaceableInfo)
+      boundaryId: boundaryId, info: highReplaceableInfo)
     {
       // Success - expected behavior
     } else {
       XCTFail("Expected successWithPrecedingCancellation")
     }
-    strategy.lock(id: boundaryId, info: highReplaceableInfo)
+    strategy.lock(boundaryId: boundaryId, info: highReplaceableInfo)
 
     // Another low priority fails against high priority
-    XCTAssertLockFailure(strategy.canLock(id: boundaryId, info: anotherLowInfo))
+    XCTAssertLockFailure(strategy.canLock(boundaryId: boundaryId, info: anotherLowInfo))
 
     // None priority still succeeds
-    XCTAssertEqual(strategy.canLock(id: boundaryId, info: noneInfo), .success)
+    XCTAssertEqual(strategy.canLock(boundaryId: boundaryId, info: noneInfo), .success)
 
     strategy.cleanUp()
   }
@@ -505,20 +505,20 @@ final class LockmanPriorityBasedInfoIntegrationTests: XCTestCase {
     let info = TestInfoFactory.highExclusive("shared")
 
     // Same info can be locked on different boundaries
-    XCTAssertEqual(strategy.canLock(id: boundary1, info: info), .success)
-    strategy.lock(id: boundary1, info: info)
+    XCTAssertEqual(strategy.canLock(boundaryId: boundary1, info: info), .success)
+    strategy.lock(boundaryId: boundary1, info: info)
 
-    XCTAssertEqual(strategy.canLock(id: boundary2, info: info), .success)
-    strategy.lock(id: boundary2, info: info)
+    XCTAssertEqual(strategy.canLock(boundaryId: boundary2, info: info), .success)
+    strategy.lock(boundaryId: boundary2, info: info)
 
     // But duplicate on same boundary fails
-    XCTAssertLockFailure(strategy.canLock(id: boundary1, info: info))
-    XCTAssertLockFailure(strategy.canLock(id: boundary2, info: info))
+    XCTAssertLockFailure(strategy.canLock(boundaryId: boundary1, info: info))
+    XCTAssertLockFailure(strategy.canLock(boundaryId: boundary2, info: info))
 
     // Cleanup only affects specific boundary
-    strategy.cleanUp(id: boundary1)
-    XCTAssertEqual(strategy.canLock(id: boundary1, info: info), .success)
-    XCTAssertLockFailure(strategy.canLock(id: boundary2, info: info))  // Still locked
+    strategy.cleanUp(boundaryId: boundary1)
+    XCTAssertEqual(strategy.canLock(boundaryId: boundary1, info: info), .success)
+    XCTAssertLockFailure(strategy.canLock(boundaryId: boundary2, info: info))  // Still locked
 
     strategy.cleanUp()
   }

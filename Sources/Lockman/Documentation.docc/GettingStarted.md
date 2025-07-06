@@ -122,7 +122,7 @@ var body: some Reducer<State, Action> {
                     state.message = "Processing is already in progress"
                 },
                 action: action,
-                cancelID: CancelID.userAction
+                boundaryId: CancelID.userAction
             )
             
         case .processStart:

@@ -56,17 +56,17 @@ private class MockLockmanStrategy: LockmanStrategy, @unchecked Sendable {
     self.identifier = identifier
   }
 
-  func canLock<B: LockmanBoundaryId>(id _: B, info _: MockLockmanInfo) -> LockmanResult {
+  func canLock<B: LockmanBoundaryId>(boundaryId _: B, info _: MockLockmanInfo) -> LockmanResult {
     .success
   }
 
-  func lock<B: LockmanBoundaryId>(id: B, info: MockLockmanInfo) {
-    let anyId = AnyLockmanBoundaryId(id)
+  func lock<B: LockmanBoundaryId>(boundaryId: B, info: MockLockmanInfo) {
+    let anyId = AnyLockmanBoundaryId(boundaryId)
     lockState[anyId, default: []].append(info)
   }
 
-  func unlock<B: LockmanBoundaryId>(id: B, info _: MockLockmanInfo) {
-    let anyId = AnyLockmanBoundaryId(id)
+  func unlock<B: LockmanBoundaryId>(boundaryId: B, info _: MockLockmanInfo) {
+    let anyId = AnyLockmanBoundaryId(boundaryId)
     lockState[anyId]?.removeLast()
     if lockState[anyId]?.isEmpty == true {
       lockState.removeValue(forKey: anyId)
@@ -78,10 +78,10 @@ private class MockLockmanStrategy: LockmanStrategy, @unchecked Sendable {
     lockState.removeAll()
   }
 
-  func cleanUp<B: LockmanBoundaryId>(id: B) {
+  func cleanUp<B: LockmanBoundaryId>(boundaryId: B) {
     cleanUpWithIdCallCount += 1
-    lastCleanUpId = id
-    let anyId = AnyLockmanBoundaryId(id)
+    lastCleanUpId = boundaryId
+    let anyId = AnyLockmanBoundaryId(boundaryId)
     lockState.removeValue(forKey: anyId)
   }
 
@@ -127,17 +127,19 @@ private final class AnotherMockLockmanStrategy: LockmanStrategy, @unchecked Send
     self.identifier = identifier
   }
 
-  func canLock<B: LockmanBoundaryId>(id _: B, info _: AnotherMockLockmanInfo) -> LockmanResult {
+  func canLock<B: LockmanBoundaryId>(boundaryId _: B, info _: AnotherMockLockmanInfo)
+    -> LockmanResult
+  {
     .success
   }
 
-  func lock<B: LockmanBoundaryId>(id: B, info: AnotherMockLockmanInfo) {
-    let anyId = AnyLockmanBoundaryId(id)
+  func lock<B: LockmanBoundaryId>(boundaryId: B, info: AnotherMockLockmanInfo) {
+    let anyId = AnyLockmanBoundaryId(boundaryId)
     lockState[anyId, default: []].append(info)
   }
 
-  func unlock<B: LockmanBoundaryId>(id: B, info _: AnotherMockLockmanInfo) {
-    let anyId = AnyLockmanBoundaryId(id)
+  func unlock<B: LockmanBoundaryId>(boundaryId: B, info _: AnotherMockLockmanInfo) {
+    let anyId = AnyLockmanBoundaryId(boundaryId)
     lockState[anyId]?.removeLast()
     if lockState[anyId]?.isEmpty == true {
       lockState.removeValue(forKey: anyId)
@@ -149,10 +151,10 @@ private final class AnotherMockLockmanStrategy: LockmanStrategy, @unchecked Send
     lockState.removeAll()
   }
 
-  func cleanUp<B: LockmanBoundaryId>(id: B) {
+  func cleanUp<B: LockmanBoundaryId>(boundaryId: B) {
     cleanUpWithIdCallCount += 1
-    lastCleanUpId = id
-    let anyId = AnyLockmanBoundaryId(id)
+    lastCleanUpId = boundaryId
+    let anyId = AnyLockmanBoundaryId(boundaryId)
     lockState.removeValue(forKey: anyId)
   }
 
@@ -298,7 +300,7 @@ final class LockmanStrategyContainerTests: XCTestCase {
     try? container.register(mockStrategy)
     try? container.register(anotherStrategy)
 
-    container.cleanUp(id: boundaryId)
+    container.cleanUp(boundaryId: boundaryId)
 
     XCTAssertEqual(mockStrategy.cleanUpWithIdCallCount, 1)
     XCTAssertEqual(anotherStrategy.cleanUpWithIdCallCount, 1)
@@ -311,7 +313,7 @@ final class LockmanStrategyContainerTests: XCTestCase {
 
     // Should not crash
     container.cleanUp()
-    container.cleanUp(id: MockBoundaryId(value: "test"))
+    container.cleanUp(boundaryId: MockBoundaryId(value: "test"))
   }
 
   // MARK: - Type Safety Tests
@@ -470,7 +472,7 @@ final class LockmanStrategyContainerTests: XCTestCase {
 
       for i in 0..<10 {
         group.addTask {
-          container.cleanUp(id: MockBoundaryId(value: "\(i)"))
+          container.cleanUp(boundaryId: MockBoundaryId(value: "\(i)"))
         }
       }
     }

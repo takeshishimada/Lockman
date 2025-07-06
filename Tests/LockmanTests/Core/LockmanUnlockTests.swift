@@ -62,27 +62,27 @@ private final class MockLockmanStrategy: LockmanStrategy, @unchecked Sendable {
   }
 
   func canLock<B: LockmanBoundaryId>(
-    id _: B,
+    boundaryId _: B,
     info _: TestLockmanInfo
   ) -> LockmanResult {
     .success
   }
 
   func lock<B: LockmanBoundaryId>(
-    id _: B,
+    boundaryId _: B,
     info _: TestLockmanInfo
   ) {}
 
-  func unlock<B: LockmanBoundaryId>(id: B, info: TestLockmanInfo) {
+  func unlock<B: LockmanBoundaryId>(boundaryId: B, info: TestLockmanInfo) {
     unlockQueue.sync {
-      unlockCalls.append((boundaryId: id, info: info))
+      unlockCalls.append((boundaryId: boundaryId, info: info))
       unlockCallCount += 1
     }
   }
 
   func cleanUp() {}
 
-  func cleanUp<B: LockmanBoundaryId>(id _: B) {}
+  func cleanUp<B: LockmanBoundaryId>(boundaryId _: B) {}
 
   func getCurrentLocks() -> [AnyLockmanBoundaryId: [any LockmanInfo]] {
     [:]

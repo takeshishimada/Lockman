@@ -115,14 +115,14 @@ public final class LockmanGroupCoordinationStrategy: LockmanStrategy, @unchecked
   // MARK: - LockmanStrategy
 
   public func canLock<B: LockmanBoundaryId>(
-    id: B,
+    boundaryId: B,
     info: LockmanGroupCoordinatedInfo
   ) -> LockmanResult {
     let result: LockmanResult
     var failureReason: String?
 
     result = storage.withCriticalRegion { storage in
-      let anyBoundaryId = AnyLockmanBoundaryId(id)
+      let anyBoundaryId = AnyLockmanBoundaryId(boundaryId)
       let boundaryState = storage[anyBoundaryId]
 
       // Check all groups (AND condition - must satisfy conditions in all groups)
@@ -201,7 +201,7 @@ public final class LockmanGroupCoordinationStrategy: LockmanStrategy, @unchecked
     LockmanLogger.shared.logCanLock(
       result: result,
       strategy: "GroupCoordination",
-      boundaryId: String(describing: id),
+      boundaryId: String(describing: boundaryId),
       info: info,
       reason: failureReason
     )
@@ -210,11 +210,11 @@ public final class LockmanGroupCoordinationStrategy: LockmanStrategy, @unchecked
   }
 
   public func lock<B: LockmanBoundaryId>(
-    id: B,
+    boundaryId: B,
     info: LockmanGroupCoordinatedInfo
   ) {
     storage.withCriticalRegion { storage in
-      let anyBoundaryId = AnyLockmanBoundaryId(id)
+      let anyBoundaryId = AnyLockmanBoundaryId(boundaryId)
 
       // Ensure boundary state exists
       if storage[anyBoundaryId] == nil {
@@ -236,11 +236,11 @@ public final class LockmanGroupCoordinationStrategy: LockmanStrategy, @unchecked
   }
 
   public func unlock<B: LockmanBoundaryId>(
-    id: B,
+    boundaryId: B,
     info: LockmanGroupCoordinatedInfo
   ) {
     storage.withCriticalRegion { storage in
-      let anyBoundaryId = AnyLockmanBoundaryId(id)
+      let anyBoundaryId = AnyLockmanBoundaryId(boundaryId)
 
       // Remove member from all groups
       for groupId in info.groupIds {
@@ -266,9 +266,9 @@ public final class LockmanGroupCoordinationStrategy: LockmanStrategy, @unchecked
     }
   }
 
-  public func cleanUp<B: LockmanBoundaryId>(id: B) {
+  public func cleanUp<B: LockmanBoundaryId>(boundaryId: B) {
     storage.withCriticalRegion { storage in
-      let anyBoundaryId = AnyLockmanBoundaryId(id)
+      let anyBoundaryId = AnyLockmanBoundaryId(boundaryId)
       storage.removeValue(forKey: anyBoundaryId)
     }
   }

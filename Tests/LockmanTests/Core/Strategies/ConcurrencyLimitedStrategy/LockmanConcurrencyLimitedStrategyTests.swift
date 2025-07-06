@@ -77,10 +77,10 @@ final class LockmanConcurrencyLimitedStrategyTests: XCTestCase {
     let info = LockmanConcurrencyLimitedInfo(
       actionId: "action", group: TestConcurrencyGroup.apiRequests)
 
-    let result = strategy.canLock(id: boundary, info: info)
+    let result = strategy.canLock(boundaryId: boundary, info: info)
     XCTAssertEqual(result, .success)
 
-    strategy.cleanUp(id: boundary)
+    strategy.cleanUp(boundaryId: boundary)
   }
 
   func testMultipleLocksWithinLimitSucceed() {
@@ -96,16 +96,16 @@ final class LockmanConcurrencyLimitedStrategyTests: XCTestCase {
       actionId: "action3", group: TestConcurrencyGroup.apiRequests)
 
     // All three should succeed
-    XCTAssertEqual(strategy.canLock(id: boundary, info: info1), .success)
-    strategy.lock(id: boundary, info: info1)
+    XCTAssertEqual(strategy.canLock(boundaryId: boundary, info: info1), .success)
+    strategy.lock(boundaryId: boundary, info: info1)
 
-    XCTAssertEqual(strategy.canLock(id: boundary, info: info2), .success)
-    strategy.lock(id: boundary, info: info2)
+    XCTAssertEqual(strategy.canLock(boundaryId: boundary, info: info2), .success)
+    strategy.lock(boundaryId: boundary, info: info2)
 
-    XCTAssertEqual(strategy.canLock(id: boundary, info: info3), .success)
-    strategy.lock(id: boundary, info: info3)
+    XCTAssertEqual(strategy.canLock(boundaryId: boundary, info: info3), .success)
+    strategy.lock(boundaryId: boundary, info: info3)
 
-    strategy.cleanUp(id: boundary)
+    strategy.cleanUp(boundaryId: boundary)
   }
 
   func testLockFailsWhenLimitExceeded() {
@@ -121,14 +121,14 @@ final class LockmanConcurrencyLimitedStrategyTests: XCTestCase {
       actionId: "upload3", group: TestConcurrencyGroup.fileOperations)
 
     // First two should succeed
-    XCTAssertEqual(strategy.canLock(id: boundary, info: info1), .success)
-    strategy.lock(id: boundary, info: info1)
+    XCTAssertEqual(strategy.canLock(boundaryId: boundary, info: info1), .success)
+    strategy.lock(boundaryId: boundary, info: info1)
 
-    XCTAssertEqual(strategy.canLock(id: boundary, info: info2), .success)
-    strategy.lock(id: boundary, info: info2)
+    XCTAssertEqual(strategy.canLock(boundaryId: boundary, info: info2), .success)
+    strategy.lock(boundaryId: boundary, info: info2)
 
     // Third should fail
-    let result = strategy.canLock(id: boundary, info: info3)
+    let result = strategy.canLock(boundaryId: boundary, info: info3)
     XCTAssertLockFailure(result)
 
     if case .failure(let error) = result,
@@ -147,7 +147,7 @@ final class LockmanConcurrencyLimitedStrategyTests: XCTestCase {
       XCTFail("Expected LockmanConcurrencyLimitedError")
     }
 
-    strategy.cleanUp(id: boundary)
+    strategy.cleanUp(boundaryId: boundary)
   }
 
   func testUnlimitedGroupAllowsManyLocks() {
@@ -158,11 +158,11 @@ final class LockmanConcurrencyLimitedStrategyTests: XCTestCase {
     for i in 0..<100 {
       let info = LockmanConcurrencyLimitedInfo(
         actionId: "ui\(i)", group: TestConcurrencyGroup.uiUpdates)
-      XCTAssertEqual(strategy.canLock(id: boundary, info: info), .success)
-      strategy.lock(id: boundary, info: info)
+      XCTAssertEqual(strategy.canLock(boundaryId: boundary, info: info), .success)
+      strategy.lock(boundaryId: boundary, info: info)
     }
 
-    strategy.cleanUp(id: boundary)
+    strategy.cleanUp(boundaryId: boundary)
   }
 
   // MARK: - Direct Limit Tests
@@ -175,13 +175,13 @@ final class LockmanConcurrencyLimitedStrategyTests: XCTestCase {
     let info2 = LockmanConcurrencyLimitedInfo(actionId: "special1", .limited(1))
 
     // First should succeed
-    XCTAssertEqual(strategy.canLock(id: boundary, info: info1), .success)
-    strategy.lock(id: boundary, info: info1)
+    XCTAssertEqual(strategy.canLock(boundaryId: boundary, info: info1), .success)
+    strategy.lock(boundaryId: boundary, info: info1)
 
     // Second with same actionId should fail (limit is 1)
-    XCTAssertLockFailure(strategy.canLock(id: boundary, info: info2))
+    XCTAssertLockFailure(strategy.canLock(boundaryId: boundary, info: info2))
 
-    strategy.cleanUp(id: boundary)
+    strategy.cleanUp(boundaryId: boundary)
   }
 
   func testDirectUnlimitedConfiguration() {
@@ -191,11 +191,11 @@ final class LockmanConcurrencyLimitedStrategyTests: XCTestCase {
     // Multiple locks with same actionId and unlimited
     for _ in 0..<50 {
       let info = LockmanConcurrencyLimitedInfo(actionId: "unlimited-action", .unlimited)
-      XCTAssertEqual(strategy.canLock(id: boundary, info: info), .success)
-      strategy.lock(id: boundary, info: info)
+      XCTAssertEqual(strategy.canLock(boundaryId: boundary, info: info), .success)
+      strategy.lock(boundaryId: boundary, info: info)
     }
 
-    strategy.cleanUp(id: boundary)
+    strategy.cleanUp(boundaryId: boundary)
   }
 
   // MARK: - Cross-Boundary Tests
@@ -214,17 +214,17 @@ final class LockmanConcurrencyLimitedStrategyTests: XCTestCase {
       actionId: "upload3", group: TestConcurrencyGroup.fileOperations)
 
     // Fill boundary1 to limit
-    strategy.lock(id: boundary1, info: info1)
-    strategy.lock(id: boundary1, info: info2)
-    XCTAssertLockFailure(strategy.canLock(id: boundary1, info: info3))
+    strategy.lock(boundaryId: boundary1, info: info1)
+    strategy.lock(boundaryId: boundary1, info: info2)
+    XCTAssertLockFailure(strategy.canLock(boundaryId: boundary1, info: info3))
 
     // boundary2 should still allow locks
-    XCTAssertEqual(strategy.canLock(id: boundary2, info: info1), .success)
-    strategy.lock(id: boundary2, info: info1)
-    XCTAssertEqual(strategy.canLock(id: boundary2, info: info2), .success)
+    XCTAssertEqual(strategy.canLock(boundaryId: boundary2, info: info1), .success)
+    strategy.lock(boundaryId: boundary2, info: info1)
+    XCTAssertEqual(strategy.canLock(boundaryId: boundary2, info: info2), .success)
 
-    strategy.cleanUp(id: boundary1)
-    strategy.cleanUp(id: boundary2)
+    strategy.cleanUp(boundaryId: boundary1)
+    strategy.cleanUp(boundaryId: boundary2)
   }
 
   // MARK: - Unlock Behavior Tests
@@ -242,17 +242,17 @@ final class LockmanConcurrencyLimitedStrategyTests: XCTestCase {
       actionId: "upload3", group: TestConcurrencyGroup.fileOperations)
 
     // Fill to limit
-    strategy.lock(id: boundary, info: info1)
-    strategy.lock(id: boundary, info: info2)
-    XCTAssertLockFailure(strategy.canLock(id: boundary, info: info3))
+    strategy.lock(boundaryId: boundary, info: info1)
+    strategy.lock(boundaryId: boundary, info: info2)
+    XCTAssertLockFailure(strategy.canLock(boundaryId: boundary, info: info3))
 
     // Unlock one
-    strategy.unlock(id: boundary, info: info1)
+    strategy.unlock(boundaryId: boundary, info: info1)
 
     // Now third should succeed
-    XCTAssertEqual(strategy.canLock(id: boundary, info: info3), .success)
+    XCTAssertEqual(strategy.canLock(boundaryId: boundary, info: info3), .success)
 
-    strategy.cleanUp(id: boundary)
+    strategy.cleanUp(boundaryId: boundary)
   }
 
   // MARK: - CleanUp Tests
@@ -267,15 +267,15 @@ final class LockmanConcurrencyLimitedStrategyTests: XCTestCase {
     let info2 = LockmanConcurrencyLimitedInfo(
       actionId: "action2", group: TestConcurrencyGroup.apiRequests)
 
-    strategy.lock(id: boundary, info: info1)
-    strategy.lock(id: boundary, info: info2)
+    strategy.lock(boundaryId: boundary, info: info1)
+    strategy.lock(boundaryId: boundary, info: info2)
 
     // Clean up
-    strategy.cleanUp(id: boundary)
+    strategy.cleanUp(boundaryId: boundary)
 
     // Should be able to lock again
-    XCTAssertEqual(strategy.canLock(id: boundary, info: info1), .success)
-    XCTAssertEqual(strategy.canLock(id: boundary, info: info2), .success)
+    XCTAssertEqual(strategy.canLock(boundaryId: boundary, info: info1), .success)
+    XCTAssertEqual(strategy.canLock(boundaryId: boundary, info: info2), .success)
   }
 
   // MARK: - GetCurrentLocks Tests
@@ -289,8 +289,8 @@ final class LockmanConcurrencyLimitedStrategyTests: XCTestCase {
     let info2 = LockmanConcurrencyLimitedInfo(
       actionId: "action2", group: TestConcurrencyGroup.fileOperations)
 
-    strategy.lock(id: boundary, info: info1)
-    strategy.lock(id: boundary, info: info2)
+    strategy.lock(boundaryId: boundary, info: info1)
+    strategy.lock(boundaryId: boundary, info: info2)
 
     let allLocks = strategy.getCurrentLocks()
     let locks = allLocks[AnyLockmanBoundaryId(boundary)] ?? []
@@ -299,6 +299,6 @@ final class LockmanConcurrencyLimitedStrategyTests: XCTestCase {
     let actionIds = locks.compactMap { ($0 as? LockmanConcurrencyLimitedInfo)?.actionId }.sorted()
     XCTAssertEqual(actionIds, ["action1", "action2"])
 
-    strategy.cleanUp(id: boundary)
+    strategy.cleanUp(boundaryId: boundary)
   }
 }

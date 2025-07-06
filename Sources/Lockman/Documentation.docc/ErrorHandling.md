@@ -24,7 +24,7 @@ Basic lockFailure handler structure used in all strategies:
         }
     },
     action: action,
-    cancelID: cancelID
+    boundaryId: cancelID
 )
 ```
 

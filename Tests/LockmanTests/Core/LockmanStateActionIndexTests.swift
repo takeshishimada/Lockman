@@ -33,11 +33,11 @@ final class LockmanStateActionIndexTests: XCTestCase {
     var strategyId: LockmanStrategyId { LockmanStrategyId(type: Self.self) }
     static func makeStrategyId() -> LockmanStrategyId { LockmanStrategyId(type: self) }
 
-    func canLock<B: LockmanBoundaryId>(id: B, info: TestInfo) -> LockmanResult { .success }
-    func lock<B: LockmanBoundaryId>(id: B, info: TestInfo) {}
-    func unlock<B: LockmanBoundaryId>(id: B, info: TestInfo) {}
+    func canLock<B: LockmanBoundaryId>(boundaryId: B, info: TestInfo) -> LockmanResult { .success }
+    func lock<B: LockmanBoundaryId>(boundaryId: B, info: TestInfo) {}
+    func unlock<B: LockmanBoundaryId>(boundaryId: B, info: TestInfo) {}
     func cleanUp() {}
-    func cleanUp<B: LockmanBoundaryId>(id: B) {}
+    func cleanUp<B: LockmanBoundaryId>(boundaryId: B) {}
     func getCurrentLocks() -> [AnyLockmanBoundaryId: [any LockmanInfo]] { [:] }
   }
 

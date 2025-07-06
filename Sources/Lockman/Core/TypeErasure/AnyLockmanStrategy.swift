@@ -96,24 +96,24 @@ public struct AnyLockmanStrategy<I: LockmanInfo>: LockmanStrategy, Sendable {
     // Capture each method as a closure, preserving the concrete strategy's behavior
     // while erasing its type information
 
-    _canLock = { [strategy] id, info in
-      strategy.canLock(id: id, info: info)
+    _canLock = { [strategy] boundaryId, info in
+      strategy.canLock(boundaryId: boundaryId, info: info)
     }
 
-    _lock = { [strategy] id, info in
-      strategy.lock(id: id, info: info)
+    _lock = { [strategy] boundaryId, info in
+      strategy.lock(boundaryId: boundaryId, info: info)
     }
 
-    _unlock = { [strategy] id, info in
-      strategy.unlock(id: id, info: info)
+    _unlock = { [strategy] boundaryId, info in
+      strategy.unlock(boundaryId: boundaryId, info: info)
     }
 
     _cleanUp = { [strategy] in
       strategy.cleanUp()
     }
 
-    _cleanUpById = { [strategy] id in
-      strategy.cleanUp(id: id)
+    _cleanUpById = { [strategy] boundaryId in
+      strategy.cleanUp(boundaryId: boundaryId)
     }
 
     _getCurrentLocks = { [strategy] in
@@ -159,11 +159,11 @@ public struct AnyLockmanStrategy<I: LockmanInfo>: LockmanStrategy, Sendable {
   /// The wrapper does not add its own error handling or modification.
   ///
   /// - Parameters:
-  ///   - id: A unique boundary identifier conforming to `LockmanBoundaryId`
+  ///   - boundaryId: A unique boundary identifier conforming to `LockmanBoundaryId`
   ///   - info: Lock information of type `I`
   /// - Returns: A `LockmanResult` indicating whether the lock can be acquired
-  public func canLock<B: LockmanBoundaryId>(id: B, info: I) -> LockmanResult {
-    _canLock(id, info)
+  public func canLock<B: LockmanBoundaryId>(boundaryId: B, info: I) -> LockmanResult {
+    _canLock(boundaryId, info)
   }
 
   /// Attempts to acquire a lock for the given boundary and information.
@@ -181,10 +181,10 @@ public struct AnyLockmanStrategy<I: LockmanInfo>: LockmanStrategy, Sendable {
   /// the acquired lock. This wrapper does not add any additional state management.
   ///
   /// - Parameters:
-  ///   - id: A unique boundary identifier conforming to `LockmanBoundaryId`
+  ///   - boundaryId: A unique boundary identifier conforming to `LockmanBoundaryId`
   ///   - info: Lock information of type `I` to be registered as active
-  public func lock<B: LockmanBoundaryId>(id: B, info: I) {
-    _lock(id, info)
+  public func lock<B: LockmanBoundaryId>(boundaryId: B, info: I) {
+    _lock(boundaryId, info)
   }
 
   /// Releases a previously acquired lock.
@@ -207,10 +207,10 @@ public struct AnyLockmanStrategy<I: LockmanInfo>: LockmanStrategy, Sendable {
   /// The behavior depends on the concrete strategy's implementation.
   ///
   /// - Parameters:
-  ///   - id: The boundary identifier for which the lock should be released
+  ///   - boundaryId: The boundary identifier for which the lock should be released
   ///   - info: The same lock information of type `I` that was used when acquiring the lock
-  public func unlock<B: LockmanBoundaryId>(id: B, info: I) {
-    _unlock(id, info)
+  public func unlock<B: LockmanBoundaryId>(boundaryId: B, info: I) {
+    _unlock(boundaryId, info)
   }
 
   /// Removes all lock information across all boundaries.
@@ -260,9 +260,9 @@ public struct AnyLockmanStrategy<I: LockmanInfo>: LockmanStrategy, Sendable {
   /// - Scoped cleanup for temporary contexts or workflows
   /// - Partial system resets during development and testing
   ///
-  /// - Parameter id: The identifier whose lock information should be removed
-  public func cleanUp<B: LockmanBoundaryId>(id: B) {
-    _cleanUpById(id)
+  /// - Parameter boundaryId: The identifier whose lock information should be removed
+  public func cleanUp<B: LockmanBoundaryId>(boundaryId: B) {
+    _cleanUpById(boundaryId)
   }
 
   /// Returns current locks information for debugging.

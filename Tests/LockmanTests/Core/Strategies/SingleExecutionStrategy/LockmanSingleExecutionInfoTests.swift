@@ -264,21 +264,21 @@ final class LockmanSingleExecutionInfoIntegrationTests: XCTestCase {
     let info2 = LockmanSingleExecutionInfo(actionId: "action2", mode: .boundary)
 
     // First lock should succeed
-    XCTAssertEqual(strategy.canLock(id: boundaryId, info: info1), .success)
-    strategy.lock(id: boundaryId, info: info1)
+    XCTAssertEqual(strategy.canLock(boundaryId: boundaryId, info: info1), .success)
+    strategy.lock(boundaryId: boundaryId, info: info1)
 
     // Different action should fail (boundary is locked)
-    XCTAssertLockFailure(strategy.canLock(id: boundaryId, info: info2))
+    XCTAssertLockFailure(strategy.canLock(boundaryId: boundaryId, info: info2))
 
     // Unlock first
-    strategy.unlock(id: boundaryId, info: info1)
+    strategy.unlock(boundaryId: boundaryId, info: info1)
 
     // Now second action should succeed
-    XCTAssertEqual(strategy.canLock(id: boundaryId, info: info2), .success)
-    strategy.lock(id: boundaryId, info: info2)
+    XCTAssertEqual(strategy.canLock(boundaryId: boundaryId, info: info2), .success)
+    strategy.lock(boundaryId: boundaryId, info: info2)
 
     // Cleanup
-    strategy.unlock(id: boundaryId, info: info2)
+    strategy.unlock(boundaryId: boundaryId, info: info2)
   }
 
   func testComplexIntegrationScenario() {
@@ -290,19 +290,19 @@ final class LockmanSingleExecutionInfoIntegrationTests: XCTestCase {
     let stringInfo = LockmanSingleExecutionInfo(actionId: "stringAction", mode: .boundary)
 
     // Lock different actions on different boundaries
-    strategy.lock(id: boundaryId1, info: stringInfo)
+    strategy.lock(boundaryId: boundaryId1, info: stringInfo)
 
     // Same actions on different boundaries should be allowed
-    XCTAssertEqual(strategy.canLock(id: boundaryId2, info: stringInfo), .success)
+    XCTAssertEqual(strategy.canLock(boundaryId: boundaryId2, info: stringInfo), .success)
 
     // Any action on same boundary should fail
-    XCTAssertLockFailure(strategy.canLock(id: boundaryId1, info: stringInfo))
+    XCTAssertLockFailure(strategy.canLock(boundaryId: boundaryId1, info: stringInfo))
 
     // Cleanup one boundary
-    strategy.cleanUp(id: boundaryId1)
+    strategy.cleanUp(boundaryId: boundaryId1)
 
     // Now should be able to lock on boundary1 again
-    XCTAssertEqual(strategy.canLock(id: boundaryId1, info: stringInfo), .success)
+    XCTAssertEqual(strategy.canLock(boundaryId: boundaryId1, info: stringInfo), .success)
 
     // Full cleanup
     strategy.cleanUp()
@@ -319,9 +319,9 @@ final class LockmanSingleExecutionInfoIntegrationTests: XCTestCase {
       for i in 0..<10 {
         group.addTask {
           let info = LockmanSingleExecutionInfo(actionId: "action_\(i)", mode: .boundary)
-          let result = strategy.canLock(id: boundaryId, info: info)
+          let result = strategy.canLock(boundaryId: boundaryId, info: info)
           if result == .success {
-            strategy.lock(id: boundaryId, info: info)
+            strategy.lock(boundaryId: boundaryId, info: info)
             return ("action_\(i)", true)
           }
           return ("action_\(i)", false)
@@ -351,7 +351,7 @@ final class LockmanSingleExecutionInfoIntegrationTests: XCTestCase {
     )
 
     // Cleanup - both specific boundary and general cleanup
-    strategy.cleanUp(id: boundaryId)
+    strategy.cleanUp(boundaryId: boundaryId)
     strategy.cleanUp()
   }
 

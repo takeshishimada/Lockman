@@ -44,7 +44,7 @@
 ///             // async work
 ///           },
 ///           action: .login,
-///           cancelID: "login-operation"
+///           boundaryId: "login-operation"
 ///         )
 ///       // ...
 ///       }
@@ -93,7 +93,7 @@ public macro LockmanSingleExecution() =
 ///             // async work
 ///           },
 ///           action: .highPriorityTask,
-///           cancelID: "priority-task"
+///           boundaryId: "priority-task"
 ///         )
 ///       // ...
 ///       }
@@ -153,7 +153,7 @@ public macro LockmanPriorityBased() =
 ///             // navigation logic
 ///           },
 ///           action: .navigate(to: destination),
-///           cancelID: "navigation"
+///           boundaryId: "navigation"
 ///         )
 ///       // ...
 ///       }
@@ -201,7 +201,7 @@ public macro LockmanGroupCoordination() =
 ///             // critical work requiring both single execution and high priority
 ///           },
 ///           action: .criticalOperation,
-///           cancelID: "critical-op"
+///           boundaryId: "critical-op"
 ///         )
 ///       }
 ///     }
@@ -428,7 +428,7 @@ public macro LockmanDynamicCondition() =
 ///             await send(.profileFetched(profile))
 ///           },
 ///           action: .fetchUserProfile(userId),
-///           cancelID: "fetch-profile-\(userId)"
+///           boundaryId: "fetch-profile-\(userId)"
 ///         )
 ///       // ...
 ///       }

@@ -137,7 +137,7 @@ public enum LockmanManager {
     /// ```
     public static func boundary<B: LockmanBoundaryId>(_ id: B) {
       LockmanManager.withBoundaryLock(for: id) {
-        container.cleanUp(id: id)
+        container.cleanUp(boundaryId: id)
       }
     }
   }
@@ -164,8 +164,8 @@ extension LockmanManager {
     ManagedCriticalState([:])
 
   /// Retrieves or creates an NSLock for the specified boundary ID.
-  private static func getLock<B: LockmanBoundaryId>(for id: B) -> NSLock {
-    let anyId = AnyLockmanBoundaryId(id)
+  private static func getLock<B: LockmanBoundaryId>(for boundaryId: B) -> NSLock {
+    let anyId = AnyLockmanBoundaryId(boundaryId)
     return boundaryLocks.withCriticalRegion { locks in
       if let existingLock = locks[anyId] {
         return existingLock
@@ -179,10 +179,10 @@ extension LockmanManager {
 
   /// Executes the given operation while holding the boundary-specific lock.
   public static func withBoundaryLock<B: LockmanBoundaryId, T>(
-    for id: B,
+    for boundaryId: B,
     operation: () throws -> T
   ) rethrows -> T {
-    let nsLock = getLock(for: id)
+    let nsLock = getLock(for: boundaryId)
     nsLock.lock()
     defer { nsLock.unlock() }
     return try operation()

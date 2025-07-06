@@ -179,11 +179,11 @@ final class LockmanConfigurationIntegrationTests: XCTestCase {
     let info = LockmanSingleExecutionInfo(actionId: "test-immediate", mode: .boundary)
 
     // Lock
-    strategy.lock(id: boundaryId, info: info)
+    strategy.lock(boundaryId: boundaryId, info: info)
 
     // Verify it's locked - another instance with same actionId should fail
     let anotherInfo = LockmanSingleExecutionInfo(actionId: "test-immediate", mode: .boundary)
-    XCTAssertLockFailure(strategy.canLock(id: boundaryId, info: anotherInfo))
+    XCTAssertLockFailure(strategy.canLock(boundaryId: boundaryId, info: anotherInfo))
 
     // Create unlock token with immediate option
     let unlockToken = LockmanUnlock(
@@ -199,7 +199,7 @@ final class LockmanConfigurationIntegrationTests: XCTestCase {
     // For immediate unlock, no wait is needed
     // Should be able to lock again with a new info instance (same actionId)
     let newInfo = LockmanSingleExecutionInfo(actionId: "test-immediate", mode: .boundary)
-    XCTAssertEqual(strategy.canLock(id: boundaryId, info: newInfo), .success)
+    XCTAssertEqual(strategy.canLock(boundaryId: boundaryId, info: newInfo), .success)
 
     // Clean up
     strategy.cleanUp()
@@ -227,22 +227,23 @@ final class LockmanConfigurationIntegrationTests: XCTestCase {
     )
 
     // Lock
-    strategy.lock(id: boundaryId, info: info)
-    XCTAssertLockFailure(strategy.canLock(id: boundaryId, info: info))
+    strategy.lock(boundaryId: boundaryId, info: info)
+    XCTAssertLockFailure(strategy.canLock(boundaryId: boundaryId, info: info))
 
     // Call unlock (should be delayed)
     unlockToken()
 
     // Verify still locked immediately after
     XCTAssertLockFailure(
-      strategy.canLock(id: boundaryId, info: info), "Lock should not be released immediately")
+      strategy.canLock(boundaryId: boundaryId, info: info),
+      "Lock should not be released immediately")
 
     // Wait a small amount to ensure we're testing the delay
     try await Task.sleep(nanoseconds: 100_000_000)  // 100ms
 
     // For transition delay, we should still be locked at this point on all platforms
     XCTAssertLockFailure(
-      strategy.canLock(id: boundaryId, info: info),
+      strategy.canLock(boundaryId: boundaryId, info: info),
       "Lock should still be held during transition delay")
 
     // Wait for the maximum possible transition delay across all platforms
@@ -250,7 +251,7 @@ final class LockmanConfigurationIntegrationTests: XCTestCase {
 
     // Now it should definitely be unlocked
     XCTAssertEqual(
-      strategy.canLock(id: boundaryId, info: info), .success,
+      strategy.canLock(boundaryId: boundaryId, info: info), .success,
       "Lock should be released after transition delay")
   }
 }

@@ -153,11 +153,11 @@ final class LockmanSingleExecutionActionTests: XCTestCase {
         let boundaryId = "test-boundary"
         let info = action.lockmanInfo
 
-        XCTAssertEqual(strategy.canLock(id: boundaryId, info: info), .success)
-        strategy.lock(id: boundaryId, info: info)
-        XCTAssertLockFailure(strategy.canLock(id: boundaryId, info: info))
-        strategy.unlock(id: boundaryId, info: info)
-        XCTAssertEqual(strategy.canLock(id: boundaryId, info: info), .success)
+        XCTAssertEqual(strategy.canLock(boundaryId: boundaryId, info: info), .success)
+        strategy.lock(boundaryId: boundaryId, info: info)
+        XCTAssertLockFailure(strategy.canLock(boundaryId: boundaryId, info: info))
+        strategy.unlock(boundaryId: boundaryId, info: info)
+        XCTAssertEqual(strategy.canLock(boundaryId: boundaryId, info: info), .success)
       } catch {
         XCTFail("Strategy resolution should succeed")
       }
@@ -173,15 +173,15 @@ final class LockmanSingleExecutionActionTests: XCTestCase {
     let action2 = ParameterizedAction.fetchUser(id: "123")
 
     // First lock should succeed
-    XCTAssertEqual(strategy.canLock(id: boundaryId, info: action1.lockmanInfo), .success)
-    strategy.lock(id: boundaryId, info: action1.lockmanInfo)
+    XCTAssertEqual(strategy.canLock(boundaryId: boundaryId, info: action1.lockmanInfo), .success)
+    strategy.lock(boundaryId: boundaryId, info: action1.lockmanInfo)
 
     // Second lock should fail (boundary is locked)
-    XCTAssertLockFailure(strategy.canLock(id: boundaryId, info: action2.lockmanInfo))
+    XCTAssertLockFailure(strategy.canLock(boundaryId: boundaryId, info: action2.lockmanInfo))
 
     // Different action should also fail (boundary is locked)
     let action3 = ParameterizedAction.fetchUser(id: "456")
-    XCTAssertLockFailure(strategy.canLock(id: boundaryId, info: action3.lockmanInfo))
+    XCTAssertLockFailure(strategy.canLock(boundaryId: boundaryId, info: action3.lockmanInfo))
 
     // Cleanup
     strategy.cleanUp()
