@@ -318,6 +318,52 @@ extension Effect {
   }
 }
 
+// MARK: - Effect.lock() Method Chain API
+
+extension Effect {
+  /// Applies lock management to this effect using a method chain style.
+  ///
+  /// This method provides an alternative API to `withLock` that works as a method chain.
+  /// The lock strategy is automatically obtained from the provided action.
+  ///
+  /// ## Usage
+  /// ```swift
+  /// return .run { send in
+  ///   // async operation
+  /// }
+  /// .lock(action: action, boundaryId: Feature.self)
+  /// ```
+  ///
+  /// ## Requirements
+  /// - The action must implement `LockmanAction` to provide lock information
+  ///
+  /// - Parameters:
+  ///   - action: LockmanAction providing lock information and strategy type
+  ///   - boundaryId: Unique identifier for effect cancellation and lock boundary
+  ///   - unlockOption: Controls when the unlock operation is executed (default: uses action's option)
+  ///   - handleCancellationErrors: Whether to pass CancellationError to catch handler (default: global config)
+  ///   - lockFailure: Optional handler for lock acquisition failures
+  /// - Returns: Effect with automatic lock management
+  public func lock<B: LockmanBoundaryId, A: LockmanAction>(
+    action: A,
+    boundaryId: B,
+    unlockOption: LockmanUnlockOption? = nil,
+    handleCancellationErrors: Bool? = nil,
+    lockFailure: (@Sendable (_ error: any Error, _ send: Send<Action>) async -> Void)? = nil
+  ) -> Effect<Action> {
+    // This is essentially a wrapper around concatenateWithLock
+    // that provides a method chain style API
+
+    return Effect.concatenateWithLock(
+      unlockOption: unlockOption,
+      operations: [self],
+      lockFailure: lockFailure,
+      action: action,
+      boundaryId: boundaryId
+    )
+  }
+}
+
 // MARK: - Internal Implementation
 
 extension Effect {
