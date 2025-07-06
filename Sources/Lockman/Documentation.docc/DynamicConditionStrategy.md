@@ -28,7 +28,7 @@ LockmanDynamicConditionInfo(
 )
 ```
 
-### Advanced Control with Reducer.withLock
+### Advanced Control with Reducer.lock
 
 Using the method chain API enables more advanced condition evaluation based on current state and action:
 
@@ -39,7 +39,7 @@ var body: some ReducerOf<Self> {
         case .makePayment(let amount):
             // Create a temporary reducer with dynamic conditions
             let tempReducer = Reduce<State, Action> { _, _ in .none }
-                .withLock { state, _ in
+                .lock { state, _ in
                     // Reducer-level condition
                     guard state.isAuthenticated else {
                         return .failure(AuthenticationError.notLoggedIn)
@@ -47,7 +47,7 @@ var body: some ReducerOf<Self> {
                     return .success
                 }
             
-            return tempReducer.withLock(
+            return tempReducer.lock(
                 state: state,
                 action: action,
                 operation: { send in
@@ -129,7 +129,7 @@ var body: some ReducerOf<Self> {
         switch action {
         case .criticalOperation:
             let tempReducer = Reduce<State, Action> { _, _ in .none }
-                .withLock { state, _ in
+                .lock { state, _ in
                     // 2. Reducer-level condition
                     guard state.maintenanceMode == false else {
                         return .failure(SystemError.maintenanceMode)
@@ -137,7 +137,7 @@ var body: some ReducerOf<Self> {
                     return .success
                 }
             
-            return tempReducer.withLock(
+            return tempReducer.lock(
                 state: state,
                 action: action,
                 operation: { send in

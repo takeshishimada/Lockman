@@ -4,8 +4,8 @@ import XCTest
 
 @testable import Lockman
 
-/// Tests for Reducer.withLock method chain API
-final class ReducerWithLockMethodChainTests: XCTestCase {
+/// Tests for Reducer.lock method chain API and LockmanDynamicConditionReducer
+final class LockmanDynamicConditionReducerMethodChainTests: XCTestCase {
 
   override func setUp() {
     super.setUp()
@@ -87,16 +87,16 @@ final class ReducerWithLockMethodChainTests: XCTestCase {
     let baseReducer = Reduce<TestState, TestAction> { state, action in
       switch action {
       case .increment:
-        // Here we create a temporary ReduceWithLock to use dynamic conditions
+        // Here we create a temporary LockmanDynamicConditionReducer to use dynamic conditions
         let tempReducer = Reduce<TestState, TestAction> { _, _ in .none }
-          .withLock { state, _ in
+          .lock { state, _ in
             guard state.isEnabled else {
               return .failure(FeatureDisabledError())
             }
             return .success
           }
 
-        return tempReducer.withLock(
+        return tempReducer.lock(
           state: state,
           action: action,
           operation: { send in
@@ -154,7 +154,7 @@ final class ReducerWithLockMethodChainTests: XCTestCase {
       case .purchase(let amount):
         // Create reducer with reducer-level condition
         let tempReducer = Reduce<TestState, TestAction> { _, _ in .none }
-          .withLock { state, _ in
+          .lock { state, _ in
             // Reducer-level condition
             guard state.isAuthenticated else {
               return .failure(NotAuthenticatedError())
@@ -163,7 +163,7 @@ final class ReducerWithLockMethodChainTests: XCTestCase {
           }
 
         // Add action-level condition
-        return tempReducer.withLock(
+        return tempReducer.lock(
           state: state,
           action: action,
           operation: { send in
@@ -236,16 +236,15 @@ final class ReducerWithLockMethodChainTests: XCTestCase {
   }
 
   @MainActor
-  func testWithLockWithoutCondition() async {
-    // Test using withLock without any reducer-level condition
-    let baseReducer = Reduce<TestState, TestAction> { state, action in
+  func testLockWithoutCondition() async {
+    // Test using lock without any reducer-level condition
+    let reducer = Reduce<TestState, TestAction> { state, action in
       switch action {
       case .increment:
         // Create reducer without condition
-        let tempReducer = Reduce<TestState, TestAction> { _, _ in .none }
-          .withLock()  // No condition
+        let tempReducer = LockmanDynamicConditionReducer<TestState, TestAction>({ _, _ in .none })
 
-        return tempReducer.withLock(
+        return tempReducer.lock(
           state: state,
           action: action,
           operation: { send in
@@ -265,7 +264,7 @@ final class ReducerWithLockMethodChainTests: XCTestCase {
     }
 
     let store = TestStore(initialState: TestState()) {
-      baseReducer
+      reducer
     }
 
     // Should work normally without reducer-level condition
@@ -304,22 +303,22 @@ final class ReducerWithLockMethodChainTests: XCTestCase {
 
 @Reducer
 struct TestFeatureWithCondition {
-  typealias State = ReducerWithLockMethodChainTests.TestState
-  typealias Action = ReducerWithLockMethodChainTests.TestAction
+  typealias State = LockmanDynamicConditionReducerMethodChainTests.TestState
+  typealias Action = LockmanDynamicConditionReducerMethodChainTests.TestAction
 
   var body: some ReducerOf<Self> {
     Reduce<State, Action> { state, action in
       switch action {
       case .increment:
-        // Use inline withLock
+        // Use inline lock
         return Reduce<State, Action> { _, _ in .none }
-          .withLock { state, _ in
+          .lock { state, _ in
             guard state.isEnabled else {
-              return .failure(ReducerWithLockMethodChainTests.FeatureDisabledError())
+              return .failure(LockmanDynamicConditionReducerMethodChainTests.FeatureDisabledError())
             }
             return .success
           }
-          .withLock(
+          .lock(
             state: state,
             action: action,
             operation: { send in
@@ -328,8 +327,8 @@ struct TestFeatureWithCondition {
             lockFailure: { error, send in
               await send(.setError(error.localizedDescription))
             },
-            lockAction: ReducerWithLockMethodChainTests.IncrementAction(),
-            boundaryId: ReducerWithLockMethodChainTests.CancelID.test
+            lockAction: LockmanDynamicConditionReducerMethodChainTests.IncrementAction(),
+            boundaryId: LockmanDynamicConditionReducerMethodChainTests.CancelID.test
           )
 
       case .incrementResponse:

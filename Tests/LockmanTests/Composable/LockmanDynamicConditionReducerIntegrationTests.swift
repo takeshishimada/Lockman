@@ -24,8 +24,8 @@ private struct ComposableTestDynamicConditionError: Error, LocalizedError {
   }
 }
 
-/// Integration tests for ReduceWithLock to ensure proper lock management
-final class ReduceWithLockIntegrationTests: XCTestCase {
+/// Integration tests for LockmanDynamicConditionReducer to ensure proper lock management
+final class LockmanDynamicConditionReducerIntegrationTests: XCTestCase {
 
   // MARK: - Test Types
 
@@ -84,7 +84,7 @@ final class ReduceWithLockIntegrationTests: XCTestCase {
 
     // Create reducer with both conditions
     // Note: We need to create the reducer in a way that allows us to call withLock on it
-    let baseReducer = ReduceWithLock<TestState, TestAction>(
+    let baseReducer = LockmanDynamicConditionReducer<TestState, TestAction>(
       { state, action in
         switch action {
         case .increment:
@@ -109,7 +109,7 @@ final class ReduceWithLockIntegrationTests: XCTestCase {
       switch action {
       case .increment:
         state.count += 1  // Execute the increment logic
-        return baseReducer.withLock(
+        return baseReducer.lock(
           state: state,
           action: action,
           unlockOption: .immediate,
@@ -228,15 +228,15 @@ final class ReduceWithLockIntegrationTests: XCTestCase {
     let tracker = ExecutionTracker()
 
     // Create reducer
-    let reducer = ReduceWithLock<TestState, TestAction>(
+    let reducer = LockmanDynamicConditionReducer<TestState, TestAction>(
       { state, action in
         switch action {
         case .increment:
           state.count += 1
-          let tempReducer = ReduceWithLock<TestState, TestAction>(
+          let tempReducer = LockmanDynamicConditionReducer<TestState, TestAction>(
             { _, _ in .none }
           )
-          return tempReducer.withLock(
+          return tempReducer.lock(
             state: state,
             action: action,
             operation: { send in
@@ -303,16 +303,16 @@ final class ReduceWithLockIntegrationTests: XCTestCase {
     }
     let tracker = UnlockTracker()
 
-    let reducer = ReduceWithLock<TestState, TestAction>(
+    let reducer = LockmanDynamicConditionReducer<TestState, TestAction>(
       { state, action in
         switch action {
         case .increment:
           state.count += 1
           // Test manual unlock version
-          let tempReducer = ReduceWithLock<TestState, TestAction>(
+          let tempReducer = LockmanDynamicConditionReducer<TestState, TestAction>(
             { _, _ in .none }
           )
-          return tempReducer.withLock(
+          return tempReducer.lock(
             state: state,
             action: action,
             operation: { send, unlock in
@@ -362,16 +362,16 @@ final class ReduceWithLockIntegrationTests: XCTestCase {
 
     struct TestError: Error {}
 
-    let reducer = ReduceWithLock<TestState, TestAction>(
+    let reducer = LockmanDynamicConditionReducer<TestState, TestAction>(
       { state, action in
         switch action {
         case .increment:
           state.count += 1
           // Test error handling with unlock token
-          let tempReducer = ReduceWithLock<TestState, TestAction>(
+          let tempReducer = LockmanDynamicConditionReducer<TestState, TestAction>(
             { _, _ in .none }
           )
-          return tempReducer.withLock(
+          return tempReducer.lock(
             state: state,
             action: action,
             operation: { send, unlock in
@@ -417,20 +417,20 @@ final class ReduceWithLockIntegrationTests: XCTestCase {
     }
     let tracker = ConditionTracker()
 
-    let reducer = ReduceWithLock<TestState, TestAction>(
+    let reducer = LockmanDynamicConditionReducer<TestState, TestAction>(
       { state, action in
         switch action {
         case .increment:
           state.count += 1
           // Test manual unlock with both reducer and action level conditions
-          let tempReducer = ReduceWithLock<TestState, TestAction>(
+          let tempReducer = LockmanDynamicConditionReducer<TestState, TestAction>(
             { _, _ in .none },
             lockCondition: { _, _ in
               tracker.conditionEvaluated = true
               return .success
             }
           )
-          return tempReducer.withLock(
+          return tempReducer.lock(
             state: state,
             action: action,
             operation: { send, unlock in
@@ -494,19 +494,19 @@ final class ReduceWithLockIntegrationTests: XCTestCase {
       info: LockmanSingleExecutionInfo(actionId: cancelID, mode: .boundary)
     )
 
-    let reducer = ReduceWithLock<TestState, TestAction>(
+    let reducer = LockmanDynamicConditionReducer<TestState, TestAction>(
       { state, action in
         switch action {
         case .increment:
           state.count += 1
-          let tempReducer = ReduceWithLock<TestState, TestAction>(
+          let tempReducer = LockmanDynamicConditionReducer<TestState, TestAction>(
             { _, _ in .none },
             lockCondition: { _, _ in
               tracker.step1Evaluated = true
               return .success  // Step 1 passes
             }
           )
-          return tempReducer.withLock(
+          return tempReducer.lock(
             state: state,
             action: action,
             operation: { send in

@@ -108,7 +108,7 @@ public final class LockmanDynamicConditionStrategy: LockmanStrategy, @unchecked 
   ///
   /// This method removes all locks that have the same actionId as the provided info,
   /// regardless of their uniqueId. This is useful when multiple locks with the same
-  /// actionId exist (e.g., from ReduceWithLock's multi-step locking).
+  /// actionId exist (e.g., from LockmanDynamicConditionReducer's multi-step locking).
   ///
   /// - Parameters:
   ///   - boundaryId: The boundary identifier
