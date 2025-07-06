@@ -148,3 +148,45 @@ Key points about the [`withLock`](<doc:Lock>) method:
 
 With this implementation, the `startProcessButtonTapped` action will not be executed again while processing, making it safe even if the user accidentally taps the button multiple times.
 
+## Alternative APIs
+
+### Using Effect.lock() Method Chain
+
+Lockman also provides a method chain API that can be more concise for simple cases:
+
+```swift
+case .startProcessButtonTapped:
+    return .run { send in
+        await send(.processStart)
+        try await Task.sleep(nanoseconds: 3_000_000_000)
+        await send(.processCompleted)
+    }
+    .lock(
+        action: action,
+        boundaryId: CancelID.userAction,
+        lockFailure: { error, send in
+            // Handler for lock acquisition failure
+        }
+    )
+```
+
+### Using Reducer.lock() for Automatic Lock Management
+
+For reducers where many actions need locking, you can use the `Reducer.lock()` modifier to automatically apply locking to all actions that implement `LockmanAction`:
+
+```swift
+var body: some ReducerOf<Self> {
+    Reduce { state, action in
+        // Your reducer logic
+    }
+    .lock(
+        boundaryId: CancelID.userAction,
+        lockFailure: { error, send in
+            // Common lock failure handler for all actions
+        }
+    )
+}
+```
+
+This approach automatically manages locks for any action that conforms to `LockmanAction`, reducing boilerplate code.
+
