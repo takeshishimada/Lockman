@@ -71,10 +71,10 @@ This handler catches errors thrown within the operation and appropriately notifi
 ```swift
 lockFailure: { error, send in
     // Notify user that processing is in progress
-    send(.showMessage("Processing is in progress"))
+    await send(.showMessage("Processing is in progress"))
     
     // Or provide visual feedback in UI
-    send(.setButtonState(.loading))
+    await send(.setButtonState(.loading))
 }
 ```
 
@@ -87,7 +87,7 @@ lockFailure: { error, send in
 lockFailure: { error, send in
     // Understand the situation from errors containing detailed information
     if let conflictInfo = extractConflictInfo(from: error) {
-        send(.showMessage("Another important process is running: \(conflictInfo.description)"))
+        await send(.showMessage("Another important process is running: \(conflictInfo.description)"))
     }
 }
 ```
@@ -100,9 +100,9 @@ lockFailure: { error, send in
 ```swift
 catch handler: { error, send in
     if error is CancellationError {
-        send(.processCancelled("Interrupted by a more important process"))
+        await send(.processCancelled("Interrupted by a more important process"))
     } else {
-        send(.processError(error.localizedDescription))
+        await send(.processError(error.localizedDescription))
     }
 }
 ```
@@ -125,10 +125,10 @@ send(.showError(error.localizedDescription))
 
 ```swift
 // ✅ Good example: Specific and easy to understand message
-send(.showMessage("Saving data. Please wait a moment."))
+await send(.showMessage("Saving data. Please wait a moment."))
 
 // ❌ Bad example: Technical error message
-send(.showMessage("LockmanError: boundary locked"))
+await send(.showMessage("LockmanError: boundary locked"))
 ```
 
 ### 3. Utilizing Additional Information

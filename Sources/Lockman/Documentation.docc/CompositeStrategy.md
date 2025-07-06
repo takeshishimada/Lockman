@@ -144,16 +144,16 @@ In composite strategies, errors from each component strategy are integrated and 
 lockFailure: { error, send in
     switch error {
     case let singleError as LockmanSingleExecutionError:
-        send(.singleExecutionConflict("Duplicate execution detected"))
+        await send(.singleExecutionConflict("Duplicate execution detected"))
         
     case let priorityError as LockmanPriorityBasedError:
-        send(.priorityConflict("Priority conflict occurred"))
+        await send(.priorityConflict("Priority conflict occurred"))
         
     case let concurrencyError as LockmanConcurrencyLimitedError:
-        send(.concurrencyLimitReached("Concurrent execution limit reached"))
+        await send(.concurrencyLimitReached("Concurrent execution limit reached"))
         
     default:
-        send(.unknownLockFailure("Failed to acquire lock"))
+        await send(.unknownLockFailure("Failed to acquire lock"))
     }
 }
 ```

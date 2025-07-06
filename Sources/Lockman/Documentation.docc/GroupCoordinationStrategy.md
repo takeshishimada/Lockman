@@ -172,7 +172,7 @@ For errors that may occur with GroupCoordinationStrategy and their solutions, pl
 ```swift
 lockFailure: { error, send in
     if case .actionAlreadyInGroup(let existingInfo, let groupIds) = error as? LockmanGroupCoordinationError {
-        send(.alreadyActive("Process is already running"))
+        await send(.alreadyActive("Process is already running"))
     }
 }
 ```
@@ -182,7 +182,7 @@ lockFailure: { error, send in
 ```swift
 lockFailure: { error, send in
     if case .leaderCannotJoinNonEmptyGroup(let groupIds) = error as? LockmanGroupCoordinationError {
-        send(.groupBusy("Cannot start because other processing is running"))
+        await send(.groupBusy("Cannot start because other processing is running"))
     }
 }
 ```
@@ -192,7 +192,7 @@ lockFailure: { error, send in
 ```swift
 lockFailure: { error, send in
     if case .memberCannotJoinEmptyGroup(let groupIds) = error as? LockmanGroupCoordinationError {
-        send(.noActiveGroup("No active group"))
+        await send(.noActiveGroup("No active group"))
     }
 }
 ```

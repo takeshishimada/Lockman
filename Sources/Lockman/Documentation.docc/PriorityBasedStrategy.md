@@ -125,7 +125,7 @@ For errors that may occur with PriorityBasedStrategy and their solutions, please
 ```swift
 lockFailure: { error, send in
     if case .higherPriorityExists(let requested, let current) = error as? LockmanPriorityBasedError {
-        send(.priorityConflict("Waiting due to high priority process running"))
+        await send(.priorityConflict("Waiting due to high priority process running"))
     }
 }
 ```
@@ -135,7 +135,7 @@ lockFailure: { error, send in
 ```swift
 lockFailure: { error, send in
     if case .samePriorityConflict(let priority) = error as? LockmanPriorityBasedError {
-        send(.busyMessage("Process with same priority is running"))
+        await send(.busyMessage("Process with same priority is running"))
     }
 }
 ```
@@ -145,7 +145,7 @@ lockFailure: { error, send in
 ```swift
 catch handler: { error, send in
     if case .precedingActionCancelled(let cancelledInfo) = error as? LockmanPriorityBasedError {
-        send(.processCancelled("Interrupted by high priority process"))
+        await send(.processCancelled("Interrupted by high priority process"))
     }
 }
 ```

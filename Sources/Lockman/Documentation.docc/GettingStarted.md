@@ -167,6 +167,7 @@ case .startProcessButtonTapped:
         boundaryId: CancelID.userAction,
         lockFailure: { error, send in
             // Handler for lock acquisition failure
+            await send(.lockFailed)
         }
     )
 ```
