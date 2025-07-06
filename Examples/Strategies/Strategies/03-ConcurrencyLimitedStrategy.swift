@@ -92,7 +92,6 @@ struct ConcurrencyLimitedStrategyFeature {
       case downloadCompleted(Int)
       case downloadFailed(id: Int, error: String)
       case downloadRejected(id: Int, reason: String)
-      case handleLockFailure(id: Int, error: Error)
     }
   }
 
@@ -106,6 +105,32 @@ struct ConcurrencyLimitedStrategyFeature {
         return handleInternalAction(internalAction, state: &state)
       }
     }
+    .lock(
+      boundaryId: CancelID.downloads,
+      lockFailure: { error, send in
+        // Handle errors from both strategies at reducer level
+        if let concurrencyError = error as? LockmanConcurrencyLimitedError,
+          case .concurrencyLimitReached(let requestedInfo, _, let current) = concurrencyError,
+          let idString = requestedInfo.actionId.split(separator: "-").last,
+          let id = Int(idString)
+        {
+          await send(
+            .internal(
+              .downloadRejected(
+                id: id, reason: "Download limit reached (\(current)/\(requestedInfo.limit))")
+            )
+          )
+        } else if let singleExecutionError = error as? LockmanSingleExecutionError,
+          case .actionAlreadyRunning(let info) = singleExecutionError,
+          let idString = info.actionId.split(separator: "-").last,
+          let id = Int(idString)
+        {
+          await send(
+            .internal(.downloadRejected(id: id, reason: "This download is already in progress"))
+          )
+        }
+      }
+    )
   }
 
   // MARK: - View Action Handler
@@ -119,27 +144,19 @@ struct ConcurrencyLimitedStrategyFeature {
 
       // SingleExecutionStrategy will handle duplicate prevention
 
-      return .withLock(
-        operation: { send in
-          await send(.internal(.downloadStarted(id)))
+      return .run { send in
+        await send(.internal(.downloadStarted(id)))
 
-          // Simulate download with progress updates
-          for i in 1...10 {
-            try await Task.sleep(nanoseconds: 500_000_000)  // 0.5 seconds
-            await send(.internal(.downloadProgress(id: id, progress: Double(i) / 10.0)))
-          }
+        // Simulate download with progress updates
+        for i in 1...10 {
+          try await Task.sleep(nanoseconds: 500_000_000)  // 0.5 seconds
+          await send(.internal(.downloadProgress(id: id, progress: Double(i) / 10.0)))
+        }
 
-          await send(.internal(.downloadCompleted(id)))
-        },
-        catch: { error, send in
-          await send(.internal(.downloadFailed(id: id, error: error.localizedDescription)))
-        },
-        lockFailure: { error, send in
-          await send(.internal(.handleLockFailure(id: id, error: error)))
-        },
-        action: Action.ViewAction.downloadButtonTapped(id),
-        boundaryId: CancelID.downloads
-      )
+        await send(.internal(.downloadCompleted(id)))
+      } catch: { error, send in
+        await send(.internal(.downloadFailed(id: id, error: error.localizedDescription)))
+      }
     }
   }
 
@@ -177,22 +194,6 @@ struct ConcurrencyLimitedStrategyFeature {
         state.downloads[id: id]?.progress = 0
       }
       return .none
-
-    case .handleLockFailure(let id, let error):
-      // Handle errors from both strategies
-      let reason: String
-      if let concurrencyError = error as? LockmanConcurrencyLimitedError,
-        case .concurrencyLimitReached(let requestedInfo, _, let current) = concurrencyError
-      {
-        reason = "Download limit reached (\(current)/\(requestedInfo.limit))"
-      } else if let singleExecutionError = error as? LockmanSingleExecutionError,
-        case .actionAlreadyRunning = singleExecutionError
-      {
-        reason = "This download is already in progress"
-      } else {
-        reason = "Cannot start download"
-      }
-      return .send(.internal(.downloadRejected(id: id, reason: reason)))
     }
   }
 }

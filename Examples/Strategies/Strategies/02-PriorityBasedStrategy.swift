@@ -83,6 +83,36 @@ struct PriorityBasedStrategyFeature {
         return handleInternalAction(internalAction, state: &state)
       }
     }
+    .lock(
+      boundaryId: CancelID.priorityOperation,
+      lockFailure: { error, send in
+        // Handle different types of lock failures at reducer level
+        if let priorityError = error as? LockmanPriorityBasedError {
+          switch priorityError {
+          case .precedingActionCancelled(let cancelledInfo):
+            // Update the cancelled task's button to show it was cancelled
+            let cancelledButton: Action.ButtonType
+            switch cancelledInfo.actionId {
+            case "high-priority":
+              cancelledButton = .high
+            case "low-exclusive":
+              cancelledButton = .lowExclusive
+            case "low-replaceable":
+              cancelledButton = .lowReplaceable
+            case "none-priority":
+              cancelledButton = .none
+            default:
+              cancelledButton = .lowExclusive
+            }
+            await send(
+              .internal(
+                .updateResult(button: cancelledButton, result: "Cancelled by higher priority")))
+          default:
+            break
+          }
+        }
+      }
+    )
   }
 
   // MARK: - View Action Handler
@@ -103,64 +133,22 @@ struct PriorityBasedStrategyFeature {
       buttonType = .none
     }
 
-    return .withLock(
-      operation: { send in
-        await send(.internal(.updateResult(button: buttonType, result: "Running...")))
+    return .run { send in
+      await send(.internal(.updateResult(button: buttonType, result: "Running...")))
 
-        // Simulate operation with different durations
-        let sleepTime: UInt64
-        switch action.priority {
-        case .high: sleepTime = 3_000_000_000  // 3 seconds
-        case .low: sleepTime = 4_000_000_000  // 4 seconds
-        case .none: sleepTime = 2_000_000_000  // 2 seconds
-        }
+      // Simulate operation with different durations
+      let sleepTime: UInt64
+      switch action.priority {
+      case .high: sleepTime = 3_000_000_000  // 3 seconds
+      case .low: sleepTime = 4_000_000_000  // 4 seconds
+      case .none: sleepTime = 2_000_000_000  // 2 seconds
+      }
 
-        try await Task.sleep(nanoseconds: sleepTime)
-        await send(.internal(.updateResult(button: buttonType, result: "Success")))
-      },
-      catch: { error, send in
-        await send(.internal(.updateResult(button: buttonType, result: "Cancelled")))
-      },
-      lockFailure: { error, send in
-        // Handle different types of lock failures
-        let failureMessage: String
-        if let priorityError = error as? LockmanPriorityBasedError {
-          switch priorityError {
-          case .higherPriorityExists:
-            failureMessage = "Blocked by higher priority"
-          case .samePriorityConflict:
-            failureMessage = "Same priority running"
-          case .precedingActionCancelled(let cancelledInfo):
-            // Update the cancelled task's button to show it was cancelled
-            let cancelledButton: Action.ButtonType
-            switch cancelledInfo.actionId {
-            case "high-priority":
-              cancelledButton = .high
-            case "low-exclusive":
-              cancelledButton = .lowExclusive
-            case "low-replaceable":
-              cancelledButton = .lowReplaceable
-            case "none-priority":
-              cancelledButton = .none
-            default:
-              // Fallback - shouldn't happen with our action IDs
-              cancelledButton = .lowExclusive
-            }
-            await send(
-              .internal(
-                .updateResult(button: cancelledButton, result: "Cancelled by higher priority")))
-            failureMessage = "Replaced lower priority"
-          }
-        } else if error is LockmanSingleExecutionError {
-          failureMessage = "❌ Already running"
-        } else {
-          failureMessage = "Failed"
-        }
-        await send(.internal(.updateResult(button: buttonType, result: failureMessage)))
-      },
-      action: action,
-      boundaryId: CancelID.priorityOperation
-    )
+      try await Task.sleep(nanoseconds: sleepTime)
+      await send(.internal(.updateResult(button: buttonType, result: "Success")))
+    } catch: { error, send in
+      await send(.internal(.updateResult(button: buttonType, result: "Cancelled")))
+    }
   }
 
   // MARK: - Internal Action Handler
