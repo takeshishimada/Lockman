@@ -20,6 +20,21 @@
 /// }
 /// ```
 ///
+/// For custom unlock timing:
+/// ```swift
+/// struct TransitionAction: LockmanAction {
+///   typealias I = LockmanSingleExecutionInfo
+///
+///   let lockmanInfo = LockmanSingleExecutionInfo(
+///     actionId: "transition",
+///     mode: .boundary
+///   )
+///
+///   // Release lock after screen transition completes
+///   var unlockOption: LockmanUnlockOption { .transition }
+/// }
+/// ```
+///
 /// For custom or configured strategies:
 /// ```swift
 /// struct ConfiguredAction: LockmanAction {
@@ -43,4 +58,17 @@ public protocol LockmanAction: Sendable {
   /// This instance contains all the necessary data for the strategy to make
   /// locking decisions (e.g., action ID, priority, strategy ID, etc.).
   var lockmanInfo: I { get }
+
+  /// The unlock timing option for this action.
+  /// This specifies when the lock should be released after the action completes.
+  /// If not implemented, defaults to `LockmanManager.config.defaultUnlockOption`.
+  var unlockOption: LockmanUnlockOption { get }
+}
+
+// Default implementation for backward compatibility
+extension LockmanAction {
+  /// Default unlock option uses the global configuration setting.
+  public var unlockOption: LockmanUnlockOption {
+    LockmanManager.config.defaultUnlockOption
+  }
 }

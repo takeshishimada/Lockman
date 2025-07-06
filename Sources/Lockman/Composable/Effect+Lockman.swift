@@ -56,7 +56,7 @@ extension Effect {
     withLockCommon(
       action: action,
       cancelID: cancelID,
-      unlockOption: unlockOption ?? LockmanManager.config.defaultUnlockOption,
+      unlockOption: unlockOption ?? action.unlockOption,
       fileID: fileID,
       filePath: filePath,
       line: line,
@@ -157,7 +157,7 @@ extension Effect {
     withLockCommon(
       action: action,
       cancelID: cancelID,
-      unlockOption: unlockOption ?? LockmanManager.config.defaultUnlockOption,
+      unlockOption: unlockOption ?? action.unlockOption,
       fileID: fileID,
       filePath: filePath,
       line: line,
@@ -251,7 +251,7 @@ extension Effect {
         id: cancelID,
         info: lockmanInfo,
         strategy: strategy,
-        unlockOption: unlockOption ?? LockmanManager.config.defaultUnlockOption
+        unlockOption: unlockOption ?? action.unlockOption
       )
 
       // Create auto-unlock manager for guaranteed cleanup
