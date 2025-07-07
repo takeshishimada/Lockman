@@ -55,7 +55,7 @@ final class NestedActionLockTests: XCTestCase {
   
   func testBasicLockWithoutPaths() async {
     // Test basic lock creation without any paths
-    let store = TestStore(initialState: TestState()) {
+    let store = await TestStore(initialState: TestState()) {
       TestFeature()
         .lock(boundaryId: "test")
     }
@@ -67,7 +67,7 @@ final class NestedActionLockTests: XCTestCase {
   
   func testLockWithSinglePath() async {
     // Test lock with a single path for nested actions
-    let store = TestStore(initialState: TestState()) {
+    let store = await TestStore(initialState: TestState()) {
       TestFeature()
         .lock(boundaryId: "test", for: \.view)
     }
@@ -80,7 +80,7 @@ final class NestedActionLockTests: XCTestCase {
   
   func testMultiplePaths() async {
     // Test lock with multiple paths
-    let store = TestStore(initialState: TestState()) {
+    let store = await TestStore(initialState: TestState()) {
       TestFeature()
         .lock(boundaryId: "test", for: \.view, \.other)
     }
