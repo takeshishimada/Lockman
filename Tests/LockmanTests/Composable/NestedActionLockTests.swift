@@ -148,6 +148,34 @@ enum CancelID {
   case test
 }
 
+// For testRootLevelLockmanAction
+struct SimpleTestReducer: Reducer {
+  let actionExecuted: LockActorIsolated<Int>
+  
+  struct State: Equatable {}
+  
+  enum Action: LockmanAction {
+    case test
+    
+    var lockmanInfo: some LockmanInfo {
+      LockmanSingleExecutionInfo(actionId: "test", mode: .boundary)
+    }
+  }
+  
+  var body: some ReducerOf<Self> {
+    Reduce { state, action in
+      switch action {
+      case .test:
+        return .run { [actionExecuted] _ in
+          await actionExecuted.withValue { $0 += 1 }
+          try await Task.sleep(nanoseconds: 50_000_000)
+        }
+      }
+    }
+    .lock(boundaryId: CancelID.test)
+  }
+}
+
 // MARK: - Tests
 
 final class NestedActionLockTests: XCTestCase {
@@ -159,38 +187,10 @@ final class NestedActionLockTests: XCTestCase {
     try? container.register(strategy)
 
     await LockmanManager.withTestContainer(container) {
-      // Simple test to verify the basic behavior works
-      let lockExecuted = LockActorIsolated(0)
-
-      struct TestReducer: Reducer {
-        let lockExecuted: LockActorIsolated<Int>
-
-        struct State: Equatable {}
-
-        enum Action: LockmanAction {
-          case test
-
-          var lockmanInfo: some LockmanInfo {
-            LockmanSingleExecutionInfo(actionId: "test", mode: .boundary)
-          }
-        }
-
-        var body: some ReducerOf<Self> {
-          Reduce { state, action in
-            switch action {
-            case .test:
-              return .run { [lockExecuted] _ in
-                await lockExecuted.withValue { $0 += 1 }
-                try await Task.sleep(nanoseconds: 50_000_000)
-              }
-            }
-          }
-          .lock(boundaryId: CancelID.test)
-        }
-      }
-
-      let store = await TestStore(initialState: TestReducer.State()) {
-        TestReducer(lockExecuted: lockExecuted)
+      let actionExecuted = LockActorIsolated(0)
+      
+      let store = await TestStore(initialState: SimpleTestReducer.State()) {
+        SimpleTestReducer(actionExecuted: actionExecuted)
       }
 
       // Send action - should execute
@@ -202,7 +202,7 @@ final class NestedActionLockTests: XCTestCase {
       await store.finish()
 
       // Verify both executions happened (lock is released after each effect)
-      await lockExecuted.withValue { value in
+      await actionExecuted.withValue { value in
         XCTAssertEqual(value, 2)
       }
     }
