@@ -140,12 +140,12 @@ lockFailure: { error, send in
 }
 ```
 
-**precedingActionCancelled** - Preceding action cancelled
+**LockmanPriorityBasedCancellationError** - Preceding action cancelled
 
 ```swift
 catch handler: { error, send in
-    if case .precedingActionCancelled(let cancelledInfo) = error as? LockmanPriorityBasedError {
-        await send(.processCancelled("Interrupted by high priority process"))
+    if let cancellationError = error as? LockmanPriorityBasedCancellationError {
+        await send(.processCancelled("Interrupted by high priority process: \(cancellationError.cancelledInfo.actionId)"))
     }
 }
 ```

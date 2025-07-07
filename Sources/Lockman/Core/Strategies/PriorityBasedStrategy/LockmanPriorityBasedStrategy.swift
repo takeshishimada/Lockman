@@ -168,7 +168,8 @@ public final class LockmanPriorityBasedStrategy: LockmanStrategy, @unchecked Sen
       // Same priority level - apply existing action's concurrency behavior
       let behaviorResult = applySamePriorityBehavior(
         current: currentHighestPriorityInfo,
-        requested: requestedInfo
+        requested: requestedInfo,
+        boundaryId: boundaryId
       )
       result = behaviorResult
 
@@ -181,8 +182,9 @@ public final class LockmanPriorityBasedStrategy: LockmanStrategy, @unchecked Sen
     } else {
       // Requested action has higher priority - can preempt current
       result = .successWithPrecedingCancellation(
-        error: LockmanPriorityBasedError.precedingActionCancelled(
-          cancelledInfo: currentHighestPriorityInfo
+        error: LockmanPriorityBasedCancellationError(
+          cancelledInfo: currentHighestPriorityInfo,
+          boundaryId: boundaryId
         )
       )
       cancelledInfo = (currentHighestPriorityInfo.actionId, currentHighestPriorityInfo.uniqueId)
@@ -327,9 +329,10 @@ extension LockmanPriorityBasedStrategy {
   ///   - current: The currently active priority-based lock info
   ///   - requested: The requested priority-based lock info (behavior ignored)
   /// - Returns: A `LockmanResult` based on the existing action's concurrency behavior
-  fileprivate func applySamePriorityBehavior(
+  fileprivate func applySamePriorityBehavior<B: LockmanBoundaryId>(
     current: LockmanPriorityBasedInfo,
-    requested _: LockmanPriorityBasedInfo
+    requested _: LockmanPriorityBasedInfo,
+    boundaryId: B
   ) -> LockmanResult {
     // Use the existing action's behavior to determine the outcome
     guard let currentBehavior = current.priority.behavior else {
@@ -348,7 +351,10 @@ extension LockmanPriorityBasedStrategy {
       // Existing action: "I am replaceable, allow new same-priority actions to take over"
       // → Existing action gets canceled, new action succeeds
       return .successWithPrecedingCancellation(
-        error: LockmanPriorityBasedError.precedingActionCancelled(cancelledInfo: current)
+        error: LockmanPriorityBasedCancellationError(
+          cancelledInfo: current,
+          boundaryId: boundaryId
+        )
       )
     }
   }

@@ -89,29 +89,28 @@ struct PriorityBasedStrategyFeature {
       boundaryId: CancelID.priorityOperation,
       lockFailure: { error, send in
         // Handle different types of lock failures at reducer level
-        if let priorityError = error as? LockmanPriorityBasedError {
-          switch priorityError {
-          case .precedingActionCancelled(let cancelledInfo):
-            // Update the cancelled task's button to show it was cancelled
-            let cancelledButton: Action.ButtonType
-            switch cancelledInfo.actionId {
-            case "high-priority":
-              cancelledButton = .high
-            case "low-exclusive":
-              cancelledButton = .lowExclusive
-            case "low-replaceable":
-              cancelledButton = .lowReplaceable
-            case "none-priority":
-              cancelledButton = .none
-            default:
-              cancelledButton = .lowExclusive
-            }
-            await send(
-              .internal(
-                .updateResult(button: cancelledButton, result: "Cancelled by higher priority")))
+        if let cancellationError = error as? LockmanPriorityBasedCancellationError {
+          // Update the cancelled task's button to show it was cancelled
+          let cancelledButton: Action.ButtonType
+          switch cancellationError.cancelledInfo.actionId {
+          case "high-priority":
+            cancelledButton = .high
+          case "low-exclusive":
+            cancelledButton = .lowExclusive
+          case "low-replaceable":
+            cancelledButton = .lowReplaceable
+          case "none-priority":
+            cancelledButton = .none
           default:
-            break
+            cancelledButton = .lowExclusive
           }
+          await send(
+            .internal(
+              .updateResult(button: cancelledButton, result: "Cancelled by higher priority")))
+        } else if let priorityError = error as? LockmanPriorityBasedError {
+          // Handle other priority errors if needed
+          // For now, we don't need special handling for higherPriorityExists and samePriorityConflict
+          // as they prevent the action from starting
         }
       },
       for: \.view

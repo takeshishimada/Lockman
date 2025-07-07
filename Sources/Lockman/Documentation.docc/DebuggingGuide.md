@@ -25,7 +25,7 @@ LockmanManager.debug.isLoggingEnabled = true
 
 ❌ [Lockman] canLock failed - Strategy: SingleExecution, BoundaryId: process, Info: LockmanSingleExecutionInfo(actionId: 'startProcessButtonTapped', uniqueId: 1EBA9632-DE39-43B6-BE75-7C754476CD4E, mode: boundary), Reason: Boundary 'process' already has an active lock
 
-⚠️ [Lockman] canLock succeeded with cancellation - Strategy: PriorityBased, BoundaryId: sync, Info: LockmanPriorityBasedInfo(...), Cancelled: 'backgroundSync' (uniqueId: 123e4567-e89b-12d3-a456-426614174000), Error: precedingActionCancelled
+⚠️ [Lockman] canLock succeeded with cancellation - Strategy: PriorityBased, BoundaryId: sync, Info: LockmanPriorityBasedInfo(...), Cancelled: 'backgroundSync' (uniqueId: 123e4567-e89b-12d3-a456-426614174000), Error: LockmanPriorityBasedCancellationError
 ```
 
 ### Current Lock State Display

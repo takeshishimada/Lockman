@@ -11,15 +11,15 @@ private enum TestAction: Equatable {
   case root
   case view(ViewAction)
   case other(OtherAction)
-  
+
   enum ViewAction: LockmanAction {
     case tap
-    
+
     var lockmanInfo: some LockmanInfo {
       LockmanSingleExecutionInfo(actionId: "tap", mode: .boundary)
     }
   }
-  
+
   enum OtherAction: Equatable {
     case test
   }
@@ -33,7 +33,7 @@ private struct TestState: Equatable {
 private struct TestFeature {
   typealias State = TestState
   typealias Action = TestAction
-  
+
   var body: some ReducerOf<Self> {
     Reduce { state, action in
       switch action {
@@ -52,44 +52,44 @@ private struct TestFeature {
 // MARK: - Tests
 
 final class NestedActionLockTests: XCTestCase {
-  
+
   func testBasicLockWithoutPaths() async {
     // Test basic lock creation without any paths
     let store = await TestStore(initialState: TestState()) {
       TestFeature()
         .lock(boundaryId: "test")
     }
-    
+
     // This should work fine as no action conforms to LockmanAction at root
     await store.send(.root)
     await store.send(.other(.test))
   }
-  
+
   func testLockWithSinglePath() async {
     // Test lock with a single path for nested actions
     let store = await TestStore(initialState: TestState()) {
       TestFeature()
         .lock(boundaryId: "test", for: \.view)
     }
-    
+
     // The nested view action should be locked
     await store.send(.view(.tap)) {
       $0.count = 1
     }
   }
-  
+
   func testMultiplePaths() async {
     // Test lock with multiple paths
     let store = await TestStore(initialState: TestState()) {
       TestFeature()
         .lock(boundaryId: "test", for: \.view, \.other)
     }
-    
+
     // View action should be locked
     await store.send(.view(.tap)) {
       $0.count = 1
     }
-    
+
     // Other action should not be locked (doesn't conform to LockmanAction)
     await store.send(.other(.test))
   }

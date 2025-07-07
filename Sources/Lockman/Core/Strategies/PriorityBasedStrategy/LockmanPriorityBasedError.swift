@@ -20,13 +20,6 @@ public enum LockmanPriorityBasedError: LockmanError {
   /// existing one has exclusive behavior.
   case samePriorityConflict(priority: LockmanPriorityBasedInfo.Priority)
 
-  /// Indicates that a preceding action will be cancelled due to preemption.
-  ///
-  /// This occurs when a higher priority action preempts a lower priority action.
-  /// The lower priority action will be cancelled to allow the higher priority
-  /// action to proceed.
-  case precedingActionCancelled(cancelledInfo: LockmanPriorityBasedInfo)
-
   public var errorDescription: String? {
     switch self {
     case .higherPriorityExists(let requested, let currentHighest):
@@ -34,9 +27,6 @@ public enum LockmanPriorityBasedError: LockmanError {
         "Cannot acquire lock: requested priority \(requested) is lower than current highest priority \(currentHighest)."
     case .samePriorityConflict(let priority):
       return "Cannot acquire lock: another action with priority \(priority) is already running."
-    case .precedingActionCancelled(let cancelledInfo):
-      return
-        "Lock acquired, preceding action '\(cancelledInfo.actionId)' will be cancelled."
     }
   }
 
@@ -47,8 +37,6 @@ public enum LockmanPriorityBasedError: LockmanError {
         "PriorityBasedStrategy only allows higher priority actions to preempt lower priority ones."
     case .samePriorityConflict:
       return "Actions with the same priority and exclusive behavior cannot run concurrently."
-    case .precedingActionCancelled:
-      return "A lower priority action was preempted by a higher priority action."
     }
   }
 }
