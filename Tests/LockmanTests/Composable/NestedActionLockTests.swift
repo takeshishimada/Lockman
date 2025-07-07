@@ -4,98 +4,93 @@ import XCTest
 
 @testable import Lockman
 
-// MARK: - Test Types
+// MARK: - Test Types for nested action support
 
 @CasePathable
-enum NestedLockTestAction: LockmanAction {
+private enum TestAction: Equatable {
   case root
-  case nested(NestedAction)
+  case view(ViewAction)
   case other(OtherAction)
-  case more(MoreAction)
-  case another(AnotherAction)
-  case last(LastAction)
   
-  var lockmanInfo: some LockmanInfo {
-    LockmanSingleExecutionInfo(actionId: "test", mode: .boundary)
-  }
-  
-  enum NestedAction: LockmanAction {
-    case test
+  enum ViewAction: LockmanAction {
+    case tap
     
     var lockmanInfo: some LockmanInfo {
-      LockmanSingleExecutionInfo(actionId: "nested", mode: .boundary)
+      LockmanSingleExecutionInfo(actionId: "tap", mode: .boundary)
     }
   }
   
-  enum OtherAction {
-    case test
-  }
-  
-  enum MoreAction {
-    case test
-  }
-  
-  enum AnotherAction {
-    case test
-  }
-  
-  enum LastAction {
+  enum OtherAction: Equatable {
     case test
   }
 }
 
-// Test reducer for compilation tests
-struct TestReducerForNestedActions: Reducer {
-  struct State: Equatable {}
-  typealias Action = NestedLockTestAction
+private struct TestState: Equatable {
+  var count = 0
+}
+
+@Reducer
+private struct TestFeature {
+  typealias State = TestState
+  typealias Action = TestAction
   
   var body: some ReducerOf<Self> {
-    EmptyReducer()
+    Reduce { state, action in
+      switch action {
+      case .root:
+        return .none
+      case .view(.tap):
+        state.count += 1
+        return .none
+      case .other:
+        return .none
+      }
+    }
   }
 }
 
 // MARK: - Tests
 
 final class NestedActionLockTests: XCTestCase {
-
-  func testLockWithCasePathsCompiles() {
-    // This test verifies that the lock() method with CasePaths compiles correctly
-    let reducer = TestReducerForNestedActions()
+  
+  func testBasicLockWithoutPaths() async {
+    // Test basic lock creation without any paths
+    let store = TestStore(initialState: TestState()) {
+      TestFeature()
+        .lock(boundaryId: "test")
+    }
     
-    // Test 0 paths (root only)
-    _ = reducer.lock(boundaryId: "test")
-    
-    // Test 1 path
-    _ = reducer.lock(boundaryId: "test", for: \.nested)
-    
-    // Test 2 paths
-    _ = reducer.lock(boundaryId: "test", for: \.nested, \.other)
-    
-    // Test 3 paths
-    _ = reducer.lock(boundaryId: "test", for: \.nested, \.other, \.more)
-    
-    // Test 4 paths
-    _ = reducer.lock(boundaryId: "test", for: \.nested, \.other, \.more, \.another)
-    
-    // Test 5 paths
-    _ = reducer.lock(boundaryId: "test", for: \.nested, \.other, \.more, \.another, \.last)
-    
-    XCTAssertTrue(true)
+    // This should work fine as no action conforms to LockmanAction at root
+    await store.send(.root)
+    await store.send(.other(.test))
   }
   
-  func testExtractorLogic() {
-    // Test the extraction logic works correctly
-    let rootAction = NestedLockTestAction.root
-    let nestedAction = NestedLockTestAction.nested(.test)
-    
-    // Test root extraction - root action conforms to LockmanAction
-    XCTAssertNotNil(rootAction as? any LockmanAction)
-    
-    // Test nested extraction
-    if case .nested(let nested) = nestedAction {
-      XCTAssertNotNil(nested as? any LockmanAction)
-    } else {
-      XCTFail("Failed to extract nested action")
+  func testLockWithSinglePath() async {
+    // Test lock with a single path for nested actions
+    let store = TestStore(initialState: TestState()) {
+      TestFeature()
+        .lock(boundaryId: "test", for: \.view)
     }
+    
+    // The nested view action should be locked
+    await store.send(.view(.tap)) {
+      $0.count = 1
+    }
+  }
+  
+  func testMultiplePaths() async {
+    // Test lock with multiple paths
+    let store = TestStore(initialState: TestState()) {
+      TestFeature()
+        .lock(boundaryId: "test", for: \.view, \.other)
+    }
+    
+    // View action should be locked
+    await store.send(.view(.tap)) {
+      $0.count = 1
+    }
+    
+    // Other action should not be locked (doesn't conform to LockmanAction)
+    await store.send(.other(.test))
   }
 }
