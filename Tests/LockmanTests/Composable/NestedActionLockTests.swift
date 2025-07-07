@@ -42,12 +42,12 @@ struct TestReducerWithNestedActions: Reducer {
       case .view(.buttonTapped):
         return .run { [viewActionExecuted] _ in
           await viewActionExecuted.withValue { $0 += 1 }
-          try await Task.sleep(for: .milliseconds(50))
+          try await Task.sleep(nanoseconds: 50_000_000)
         }
       case .delegate(.process):
         return .run { [delegateActionExecuted] _ in
           await delegateActionExecuted.withValue { $0 += 1 }
-          try await Task.sleep(for: .milliseconds(50))
+          try await Task.sleep(nanoseconds: 50_000_000)
         }
       case .other:
         return .none
@@ -128,12 +128,12 @@ struct TestReducerWithRootPriority: Reducer {
       case .root:
         return .run { [rootExecuted] _ in
           await rootExecuted.withValue { $0 += 1 }
-          try await Task.sleep(for: .milliseconds(50))
+          try await Task.sleep(nanoseconds: 50_000_000)
         }
       case .nested(.test):
         return .run { [nestedExecuted] _ in
           await nestedExecuted.withValue { $0 += 1 }
-          try await Task.sleep(for: .milliseconds(50))
+          try await Task.sleep(nanoseconds: 50_000_000)
         }
       }
     }
@@ -181,7 +181,7 @@ final class NestedActionLockTests: XCTestCase {
             case .test:
               return .run { [lockExecuted] _ in
                 await lockExecuted.withValue { $0 += 1 }
-                try await Task.sleep(for: .milliseconds(50))
+                try await Task.sleep(nanoseconds: 50_000_000)
               }
             }
           }
