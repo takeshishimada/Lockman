@@ -1,6 +1,6 @@
 import CasePaths
 import ComposableArchitecture
-import Testing
+import XCTest
 
 @testable import Lockman
 
@@ -150,10 +150,8 @@ enum CancelID {
 
 // MARK: - Tests
 
-@Suite("Nested Action Lock Tests")
-struct NestedActionLockTests {
+final class NestedActionLockTests: XCTestCase {
 
-  @Test("LockmanReducer handles root-level LockmanAction")
   func testRootLevelLockmanAction() async {
     // Setup test container with single execution strategy
     let container = LockmanStrategyContainer()
@@ -205,12 +203,11 @@ struct NestedActionLockTests {
 
       // Verify both executions happened (lock is released after each effect)
       await lockExecuted.withValue { value in
-        #expect(value == 2)
+        XCTAssertEqual(value, 2)
       }
     }
   }
 
-  @Test("LockmanReducer with case paths handles nested actions")
   func testNestedActionWithCasePaths() async {
     // Setup test container with single execution strategy
     let container = LockmanStrategyContainer()
@@ -242,17 +239,16 @@ struct NestedActionLockTests {
 
       // Verify view action executed once
       await viewActionExecuted.withValue { value in
-        #expect(value == 1)
+        XCTAssertEqual(value, 1)
       }
 
       // Verify delegate action executed once
       await delegateActionExecuted.withValue { value in
-        #expect(value == 1)
+        XCTAssertEqual(value, 1)
       }
     }
   }
 
-  @Test("LockmanReducer without case paths ignores nested actions")
   func testNoCasePathsIgnoresNested() async {
     // Setup test container with single execution strategy
     let container = LockmanStrategyContainer()
@@ -274,12 +270,11 @@ struct NestedActionLockTests {
 
       // All should execute since no case paths are provided
       await actionExecuted.withValue { value in
-        #expect(value == 3)
+        XCTAssertEqual(value, 3)
       }
     }
   }
 
-  @Test("LockmanReducer prioritizes root action conformance")
   func testRootActionPriority() async {
     // Setup test container with single execution strategy
     let container = LockmanStrategyContainer()
@@ -307,7 +302,7 @@ struct NestedActionLockTests {
 
       // Both root actions should execute
       await rootExecuted.withValue { value in
-        #expect(value == 2)
+        XCTAssertEqual(value, 2)
       }
 
       // Now test nested action
@@ -320,7 +315,7 @@ struct NestedActionLockTests {
 
       // Both nested actions should execute
       await nestedExecuted.withValue { value in
-        #expect(value == 2)
+        XCTAssertEqual(value, 2)
       }
     }
   }
