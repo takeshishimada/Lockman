@@ -55,6 +55,7 @@ Lockman provides the following control strategies to address common problems in 
 Here's how to implement a feature that prevents duplicate execution of processes using the `@LockmanSingleExecution` macro:
 
 ```swift
+import CasePaths
 import ComposableArchitecture
 import Lockman
 
@@ -66,6 +67,7 @@ struct ProcessFeature {
         var message = ""
     }
     
+    @CasePathable
     enum Action: ViewAction {
         case view(ViewAction)
         case `internal`(InternalAction)
@@ -82,6 +84,7 @@ struct ProcessFeature {
         enum InternalAction {
             case processStart
             case processCompleted
+            case updateMessage(String)
         }
     }
     
@@ -95,20 +98,12 @@ struct ProcessFeature {
             case let .view(viewAction):
                 switch viewAction {
                 case .startProcessButtonTapped:
-                    return .withLock(
-                        operation: { send in
-                            await send(.internal(.processStart))
-                            // Simulate heavy processing
-                            try await Task.sleep(nanoseconds: 3_000_000_000)
-                            await send(.internal(.processCompleted))
-                        },
-                        lockFailure: { error, send in
-                            // When processing is already in progress
-                            state.message = "Processing is already in progress"
-                        },
-                        action: viewAction,
-                        cancelID: CancelID.userAction
-                    )
+                    return .run { send in
+                        await send(.internal(.processStart))
+                        // Simulate heavy processing
+                        try await Task.sleep(nanoseconds: 3_000_000_000)
+                        await send(.internal(.processCompleted))
+                    }
                 }
                 
             case let .internal(internalAction):
@@ -122,14 +117,29 @@ struct ProcessFeature {
                     state.isProcessing = false
                     state.message = "Processing completed"
                     return .none
+                    
+                case .updateMessage(let message):
+                    state.message = message
+                    return .none
                 }
             }
         }
+        .lock(
+            boundaryId: CancelID.userAction,
+            lockFailure: { error, send in
+                // When processing is already in progress
+                if error is LockmanSingleExecutionError {
+                    // Update message through an action instead of direct state mutation
+                    await send(.internal(.updateMessage("Processing is already in progress")))
+                }
+            },
+            for: \.view
+        )
     }
 }
 ```
 
-The `withLock` method ensures that `startProcessButtonTapped` won't execute while processing is in progress, preventing duplicate operations even if the user taps the button multiple times.
+The `Reducer.lock` modifier automatically applies lock management to actions that conform to `LockmanAction`. Since the `ViewAction` enum is marked with `@LockmanSingleExecution`, the `startProcessButtonTapped` action won't execute while processing is in progress. The `for: \.view` parameter tells Lockman to check actions nested in the `view` case for `LockmanAction` conformance.
 
 ### Debug Output Example
 

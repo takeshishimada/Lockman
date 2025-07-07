@@ -55,12 +55,40 @@ struct Feature {
 - `boundaryId`: Boundary identifier for all locked actions
 - `unlockOption`: Default lock release timing (optional)
 - `lockFailure`: Handler for lock acquisition failures (optional)
+- `for`: Case paths to check for nested LockmanAction conformance (optional, up to 5 paths)
 
 **Features:**
 - Automatic lock management for LockmanAction effects
 - Non-LockmanAction effects pass through unchanged
 - Centralized error handling
 - Seamless integration with existing reducers
+- Support for nested actions via CasePaths
+
+**Nested Action Support:**
+
+When using the ViewAction pattern in TCA, actions may be nested within enum cases. The `lock` method supports checking these nested actions:
+
+```swift
+// Root action only (no paths)
+.lock(boundaryId: CancelID.feature)
+
+// Check root and view actions
+.lock(boundaryId: CancelID.feature, for: \.view)
+
+// Check root, view, and delegate actions
+.lock(boundaryId: CancelID.feature, for: \.view, \.delegate)
+
+// Up to 5 paths supported
+.lock(
+  boundaryId: CancelID.feature,
+  for: \.view, \.delegate, \.alert, \.sheet, \.popover
+)
+```
+
+The method will check actions in the following order:
+1. First, it checks if the root action conforms to `LockmanAction`
+2. If not, it checks each provided path in order
+3. The first action found that conforms to `LockmanAction` will be used for locking
 
 ### Effect.lock (Method Chain Style)
 

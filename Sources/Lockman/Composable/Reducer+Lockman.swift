@@ -1,3 +1,4 @@
+import CasePaths
 import ComposableArchitecture
 import Foundation
 
@@ -52,14 +53,15 @@ public struct LockmanReducer<Base: Reducer>: Reducer {
   let boundaryId: any LockmanBoundaryId
   let unlockOption: LockmanUnlockOption
   let lockFailure: (@Sendable (_ error: any Error, _ send: Send<Action>) async -> Void)?
+  let extractLockmanAction: (Action) -> (any LockmanAction)?
 
   public var body: some ReducerOf<Self> {
     Reduce { state, action in
       // Get the base effect
       let baseEffect = self.base.reduce(into: &state, action: action)
 
-      // Check if action implements LockmanAction
-      guard let lockmanAction = action as? any LockmanAction else {
+      // Extract LockmanAction using the provided extractor
+      guard let lockmanAction = self.extractLockmanAction(action) else {
         // Not a LockmanAction, return effect as-is
         return baseEffect
       }
@@ -150,18 +152,12 @@ extension Reducer {
   ///
   /// ## Usage
   /// ```swift
+  /// // For root-level LockmanAction
   /// var body: some ReducerOf<Self> {
   ///   Reduce { state, action in
   ///     // Your reducer logic
   ///   }
-  ///   .lock(
-  ///     boundaryId: CancelID.feature,
-  ///     unlockOption: .immediate,
-  ///     lockFailure: { error, send in
-  ///       print("Lock failed: \(error)")
-  ///       await send(.lockFailureHandled)
-  ///     }
-  ///   )
+  ///   .lock(boundaryId: CancelID.feature)
   /// }
   /// ```
   ///
@@ -181,7 +177,275 @@ extension Reducer {
       base: self,
       boundaryId: boundaryId,
       unlockOption: unlockOption,
-      lockFailure: lockFailure
+      lockFailure: lockFailure,
+      extractLockmanAction: { action in
+        // Only check root action
+        action as? any LockmanAction
+      }
+    )
+  }
+
+  /// Applies Lockman locking to effects with support for nested actions (1 path).
+  ///
+  /// This overload supports the ViewAction pattern in TCA where actions may be nested
+  /// within enum cases. It checks both the root action and the specified nested path.
+  ///
+  /// ## Usage
+  /// ```swift
+  /// var body: some ReducerOf<Self> {
+  ///   Reduce { state, action in
+  ///     // Your reducer logic
+  ///   }
+  ///   .lock(
+  ///     boundaryId: CancelID.feature,
+  ///     for: \.view
+  ///   )
+  /// }
+  /// ```
+  ///
+  /// - Parameters:
+  ///   - boundaryId: The boundary identifier for locking.
+  ///   - unlockOption: When to release the lock. Defaults to `.immediate`.
+  ///   - lockFailure: Optional callback invoked when lock acquisition fails.
+  ///   - path1: A case path to extract a nested action that may conform to `LockmanAction`.
+  /// - Returns: A `LockmanReducer` that wraps this reducer with locking behavior.
+  public func lock<Value1>(
+    boundaryId: any LockmanBoundaryId,
+    unlockOption: LockmanUnlockOption = .immediate,
+    lockFailure: (@Sendable (_ error: any Error, _ send: Send<Action>) async -> Void)? = nil,
+    for path1: CaseKeyPath<Action, Value1>
+  ) -> LockmanReducer<Self> where Action: CasePathable {
+    LockmanReducer(
+      base: self,
+      boundaryId: boundaryId,
+      unlockOption: unlockOption,
+      lockFailure: lockFailure,
+      extractLockmanAction: { action in
+        // First check if root action conforms to LockmanAction
+        if let lockmanAction = action as? any LockmanAction {
+          return lockmanAction
+        }
+        // Then check the provided path
+        if let value = action[case: path1] {
+          return value as? any LockmanAction
+        }
+        return nil
+      }
+    )
+  }
+
+  /// Applies Lockman locking to effects with support for nested actions (2 paths).
+  ///
+  /// This overload supports the ViewAction pattern in TCA where actions may be nested
+  /// within enum cases. It checks the root action and the specified nested paths.
+  ///
+  /// ## Usage
+  /// ```swift
+  /// var body: some ReducerOf<Self> {
+  ///   Reduce { state, action in
+  ///     // Your reducer logic
+  ///   }
+  ///   .lock(
+  ///     boundaryId: CancelID.feature,
+  ///     for: \.view, \.delegate
+  ///   )
+  /// }
+  /// ```
+  ///
+  /// - Parameters:
+  ///   - boundaryId: The boundary identifier for locking.
+  ///   - unlockOption: When to release the lock. Defaults to `.immediate`.
+  ///   - lockFailure: Optional callback invoked when lock acquisition fails.
+  ///   - path1: First case path to extract a nested action.
+  ///   - path2: Second case path to extract a nested action.
+  /// - Returns: A `LockmanReducer` that wraps this reducer with locking behavior.
+  public func lock<Value1, Value2>(
+    boundaryId: any LockmanBoundaryId,
+    unlockOption: LockmanUnlockOption = .immediate,
+    lockFailure: (@Sendable (_ error: any Error, _ send: Send<Action>) async -> Void)? = nil,
+    for path1: CaseKeyPath<Action, Value1>,
+    _ path2: CaseKeyPath<Action, Value2>
+  ) -> LockmanReducer<Self> where Action: CasePathable {
+    LockmanReducer(
+      base: self,
+      boundaryId: boundaryId,
+      unlockOption: unlockOption,
+      lockFailure: lockFailure,
+      extractLockmanAction: { action in
+        // First check if root action conforms to LockmanAction
+        if let lockmanAction = action as? any LockmanAction {
+          return lockmanAction
+        }
+        // Then check the provided paths
+        let paths: [(Action) -> Any?] = [
+          { $0[case: path1] },
+          { $0[case: path2] },
+        ]
+        for path in paths {
+          if let value = path(action) {
+            if let lockmanAction = value as? any LockmanAction {
+              return lockmanAction
+            }
+          }
+        }
+        return nil
+      }
+    )
+  }
+
+  /// Applies Lockman locking to effects with support for nested actions (3 paths).
+  ///
+  /// This overload supports the ViewAction pattern in TCA where actions may be nested
+  /// within enum cases. It checks the root action and the specified nested paths.
+  ///
+  /// - Parameters:
+  ///   - boundaryId: The boundary identifier for locking.
+  ///   - unlockOption: When to release the lock. Defaults to `.immediate`.
+  ///   - lockFailure: Optional callback invoked when lock acquisition fails.
+  ///   - path1: First case path to extract a nested action.
+  ///   - path2: Second case path to extract a nested action.
+  ///   - path3: Third case path to extract a nested action.
+  /// - Returns: A `LockmanReducer` that wraps this reducer with locking behavior.
+  public func lock<Value1, Value2, Value3>(
+    boundaryId: any LockmanBoundaryId,
+    unlockOption: LockmanUnlockOption = .immediate,
+    lockFailure: (@Sendable (_ error: any Error, _ send: Send<Action>) async -> Void)? = nil,
+    for path1: CaseKeyPath<Action, Value1>,
+    _ path2: CaseKeyPath<Action, Value2>,
+    _ path3: CaseKeyPath<Action, Value3>
+  ) -> LockmanReducer<Self> where Action: CasePathable {
+    LockmanReducer(
+      base: self,
+      boundaryId: boundaryId,
+      unlockOption: unlockOption,
+      lockFailure: lockFailure,
+      extractLockmanAction: { action in
+        // First check if root action conforms to LockmanAction
+        if let lockmanAction = action as? any LockmanAction {
+          return lockmanAction
+        }
+        // Then check the provided paths
+        let paths: [(Action) -> Any?] = [
+          { $0[case: path1] },
+          { $0[case: path2] },
+          { $0[case: path3] },
+        ]
+        for path in paths {
+          if let value = path(action) {
+            if let lockmanAction = value as? any LockmanAction {
+              return lockmanAction
+            }
+          }
+        }
+        return nil
+      }
+    )
+  }
+
+  /// Applies Lockman locking to effects with support for nested actions (4 paths).
+  ///
+  /// This overload supports the ViewAction pattern in TCA where actions may be nested
+  /// within enum cases. It checks the root action and the specified nested paths.
+  ///
+  /// - Parameters:
+  ///   - boundaryId: The boundary identifier for locking.
+  ///   - unlockOption: When to release the lock. Defaults to `.immediate`.
+  ///   - lockFailure: Optional callback invoked when lock acquisition fails.
+  ///   - path1: First case path to extract a nested action.
+  ///   - path2: Second case path to extract a nested action.
+  ///   - path3: Third case path to extract a nested action.
+  ///   - path4: Fourth case path to extract a nested action.
+  /// - Returns: A `LockmanReducer` that wraps this reducer with locking behavior.
+  public func lock<Value1, Value2, Value3, Value4>(
+    boundaryId: any LockmanBoundaryId,
+    unlockOption: LockmanUnlockOption = .immediate,
+    lockFailure: (@Sendable (_ error: any Error, _ send: Send<Action>) async -> Void)? = nil,
+    for path1: CaseKeyPath<Action, Value1>,
+    _ path2: CaseKeyPath<Action, Value2>,
+    _ path3: CaseKeyPath<Action, Value3>,
+    _ path4: CaseKeyPath<Action, Value4>
+  ) -> LockmanReducer<Self> where Action: CasePathable {
+    LockmanReducer(
+      base: self,
+      boundaryId: boundaryId,
+      unlockOption: unlockOption,
+      lockFailure: lockFailure,
+      extractLockmanAction: { action in
+        // First check if root action conforms to LockmanAction
+        if let lockmanAction = action as? any LockmanAction {
+          return lockmanAction
+        }
+        // Then check the provided paths
+        let paths: [(Action) -> Any?] = [
+          { $0[case: path1] },
+          { $0[case: path2] },
+          { $0[case: path3] },
+          { $0[case: path4] },
+        ]
+        for path in paths {
+          if let value = path(action) {
+            if let lockmanAction = value as? any LockmanAction {
+              return lockmanAction
+            }
+          }
+        }
+        return nil
+      }
+    )
+  }
+
+  /// Applies Lockman locking to effects with support for nested actions (5 paths).
+  ///
+  /// This overload supports the ViewAction pattern in TCA where actions may be nested
+  /// within enum cases. It checks the root action and the specified nested paths.
+  ///
+  /// - Parameters:
+  ///   - boundaryId: The boundary identifier for locking.
+  ///   - unlockOption: When to release the lock. Defaults to `.immediate`.
+  ///   - lockFailure: Optional callback invoked when lock acquisition fails.
+  ///   - path1: First case path to extract a nested action.
+  ///   - path2: Second case path to extract a nested action.
+  ///   - path3: Third case path to extract a nested action.
+  ///   - path4: Fourth case path to extract a nested action.
+  ///   - path5: Fifth case path to extract a nested action.
+  /// - Returns: A `LockmanReducer` that wraps this reducer with locking behavior.
+  public func lock<Value1, Value2, Value3, Value4, Value5>(
+    boundaryId: any LockmanBoundaryId,
+    unlockOption: LockmanUnlockOption = .immediate,
+    lockFailure: (@Sendable (_ error: any Error, _ send: Send<Action>) async -> Void)? = nil,
+    for path1: CaseKeyPath<Action, Value1>,
+    _ path2: CaseKeyPath<Action, Value2>,
+    _ path3: CaseKeyPath<Action, Value3>,
+    _ path4: CaseKeyPath<Action, Value4>,
+    _ path5: CaseKeyPath<Action, Value5>
+  ) -> LockmanReducer<Self> where Action: CasePathable {
+    LockmanReducer(
+      base: self,
+      boundaryId: boundaryId,
+      unlockOption: unlockOption,
+      lockFailure: lockFailure,
+      extractLockmanAction: { action in
+        // First check if root action conforms to LockmanAction
+        if let lockmanAction = action as? any LockmanAction {
+          return lockmanAction
+        }
+        // Then check the provided paths
+        let paths: [(Action) -> Any?] = [
+          { $0[case: path1] },
+          { $0[case: path2] },
+          { $0[case: path3] },
+          { $0[case: path4] },
+          { $0[case: path5] },
+        ]
+        for path in paths {
+          if let value = path(action) {
+            if let lockmanAction = value as? any LockmanAction {
+              return lockmanAction
+            }
+          }
+        }
+        return nil
+      }
     )
   }
 }

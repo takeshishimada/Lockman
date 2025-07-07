@@ -81,7 +81,8 @@ struct ProcessFeature {
 
 Key points:
 
-- Applying the [`@LockmanSingleExecution`](<doc:SingleExecutionStrategy>) macro to the Action enum makes it conform to the `LockmanSingleExecutionAction` protocol
+- This example uses TCA's ViewAction pattern, where view-related actions are nested under the `view` case
+- Applying the [`@LockmanSingleExecution`](<doc:SingleExecutionStrategy>) macro to the nested View enum makes it conform to the `LockmanSingleExecutionAction` protocol
 - The `lockmanInfo` property defines how each action is controlled for locking:
   - Control parameter configuration: Specifies strategy-specific behavior settings (priority, concurrency limits, group coordination rules, etc.)
   - Action identification: Provides the action identifier within the lock management system
@@ -135,7 +136,8 @@ var body: some ReducerOf<Self> {
             if error is LockmanSingleExecutionError {
                 await send(.internal(.updateMessage("Processing is already in progress")))
             }
-        }
+        },
+        for: \.view
     )
 }
 ```
@@ -145,6 +147,7 @@ Key points about the [`Reducer.lock`](<doc:Lock>) modifier:
 - Automatically applies lock management to all actions that implement `LockmanAction`
 - `boundaryId`: Specifies the identifier for Effect cancellation and lock boundary
 - `lockFailure`: Common handler for lock acquisition failures across all actions
+- `for`: Case paths to check for nested LockmanAction conformance (in this example, `\.view` checks actions nested in the view case)
 - Effects from non-LockmanAction actions pass through unchanged
 
 With this implementation, the `startProcessButtonTapped` action will not be executed again while processing, making it safe even if the user accidentally taps the button multiple times.

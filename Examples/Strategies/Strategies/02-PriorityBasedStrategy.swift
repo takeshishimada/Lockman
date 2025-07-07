@@ -1,3 +1,4 @@
+import CasePaths
 import ComposableArchitecture
 import Lockman
 import SwiftUI
@@ -12,6 +13,7 @@ struct PriorityBasedStrategyFeature {
     var noneButtonResult: String = ""
   }
 
+  @CasePathable
   enum Action: ViewAction {
     case view(ViewAction)
     case `internal`(InternalAction)
@@ -54,7 +56,7 @@ struct PriorityBasedStrategyFeature {
           ),
           lockmanInfoForStrategy2: LockmanSingleExecutionInfo(
             actionId: actionId,
-            mode: .action  // 同じアクションの重複実行を防止
+            mode: .action
           )
         )
       }
@@ -111,7 +113,8 @@ struct PriorityBasedStrategyFeature {
             break
           }
         }
-      }
+      },
+      for: \.view
     )
   }
 

@@ -55,6 +55,7 @@ Lockman fornece as seguintes estratégias de controle para abordar problemas com
 Veja como implementar um recurso que previne execução duplicada de processos usando o macro `@LockmanSingleExecution`:
 
 ```swift
+import CasePaths
 import ComposableArchitecture
 import Lockman
 
@@ -66,6 +67,7 @@ struct ProcessFeature {
         var message = ""
     }
     
+    @CasePathable
     enum Action: ViewAction {
         case view(ViewAction)
         case `internal`(InternalAction)
@@ -82,6 +84,7 @@ struct ProcessFeature {
         enum InternalAction {
             case processStart
             case processCompleted
+            case updateMessage(String)
         }
     }
     
@@ -95,41 +98,48 @@ struct ProcessFeature {
             case let .view(viewAction):
                 switch viewAction {
                 case .startProcessButtonTapped:
-                    return .withLock(
-                        operation: { send in
-                            await send(.internal(.processStart))
-                            // Simulate heavy processing
-                            try await Task.sleep(nanoseconds: 3_000_000_000)
-                            await send(.internal(.processCompleted))
-                        },
-                        lockFailure: { error, send in
-                            // When processing is already in progress
-                            state.message = "Processing is already in progress"
-                        },
-                        action: viewAction,
-                        cancelID: CancelID.userAction
-                    )
+                    return .run { send in
+                        await send(.internal(.processStart))
+                        // Simular processamento pesado
+                        try await Task.sleep(nanoseconds: 3_000_000_000)
+                        await send(.internal(.processCompleted))
+                    }
                 }
                 
             case let .internal(internalAction):
                 switch internalAction {
                 case .processStart:
                     state.isProcessing = true
-                    state.message = "Processing started..."
+                    state.message = "Processamento iniciado..."
                     return .none
                     
                 case .processCompleted:
                     state.isProcessing = false
-                    state.message = "Processing completed"
+                    state.message = "Processamento concluído"
+                    return .none
+                    
+                case .updateMessage(let message):
+                    state.message = message
                     return .none
                 }
             }
         }
+        .lock(
+            boundaryId: CancelID.userAction,
+            lockFailure: { error, send in
+                // Quando o processamento já está em andamento
+                if error is LockmanSingleExecutionError {
+                    // Atualizar mensagem através de uma ação em vez de mutação direta do estado
+                    await send(.internal(.updateMessage("O processamento já está em andamento")))
+                }
+            },
+            for: \.view
+        )
     }
 }
 ```
 
-O método `withLock` garante que `startProcessButtonTapped` não será executado enquanto o processamento estiver em andamento, prevenindo operações duplicadas mesmo se o usuário tocar o botão várias vezes.
+O modificador `Reducer.lock` aplica automaticamente o gerenciamento de bloqueio às ações que estão em conformidade com `LockmanAction`. Como a enumeração `ViewAction` está marcada com `@LockmanSingleExecution`, a ação `startProcessButtonTapped` não será executada enquanto o processamento estiver em andamento. O parâmetro `for: \.view` instrui o Lockman a verificar a conformidade com `LockmanAction` para ações aninhadas no caso `view`.
 
 ### Exemplo de Saída de Debug
 
