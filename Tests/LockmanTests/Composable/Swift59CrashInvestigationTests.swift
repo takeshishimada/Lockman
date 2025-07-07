@@ -15,7 +15,7 @@ private enum FiveNestedAction: Equatable {
   case another(AnotherAction)
   case last(LastAction)
   
-  enum NestedAction: LockmanAction {
+  enum NestedAction: LockmanAction, Equatable {
     case test
     
     var lockmanInfo: some LockmanInfo {
@@ -42,7 +42,7 @@ private enum FiveNestedAction: Equatable {
 
 // Root action that conforms to LockmanAction (original crash case)
 @CasePathable
-private enum RootLockmanAction: LockmanAction {
+private enum RootLockmanAction: LockmanAction, Equatable {
   case root
   case nested(NestedAction)
   case other(OtherAction)
@@ -54,7 +54,7 @@ private enum RootLockmanAction: LockmanAction {
     LockmanSingleExecutionInfo(actionId: "root", mode: .boundary)
   }
   
-  enum NestedAction: LockmanAction {
+  enum NestedAction: LockmanAction, Equatable {
     case test
     
     var lockmanInfo: some LockmanInfo {
@@ -183,5 +183,25 @@ final class Swift59CrashInvestigationTests: XCTestCase {
     )
     
     XCTAssertTrue(true, "Explicit types compilation succeeded")
+  }
+  
+  // Test with actual behavior similar to original crash
+  func testComplexNestedBehavior() async {
+    let store = await TestStore(initialState: TestState()) {
+      RootLockmanReducer()
+        .lock(
+          boundaryId: "test",
+          for: \.nested,
+          \.other,
+          \.more,
+          \.another,
+          \.last
+        )
+    }
+    
+    // Just test that the store can be created without crashing
+    await store.send(.root)
+    
+    XCTAssertTrue(true, "Complex nested behavior test succeeded")
   }
 }
