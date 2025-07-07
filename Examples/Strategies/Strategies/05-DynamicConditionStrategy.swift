@@ -1,3 +1,4 @@
+import CasePaths
 import ComposableArchitecture
 import Lockman
 import SwiftUI
@@ -52,6 +53,7 @@ struct DynamicConditionStrategyFeature {
     }
   }
 
+  @CasePathable
   enum Action: ViewAction {
     case view(ViewAction)
     case `internal`(InternalAction)
@@ -112,7 +114,8 @@ struct DynamicConditionStrategyFeature {
         // Handle lock errors from DynamicConditionStrategy
         await send(
           .internal(.operationFailed(operation: "Operation", error: error.localizedDescription)))
-      }
+      },
+      for: \.view
     )
   }
 

@@ -55,6 +55,7 @@ Lockman 提供以下控制策略来解决应用开发中的常见问题：
 以下是如何使用 `@LockmanSingleExecution` 宏实现防止进程重复执行的功能：
 
 ```swift
+import CasePaths
 import ComposableArchitecture
 import Lockman
 
@@ -66,6 +67,7 @@ struct ProcessFeature {
         var message = ""
     }
     
+    @CasePathable
     enum Action: ViewAction {
         case view(ViewAction)
         case `internal`(InternalAction)
@@ -82,6 +84,7 @@ struct ProcessFeature {
         enum InternalAction {
             case processStart
             case processCompleted
+            case updateMessage(String)
         }
     }
     
@@ -95,41 +98,48 @@ struct ProcessFeature {
             case let .view(viewAction):
                 switch viewAction {
                 case .startProcessButtonTapped:
-                    return .withLock(
-                        operation: { send in
-                            await send(.internal(.processStart))
-                            // Simulate heavy processing
-                            try await Task.sleep(nanoseconds: 3_000_000_000)
-                            await send(.internal(.processCompleted))
-                        },
-                        lockFailure: { error, send in
-                            // When processing is already in progress
-                            state.message = "Processing is already in progress"
-                        },
-                        action: viewAction,
-                        cancelID: CancelID.userAction
-                    )
+                    return .run { send in
+                        await send(.internal(.processStart))
+                        // 模拟重处理
+                        try await Task.sleep(nanoseconds: 3_000_000_000)
+                        await send(.internal(.processCompleted))
+                    }
                 }
                 
             case let .internal(internalAction):
                 switch internalAction {
                 case .processStart:
                     state.isProcessing = true
-                    state.message = "Processing started..."
+                    state.message = "处理已开始..."
                     return .none
                     
                 case .processCompleted:
                     state.isProcessing = false
-                    state.message = "Processing completed"
+                    state.message = "处理已完成"
+                    return .none
+                    
+                case .updateMessage(let message):
+                    state.message = message
                     return .none
                 }
             }
         }
+        .lock(
+            boundaryId: CancelID.userAction,
+            lockFailure: { error, send in
+                // 当处理已经在进行中时
+                if error is LockmanSingleExecutionError {
+                    // 通过动作更新消息而不是直接修改状态
+                    await send(.internal(.updateMessage("处理已经在进行中")))
+                }
+            },
+            for: \.view
+        )
     }
 }
 ```
 
-`withLock` 方法确保在处理进行中时不会执行 `startProcessButtonTapped`，即使用户多次点击按钮也能防止重复操作。
+`Reducer.lock` 修饰符自动对符合 `LockmanAction` 的动作应用锁管理。由于 `ViewAction` 枚举被标记为 `@LockmanSingleExecution`，`startProcessButtonTapped` 动作在处理进行中时不会被执行。`for: \.view` 参数告诉 Lockman 检查嵌套在 `view` 情况中的动作的 `LockmanAction` 一致性。
 
 ### 调试输出示例
 

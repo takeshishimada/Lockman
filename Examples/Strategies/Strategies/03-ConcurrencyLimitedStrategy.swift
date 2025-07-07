@@ -1,3 +1,4 @@
+import CasePaths
 import ComposableArchitecture
 import Lockman
 import SwiftUI
@@ -50,6 +51,7 @@ struct ConcurrencyLimitedStrategyFeature {
     case downloads  // Use single boundary for all downloads
   }
 
+  @CasePathable
   enum Action: ViewAction {
     case view(ViewAction)
     case `internal`(InternalAction)
@@ -129,7 +131,8 @@ struct ConcurrencyLimitedStrategyFeature {
             .internal(.downloadRejected(id: id, reason: "This download is already in progress"))
           )
         }
-      }
+      },
+      for: \.view
     )
   }
 

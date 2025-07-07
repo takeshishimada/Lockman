@@ -1,3 +1,4 @@
+import CasePaths
 import ComposableArchitecture
 import Lockman
 import SwiftUI
@@ -22,6 +23,7 @@ struct GroupCoordinationStrategyFeature {
     case failed(String)
   }
 
+  @CasePathable
   enum Action: ViewAction {
     case view(ViewAction)
     case `internal`(InternalAction)
@@ -115,7 +117,8 @@ struct GroupCoordinationStrategyFeature {
             await send(.internal(.syncFailed("Blocked by exclusive leader")))
           }
         }
-      }
+      },
+      for: \.view
     )
   }
 

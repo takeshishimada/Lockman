@@ -1,3 +1,4 @@
+import CasePaths
 import ComposableArchitecture
 import Lockman
 import SwiftUI
@@ -18,6 +19,7 @@ struct SingleExecutionStrategyFeature {
     }
   }
 
+  @CasePathable
   enum Action: ViewAction {
     case view(ViewAction)
     case `internal`(InternalAction)
@@ -61,7 +63,8 @@ struct SingleExecutionStrategyFeature {
         print("  Error type: \(type(of: error))")
         print("  Error description: \(error.localizedDescription)")
         await send(.internal(.handleLockFailure(error)))
-      }
+      },
+      for: \.view
     )
   }
 

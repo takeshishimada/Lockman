@@ -55,6 +55,7 @@ Lockman은 애플리케이션 개발의 일반적인 문제를 해결하기 위�
 `@LockmanSingleExecution` 매크로를 사용하여 프로세스의 중복 실행을 방지하는 기능을 구현하는 방법입니다:
 
 ```swift
+import CasePaths
 import ComposableArchitecture
 import Lockman
 
@@ -66,6 +67,7 @@ struct ProcessFeature {
         var message = ""
     }
     
+    @CasePathable
     enum Action: ViewAction {
         case view(ViewAction)
         case `internal`(InternalAction)
@@ -82,6 +84,7 @@ struct ProcessFeature {
         enum InternalAction {
             case processStart
             case processCompleted
+            case updateMessage(String)
         }
     }
     
@@ -95,41 +98,48 @@ struct ProcessFeature {
             case let .view(viewAction):
                 switch viewAction {
                 case .startProcessButtonTapped:
-                    return .withLock(
-                        operation: { send in
-                            await send(.internal(.processStart))
-                            // Simulate heavy processing
-                            try await Task.sleep(nanoseconds: 3_000_000_000)
-                            await send(.internal(.processCompleted))
-                        },
-                        lockFailure: { error, send in
-                            // When processing is already in progress
-                            state.message = "Processing is already in progress"
-                        },
-                        action: viewAction,
-                        cancelID: CancelID.userAction
-                    )
+                    return .run { send in
+                        await send(.internal(.processStart))
+                        // 무거운 처리 시뮬레이션
+                        try await Task.sleep(nanoseconds: 3_000_000_000)
+                        await send(.internal(.processCompleted))
+                    }
                 }
                 
             case let .internal(internalAction):
                 switch internalAction {
                 case .processStart:
                     state.isProcessing = true
-                    state.message = "Processing started..."
+                    state.message = "처리 시작됨..."
                     return .none
                     
                 case .processCompleted:
                     state.isProcessing = false
-                    state.message = "Processing completed"
+                    state.message = "처리 완료됨"
+                    return .none
+                    
+                case .updateMessage(let message):
+                    state.message = message
                     return .none
                 }
             }
         }
+        .lock(
+            boundaryId: CancelID.userAction,
+            lockFailure: { error, send in
+                // 이미 처리가 진행 중일 때
+                if error is LockmanSingleExecutionError {
+                    // 직접적인 상태 변경 대신 액션을 통해 메시지 업데이트
+                    await send(.internal(.updateMessage("이미 처리가 진행 중입니다")))
+                }
+            },
+            for: \.view
+        )
     }
 }
 ```
 
-`withLock` 메서드는 처리가 진행 중일 때 `startProcessButtonTapped`가 실행되지 않도록 보장하여, 사용자가 버튼을 여러 번 눌러도 중복 작업을 방지합니다.
+`Reducer.lock` 수정자는 `LockmanAction`을 준수하는 액션에 대해 자동으로 잠금 관리를 적용합니다. `ViewAction` 열거형이 `@LockmanSingleExecution`으로 표시되어 있으므로, 처리가 진행 중일 때 `startProcessButtonTapped` 액션이 실행되지 않습니다. `for: \.view` 매개변수는 Lockman에게 `view` 케이스에 중첩된 액션에 대해 `LockmanAction` 준수를 확인하도록 지시합니다.
 
 ### 디버그 출력 예제
 

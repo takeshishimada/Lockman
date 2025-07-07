@@ -55,6 +55,7 @@ Lockmanは以下の制御戦略を提供し、実際のアプリ開発で頻繁�
 `@LockmanSingleExecution`マクロを使用して、処理の重複実行を防ぐ機能を実装する方法：
 
 ```swift
+import CasePaths
 import ComposableArchitecture
 import Lockman
 
@@ -66,6 +67,7 @@ struct ProcessFeature {
         var message = ""
     }
     
+    @CasePathable
     enum Action: ViewAction {
         case view(ViewAction)
         case `internal`(InternalAction)
@@ -82,6 +84,7 @@ struct ProcessFeature {
         enum InternalAction {
             case processStart
             case processCompleted
+            case updateMessage(String)
         }
     }
     
@@ -95,20 +98,12 @@ struct ProcessFeature {
             case let .view(viewAction):
                 switch viewAction {
                 case .startProcessButtonTapped:
-                    return .withLock(
-                        operation: { send in
-                            await send(.internal(.processStart))
-                            // 重い処理をシミュレート
-                            try await Task.sleep(nanoseconds: 3_000_000_000)
-                            await send(.internal(.processCompleted))
-                        },
-                        lockFailure: { error, send in
-                            // すでに処理が実行中の場合
-                            state.message = "処理は既に実行中です"
-                        },
-                        action: viewAction,
-                        cancelID: CancelID.userAction
-                    )
+                    return .run { send in
+                        await send(.internal(.processStart))
+                        // 重い処理をシミュレート
+                        try await Task.sleep(nanoseconds: 3_000_000_000)
+                        await send(.internal(.processCompleted))
+                    }
                 }
                 
             case let .internal(internalAction):
@@ -122,14 +117,29 @@ struct ProcessFeature {
                     state.isProcessing = false
                     state.message = "処理が完了しました"
                     return .none
+                    
+                case .updateMessage(let message):
+                    state.message = message
+                    return .none
                 }
             }
         }
+        .lock(
+            boundaryId: CancelID.userAction,
+            lockFailure: { error, send in
+                // すでに処理が実行中の場合
+                if error is LockmanSingleExecutionError {
+                    // アクションを通じてメッセージを更新
+                    await send(.internal(.updateMessage("処理は既に実行中です")))
+                }
+            },
+            for: \.view
+        )
     }
 }
 ```
 
-`withLock`メソッドにより、`startProcessButtonTapped`アクションは処理中に再度実行されることがなくなり、ユーザーが誤って複数回ボタンをタップしても安全です。
+`Reducer.lock`モディファイアは`LockmanAction`に準拠するアクションに対して自動的にロック管理を適用します。`ViewAction`列挙型が`@LockmanSingleExecution`でマークされているため、`startProcessButtonTapped`アクションは処理中に再実行されません。`for: \.view`パラメータはLockmanに`view`ケースにネストされたアクションの`LockmanAction`準拠性をチェックするよう指示します。
 
 ### デバッグ出力例
 
