@@ -139,7 +139,7 @@ final class LockmanEdgeCaseTests: XCTestCase {
     case .success, .successWithPrecedingCancellation:
       // Success - either immediate success or with cancellation
       break
-    case .failure(let error):
+    case .cancel(let error):
       XCTFail("Expected success or successWithPrecedingCancellation but got failure: \(error)")
     }
 

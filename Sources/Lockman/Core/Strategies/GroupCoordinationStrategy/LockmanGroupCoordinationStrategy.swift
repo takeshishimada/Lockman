@@ -133,7 +133,7 @@ public final class LockmanGroupCoordinationStrategy: LockmanStrategy, @unchecked
         if let existingMember = groupState?.activeMembers[info.actionId] {
           // Same action ID cannot be executed twice in the same group
           failureReason = "Action '\(info.actionId)' is already active in group '\(groupId)'"
-          return .failure(
+          return .cancel(
             LockmanGroupCoordinationCancellationError(
               cancelledInfo: info,
               boundaryId: boundaryId,
@@ -185,7 +185,7 @@ public final class LockmanGroupCoordinationStrategy: LockmanStrategy, @unchecked
             }
 
             if !canJoin {
-              return .failure(
+              return .cancel(
                 LockmanGroupCoordinationCancellationError(
                   cancelledInfo: info,
                   boundaryId: boundaryId,
@@ -199,7 +199,7 @@ public final class LockmanGroupCoordinationStrategy: LockmanStrategy, @unchecked
           // Members can only join when group has active participants
           if groupState == nil || groupState!.isEmpty {
             failureReason = "Member cannot join: group '\(groupId)' has no active participants"
-            return .failure(
+            return .cancel(
               LockmanGroupCoordinationCancellationError(
                 cancelledInfo: info,
                 boundaryId: boundaryId,

@@ -66,8 +66,8 @@ where S1.I == I1, S2.I == I2 {
   ) -> LockmanResult {
     // Early return pattern for performance optimization
     let result1 = strategy1.canLock(boundaryId: boundaryId, info: info.lockmanInfoForStrategy1)
-    if case .failure(let error) = result1 {
-      let result = LockmanResult.failure(error)
+    if case .cancel(let error) = result1 {
+      let result = LockmanResult.cancel(error)
       LockmanLogger.shared.logCanLock(
         result: result,
         strategy: "Composite",
@@ -79,8 +79,8 @@ where S1.I == I1, S2.I == I2 {
     }
 
     let result2 = strategy2.canLock(boundaryId: boundaryId, info: info.lockmanInfoForStrategy2)
-    if case .failure(let error) = result2 {
-      let result = LockmanResult.failure(error)
+    if case .cancel(let error) = result2 {
+      let result = LockmanResult.cancel(error)
       LockmanLogger.shared.logCanLock(
         result: result,
         strategy: "Composite",
@@ -170,8 +170,8 @@ where S1.I == I1, S2.I == I2 {
     // If any strategy failed, the entire operation fails
     // Return the first failure with its error
     for result in results {
-      if case .failure(let error) = result {
-        return .failure(error)
+      if case .cancel(let error) = result {
+        return .cancel(error)
       }
       // Capture the first cancellation error we encounter
       if case .successWithPrecedingCancellation(let error) = result, cancellationError == nil {
@@ -252,8 +252,8 @@ where S1.I == I1, S2.I == I2, S3.I == I3 {
   ) -> LockmanResult {
     // Early return pattern for performance optimization
     let result1 = strategy1.canLock(boundaryId: boundaryId, info: info.lockmanInfoForStrategy1)
-    if case .failure(let error) = result1 {
-      let result = LockmanResult.failure(error)
+    if case .cancel(let error) = result1 {
+      let result = LockmanResult.cancel(error)
       LockmanLogger.shared.logCanLock(
         result: result,
         strategy: "Composite",
@@ -265,8 +265,8 @@ where S1.I == I1, S2.I == I2, S3.I == I3 {
     }
 
     let result2 = strategy2.canLock(boundaryId: boundaryId, info: info.lockmanInfoForStrategy2)
-    if case .failure(let error) = result2 {
-      let result = LockmanResult.failure(error)
+    if case .cancel(let error) = result2 {
+      let result = LockmanResult.cancel(error)
       LockmanLogger.shared.logCanLock(
         result: result,
         strategy: "Composite",
@@ -278,8 +278,8 @@ where S1.I == I1, S2.I == I2, S3.I == I3 {
     }
 
     let result3 = strategy3.canLock(boundaryId: boundaryId, info: info.lockmanInfoForStrategy3)
-    if case .failure(let error) = result3 {
-      let result = LockmanResult.failure(error)
+    if case .cancel(let error) = result3 {
+      let result = LockmanResult.cancel(error)
       LockmanLogger.shared.logCanLock(
         result: result,
         strategy: "Composite",
@@ -366,8 +366,8 @@ where S1.I == I1, S2.I == I2, S3.I == I3 {
 
     // If any strategy failed, return the first failure with its error
     for result in results {
-      if case .failure(let error) = result {
-        return .failure(error)
+      if case .cancel(let error) = result {
+        return .cancel(error)
       }
       // Capture the first cancellation error we encounter
       if case .successWithPrecedingCancellation(let error) = result, cancellationError == nil {
@@ -437,8 +437,8 @@ where S1.I == I1, S2.I == I2, S3.I == I3, S4.I == I4 {
   ) -> LockmanResult {
     // Early return pattern for performance optimization
     let result1 = strategy1.canLock(boundaryId: boundaryId, info: info.lockmanInfoForStrategy1)
-    if case .failure(let error) = result1 {
-      let result = LockmanResult.failure(error)
+    if case .cancel(let error) = result1 {
+      let result = LockmanResult.cancel(error)
       LockmanLogger.shared.logCanLock(
         result: result,
         strategy: "Composite",
@@ -450,8 +450,8 @@ where S1.I == I1, S2.I == I2, S3.I == I3, S4.I == I4 {
     }
 
     let result2 = strategy2.canLock(boundaryId: boundaryId, info: info.lockmanInfoForStrategy2)
-    if case .failure(let error) = result2 {
-      let result = LockmanResult.failure(error)
+    if case .cancel(let error) = result2 {
+      let result = LockmanResult.cancel(error)
       LockmanLogger.shared.logCanLock(
         result: result,
         strategy: "Composite",
@@ -463,8 +463,8 @@ where S1.I == I1, S2.I == I2, S3.I == I3, S4.I == I4 {
     }
 
     let result3 = strategy3.canLock(boundaryId: boundaryId, info: info.lockmanInfoForStrategy3)
-    if case .failure(let error) = result3 {
-      let result = LockmanResult.failure(error)
+    if case .cancel(let error) = result3 {
+      let result = LockmanResult.cancel(error)
       LockmanLogger.shared.logCanLock(
         result: result,
         strategy: "Composite",
@@ -476,8 +476,8 @@ where S1.I == I1, S2.I == I2, S3.I == I3, S4.I == I4 {
     }
 
     let result4 = strategy4.canLock(boundaryId: boundaryId, info: info.lockmanInfoForStrategy4)
-    if case .failure(let error) = result4 {
-      let result = LockmanResult.failure(error)
+    if case .cancel(let error) = result4 {
+      let result = LockmanResult.cancel(error)
       LockmanLogger.shared.logCanLock(
         result: result,
         strategy: "Composite",
@@ -572,8 +572,8 @@ where S1.I == I1, S2.I == I2, S3.I == I3, S4.I == I4 {
 
     // If any strategy failed, return the first failure with its error
     for result in results {
-      if case .failure(let error) = result {
-        return .failure(error)
+      if case .cancel(let error) = result {
+        return .cancel(error)
       }
       // Capture the first cancellation error we encounter
       if case .successWithPrecedingCancellation(let error) = result, cancellationError == nil {
@@ -653,8 +653,8 @@ where S1.I == I1, S2.I == I2, S3.I == I3, S4.I == I4, S5.I == I5 {
   ) -> LockmanResult {
     // Early return pattern for performance optimization
     let result1 = strategy1.canLock(boundaryId: boundaryId, info: info.lockmanInfoForStrategy1)
-    if case .failure(let error) = result1 {
-      let result = LockmanResult.failure(error)
+    if case .cancel(let error) = result1 {
+      let result = LockmanResult.cancel(error)
       LockmanLogger.shared.logCanLock(
         result: result,
         strategy: "Composite",
@@ -666,8 +666,8 @@ where S1.I == I1, S2.I == I2, S3.I == I3, S4.I == I4, S5.I == I5 {
     }
 
     let result2 = strategy2.canLock(boundaryId: boundaryId, info: info.lockmanInfoForStrategy2)
-    if case .failure(let error) = result2 {
-      let result = LockmanResult.failure(error)
+    if case .cancel(let error) = result2 {
+      let result = LockmanResult.cancel(error)
       LockmanLogger.shared.logCanLock(
         result: result,
         strategy: "Composite",
@@ -679,8 +679,8 @@ where S1.I == I1, S2.I == I2, S3.I == I3, S4.I == I4, S5.I == I5 {
     }
 
     let result3 = strategy3.canLock(boundaryId: boundaryId, info: info.lockmanInfoForStrategy3)
-    if case .failure(let error) = result3 {
-      let result = LockmanResult.failure(error)
+    if case .cancel(let error) = result3 {
+      let result = LockmanResult.cancel(error)
       LockmanLogger.shared.logCanLock(
         result: result,
         strategy: "Composite",
@@ -692,8 +692,8 @@ where S1.I == I1, S2.I == I2, S3.I == I3, S4.I == I4, S5.I == I5 {
     }
 
     let result4 = strategy4.canLock(boundaryId: boundaryId, info: info.lockmanInfoForStrategy4)
-    if case .failure(let error) = result4 {
-      let result = LockmanResult.failure(error)
+    if case .cancel(let error) = result4 {
+      let result = LockmanResult.cancel(error)
       LockmanLogger.shared.logCanLock(
         result: result,
         strategy: "Composite",
@@ -705,8 +705,8 @@ where S1.I == I1, S2.I == I2, S3.I == I3, S4.I == I4, S5.I == I5 {
     }
 
     let result5 = strategy5.canLock(boundaryId: boundaryId, info: info.lockmanInfoForStrategy5)
-    if case .failure(let error) = result5 {
-      let result = LockmanResult.failure(error)
+    if case .cancel(let error) = result5 {
+      let result = LockmanResult.cancel(error)
       LockmanLogger.shared.logCanLock(
         result: result,
         strategy: "Composite",
@@ -810,8 +810,8 @@ where S1.I == I1, S2.I == I2, S3.I == I3, S4.I == I4, S5.I == I5 {
 
     // If any strategy failed, return the first failure with its error
     for result in results {
-      if case .failure(let error) = result {
-        return .failure(error)
+      if case .cancel(let error) = result {
+        return .cancel(error)
       }
       // Capture the first cancellation error we encounter
       if case .successWithPrecedingCancellation(let error) = result, cancellationError == nil {

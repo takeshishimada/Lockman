@@ -16,7 +16,7 @@ import Foundation
 /// let action = MyAction.fetchData(userId: "123", priority: 5)
 /// let conditionalAction = action.with {
 ///     guard priority > 3 else {
-///         return .failure(PriorityTooLowError(priority: priority))
+///         return .cancel(PriorityTooLowError(priority: priority))
 ///     }
 ///     return .success
 /// }
@@ -75,7 +75,7 @@ public final class LockmanDynamicConditionStrategy: LockmanStrategy, @unchecked 
     // Evaluate the condition and get the result directly
     let result = info.condition()
     let failureReason: String? =
-      if case .failure(let error) = result {
+      if case .cancel(let error) = result {
         "Dynamic condition failed: \(error.localizedDescription)"
       } else {
         nil

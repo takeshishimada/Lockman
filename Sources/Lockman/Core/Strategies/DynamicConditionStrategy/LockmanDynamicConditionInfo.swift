@@ -18,7 +18,7 @@ import Foundation
 ///     condition: {
 ///         // Custom business logic to determine if lock can be acquired
 ///         guard userCount < maxUsers else {
-///             return .failure(UserLimitExceededError(
+///             return .cancel(UserLimitExceededError(
 ///                 currentUsers: userCount,
 ///                 maxUsers: maxUsers
 ///             ))

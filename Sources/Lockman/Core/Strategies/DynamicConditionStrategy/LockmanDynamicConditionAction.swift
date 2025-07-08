@@ -22,7 +22,7 @@ import Foundation
 /// let action = MyAction.fetchData(userId: "123", priority: 5)
 /// let info = action.with {
 ///     guard priority > 3 else {
-///         return .failure(MyActionError.priorityTooLow(priority: priority))
+///         return .cancel(MyActionError.priorityTooLow(priority: priority))
 ///     }
 ///     return .success
 /// }

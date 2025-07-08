@@ -91,7 +91,7 @@ final class LockmanDynamicConditionStrategyTests: XCTestCase {
       condition: {
         currentCount.value < 2
           ? .success
-          : .failure(
+          : .cancel(
             MockDynamicConditionError.conditionNotMet(
               actionId: "fetch", hint: "Count limit exceeded"))
       }
@@ -108,7 +108,7 @@ final class LockmanDynamicConditionStrategyTests: XCTestCase {
       condition: {
         currentCount.value < 2
           ? .success
-          : .failure(
+          : .cancel(
             MockDynamicConditionError.conditionNotMet(
               actionId: "fetch", hint: "Count limit exceeded"))
       }
@@ -123,7 +123,7 @@ final class LockmanDynamicConditionStrategyTests: XCTestCase {
       condition: {
         currentCount.value < 2
           ? .success
-          : .failure(
+          : .cancel(
             MockDynamicConditionError.conditionNotMet(
               actionId: "fetch", hint: "Count limit exceeded"))
       }
@@ -144,7 +144,7 @@ final class LockmanDynamicConditionStrategyTests: XCTestCase {
       condition: {
         priority > 5
           ? .success
-          : .failure(
+          : .cancel(
             MockDynamicConditionError.conditionNotMet(
               actionId: "process", hint: "Priority too low"))
       }
@@ -159,7 +159,7 @@ final class LockmanDynamicConditionStrategyTests: XCTestCase {
       condition: {
         lowPriority > 5
           ? .success
-          : .failure(
+          : .cancel(
             MockDynamicConditionError.conditionNotMet(
               actionId: "process", hint: "Priority too low"))
       }
@@ -180,7 +180,7 @@ final class LockmanDynamicConditionStrategyTests: XCTestCase {
       condition: {
         (currentHour >= 9 && currentHour < 17)
           ? .success
-          : .failure(
+          : .cancel(
             MockDynamicConditionError.conditionNotMet(
               actionId: "batch", hint: "Outside business hours"))
       }
@@ -195,7 +195,7 @@ final class LockmanDynamicConditionStrategyTests: XCTestCase {
       condition: {
         (afterHour >= 9 && afterHour < 17)
           ? .success
-          : .failure(
+          : .cancel(
             MockDynamicConditionError.conditionNotMet(
               actionId: "batch", hint: "Outside business hours"))
       }
@@ -217,7 +217,7 @@ final class LockmanDynamicConditionStrategyTests: XCTestCase {
       condition: {
         !isLocked.value
           ? .success
-          : .failure(
+          : .cancel(
             MockDynamicConditionError.conditionNotMet(
               actionId: "exclusive", hint: "Already locked"))
       }
@@ -234,7 +234,7 @@ final class LockmanDynamicConditionStrategyTests: XCTestCase {
       condition: {
         !isLocked.value
           ? .success
-          : .failure(
+          : .cancel(
             MockDynamicConditionError.conditionNotMet(
               actionId: "exclusive", hint: "Already locked"))
       }
@@ -251,7 +251,7 @@ final class LockmanDynamicConditionStrategyTests: XCTestCase {
       condition: {
         !isLocked.value
           ? .success
-          : .failure(
+          : .cancel(
             MockDynamicConditionError.conditionNotMet(
               actionId: "exclusive", hint: "Already locked"))
       }
@@ -462,7 +462,7 @@ final class LockmanDynamicConditionStrategyTests: XCTestCase {
 
           return requestCount.value < quota
             ? .success
-            : .failure(
+            : .cancel(
               MockDynamicConditionError.conditionNotMet(
                 actionId: "api-call", hint: "Quota exceeded"))
         }
@@ -489,7 +489,7 @@ final class LockmanDynamicConditionStrategyTests: XCTestCase {
     let info = LockmanDynamicConditionInfo(
       actionId: "restricted",
       condition: {
-        .failure(
+        .cancel(
           MockDynamicConditionError.conditionNotMet(actionId: "restricted", hint: "Always fails")
         )
       }
@@ -515,7 +515,7 @@ final class LockmanDynamicConditionStrategyTests: XCTestCase {
       condition: {
         user1Count.value < 1
           ? .success
-          : .failure(
+          : .cancel(
             MockDynamicConditionError.conditionNotMet(
               actionId: "request", hint: "User limit reached"))
       }
@@ -532,7 +532,7 @@ final class LockmanDynamicConditionStrategyTests: XCTestCase {
       condition: {
         user2Count.value < 1
           ? .success
-          : .failure(
+          : .cancel(
             MockDynamicConditionError.conditionNotMet(
               actionId: "request", hint: "User limit reached"))
       }
@@ -547,7 +547,7 @@ final class LockmanDynamicConditionStrategyTests: XCTestCase {
       condition: {
         user1Count.value < 1
           ? .success
-          : .failure(
+          : .cancel(
             MockDynamicConditionError.conditionNotMet(
               actionId: "request", hint: "User limit reached"))
       }

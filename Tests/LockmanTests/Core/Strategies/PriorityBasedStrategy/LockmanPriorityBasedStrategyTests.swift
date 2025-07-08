@@ -462,7 +462,7 @@ final class LockmanPriorityBasedStrategyTests: XCTestCase {
       switch $0.1 {
       case .success, .successWithPrecedingCancellation:
         return true
-      case .failure:
+      case .cancel:
         return false
       }
     }.count

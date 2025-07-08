@@ -251,7 +251,7 @@ final class LockmanDynamicConditionReducerIntegrationTests: XCTestCase {
             boundaryId: TestLockAction().lockmanInfo.actionId,
             lockCondition: { _, _ in
               // Failing condition
-              return .failure(
+              return .cancel(
                 ComposableTestDynamicConditionError.conditionNotMet(
                   actionId: "test",
                   hint: "Test failure"

@@ -43,7 +43,7 @@ public final class LockmanConcurrencyLimitedStrategy: LockmanStrategy, @unchecke
         // Get existing infos in the same concurrency group
         let existingInfos = state.currents(id: boundaryId, key: info.concurrencyId)
 
-        result = .failure(
+        result = .cancel(
           LockmanConcurrencyLimitedCancellationError(
             cancelledInfo: info,
             boundaryId: boundaryId,

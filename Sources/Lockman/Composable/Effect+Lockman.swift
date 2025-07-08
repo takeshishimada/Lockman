@@ -294,7 +294,7 @@ extension Effect {
         }
         return .concatenate(.cancel(id: boundaryId), builtEffect)
 
-      case .failure(let error):
+      case .cancel(let error):
         // Lock acquisition failed
         if let lockFailure = lockFailure {
           return .run { send in
@@ -456,7 +456,7 @@ extension Effect {
         }
         return .concatenate(.cancel(id: boundaryId), effectBuilder(unlockToken))
 
-      case .failure(let error):
+      case .cancel(let error):
         // Lock acquisition failed
         if let handler = handler {
           return .run { send in
@@ -528,7 +528,7 @@ extension Effect {
       )
 
       // Early exit if lock cannot be acquired
-      if case .failure = result {
+      if case .cancel = result {
         return result
       }
 

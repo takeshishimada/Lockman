@@ -19,7 +19,7 @@ import Foundation
 /// For dynamic condition strategy, users define their own error types.
 ///
 /// ## Usage
-/// When a lock acquisition fails, strategies return `.failure(error)` where
+/// When a lock acquisition fails, strategies return `.cancel(error)` where
 /// the error conforms to this protocol, providing detailed information about
 /// why the lock could not be acquired.
 public protocol LockmanError: Error, LocalizedError {

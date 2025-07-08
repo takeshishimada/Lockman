@@ -107,7 +107,7 @@ extension Reducer {
   ///         lockCondition: { state, _ in
   ///           // Action-level condition
   ///           guard state.balance >= amount else {
-  ///             return .failure(InsufficientFundsError())
+  ///             return .cancel(InsufficientFundsError())
   ///           }
   ///           return .success
   ///         }
@@ -117,7 +117,7 @@ extension Reducer {
   ///   .lock { state, _ in
   ///     // Reducer-level condition
   ///     guard state.isAuthenticated else {
-  ///       return .failure(NotAuthenticatedError())
+  ///       return .cancel(NotAuthenticatedError())
   ///     }
   ///     return .success
   ///   }
@@ -486,7 +486,7 @@ extension Reducer {
 ///   .lock { state, action in
 ///     // Evaluate state to determine if lock should be acquired
 ///     guard state.isEnabled else {
-///       return .failure(MyError.featureDisabled)
+///       return .cancel(MyError.featureDisabled)
 ///     }
 ///     return .success
 ///   }
@@ -510,7 +510,7 @@ extension Reducer {
 ///         lockCondition: { state, _ in
 ///           // Action-level condition
 ///           guard state.balance >= amount else {
-///             return .failure(MyError.insufficientBalance(required: amount, available: state.balance))
+///             return .cancel(MyError.insufficientBalance(required: amount, available: state.balance))
 ///           }
 ///           return .success
 ///         }
@@ -522,7 +522,7 @@ extension Reducer {
 ///   .lock { state, _ in
 ///     // Reducer-level condition
 ///     guard state.isLoggedIn else {
-///       return .failure(MyError.notAuthenticated)
+///       return .cancel(MyError.notAuthenticated)
 ///     }
 ///     return .success
 ///   }
@@ -808,7 +808,7 @@ extension LockmanDynamicConditionReducer {
 
     // Handle result
     switch result {
-    case .failure(let error):
+    case .cancel(let error):
       return (false, error)
     case .successWithPrecedingCancellation(let error):
       // Lock acquired but with preceding cancellation - return success with error

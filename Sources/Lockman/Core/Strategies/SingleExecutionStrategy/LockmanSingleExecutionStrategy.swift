@@ -72,7 +72,7 @@ public final class LockmanSingleExecutionStrategy: LockmanStrategy, @unchecked S
   ///   - info: The lock information containing the action ID and execution mode
   /// - Returns:
   ///   - `.success` if the lock can be acquired
-  ///   - `.failure(error)` if a lock conflict exists based on the execution mode, with detailed error information
+  ///   - `.cancel(error)` if a lock conflict exists based on the execution mode, with detailed error information
   ///
   /// ## Example
   /// ```swift
@@ -102,7 +102,7 @@ public final class LockmanSingleExecutionStrategy: LockmanStrategy, @unchecked S
         result = .success
       } else {
         let existingInfo = currentLocks.first!
-        result = .failure(
+        result = .cancel(
           LockmanSingleExecutionCancellationError(
             cancelledInfo: info,
             boundaryId: boundaryId,
@@ -116,7 +116,7 @@ public final class LockmanSingleExecutionStrategy: LockmanStrategy, @unchecked S
       // Exclusive per action - check if same actionId exists
       if state.contains(id: boundaryId, key: info.actionId) {
         let existingInfo = state.currents(id: boundaryId, key: info.actionId).first!
-        result = .failure(
+        result = .cancel(
           LockmanSingleExecutionCancellationError(
             cancelledInfo: info,
             boundaryId: boundaryId,

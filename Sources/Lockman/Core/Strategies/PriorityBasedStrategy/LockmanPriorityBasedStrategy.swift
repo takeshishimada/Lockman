@@ -106,7 +106,7 @@ public final class LockmanPriorityBasedStrategy: LockmanStrategy, @unchecked Sen
   /// ## Return Values
   /// - `.success`: No conflicts, lock can be acquired immediately
   /// - `.successWithPrecedingCancellation`: Lock acquired, but existing operation must be canceled
-  /// - `.failure`: Cannot acquire lock due to higher/equal priority conflicts or same-action blocking
+  /// - `.cancel`: Cannot acquire lock due to higher/equal priority conflicts or same-action blocking
   ///
   /// - Parameters:
   ///   - boundaryId: A unique boundary identifier conforming to `LockmanBoundaryId`
@@ -159,7 +159,7 @@ public final class LockmanPriorityBasedStrategy: LockmanStrategy, @unchecked Sen
     // Compare priority levels using the Comparable implementation
     if currentPriority > requestedPriority {
       // Current action has higher priority - request fails
-      result = .failure(
+      result = .cancel(
         LockmanPriorityBasedBlockedError(
           blockedInfo: requestedInfo,
           boundaryId: boundaryId,
@@ -180,7 +180,7 @@ public final class LockmanPriorityBasedStrategy: LockmanStrategy, @unchecked Sen
       )
       result = behaviorResult
 
-      if case .failure = behaviorResult {
+      if case .cancel = behaviorResult {
         failureReason =
           "Same priority action '\(currentHighestPriorityInfo.actionId)' with exclusive behavior is already running"
       } else if case .successWithPrecedingCancellation(_) = behaviorResult {
@@ -352,7 +352,7 @@ extension LockmanPriorityBasedStrategy {
     case .exclusive:
       // Existing action: "I run exclusively, block new same-priority actions"
       // → New action must wait or fail
-      return .failure(
+      return .cancel(
         LockmanPriorityBasedBlockedError(
           blockedInfo: requested,
           boundaryId: boundaryId,
