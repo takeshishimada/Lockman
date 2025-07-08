@@ -111,20 +111,21 @@ struct ConcurrencyLimitedStrategyFeature {
       boundaryId: CancelID.downloads,
       lockFailure: { error, send in
         // Handle errors from both strategies at reducer level
-        if let concurrencyError = error as? LockmanConcurrencyLimitedError,
-          case .concurrencyLimitReached(let requestedInfo, _, let current) = concurrencyError,
-          let idString = requestedInfo.actionId.split(separator: "-").last,
+        if let concurrencyError = error as? LockmanConcurrencyLimitedCancellationError,
+          let idString = concurrencyError.cancelledInfo.actionId.split(separator: "-").last,
           let id = Int(idString)
         {
           await send(
             .internal(
               .downloadRejected(
-                id: id, reason: "Download limit reached (\(current)/\(requestedInfo.limit))")
+                id: id,
+                reason:
+                  "Download limit reached (\(concurrencyError.currentCount)/\(concurrencyError.cancelledInfo.limit))"
+              )
             )
           )
-        } else if let singleExecutionError = error as? LockmanSingleExecutionError,
-          case .actionAlreadyRunning(let info) = singleExecutionError,
-          let idString = info.actionId.split(separator: "-").last,
+        } else if let singleExecutionError = error as? LockmanSingleExecutionCancellationError,
+          let idString = singleExecutionError.cancelledInfo.actionId.split(separator: "-").last,
           let id = Int(idString)
         {
           await send(

@@ -37,9 +37,9 @@ public enum LockmanResult: Sendable {
   /// When this result is returned, the requesting operation should not proceed.
   ///
   /// - Parameter error: An error conforming to `LockmanError` that provides
-  ///   detailed information about why the lock acquisition failed. Each strategy
-  ///   returns its own error type (e.g., `LockmanSingleExecutionError`,
-  ///   `LockmanPriorityBasedError`) to help with debugging and error handling.
+  ///   detailed information about why the lock acquisition failed. All cancellation
+  ///   errors conform to `LockmanCancellationError` which provides consistent
+  ///   access to cancelled action info and the boundary where cancellation occurred.
   case failure(any Error)
 }
 

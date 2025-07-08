@@ -44,10 +44,11 @@ public final class LockmanConcurrencyLimitedStrategy: LockmanStrategy, @unchecke
         let existingInfos = state.currents(id: boundaryId, key: info.concurrencyId)
 
         result = .failure(
-          LockmanConcurrencyLimitedError.concurrencyLimitReached(
-            requestedInfo: info,
+          LockmanConcurrencyLimitedCancellationError(
+            cancelledInfo: info,
+            boundaryId: boundaryId,
             existingInfos: existingInfos,
-            current: currentCount
+            currentCount: currentCount
           )
         )
         failureReason =

@@ -38,4 +38,3 @@ public struct LockmanPriorityBasedCancellationError: LockmanCancellationError {
     "A lower priority action was preempted by a higher priority action."
   }
 }
-

@@ -104,7 +104,7 @@ struct SingleExecutionStrategyFeature {
       return .none
 
     case .handleLockFailure(let error):
-      if error is LockmanSingleExecutionError {
+      if error is LockmanSingleExecutionCancellationError {
         // Show temporary message when blocked during processing
         if state.processStatus == .processing {
           state.temporaryMessage = "Already running"

@@ -979,9 +979,9 @@ final class LockmanGroupCoordinationStrategyTests: XCTestCase {
 
     if case .failure(let error) = strategy.canLock(boundaryId: boundaryId, info: sameLock) {
       // Should fail due to actionAlreadyInGroup, not blockedByExclusiveLeader
-      XCTAssertTrue(error is LockmanGroupCoordinationError)
-      if let coordinationError = error as? LockmanGroupCoordinationError {
-        if case .actionAlreadyInGroup = coordinationError {
+      XCTAssertTrue(error is LockmanGroupCoordinationCancellationError)
+      if let coordinationError = error as? LockmanGroupCoordinationCancellationError {
+        if case .actionAlreadyInGroup = coordinationError.reason {
           // Expected
         } else {
           XCTFail("Expected actionAlreadyInGroup error, got \(coordinationError)")
@@ -1021,7 +1021,7 @@ final class LockmanGroupCoordinationStrategyTests: XCTestCase {
       coordinationRole: .leader(.emptyGroup)
     )
     if case .failure(let error) = strategy.canLock(boundaryId: boundaryId, info: emptyGroupLeader) {
-      XCTAssertTrue(error is LockmanGroupCoordinationError)
+      XCTAssertTrue(error is LockmanGroupCoordinationCancellationError)
     } else {
       XCTFail("Expected failure for .emptyGroup policy")
     }
@@ -1035,7 +1035,7 @@ final class LockmanGroupCoordinationStrategyTests: XCTestCase {
     if case .failure(let error) = strategy.canLock(
       boundaryId: boundaryId, info: withoutMembersLeader)
     {
-      XCTAssertTrue(error is LockmanGroupCoordinationError)
+      XCTAssertTrue(error is LockmanGroupCoordinationCancellationError)
     } else {
       XCTFail("Expected failure for .withoutMembers policy")
     }
@@ -1049,7 +1049,7 @@ final class LockmanGroupCoordinationStrategyTests: XCTestCase {
     if case .failure(let error) = strategy.canLock(
       boundaryId: boundaryId, info: withoutLeaderLeader)
     {
-      XCTAssertTrue(error is LockmanGroupCoordinationError)
+      XCTAssertTrue(error is LockmanGroupCoordinationCancellationError)
     } else {
       XCTFail("Expected failure for .withoutLeader policy")
     }

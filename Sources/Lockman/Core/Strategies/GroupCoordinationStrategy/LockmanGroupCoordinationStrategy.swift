@@ -134,8 +134,15 @@ public final class LockmanGroupCoordinationStrategy: LockmanStrategy, @unchecked
           // Same action ID cannot be executed twice in the same group
           failureReason = "Action '\(info.actionId)' is already active in group '\(groupId)'"
           return .failure(
-            LockmanGroupCoordinationError.actionAlreadyInGroup(
-              existingInfo: existingMember.info, groupIds: Set([groupId])))
+            LockmanGroupCoordinationCancellationError(
+              cancelledInfo: info,
+              boundaryId: boundaryId,
+              reason: .actionAlreadyInGroup(
+                existingInfo: existingMember.info,
+                groupIds: Set([groupId])
+              )
+            )
+          )
         }
 
         // No additional blocking logic needed here
@@ -179,8 +186,12 @@ public final class LockmanGroupCoordinationStrategy: LockmanStrategy, @unchecked
 
             if !canJoin {
               return .failure(
-                LockmanGroupCoordinationError.leaderCannotJoinNonEmptyGroup(
-                  groupIds: Set([groupId])))
+                LockmanGroupCoordinationCancellationError(
+                  cancelledInfo: info,
+                  boundaryId: boundaryId,
+                  reason: .leaderCannotJoinNonEmptyGroup(groupIds: Set([groupId]))
+                )
+              )
             }
           }
 
@@ -189,7 +200,12 @@ public final class LockmanGroupCoordinationStrategy: LockmanStrategy, @unchecked
           if groupState == nil || groupState!.isEmpty {
             failureReason = "Member cannot join: group '\(groupId)' has no active participants"
             return .failure(
-              LockmanGroupCoordinationError.memberCannotJoinEmptyGroup(groupIds: Set([groupId])))
+              LockmanGroupCoordinationCancellationError(
+                cancelledInfo: info,
+                boundaryId: boundaryId,
+                reason: .memberCannotJoinEmptyGroup(groupIds: Set([groupId]))
+              )
+            )
           }
         }
       }
