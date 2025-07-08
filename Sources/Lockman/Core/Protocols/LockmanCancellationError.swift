@@ -82,6 +82,6 @@ extension LockmanCancellationError: LocalizedError {
 
   public var failureReason: String? {
     // Delegate to the underlying error's failure reason
-    (reason as? LocalizedError)?.failureReason
+    reason.failureReason
   }
 }

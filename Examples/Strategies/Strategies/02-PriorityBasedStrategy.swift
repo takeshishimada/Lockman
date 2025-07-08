@@ -64,6 +64,7 @@ struct PriorityBasedStrategyFeature {
 
     enum InternalAction {
       case updateResult(button: ButtonType, result: String)
+      case handleLockFailure(error: Error)
     }
 
     enum ButtonType {
@@ -88,32 +89,7 @@ struct PriorityBasedStrategyFeature {
     .lock(
       boundaryId: CancelID.priorityOperation,
       lockFailure: { error, send in
-        // Handle different types of lock failures at reducer level
-        if let priorityError = error as? LockmanPriorityBasedError {
-          switch priorityError {
-          case .precedingActionCancelled(let cancelledInfo, _):
-            // Update the cancelled task's button to show it was cancelled
-            let cancelledButton: Action.ButtonType
-            switch cancelledInfo.actionId {
-            case "high-priority":
-              cancelledButton = .high
-            case "low-exclusive":
-              cancelledButton = .lowExclusive
-            case "low-replaceable":
-              cancelledButton = .lowReplaceable
-            case "none-priority":
-              cancelledButton = .none
-            default:
-              cancelledButton = .lowExclusive
-            }
-            await send(
-              .internal(
-                .updateResult(button: cancelledButton, result: "Cancelled by higher priority")))
-          case .higherPriorityExists, .samePriorityConflict:
-            // These prevent the action from starting, no special handling needed
-            break
-          }
-        }
+        await send(.internal(.handleLockFailure(error: error)))
       },
       for: \.view
     )
@@ -173,6 +149,99 @@ struct PriorityBasedStrategyFeature {
         state.noneButtonResult = result
       }
       return .none
+
+    case .handleLockFailure(let error):
+      return handleLockFailure(error: error, state: &state)
+    }
+  }
+
+  // MARK: - Lock Failure Handler
+  private func handleLockFailure(
+    error: Error,
+    state: inout State
+  ) -> Effect<Action> {
+    // Extract cancellation error and view action
+    guard let cancellationError = error as? LockmanCancellationError,
+      let viewAction = cancellationError.action as? Action.ViewAction,
+      let priorityError = cancellationError.reason as? LockmanPriorityBasedError
+    else {
+      return .none
+    }
+
+    switch priorityError {
+    case .precedingActionCancelled(let cancelledInfo, _):
+      // An existing action was cancelled
+      let button = buttonType(for: cancelledInfo.actionId)
+      let message = cancellationMessage(for: cancelledInfo.priority)
+      switch button {
+      case .high:
+        state.highButtonResult = message
+      case .lowExclusive:
+        state.lowExclusiveResult = message
+      case .lowReplaceable:
+        state.lowReplaceableResult = message
+      case .none:
+        state.noneButtonResult = message
+      }
+      return .none
+
+    case .higherPriorityExists:
+      // New action blocked by higher priority
+      let button = buttonType(for: viewAction)
+      switch button {
+      case .high:
+        state.highButtonResult = "Blocked by higher priority"
+      case .lowExclusive:
+        state.lowExclusiveResult = "Blocked by higher priority"
+      case .lowReplaceable:
+        state.lowReplaceableResult = "Blocked by higher priority"
+      case .none:
+        state.noneButtonResult = "Blocked by higher priority"
+      }
+      return .none
+
+    case .samePriorityConflict:
+      // New action blocked by same priority exclusive
+      let button = buttonType(for: viewAction)
+      switch button {
+      case .high:
+        state.highButtonResult = "Blocked by exclusive"
+      case .lowExclusive:
+        state.lowExclusiveResult = "Blocked by exclusive"
+      case .lowReplaceable:
+        state.lowReplaceableResult = "Blocked by exclusive"
+      case .none:
+        state.noneButtonResult = "Blocked by exclusive"
+      }
+      return .none
+    }
+  }
+
+  // MARK: - Helper Methods
+  private func buttonType(for action: Action.ViewAction) -> Action.ButtonType {
+    switch action {
+    case .highButtonTapped: return .high
+    case .lowExclusiveTapped: return .lowExclusive
+    case .lowReplaceableTapped: return .lowReplaceable
+    case .noneButtonTapped: return .none
+    }
+  }
+
+  private func buttonType(for actionId: String) -> Action.ButtonType {
+    switch actionId {
+    case "high-priority": return .high
+    case "low-exclusive": return .lowExclusive
+    case "low-replaceable": return .lowReplaceable
+    case "none-priority": return .none
+    default: return .lowExclusive
+    }
+  }
+
+  private func cancellationMessage(for priority: LockmanPriorityBasedInfo.Priority) -> String {
+    if case .low(.replaceable) = priority {
+      return "Replaced by exclusive"
+    } else {
+      return "Cancelled by higher priority"
     }
   }
 }
