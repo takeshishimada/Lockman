@@ -516,15 +516,20 @@ final class LockmanPriorityBasedStrategyTests: XCTestCase {
     switch result {
     case .successWithPrecedingCancellation(let error):
       // Verify the error is of the correct type
-      guard let cancellationError = error as? LockmanPriorityBasedCancellationError else {
-        XCTFail("Expected LockmanPriorityBasedCancellationError but got \(type(of: error))")
+      guard let priorityError = error as? LockmanPriorityBasedError else {
+        XCTFail("Expected LockmanPriorityBasedError but got \(type(of: error))")
         return
       }
 
       // Verify the error contains correct information
-      XCTAssertEqual(
-        cancellationError.cancelledInfo.actionId, "lowAction",
-        "Error should contain the cancelled action ID")
+      switch priorityError {
+      case .precedingActionCancelled(let cancelledInfo, _):
+        XCTAssertEqual(
+          cancelledInfo.actionId, "lowAction",
+          "Error should contain the cancelled action ID")
+      default:
+        XCTFail("Expected .precedingActionCancelled but got \(priorityError)")
+      }
     default:
       XCTFail("Expected successWithPrecedingCancellation but got \(result)")
     }
@@ -548,14 +553,20 @@ final class LockmanPriorityBasedStrategyTests: XCTestCase {
     switch result {
     case .successWithPrecedingCancellation(let error):
       // Verify the error contains the correct action ID
-      guard let cancellationError = error as? LockmanPriorityBasedCancellationError else {
-        XCTFail("Expected LockmanPriorityBasedCancellationError but got \(type(of: error))")
+      guard let priorityError = error as? LockmanPriorityBasedError else {
+        XCTFail("Expected LockmanPriorityBasedError but got \(type(of: error))")
         return
       }
 
-      XCTAssertEqual(
-        cancellationError.cancelledInfo.actionId, "replaceableAction",
-        "Error should contain the cancelled action ID")
+      // Verify the error contains correct information
+      switch priorityError {
+      case .precedingActionCancelled(let cancelledInfo, _):
+        XCTAssertEqual(
+          cancelledInfo.actionId, "replaceableAction",
+          "Error should contain the cancelled action ID")
+      default:
+        XCTFail("Expected .precedingActionCancelled but got \(priorityError)")
+      }
     default:
       XCTFail("Expected successWithPrecedingCancellation but got \(result)")
     }

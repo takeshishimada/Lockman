@@ -160,13 +160,9 @@ public final class LockmanPriorityBasedStrategy: LockmanStrategy, @unchecked Sen
     if currentPriority > requestedPriority {
       // Current action has higher priority - request fails
       result = .cancel(
-        LockmanPriorityBasedBlockedError(
-          blockedInfo: requestedInfo,
-          boundaryId: boundaryId,
-          reason: .higherPriorityExists(
-            requested: requestedPriority,
-            currentHighest: currentPriority
-          )
+        LockmanPriorityBasedError.higherPriorityExists(
+          requested: requestedPriority,
+          currentHighest: currentPriority
         )
       )
       failureReason =
@@ -189,7 +185,7 @@ public final class LockmanPriorityBasedStrategy: LockmanStrategy, @unchecked Sen
     } else {
       // Requested action has higher priority - can preempt current
       result = .successWithPrecedingCancellation(
-        error: LockmanPriorityBasedCancellationError(
+        error: LockmanPriorityBasedError.precedingActionCancelled(
           cancelledInfo: currentHighestPriorityInfo,
           boundaryId: boundaryId
         )
@@ -353,10 +349,8 @@ extension LockmanPriorityBasedStrategy {
       // Existing action: "I run exclusively, block new same-priority actions"
       // → New action must wait or fail
       return .cancel(
-        LockmanPriorityBasedBlockedError(
-          blockedInfo: requested,
-          boundaryId: boundaryId,
-          reason: .samePriorityConflict(priority: current.priority)
+        LockmanPriorityBasedError.samePriorityConflict(
+          priority: current.priority
         )
       )
 
@@ -364,7 +358,7 @@ extension LockmanPriorityBasedStrategy {
       // Existing action: "I am replaceable, allow new same-priority actions to take over"
       // → Existing action gets canceled, new action succeeds
       return .successWithPrecedingCancellation(
-        error: LockmanPriorityBasedCancellationError(
+        error: LockmanPriorityBasedError.precedingActionCancelled(
           cancelledInfo: current,
           boundaryId: boundaryId
         )

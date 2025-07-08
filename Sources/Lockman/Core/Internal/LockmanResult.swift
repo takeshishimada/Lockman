@@ -21,10 +21,10 @@ public enum LockmanResult: Sendable {
   /// 1. Cancel the existing operation (usually via Effect cancellation)
   /// 2. Proceed with the new operation
   ///
-  /// - Parameter error: An error that describes the preceding action that will
-  ///   be canceled. This error should be handled appropriately, such as notifying
-  ///   error handlers before proceeding with cancellation.
-  case successWithPrecedingCancellation(error: any Error)
+  /// - Parameter error: A strategy-specific error conforming to `LockmanError`
+  ///   that describes the preceding action that will be canceled. This error
+  ///   should be handled appropriately before proceeding with cancellation.
+  case successWithPrecedingCancellation(error: any LockmanError)
 
   /// Lock acquisition failed and the new action is cancelled.
   ///
@@ -36,9 +36,10 @@ public enum LockmanResult: Sendable {
   ///
   /// When this result is returned, the requesting operation should not proceed.
   ///
-  /// - Parameter error: An error that provides detailed information about why
-  ///   the lock acquisition failed and the new action was cancelled.
-  case cancel(any Error)
+  /// - Parameter error: A strategy-specific error conforming to `LockmanError`
+  ///   that provides detailed information about why the lock acquisition failed
+  ///   and the new action was cancelled.
+  case cancel(any LockmanError)
 }
 
 // MARK: - Equatable Conformance

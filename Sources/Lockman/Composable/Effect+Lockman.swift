@@ -446,10 +446,15 @@ extension Effect {
 
       case .successWithPrecedingCancellation(let error):
         // Lock acquired but need to cancel existing operation first
-        // Notify about the cancellation if a handler is provided
+        // Wrap the strategy error with action context
+        let cancellationError = LockmanCancellationError(
+          action: action,
+          boundaryId: boundaryId,
+          reason: error
+        )
         if let handler = handler {
           return .concatenate(
-            .run { send in await handler(error, send) },
+            .run { send in await handler(cancellationError, send) },
             .cancel(id: boundaryId),
             effectBuilder(unlockToken)
           )
@@ -458,9 +463,15 @@ extension Effect {
 
       case .cancel(let error):
         // Lock acquisition failed
+        // Wrap the strategy error with action context
+        let cancellationError = LockmanCancellationError(
+          action: action,
+          boundaryId: boundaryId,
+          reason: error
+        )
         if let handler = handler {
           return .run { send in
-            await handler(error, send)
+            await handler(cancellationError, send)
           }
         }
         return .none

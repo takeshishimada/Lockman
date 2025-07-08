@@ -165,7 +165,7 @@ where S1.I == I1, S2.I == I2 {
   ///   - results: Variable number of `LockmanResult` values from component strategies
   /// - Returns: The coordinated result following composite strategy rules
   private func coordinateResults(_ results: LockmanResult...) -> LockmanResult {
-    var cancellationError: (any Error)?
+    var cancellationError: (any LockmanError)?
 
     // If any strategy failed, the entire operation fails
     // Return the first failure with its error
@@ -362,7 +362,7 @@ where S1.I == I1, S2.I == I2, S3.I == I3 {
   // MARK: - Private Helpers
 
   private func coordinateResults(_ results: LockmanResult...) -> LockmanResult {
-    var cancellationError: (any Error)?
+    var cancellationError: (any LockmanError)?
 
     // If any strategy failed, return the first failure with its error
     for result in results {
@@ -568,7 +568,7 @@ where S1.I == I1, S2.I == I2, S3.I == I3, S4.I == I4 {
   // MARK: - Private Helpers
 
   private func coordinateResults(_ results: LockmanResult...) -> LockmanResult {
-    var cancellationError: (any Error)?
+    var cancellationError: (any LockmanError)?
 
     // If any strategy failed, return the first failure with its error
     for result in results {
@@ -806,7 +806,7 @@ where S1.I == I1, S2.I == I2, S3.I == I3, S4.I == I4, S5.I == I5 {
   // MARK: - Private Helpers
 
   private func coordinateResults(_ results: LockmanResult...) -> LockmanResult {
-    var cancellationError: (any Error)?
+    var cancellationError: (any LockmanError)?
 
     // If any strategy failed, return the first failure with its error
     for result in results {

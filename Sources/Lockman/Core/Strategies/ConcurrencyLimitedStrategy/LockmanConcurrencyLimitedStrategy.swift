@@ -44,9 +44,8 @@ public final class LockmanConcurrencyLimitedStrategy: LockmanStrategy, @unchecke
         let existingInfos = state.currents(id: boundaryId, key: info.concurrencyId)
 
         result = .cancel(
-          LockmanConcurrencyLimitedCancellationError(
-            cancelledInfo: info,
-            boundaryId: boundaryId,
+          LockmanConcurrencyLimitedError.concurrencyLimitReached(
+            requestedInfo: info,
             existingInfos: existingInfos,
             currentCount: currentCount
           )

@@ -3,7 +3,7 @@ import XCTest
 @testable import Lockman
 
 // Test-specific error for dynamic condition tests
-struct TestDynamicConditionError: Error, LocalizedError {
+struct TestDynamicConditionError: LockmanError {
   let actionId: String
   let hint: String?
 

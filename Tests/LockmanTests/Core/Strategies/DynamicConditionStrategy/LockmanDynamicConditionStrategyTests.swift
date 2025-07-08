@@ -4,7 +4,7 @@ import XCTest
 @testable import Lockman
 
 // Test-specific error for dynamic condition strategy tests
-private struct MockDynamicConditionError: Error, LocalizedError {
+private struct MockDynamicConditionError: LockmanError {
   let actionId: String
   let hint: String?
 

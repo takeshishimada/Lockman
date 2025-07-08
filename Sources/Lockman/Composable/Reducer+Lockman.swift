@@ -589,9 +589,10 @@ public struct LockmanDynamicConditionReducer<State: Sendable, Action: Sendable>:
 extension LockmanDynamicConditionReducer {
   /// Executes Step 1 and Step 2: Dynamic condition evaluation for action-level and reducer-level conditions
   @usableFromInline
-  func withLockStep1Step2<B: LockmanBoundaryId>(
+  func withLockStep1Step2<B: LockmanBoundaryId, LA: LockmanAction>(
     state: State,
     action: Action,
+    lockAction: LA,
     actionId: LockmanActionId,
     boundaryId: B,
     lockCondition: (@Sendable (_ state: State, _ action: Action) -> LockmanResult)?,
@@ -648,8 +649,15 @@ extension LockmanDynamicConditionReducer {
     if !step1Success {
       // Step 1 failed - return without unlocking
       if let lockFailure = lockFailure, let error = step1Error {
+        // Wrap the error with action context
+        // The error must conform to LockmanError as per dynamic condition requirements
+        let cancellationError = LockmanCancellationError(
+          action: lockAction,
+          boundaryId: boundaryId,
+          reason: error as! any LockmanError
+        )
         return .run { send in
-          await lockFailure(error, send)
+          await lockFailure(cancellationError, send)
         }
       }
       return .none
@@ -669,8 +677,15 @@ extension LockmanDynamicConditionReducer {
       // Step 2 failed - unlock Step 1 if it was acquired
       unlockToken()
       if let lockFailure = lockFailure, let error = step2Error {
+        // Wrap the error with action context
+        // The error must conform to LockmanError as per dynamic condition requirements
+        let cancellationError = LockmanCancellationError(
+          action: lockAction,
+          boundaryId: boundaryId,
+          reason: error as! any LockmanError
+        )
         return .run { send in
-          await lockFailure(error, send)
+          await lockFailure(cancellationError, send)
         }
       }
       return .none
@@ -847,7 +862,7 @@ extension LockmanDynamicConditionReducer {
   ///   - line: Source line number for debugging (auto-populated)
   ///   - column: Source column number for debugging (auto-populated)
   /// - Returns: Effect that executes with appropriate locking based on all conditions
-  public func lock<B: LockmanBoundaryId>(
+  public func lock<B: LockmanBoundaryId, LA: LockmanAction>(
     state: State,
     action: Action,
     priority: TaskPriority? = nil,
@@ -860,7 +875,7 @@ extension LockmanDynamicConditionReducer {
     lockFailure: (
       @Sendable (_ error: any Error, _ send: Send<Action>) async -> Void
     )? = nil,
-    lockAction: some LockmanAction,
+    lockAction: LA,
     boundaryId: B,
     lockCondition: (@Sendable (_ state: State, _ action: Action) -> LockmanResult)? = nil,
     fileID: StaticString = #fileID,
@@ -875,6 +890,7 @@ extension LockmanDynamicConditionReducer {
     return withLockStep1Step2(
       state: state,
       action: action,
+      lockAction: lockAction,
       actionId: actionId,
       boundaryId: boundaryId,
       lockCondition: lockCondition,
@@ -972,6 +988,7 @@ extension LockmanDynamicConditionReducer {
     return withLockStep1Step2(
       state: state,
       action: action,
+      lockAction: lockAction,
       actionId: actionId,
       boundaryId: boundaryId,
       lockCondition: lockCondition,

@@ -63,15 +63,15 @@ final class LockmanDynamicConditionReducerMethodChainTests: XCTestCase {
     case payment
   }
 
-  struct FeatureDisabledError: Error, LocalizedError {
+  struct FeatureDisabledError: LockmanError {
     var errorDescription: String? { "Feature is disabled" }
   }
 
-  struct NotAuthenticatedError: Error, LocalizedError {
+  struct NotAuthenticatedError: LockmanError {
     var errorDescription: String? { "Not authenticated" }
   }
 
-  struct InsufficientFundsError: Error, LocalizedError {
+  struct InsufficientFundsError: LockmanError {
     let required: Double
     let available: Double
     var errorDescription: String? {

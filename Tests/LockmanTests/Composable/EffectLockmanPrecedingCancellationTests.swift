@@ -147,8 +147,10 @@ final class EffectWithLockPrecedingCancellationTests: XCTestCase {
               await send(.taskCompleted(.low))
             },
             lockFailure: { error, send in
-              if let cancellationError = error as? LockmanPriorityBasedCancellationError {
-                await send(.lockFailureOccurred(cancellationError.cancelledInfo.actionId))
+              if let cancellationError = error as? LockmanCancellationError,
+                 let priorityError = cancellationError.reason as? LockmanPriorityBasedError,
+                 case .precedingActionCancelled(let cancelledInfo, _) = priorityError {
+                await send(.lockFailureOccurred(cancelledInfo.actionId))
               }
             },
             action: PriorityBasedAction.lowPriority,
@@ -163,8 +165,10 @@ final class EffectWithLockPrecedingCancellationTests: XCTestCase {
               await send(.taskCompleted(.high))
             },
             lockFailure: { error, send in
-              if let cancellationError = error as? LockmanPriorityBasedCancellationError {
-                await send(.lockFailureOccurred(cancellationError.cancelledInfo.actionId))
+              if let cancellationError = error as? LockmanCancellationError,
+                 let priorityError = cancellationError.reason as? LockmanPriorityBasedError,
+                 case .precedingActionCancelled(let cancelledInfo, _) = priorityError {
+                await send(.lockFailureOccurred(cancelledInfo.actionId))
               }
             },
             action: PriorityBasedAction.highExclusive,
