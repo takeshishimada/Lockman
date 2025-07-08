@@ -182,6 +182,7 @@ struct ConcurrencyLimitedStrategyFeature {
       } catch: { error, send in
         await send(.internal(.downloadFailed(id: id, error: error.localizedDescription)))
       }
+      .cancellable(id: CancelID.downloads)
     }
   }
 
