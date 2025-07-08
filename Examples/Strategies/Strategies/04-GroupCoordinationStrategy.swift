@@ -104,8 +104,8 @@ struct GroupCoordinationStrategyFeature {
       boundaryId: CancelID.sync,
       lockFailure: { error, send in
         // Handle group coordination errors at reducer level
-        if let groupError = error as? LockmanGroupCoordinationCancellationError {
-          switch groupError.reason {
+        if let groupError = error as? LockmanGroupCoordinationError {
+          switch groupError {
           case .memberCannotJoinEmptyGroup:
             await send(.internal(.syncFailed("No active sync session")))
           case .leaderCannotJoinNonEmptyGroup:
