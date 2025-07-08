@@ -18,10 +18,10 @@ LockmanDynamicConditionInfo(
     condition: {
         // Custom condition logic
         guard userIsAuthenticated else {
-            return .failure(AuthenticationError.notLoggedIn)
+            return .cancel(AuthenticationError.notLoggedIn)
         }
         guard accountBalance >= requiredAmount else {
-            return .failure(PaymentError.insufficientFunds)
+            return .cancel(PaymentError.insufficientFunds)
         }
         return .success
     }
@@ -42,7 +42,7 @@ var body: some ReducerOf<Self> {
                 .lock { state, _ in
                     // Reducer-level condition
                     guard state.isAuthenticated else {
-                        return .failure(AuthenticationError.notLoggedIn)
+                        return .cancel(AuthenticationError.notLoggedIn)
                     }
                     return .success
                 }
@@ -59,7 +59,7 @@ var body: some ReducerOf<Self> {
                 lockCondition: { state, _ in
                     // Action-level condition
                     guard state.balance >= amount else {
-                        return .failure(PaymentError.insufficientFunds(
+                        return .cancel(PaymentError.insufficientFunds(
                             required: amount,
                             available: state.balance
                         ))
@@ -90,11 +90,11 @@ enum ViewAction {
                 condition: {
                     // Business hours check
                     guard BusinessHours.isOpen else {
-                        return .failure(BankError.outsideBusinessHours)
+                        return .cancel(BankError.outsideBusinessHours)
                     }
                     // Amount limit check
                     guard amount <= transferLimit else {
-                        return .failure(BankError.transferLimitExceeded)
+                        return .cancel(BankError.transferLimitExceeded)
                     }
                     return .success
                 }
@@ -105,7 +105,7 @@ enum ViewAction {
                 condition: {
                     // ATM availability check
                     guard ATMService.isAvailable else {
-                        return .failure(BankError.atmUnavailable)
+                        return .cancel(BankError.atmUnavailable)
                     }
                     return .success
                 }
@@ -132,7 +132,7 @@ var body: some ReducerOf<Self> {
                 .lock { state, _ in
                     // 2. Reducer-level condition
                     guard state.maintenanceMode == false else {
-                        return .failure(SystemError.maintenanceMode)
+                        return .cancel(SystemError.maintenanceMode)
                     }
                     return .success
                 }
@@ -149,7 +149,7 @@ var body: some ReducerOf<Self> {
                 lockCondition: { state, _ in
                     // 1. Action-level condition
                     guard state.systemStatus == .ready else {
-                        return .failure(SystemError.notReady)
+                        return .cancel(SystemError.notReady)
                     }
                     return .success
                 }

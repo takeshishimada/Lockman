@@ -977,7 +977,7 @@ final class LockmanGroupCoordinationStrategyTests: XCTestCase {
       coordinationRole: .leader(.emptyGroup)
     )
 
-    if case .failure(let error) = strategy.canLock(boundaryId: boundaryId, info: sameLock) {
+    if case .cancel(let error) = strategy.canLock(boundaryId: boundaryId, info: sameLock) {
       // Should fail due to actionAlreadyInGroup, not blockedByExclusiveLeader
       XCTAssertTrue(error is LockmanGroupCoordinationError)
       if let coordinationError = error as? LockmanGroupCoordinationError {
@@ -1020,7 +1020,7 @@ final class LockmanGroupCoordinationStrategyTests: XCTestCase {
       groupId: "group1",
       coordinationRole: .leader(.emptyGroup)
     )
-    if case .failure(let error) = strategy.canLock(boundaryId: boundaryId, info: emptyGroupLeader) {
+    if case .cancel(let error) = strategy.canLock(boundaryId: boundaryId, info: emptyGroupLeader) {
       XCTAssertTrue(error is LockmanGroupCoordinationError)
     } else {
       XCTFail("Expected failure for .emptyGroup policy")
@@ -1032,7 +1032,7 @@ final class LockmanGroupCoordinationStrategyTests: XCTestCase {
       groupId: "group1",
       coordinationRole: .leader(.withoutMembers)
     )
-    if case .failure(let error) = strategy.canLock(
+    if case .cancel(let error) = strategy.canLock(
       boundaryId: boundaryId, info: withoutMembersLeader)
     {
       XCTAssertTrue(error is LockmanGroupCoordinationError)
@@ -1046,7 +1046,7 @@ final class LockmanGroupCoordinationStrategyTests: XCTestCase {
       groupId: "group1",
       coordinationRole: .leader(.withoutLeader)
     )
-    if case .failure(let error) = strategy.canLock(
+    if case .cancel(let error) = strategy.canLock(
       boundaryId: boundaryId, info: withoutLeaderLeader)
     {
       XCTAssertTrue(error is LockmanGroupCoordinationError)

@@ -2,23 +2,23 @@ import Foundation
 
 // MARK: - LockmanSingleExecutionError
 
-/// Errors that can occur when attempting to acquire a lock using SingleExecutionStrategy.
+/// An error that occurs when single execution strategy prevents a new action.
 ///
-/// These errors provide detailed information about why a single execution lock
-/// could not be acquired.
+/// This error is returned when a new action cannot proceed because:
+/// - The boundary already has an active lock (boundary mode)
+/// - An action with the same ID is already running (action mode)
 public enum LockmanSingleExecutionError: LockmanError {
-  /// Indicates that the specified boundary already has an active lock.
-  ///
-  /// This occurs when attempting to acquire a boundary-scoped lock while
-  /// another operation is already holding a lock in the same boundary.
-  case boundaryAlreadyLocked(boundaryId: String, existingInfo: LockmanSingleExecutionInfo)
+  /// The boundary already has an active lock.
+  case boundaryAlreadyLocked(
+    boundaryId: any LockmanBoundaryId, existingInfo: LockmanSingleExecutionInfo)
 
-  /// Indicates that an action with the same ID is already running.
-  ///
-  /// This occurs when attempting to execute an action while another instance
-  /// of the same action is already in progress.
+  /// An action with the same ID is already running.
   case actionAlreadyRunning(existingInfo: LockmanSingleExecutionInfo)
+}
 
+// MARK: - LocalizedError Conformance
+
+extension LockmanSingleExecutionError: LocalizedError {
   public var errorDescription: String? {
     switch self {
     case .boundaryAlreadyLocked(let boundaryId, let existingInfo):

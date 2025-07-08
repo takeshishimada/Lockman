@@ -18,7 +18,7 @@ import Foundation
 ///     condition: {
 ///         // Custom business logic to determine if lock can be acquired
 ///         guard userCount < maxUsers else {
-///             return .failure(UserLimitExceededError(
+///             return .cancel(UserLimitExceededError(
 ///                 currentUsers: userCount,
 ///                 maxUsers: maxUsers
 ///             ))
@@ -41,8 +41,21 @@ public struct LockmanDynamicConditionInfo: LockmanInfo, Sendable {
 
   /// The condition that determines whether this lock can be acquired.
   ///
-  /// This closure returns a `LockmanResult` to indicate success, failure with error,
-  /// or success with preceding cancellation needed.
+  /// This closure returns a `LockmanResult` to indicate success or cancellation.
+  /// When returning `.cancel`, the error MUST conform to `LockmanError` protocol.
+  ///
+  /// ## Example
+  /// ```swift
+  /// LockmanDynamicConditionInfo(
+  ///   actionId: "purchase",
+  ///   condition: {
+  ///     guard userIsAuthenticated else {
+  ///       return .cancel(MyAuthError.notAuthenticated) // MyAuthError: LockmanError
+  ///     }
+  ///     return .success
+  ///   }
+  /// )
+  /// ```
   public let condition: @Sendable () -> LockmanResult
 
   // MARK: - Initialization
@@ -52,8 +65,8 @@ public struct LockmanDynamicConditionInfo: LockmanInfo, Sendable {
   /// - Parameters:
   ///   - strategyId: The strategy identifier for this lock (defaults to .dynamicCondition)
   ///   - actionId: The identifier for this action
-  ///   - condition: A closure that evaluates whether the lock can be acquired,
-  ///                returning a `LockmanResult`
+  ///   - condition: A closure that evaluates whether the lock can be acquired.
+  ///                When returning `.cancel`, the error MUST conform to `LockmanError`.
   public init(
     strategyId: LockmanStrategyId = .dynamicCondition,
     actionId: LockmanActionId,

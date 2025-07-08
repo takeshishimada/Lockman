@@ -106,7 +106,7 @@ public final class LockmanPriorityBasedStrategy: LockmanStrategy, @unchecked Sen
   /// ## Return Values
   /// - `.success`: No conflicts, lock can be acquired immediately
   /// - `.successWithPrecedingCancellation`: Lock acquired, but existing operation must be canceled
-  /// - `.failure`: Cannot acquire lock due to higher/equal priority conflicts or same-action blocking
+  /// - `.cancel`: Cannot acquire lock due to higher/equal priority conflicts or same-action blocking
   ///
   /// - Parameters:
   ///   - boundaryId: A unique boundary identifier conforming to `LockmanBoundaryId`
@@ -159,20 +159,24 @@ public final class LockmanPriorityBasedStrategy: LockmanStrategy, @unchecked Sen
     // Compare priority levels using the Comparable implementation
     if currentPriority > requestedPriority {
       // Current action has higher priority - request fails
-      result = .failure(
+      result = .cancel(
         LockmanPriorityBasedError.higherPriorityExists(
-          requested: requestedPriority, currentHighest: currentPriority))
+          requested: requestedPriority,
+          currentHighest: currentPriority
+        )
+      )
       failureReason =
         "Higher priority action '\(currentHighestPriorityInfo.actionId)' (priority: \(currentPriority)) is currently locked"
     } else if currentPriority == requestedPriority {
       // Same priority level - apply existing action's concurrency behavior
       let behaviorResult = applySamePriorityBehavior(
         current: currentHighestPriorityInfo,
-        requested: requestedInfo
+        requested: requestedInfo,
+        boundaryId: boundaryId
       )
       result = behaviorResult
 
-      if case .failure = behaviorResult {
+      if case .cancel = behaviorResult {
         failureReason =
           "Same priority action '\(currentHighestPriorityInfo.actionId)' with exclusive behavior is already running"
       } else if case .successWithPrecedingCancellation(_) = behaviorResult {
@@ -182,7 +186,8 @@ public final class LockmanPriorityBasedStrategy: LockmanStrategy, @unchecked Sen
       // Requested action has higher priority - can preempt current
       result = .successWithPrecedingCancellation(
         error: LockmanPriorityBasedError.precedingActionCancelled(
-          cancelledInfo: currentHighestPriorityInfo
+          cancelledInfo: currentHighestPriorityInfo,
+          boundaryId: boundaryId
         )
       )
       cancelledInfo = (currentHighestPriorityInfo.actionId, currentHighestPriorityInfo.uniqueId)
@@ -327,9 +332,10 @@ extension LockmanPriorityBasedStrategy {
   ///   - current: The currently active priority-based lock info
   ///   - requested: The requested priority-based lock info (behavior ignored)
   /// - Returns: A `LockmanResult` based on the existing action's concurrency behavior
-  fileprivate func applySamePriorityBehavior(
+  fileprivate func applySamePriorityBehavior<B: LockmanBoundaryId>(
     current: LockmanPriorityBasedInfo,
-    requested _: LockmanPriorityBasedInfo
+    requested: LockmanPriorityBasedInfo,
+    boundaryId: B
   ) -> LockmanResult {
     // Use the existing action's behavior to determine the outcome
     guard let currentBehavior = current.priority.behavior else {
@@ -342,13 +348,20 @@ extension LockmanPriorityBasedStrategy {
     case .exclusive:
       // Existing action: "I run exclusively, block new same-priority actions"
       // → New action must wait or fail
-      return .failure(LockmanPriorityBasedError.samePriorityConflict(priority: current.priority))
+      return .cancel(
+        LockmanPriorityBasedError.samePriorityConflict(
+          priority: current.priority
+        )
+      )
 
     case .replaceable:
       // Existing action: "I am replaceable, allow new same-priority actions to take over"
       // → Existing action gets canceled, new action succeeds
       return .successWithPrecedingCancellation(
-        error: LockmanPriorityBasedError.precedingActionCancelled(cancelledInfo: current)
+        error: LockmanPriorityBasedError.precedingActionCancelled(
+          cancelledInfo: current,
+          boundaryId: boundaryId
+        )
       )
     }
   }

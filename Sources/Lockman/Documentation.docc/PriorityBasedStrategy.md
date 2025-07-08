@@ -118,34 +118,39 @@ Time: 1s  - First process              → 🛑 Cancel
 
 For errors that may occur with PriorityBasedStrategy and their solutions, please also refer to the common patterns on the [Error Handling](<doc:ErrorHandling>) page.
 
-### LockmanPriorityBasedError
+### Error Types
 
-**higherPriorityExists** - Higher priority is running
+PriorityBasedStrategy uses two error types, both conforming to `LockmanCancellationError` protocol:
+
+#### LockmanPriorityBasedBlockedError
+
+Occurs when a new action is blocked due to priority conflicts.
+
+**BlockedReason cases:**
+- **higherPriorityExists** - Higher priority is running
+- **samePriorityConflict** - Conflict at same priority
 
 ```swift
 lockFailure: { error, send in
-    if case .higherPriorityExists(let requested, let current) = error as? LockmanPriorityBasedError {
-        await send(.priorityConflict("Waiting due to high priority process running"))
+    if let blockedError = error as? LockmanPriorityBasedBlockedError {
+        switch blockedError.reason {
+        case .higherPriorityExists(let requested, let current):
+            await send(.priorityConflict("Waiting due to high priority process running"))
+        case .samePriorityConflict(let priority):
+            await send(.busyMessage("Process with same priority is running"))
+        }
     }
 }
 ```
 
-**samePriorityConflict** - Conflict at same priority
+#### LockmanPriorityBasedCancellationError
 
-```swift
-lockFailure: { error, send in
-    if case .samePriorityConflict(let priority) = error as? LockmanPriorityBasedError {
-        await send(.busyMessage("Process with same priority is running"))
-    }
-}
-```
-
-**precedingActionCancelled** - Preceding action cancelled
+Occurs when an existing action is cancelled by preemption.
 
 ```swift
 catch handler: { error, send in
-    if case .precedingActionCancelled(let cancelledInfo) = error as? LockmanPriorityBasedError {
-        await send(.processCancelled("Interrupted by high priority process"))
+    if let cancellationError = error as? LockmanPriorityBasedCancellationError {
+        await send(.processCancelled("Interrupted by high priority process: \(cancellationError.cancelledInfo.actionId)"))
     }
 }
 ```

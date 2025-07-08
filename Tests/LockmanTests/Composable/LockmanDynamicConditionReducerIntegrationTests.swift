@@ -5,7 +5,7 @@ import XCTest
 @testable import Lockman
 
 // Test-specific error for dynamic condition tests
-private struct ComposableTestDynamicConditionError: Error, LocalizedError {
+private struct ComposableTestDynamicConditionError: LockmanError {
   let actionId: String
   let hint: String?
 
@@ -251,7 +251,7 @@ final class LockmanDynamicConditionReducerIntegrationTests: XCTestCase {
             boundaryId: TestLockAction().lockmanInfo.actionId,
             lockCondition: { _, _ in
               // Failing condition
-              return .failure(
+              return .cancel(
                 ComposableTestDynamicConditionError.conditionNotMet(
                   actionId: "test",
                   hint: "Test failure"

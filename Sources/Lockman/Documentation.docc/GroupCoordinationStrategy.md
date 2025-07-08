@@ -165,13 +165,21 @@ Group state: [leader] → leader request → ❌ Reject
 
 For errors that may occur with GroupCoordinationStrategy and their solutions, please also refer to the common patterns on the [Error Handling](<doc:ErrorHandling>) page.
 
-### LockmanGroupCoordinationError
+### LockmanGroupCoordinationCancellationError
+
+This error conforms to `LockmanCancellationError` protocol and provides:
+- `cancelledInfo`: Information about the cancelled action
+- `boundaryId`: Where the cancellation occurred
+- `reason`: Specific reason for cancellation
+
+**CancellationReason cases:**
 
 **actionAlreadyInGroup** - Action already in group
 
 ```swift
 lockFailure: { error, send in
-    if case .actionAlreadyInGroup(let existingInfo, let groupIds) = error as? LockmanGroupCoordinationError {
+    if let groupError = error as? LockmanGroupCoordinationCancellationError,
+       case .actionAlreadyInGroup(let existingInfo, let groupIds) = groupError.reason {
         await send(.alreadyActive("Process is already running"))
     }
 }
@@ -181,7 +189,8 @@ lockFailure: { error, send in
 
 ```swift
 lockFailure: { error, send in
-    if case .leaderCannotJoinNonEmptyGroup(let groupIds) = error as? LockmanGroupCoordinationError {
+    if let groupError = error as? LockmanGroupCoordinationCancellationError,
+       case .leaderCannotJoinNonEmptyGroup(let groupIds) = groupError.reason {
         await send(.groupBusy("Cannot start because other processing is running"))
     }
 }
@@ -191,8 +200,20 @@ lockFailure: { error, send in
 
 ```swift
 lockFailure: { error, send in
-    if case .memberCannotJoinEmptyGroup(let groupIds) = error as? LockmanGroupCoordinationError {
+    if let groupError = error as? LockmanGroupCoordinationCancellationError,
+       case .memberCannotJoinEmptyGroup(let groupIds) = groupError.reason {
         await send(.noActiveGroup("No active group"))
+    }
+}
+```
+
+**blockedByExclusiveLeader** - Blocked by exclusive leader
+
+```swift
+lockFailure: { error, send in
+    if let groupError = error as? LockmanGroupCoordinationCancellationError,
+       case .blockedByExclusiveLeader(let leaderInfo, let groupId, let entryPolicy) = groupError.reason {
+        await send(.blockedByLeader("Blocked by exclusive leader: \(leaderInfo.actionId)"))
     }
 }
 ```

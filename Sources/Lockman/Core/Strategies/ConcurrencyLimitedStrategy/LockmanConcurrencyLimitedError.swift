@@ -1,21 +1,35 @@
 import Foundation
 
-/// Errors specific to concurrency-limited locking.
+// MARK: - LockmanConcurrencyLimitedError
+
+/// An error that occurs when concurrency limit strategy blocks a new action.
+///
+/// This error is returned when a new action cannot proceed because the concurrency
+/// limit has been reached for the specified concurrency group.
 public enum LockmanConcurrencyLimitedError: LockmanError {
   /// The concurrency limit has been reached.
-  /// - Parameters:
-  ///   - requestedInfo: The info of the action that was blocked
-  ///   - existingInfos: Array of currently active infos in the same concurrency group
-  ///   - current: Current number of active concurrent executions
   case concurrencyLimitReached(
-    requestedInfo: LockmanConcurrencyLimitedInfo, existingInfos: [LockmanConcurrencyLimitedInfo],
-    current: Int)
+    requestedInfo: LockmanConcurrencyLimitedInfo,
+    existingInfos: [LockmanConcurrencyLimitedInfo],
+    currentCount: Int
+  )
+}
 
+// MARK: - LocalizedError Conformance
+
+extension LockmanConcurrencyLimitedError: LocalizedError {
   public var errorDescription: String? {
     switch self {
-    case .concurrencyLimitReached(let requestedInfo, _, let current):
+    case .concurrencyLimitReached(let requestedInfo, _, let currentCount):
+      let limitStr: String
+      switch requestedInfo.limit {
+      case .unlimited:
+        limitStr = "unlimited"
+      case .limited(let limit):
+        limitStr = String(limit)
+      }
       return
-        "Concurrency limit reached for '\(requestedInfo.concurrencyId)': \(current)/\(requestedInfo.limit)"
+        "Concurrency limit reached for '\(requestedInfo.concurrencyId)': \(currentCount)/\(limitStr)"
     }
   }
 

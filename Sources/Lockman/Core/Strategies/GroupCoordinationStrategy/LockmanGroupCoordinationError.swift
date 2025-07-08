@@ -2,34 +2,33 @@ import Foundation
 
 // MARK: - LockmanGroupCoordinationError
 
-/// Errors that can occur when attempting to acquire a lock using GroupCoordinationStrategy.
+/// An error that occurs when group coordination strategy blocks a new action.
 ///
-/// These errors provide information about group coordination conflicts and
-/// role-based restrictions.
+/// This error is returned when a new action cannot proceed due to group coordination rules.
 public enum LockmanGroupCoordinationError: LockmanError {
-  /// Indicates that a leader cannot join a group that already has members.
-  ///
-  /// Leaders must be the first to join a group to establish coordination.
+  /// Leader cannot join a non-empty group.
   case leaderCannotJoinNonEmptyGroup(groupIds: Set<AnyLockmanGroupId>)
 
-  /// Indicates that a member cannot join a group that has no participants.
-  ///
-  /// Members require an existing leader or other members to coordinate with.
+  /// Member cannot join an empty group.
   case memberCannotJoinEmptyGroup(groupIds: Set<AnyLockmanGroupId>)
 
-  /// Indicates that an action with the same ID is already in the group.
-  ///
-  /// Each action ID must be unique within a coordination group.
+  /// Action with the same ID is already in the group.
   case actionAlreadyInGroup(
-    existingInfo: LockmanGroupCoordinatedInfo, groupIds: Set<AnyLockmanGroupId>)
+    existingInfo: LockmanGroupCoordinatedInfo,
+    groupIds: Set<AnyLockmanGroupId>
+  )
 
-  /// Indicates that an action is blocked by an exclusive leader.
-  ///
-  /// Exclusive leaders can prevent other actions from executing based on their entry policy.
+  /// Action is blocked by an exclusive leader.
   case blockedByExclusiveLeader(
-    leaderInfo: LockmanGroupCoordinatedInfo, groupId: AnyLockmanGroupId,
-    entryPolicy: LockmanGroupCoordinationRole.LeaderEntryPolicy)
+    leaderInfo: LockmanGroupCoordinatedInfo,
+    groupId: AnyLockmanGroupId,
+    entryPolicy: LockmanGroupCoordinationRole.LeaderEntryPolicy
+  )
+}
 
+// MARK: - LocalizedError Conformance
+
+extension LockmanGroupCoordinationError: LocalizedError {
   public var errorDescription: String? {
     switch self {
     case .leaderCannotJoinNonEmptyGroup(let groupIds):

@@ -462,7 +462,7 @@ final class LockmanPriorityBasedStrategyTests: XCTestCase {
       switch $0.1 {
       case .success, .successWithPrecedingCancellation:
         return true
-      case .failure:
+      case .cancel:
         return false
       }
     }.count
@@ -522,11 +522,13 @@ final class LockmanPriorityBasedStrategyTests: XCTestCase {
       }
 
       // Verify the error contains correct information
-      if case .precedingActionCancelled(let cancelledInfo) = priorityError {
+      switch priorityError {
+      case .precedingActionCancelled(let cancelledInfo, _):
         XCTAssertEqual(
-          cancelledInfo.actionId, "lowAction", "Error should contain the cancelled action ID")
-      } else {
-        XCTFail("Expected precedingActionCancelled error but got \(priorityError)")
+          cancelledInfo.actionId, "lowAction",
+          "Error should contain the cancelled action ID")
+      default:
+        XCTFail("Expected .precedingActionCancelled but got \(priorityError)")
       }
     default:
       XCTFail("Expected successWithPrecedingCancellation but got \(result)")
@@ -556,12 +558,14 @@ final class LockmanPriorityBasedStrategyTests: XCTestCase {
         return
       }
 
-      if case .precedingActionCancelled(let cancelledInfo) = priorityError {
+      // Verify the error contains correct information
+      switch priorityError {
+      case .precedingActionCancelled(let cancelledInfo, _):
         XCTAssertEqual(
           cancelledInfo.actionId, "replaceableAction",
           "Error should contain the cancelled action ID")
-      } else {
-        XCTFail("Expected precedingActionCancelled error but got \(priorityError)")
+      default:
+        XCTFail("Expected .precedingActionCancelled but got \(priorityError)")
       }
     default:
       XCTFail("Expected successWithPrecedingCancellation but got \(result)")

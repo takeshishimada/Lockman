@@ -143,14 +143,20 @@ In composite strategies, errors from each component strategy are integrated and 
 ```swift
 lockFailure: { error, send in
     switch error {
-    case let singleError as LockmanSingleExecutionError:
+    case let singleError as LockmanSingleExecutionCancellationError:
         await send(.singleExecutionConflict("Duplicate execution detected"))
         
-    case let priorityError as LockmanPriorityBasedError:
+    case let blockedError as LockmanPriorityBasedBlockedError:
         await send(.priorityConflict("Priority conflict occurred"))
         
-    case let concurrencyError as LockmanConcurrencyLimitedError:
+    case let cancellationError as LockmanPriorityBasedCancellationError:
+        await send(.actionPreempted("Action was preempted by higher priority"))
+        
+    case let concurrencyError as LockmanConcurrencyLimitedCancellationError:
         await send(.concurrencyLimitReached("Concurrent execution limit reached"))
+        
+    case let groupError as LockmanGroupCoordinationCancellationError:
+        await send(.groupCoordinationConflict("Group coordination rule violated"))
         
     default:
         await send(.unknownLockFailure("Failed to acquire lock"))

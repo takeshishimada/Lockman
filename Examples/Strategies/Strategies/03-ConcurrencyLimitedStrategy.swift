@@ -111,25 +111,47 @@ struct ConcurrencyLimitedStrategyFeature {
       boundaryId: CancelID.downloads,
       lockFailure: { error, send in
         // Handle errors from both strategies at reducer level
-        if let concurrencyError = error as? LockmanConcurrencyLimitedError,
-          case .concurrencyLimitReached(let requestedInfo, _, let current) = concurrencyError,
-          let idString = requestedInfo.actionId.split(separator: "-").last,
-          let id = Int(idString)
-        {
-          await send(
-            .internal(
-              .downloadRejected(
-                id: id, reason: "Download limit reached (\(current)/\(requestedInfo.limit))")
+        if let concurrencyError = error as? LockmanConcurrencyLimitedError {
+          switch concurrencyError {
+          case .concurrencyLimitReached(let requestedInfo, _, let currentCount):
+            if let idString = requestedInfo.actionId.split(separator: "-").last,
+              let id = Int(idString)
+            {
+              let limitStr: String
+              switch requestedInfo.limit {
+              case .unlimited:
+                limitStr = "unlimited"
+              case .limited(let limit):
+                limitStr = String(limit)
+              }
+              await send(
+                .internal(
+                  .downloadRejected(
+                    id: id,
+                    reason: "Download limit reached (\(currentCount)/\(limitStr))"
+                  )
+                )
+              )
+            }
+          }
+        } else if let singleExecutionError = error as? LockmanSingleExecutionError {
+          // Extract ID from the action ID in the error
+          var actionId: String?
+          switch singleExecutionError {
+          case .boundaryAlreadyLocked(_, let existingInfo):
+            actionId = existingInfo.actionId
+          case .actionAlreadyRunning(let existingInfo):
+            actionId = existingInfo.actionId
+          }
+
+          if let actionId = actionId,
+            let idString = actionId.split(separator: "-").last,
+            let id = Int(idString)
+          {
+            await send(
+              .internal(.downloadRejected(id: id, reason: "This download is already in progress"))
             )
-          )
-        } else if let singleExecutionError = error as? LockmanSingleExecutionError,
-          case .actionAlreadyRunning(let info) = singleExecutionError,
-          let idString = info.actionId.split(separator: "-").last,
-          let id = Int(idString)
-        {
-          await send(
-            .internal(.downloadRejected(id: id, reason: "This download is already in progress"))
-          )
+          }
         }
       },
       for: \.view

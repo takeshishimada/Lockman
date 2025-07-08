@@ -21,12 +21,12 @@ public enum LockmanResult: Sendable {
   /// 1. Cancel the existing operation (usually via Effect cancellation)
   /// 2. Proceed with the new operation
   ///
-  /// - Parameter error: An error describing the failure state of the preceding
-  ///   action that will be canceled. This error should be handled appropriately,
-  ///   such as notifying error handlers before proceeding with cancellation.
-  case successWithPrecedingCancellation(error: any Error)
+  /// - Parameter error: A strategy-specific error conforming to `LockmanError`
+  ///   that describes the preceding action that will be canceled. This error
+  ///   should be handled appropriately before proceeding with cancellation.
+  case successWithPrecedingCancellation(error: any LockmanError)
 
-  /// Lock acquisition failed due to conflicts.
+  /// Lock acquisition failed and the new action is cancelled.
   ///
   /// The requested lock could not be acquired because a conflicting operation
   /// is already running. This typically occurs when:
@@ -36,11 +36,10 @@ public enum LockmanResult: Sendable {
   ///
   /// When this result is returned, the requesting operation should not proceed.
   ///
-  /// - Parameter error: An error conforming to `LockmanError` that provides
-  ///   detailed information about why the lock acquisition failed. Each strategy
-  ///   returns its own error type (e.g., `LockmanSingleExecutionError`,
-  ///   `LockmanPriorityBasedError`) to help with debugging and error handling.
-  case failure(any Error)
+  /// - Parameter error: A strategy-specific error conforming to `LockmanError`
+  ///   that provides detailed information about why the lock acquisition failed
+  ///   and the new action was cancelled.
+  case cancel(any LockmanError)
 }
 
 // MARK: - Equatable Conformance
@@ -52,7 +51,7 @@ extension LockmanResult: Equatable {
       return true
     case (.successWithPrecedingCancellation, .successWithPrecedingCancellation):
       return true
-    case (.failure(let lhsError), .failure(let rhsError)):
+    case (.cancel(let lhsError), .cancel(let rhsError)):
       // Compare errors by their localized description since Error is not Equatable
       return lhsError.localizedDescription == rhsError.localizedDescription
     default:

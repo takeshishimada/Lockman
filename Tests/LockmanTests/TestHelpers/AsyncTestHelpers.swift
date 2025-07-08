@@ -144,7 +144,7 @@ enum LockTestHelpers {
 
     let lockedResult = strategy.canLock(boundaryId: boundaryId, info: info)
     // Check if it's a failure (with or without error)
-    if case .failure = lockedResult {
+    if case .cancel = lockedResult {
       // Success - it's a failure as expected
     } else {
       XCTFail("Should not be able to acquire locked resource")
@@ -168,13 +168,13 @@ enum LockTestHelpers {
     }
 
     let successful = results.filter {
-      if case .failure = $0 {
+      if case .cancel = $0 {
         return false
       }
       return true
     }.count
     let failed = results.filter {
-      if case .failure = $0 {
+      if case .cancel = $0 {
         return true
       }
       return false
@@ -194,7 +194,7 @@ enum LockTestHelpers {
 
     if expectedLocked {
       // Check if it's a failure (with or without error)
-      if case .failure = result {
+      if case .cancel = result {
         // Success - it's locked as expected
       } else {
         XCTFail("Resource should be locked")
@@ -228,7 +228,7 @@ func XCTAssertTrue<E: Error>(
 func XCTAssertLockFailure(
   _ result: LockmanResult, _ message: String = "", file: StaticString = #file, line: UInt = #line
 ) {
-  if case .failure = result {
+  if case .cancel = result {
     // Success - it's a failure as expected
   } else {
     let failMessage = message.isEmpty ? "Expected lock failure but got \(result)" : message
@@ -248,7 +248,7 @@ func XCTAssertLockResult(
   case (.successWithPrecedingCancellation, .successWithPrecedingCancellation):
     // Both successWithPrecedingCancellation
     return
-  case (.failure, .failure):
+  case (.cancel, .cancel):
     // Both failure (ignore error details)
     return
   default:

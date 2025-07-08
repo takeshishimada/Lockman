@@ -2,51 +2,50 @@ import Foundation
 
 // MARK: - LockmanPriorityBasedError
 
-/// Errors that can occur when attempting to acquire a lock using PriorityBasedStrategy.
+/// An error that occurs when priority-based strategy prevents or cancels an action.
 ///
-/// These errors provide information about priority conflicts and why a lock
-/// could not be acquired based on priority rules.
+/// This error covers both scenarios:
+/// - When a new action is blocked due to priority conflicts
+/// - When an existing action is cancelled by preemption
 public enum LockmanPriorityBasedError: LockmanError {
-  /// Indicates that a higher priority action is already running.
-  ///
-  /// This occurs when attempting to acquire a lock with a lower priority
-  /// than an existing lock.
+  /// A higher priority action is already running, blocking the new action.
   case higherPriorityExists(
-    requested: LockmanPriorityBasedInfo.Priority, currentHighest: LockmanPriorityBasedInfo.Priority)
+    requested: LockmanPriorityBasedInfo.Priority,
+    currentHighest: LockmanPriorityBasedInfo.Priority
+  )
 
-  /// Indicates that another action with the same priority is already running.
-  ///
-  /// This occurs when two actions have the same priority level and the
-  /// existing one has exclusive behavior.
+  /// Same priority conflict based on the existing action's concurrency behavior.
   case samePriorityConflict(priority: LockmanPriorityBasedInfo.Priority)
 
-  /// Indicates that a preceding action will be cancelled due to preemption.
-  ///
-  /// This occurs when a higher priority action preempts a lower priority action.
-  /// The lower priority action will be cancelled to allow the higher priority
-  /// action to proceed.
-  case precedingActionCancelled(cancelledInfo: LockmanPriorityBasedInfo)
+  /// The existing action was cancelled by a higher priority action.
+  case precedingActionCancelled(
+    cancelledInfo: LockmanPriorityBasedInfo,
+    boundaryId: any LockmanBoundaryId
+  )
+}
 
+// MARK: - LocalizedError Conformance
+
+extension LockmanPriorityBasedError: LocalizedError {
   public var errorDescription: String? {
     switch self {
     case .higherPriorityExists(let requested, let currentHighest):
       return
-        "Cannot acquire lock: requested priority \(requested) is lower than current highest priority \(currentHighest)."
+        "Cannot acquire lock: Current priority \(currentHighest) is higher than requested priority \(requested)."
     case .samePriorityConflict(let priority):
-      return "Cannot acquire lock: another action with priority \(priority) is already running."
-    case .precedingActionCancelled(let cancelledInfo):
       return
-        "Lock acquired, preceding action '\(cancelledInfo.actionId)' will be cancelled."
+        "Cannot acquire lock: Another action with priority \(priority) is already running with exclusive behavior."
+    case .precedingActionCancelled(let cancelledInfo, _):
+      return "Lock acquired, preceding action '\(cancelledInfo.actionId)' will be cancelled."
     }
   }
 
   public var failureReason: String? {
     switch self {
     case .higherPriorityExists:
-      return
-        "PriorityBasedStrategy only allows higher priority actions to preempt lower priority ones."
+      return "A higher priority action is currently executing and cannot be interrupted."
     case .samePriorityConflict:
-      return "Actions with the same priority and exclusive behavior cannot run concurrently."
+      return "The existing action with same priority has exclusive concurrency behavior."
     case .precedingActionCancelled:
       return "A lower priority action was preempted by a higher priority action."
     }

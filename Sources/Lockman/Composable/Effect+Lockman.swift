@@ -31,10 +31,12 @@ extension Effect {
   /// - `lockFailure`: For lock acquisition failures
   ///
   /// Lock acquisition error types include:
-  /// - `LockmanSingleExecutionError`: Single execution conflicts
-  /// - `LockmanPriorityBasedError`: Priority-based conflicts
+  /// - `LockmanSingleExecutionCancellationError`: Single execution conflicts
+  /// - `LockmanPriorityBasedCancellationError`: Priority-based preemption
+  /// - `LockmanPriorityBasedBlockedError`: Priority-based blocking
+  /// - `LockmanGroupCoordinationCancellationError`: Group coordination conflicts
+  /// - `LockmanConcurrencyLimitedCancellationError`: Concurrency limit reached
   /// - User-defined errors from dynamic conditions
-  /// - `LockmanGroupCoordinationError`: Group coordination conflicts
   public static func withLock<B: LockmanBoundaryId, A: LockmanAction>(
     priority: TaskPriority? = nil,
     unlockOption: LockmanUnlockOption? = nil,
@@ -283,20 +285,32 @@ extension Effect {
 
       case .successWithPrecedingCancellation(let error):
         // Lock acquired but need to cancel existing operation first
+        // Wrap the strategy error with action context
+        let cancellationError = LockmanCancellationError(
+          action: action,
+          boundaryId: boundaryId,
+          reason: error
+        )
         if let lockFailure = lockFailure {
           return .concatenate(
-            .run { send in await lockFailure(error, send) },
+            .run { send in await lockFailure(cancellationError, send) },
             .cancel(id: boundaryId),
             builtEffect
           )
         }
         return .concatenate(.cancel(id: boundaryId), builtEffect)
 
-      case .failure(let error):
+      case .cancel(let error):
         // Lock acquisition failed
+        // Wrap the strategy error with action context
+        let cancellationError = LockmanCancellationError(
+          action: action,
+          boundaryId: boundaryId,
+          reason: error
+        )
         if let lockFailure = lockFailure {
           return .run { send in
-            await lockFailure(error, send)
+            await lockFailure(cancellationError, send)
           }
         }
         return .none
@@ -444,21 +458,32 @@ extension Effect {
 
       case .successWithPrecedingCancellation(let error):
         // Lock acquired but need to cancel existing operation first
-        // Notify about the cancellation if a handler is provided
+        // Wrap the strategy error with action context
+        let cancellationError = LockmanCancellationError(
+          action: action,
+          boundaryId: boundaryId,
+          reason: error
+        )
         if let handler = handler {
           return .concatenate(
-            .run { send in await handler(error, send) },
+            .run { send in await handler(cancellationError, send) },
             .cancel(id: boundaryId),
             effectBuilder(unlockToken)
           )
         }
         return .concatenate(.cancel(id: boundaryId), effectBuilder(unlockToken))
 
-      case .failure(let error):
+      case .cancel(let error):
         // Lock acquisition failed
+        // Wrap the strategy error with action context
+        let cancellationError = LockmanCancellationError(
+          action: action,
+          boundaryId: boundaryId,
+          reason: error
+        )
         if let handler = handler {
           return .run { send in
-            await handler(error, send)
+            await handler(cancellationError, send)
           }
         }
         return .none
@@ -526,7 +551,7 @@ extension Effect {
       )
 
       // Early exit if lock cannot be acquired
-      if case .failure = result {
+      if case .cancel = result {
         return result
       }
 

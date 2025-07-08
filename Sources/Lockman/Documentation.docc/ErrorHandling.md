@@ -22,10 +22,12 @@ var body: some ReducerOf<Self> {
         lockFailure: { error, send in
             // Centralized error handling for all locked actions
             switch error {
-            case let singleExecError as LockmanSingleExecutionError:
+            case let singleExecError as LockmanSingleExecutionCancellationError:
                 await send(.showBusyMessage("Process already running"))
-            case let priorityError as LockmanPriorityBasedError:
+            case let priorityError as LockmanPriorityBasedBlockedError:
                 await send(.showMessage("Higher priority task is running"))
+            case let priorityError as LockmanPriorityBasedCancellationError:
+                await send(.showMessage("Action was preempted"))
             default:
                 await send(.showMessage("Cannot start process"))
             }
@@ -113,7 +115,8 @@ catch handler: { error, send in
 
 ```swift
 // ✅ Good example: Cast to strategy-specific error type
-if case .actionAlreadyRunning(let existingInfo) = error as? LockmanSingleExecutionError {
+if let singleError = error as? LockmanSingleExecutionCancellationError,
+   case .actionAlreadyRunning(let existingInfo) = singleError.reason {
     // Use existingInfo to provide detailed information
 }
 
@@ -140,10 +143,11 @@ Many errors contain additional information:
 .lock(
     boundaryId: CancelID.feature,
     lockFailure: { error, send in
-        switch error as? LockmanConcurrencyLimitedError {
-        case .concurrencyLimitReached(let current, let limit, _):
-            await send(.showMessage("Concurrent execution limit (\(limit)) reached (current: \(current))"))
-        default:
+        if let concurrencyError = error as? LockmanConcurrencyLimitedCancellationError {
+            let limit = concurrencyError.cancelledInfo.limit
+            let current = concurrencyError.currentCount
+            await send(.showMessage("Concurrent execution limit reached: \(current)/\(limit)"))
+        } else {
             await send(.showMessage("Cannot start processing"))
         }
     }
@@ -152,12 +156,19 @@ Many errors contain additional information:
 
 ## Strategy-Specific Errors
 
-For detailed error information for each strategy, please refer to their respective documentation:
+All strategy errors now conform to `LockmanCancellationError` protocol, providing consistent access to:
+- `lockmanInfo`: Information about the cancelled action
+- `boundaryId`: Where the cancellation occurred
+- `errorDescription` and `failureReason`: Localized error descriptions
 
-- [SingleExecutionStrategy](<doc:SingleExecutionStrategy>) - Duplicate execution errors
-- [PriorityBasedStrategy](<doc:PriorityBasedStrategy>) - Priority conflict errors
-- [GroupCoordinationStrategy](<doc:GroupCoordinationStrategy>) - Group rule violation errors
-- [ConcurrencyLimitedStrategy](<doc:ConcurrencyLimitedStrategy>) - Concurrent execution limit exceeded errors
+### Error Types by Strategy:
+
+- **SingleExecutionStrategy**: `LockmanSingleExecutionCancellationError` - Duplicate execution prevention
+- **PriorityBasedStrategy**: 
+  - `LockmanPriorityBasedBlockedError` - New action blocked by priority
+  - `LockmanPriorityBasedCancellationError` - Existing action cancelled by preemption
+- **GroupCoordinationStrategy**: `LockmanGroupCoordinationCancellationError` - Group rule violations
+- **ConcurrencyLimitedStrategy**: `LockmanConcurrencyLimitedCancellationError` - Concurrent execution limit exceeded
 - [DynamicConditionStrategy](<doc:DynamicConditionStrategy>) - Condition mismatch errors
 - [CompositeStrategy](<doc:CompositeStrategy>) - Composite strategy errors
 

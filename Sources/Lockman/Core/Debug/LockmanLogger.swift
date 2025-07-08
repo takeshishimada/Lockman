@@ -63,7 +63,7 @@ public final class LockmanLogger: @unchecked Sendable {
         message =
           "✅ [Lockman] canLock succeeded - Strategy: \(strategy), BoundaryId: \(boundaryId), Info: \(info.debugDescription)"
 
-      case .failure(_):
+      case .cancel(_):
         let reasonStr = reason.map { ", Reason: \($0)" } ?? ""
         message =
           "❌ [Lockman] canLock failed - Strategy: \(strategy), BoundaryId: \(boundaryId), Info: \(info.debugDescription)\(reasonStr)"

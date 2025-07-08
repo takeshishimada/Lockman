@@ -63,15 +63,15 @@ final class LockmanDynamicConditionReducerMethodChainTests: XCTestCase {
     case payment
   }
 
-  struct FeatureDisabledError: Error, LocalizedError {
+  struct FeatureDisabledError: LockmanError {
     var errorDescription: String? { "Feature is disabled" }
   }
 
-  struct NotAuthenticatedError: Error, LocalizedError {
+  struct NotAuthenticatedError: LockmanError {
     var errorDescription: String? { "Not authenticated" }
   }
 
-  struct InsufficientFundsError: Error, LocalizedError {
+  struct InsufficientFundsError: LockmanError {
     let required: Double
     let available: Double
     var errorDescription: String? {
@@ -91,7 +91,7 @@ final class LockmanDynamicConditionReducerMethodChainTests: XCTestCase {
         let tempReducer = Reduce<TestState, TestAction> { _, _ in .none }
           .lock { state, _ in
             guard state.isEnabled else {
-              return .failure(FeatureDisabledError())
+              return .cancel(FeatureDisabledError())
             }
             return .success
           }
@@ -157,7 +157,7 @@ final class LockmanDynamicConditionReducerMethodChainTests: XCTestCase {
           .lock { state, _ in
             // Reducer-level condition
             guard state.isAuthenticated else {
-              return .failure(NotAuthenticatedError())
+              return .cancel(NotAuthenticatedError())
             }
             return .success
           }
@@ -177,7 +177,7 @@ final class LockmanDynamicConditionReducerMethodChainTests: XCTestCase {
           lockCondition: { state, _ in
             // Action-level condition
             guard state.balance >= amount else {
-              return .failure(
+              return .cancel(
                 InsufficientFundsError(
                   required: amount,
                   available: state.balance
@@ -314,7 +314,7 @@ struct TestFeatureWithCondition {
         return Reduce<State, Action> { _, _ in .none }
           .lock { state, _ in
             guard state.isEnabled else {
-              return .failure(LockmanDynamicConditionReducerMethodChainTests.FeatureDisabledError())
+              return .cancel(LockmanDynamicConditionReducerMethodChainTests.FeatureDisabledError())
             }
             return .success
           }

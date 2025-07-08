@@ -8,16 +8,18 @@ import Foundation
 /// ensuring consistent error handling across different components.
 ///
 /// ## Error Types
-/// Each strategy defines its own error type conforming to this protocol:
-/// - `LockmanSingleExecutionError`: Errors from single execution strategy
-/// - `LockmanPriorityBasedError`: Errors from priority-based strategy
-/// - `LockmanGroupCoordinationError`: Errors from group coordination strategy
+/// All cancellation errors conform to `LockmanCancellationError` protocol:
+/// - `LockmanSingleExecutionCancellationError`: When single execution blocks new actions
+/// - `LockmanPriorityBasedCancellationError`: When actions are preempted by priority
+/// - `LockmanPriorityBasedBlockedError`: When actions are blocked by priority
+/// - `LockmanGroupCoordinationCancellationError`: When group coordination blocks actions
+/// - `LockmanConcurrencyLimitedCancellationError`: When concurrency limit is reached
 /// - `LockmanRegistrationError`: Errors from strategy registration and resolution
 ///
 /// For dynamic condition strategy, users define their own error types.
 ///
 /// ## Usage
-/// When a lock acquisition fails, strategies return `.failure(error)` where
+/// When a lock acquisition fails, strategies return `.cancel(error)` where
 /// the error conforms to this protocol, providing detailed information about
 /// why the lock could not be acquired.
 public protocol LockmanError: Error, LocalizedError {
