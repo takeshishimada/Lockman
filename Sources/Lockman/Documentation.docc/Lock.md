@@ -119,7 +119,7 @@ return .run { send in
 
 **Features:**
 - Method chain style for natural TCA integration
-- Internally uses `concatenateWithLock`
+- Internally uses `withLock(concatenating:)`
 - Same lock management guarantees as `withLock`
 
 ### withLock (Auto-release Version)
@@ -176,18 +176,18 @@ Used when you want to manually control the lock release timing. Parameters are t
 - Finer control possible
 - **Important**: You must call unlock() in all code paths (see [Unlock](<doc:Unlock>) page for details)
 
-### concatenateWithLock
+### withLock(concatenating:)
 
 Maintains the same lock while executing multiple Effects sequentially.
 
 ```swift
-.concatenateWithLock(
-  unlockOption: .immediate, // Optional: Lock release timing
-  operations: [
+.withLock(
+  concatenating: [
     .run { send in /* Processing 1 */ },
     .run { send in /* Processing 2 */ },
     .run { send in /* Processing 3 */ }
   ],
+  unlockOption: .immediate, // Optional: Lock release timing
   lockFailure: { error, send in /* Lock acquisition failure handling */ }, // Optional
   action: action,
   boundaryId: cancelID

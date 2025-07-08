@@ -487,40 +487,40 @@ private struct TestConcatenateWithLockFeature {
     Reduce<State, Action> { state, action in
       switch action {
       case .executeConcatenateWithLock:
-        return .concatenateWithLock(
-          unlockOption: .immediate,
-          operations: [
+        return .withLock(
+          concatenating: [
             .send(.increment),
             .send(.increment),
           ],
+          unlockOption: .immediate,
           action: action,
           boundaryId: CancelID.userAction
         )
 
       case .executeConcatenateWithLockWithFailure:
-        return .concatenateWithLock(
-          unlockOption: .immediate,
-          operations: [
+        return .withLock(
+          concatenating: [
             .send(.operationFailed)
           ],
+          unlockOption: .immediate,
           action: action,
           boundaryId: CancelID.userAction
         )
 
       case .executeConcatenateWithLockWithCancel:
-        return .concatenateWithLock(
-          unlockOption: .immediate,
-          operations: [
+        return .withLock(
+          concatenating: [
             .send(.operationCanceled)
           ],
+          unlockOption: .immediate,
           action: action,
           boundaryId: CancelID.userAction
         )
 
       case .executeConcatenateWithLockEmpty:
-        return .concatenateWithLock(
+        return .withLock(
+          concatenating: [],
           unlockOption: .immediate,
-          operations: [],
           action: action,
           boundaryId: CancelID.userAction
         )

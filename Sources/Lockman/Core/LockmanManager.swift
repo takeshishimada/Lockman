@@ -13,7 +13,7 @@ public enum LockmanManager {
   struct Configuration: Sendable {
     /// The default unlock option to use when not explicitly specified.
     ///
-    /// This value is used by all `withLock` and `concatenateWithLock` methods
+    /// This value is used by all `withLock` methods
     /// when the `unlockOption` parameter is not provided.
     ///
     /// Default value is `.immediate` for immediate unlock behavior.
@@ -40,7 +40,7 @@ public enum LockmanManager {
   public enum config {
     /// The default unlock option to use when not explicitly specified.
     ///
-    /// This value is used by all `withLock` and `concatenateWithLock` methods
+    /// This value is used by all `withLock` methods
     /// when the `unlockOption` parameter is not provided.
     ///
     /// Default value is `.immediate` for immediate unlock behavior.
