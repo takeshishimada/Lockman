@@ -160,8 +160,15 @@ public final class LockmanPriorityBasedStrategy: LockmanStrategy, @unchecked Sen
     if currentPriority > requestedPriority {
       // Current action has higher priority - request fails
       result = .failure(
-        LockmanPriorityBasedError.higherPriorityExists(
-          requested: requestedPriority, currentHighest: currentPriority))
+        LockmanPriorityBasedBlockedError(
+          blockedInfo: requestedInfo,
+          boundaryId: boundaryId,
+          reason: .higherPriorityExists(
+            requested: requestedPriority,
+            currentHighest: currentPriority
+          )
+        )
+      )
       failureReason =
         "Higher priority action '\(currentHighestPriorityInfo.actionId)' (priority: \(currentPriority)) is currently locked"
     } else if currentPriority == requestedPriority {
@@ -331,7 +338,7 @@ extension LockmanPriorityBasedStrategy {
   /// - Returns: A `LockmanResult` based on the existing action's concurrency behavior
   fileprivate func applySamePriorityBehavior<B: LockmanBoundaryId>(
     current: LockmanPriorityBasedInfo,
-    requested _: LockmanPriorityBasedInfo,
+    requested: LockmanPriorityBasedInfo,
     boundaryId: B
   ) -> LockmanResult {
     // Use the existing action's behavior to determine the outcome
@@ -345,7 +352,13 @@ extension LockmanPriorityBasedStrategy {
     case .exclusive:
       // Existing action: "I run exclusively, block new same-priority actions"
       // → New action must wait or fail
-      return .failure(LockmanPriorityBasedError.samePriorityConflict(priority: current.priority))
+      return .failure(
+        LockmanPriorityBasedBlockedError(
+          blockedInfo: requested,
+          boundaryId: boundaryId,
+          reason: .samePriorityConflict(priority: current.priority)
+        )
+      )
 
     case .replaceable:
       // Existing action: "I am replaceable, allow new same-priority actions to take over"

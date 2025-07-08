@@ -31,10 +31,12 @@ extension Effect {
   /// - `lockFailure`: For lock acquisition failures
   ///
   /// Lock acquisition error types include:
-  /// - `LockmanSingleExecutionError`: Single execution conflicts
-  /// - `LockmanPriorityBasedError`: Priority-based conflicts
+  /// - `LockmanSingleExecutionCancellationError`: Single execution conflicts
+  /// - `LockmanPriorityBasedCancellationError`: Priority-based preemption
+  /// - `LockmanPriorityBasedBlockedError`: Priority-based blocking
+  /// - `LockmanGroupCoordinationCancellationError`: Group coordination conflicts
+  /// - `LockmanConcurrencyLimitedCancellationError`: Concurrency limit reached
   /// - User-defined errors from dynamic conditions
-  /// - `LockmanGroupCoordinationError`: Group coordination conflicts
   public static func withLock<B: LockmanBoundaryId, A: LockmanAction>(
     priority: TaskPriority? = nil,
     unlockOption: LockmanUnlockOption? = nil,

@@ -103,8 +103,12 @@ public final class LockmanSingleExecutionStrategy: LockmanStrategy, @unchecked S
       } else {
         let existingInfo = currentLocks.first!
         result = .failure(
-          LockmanSingleExecutionError.boundaryAlreadyLocked(
-            boundaryId: String(describing: boundaryId), existingInfo: existingInfo))
+          LockmanSingleExecutionCancellationError(
+            cancelledInfo: info,
+            boundaryId: boundaryId,
+            reason: .boundaryAlreadyLocked(existingInfo: existingInfo)
+          )
+        )
         failureReason = "Boundary '\(boundaryId)' already has an active lock"
       }
 
@@ -113,7 +117,12 @@ public final class LockmanSingleExecutionStrategy: LockmanStrategy, @unchecked S
       if state.contains(id: boundaryId, key: info.actionId) {
         let existingInfo = state.currents(id: boundaryId, key: info.actionId).first!
         result = .failure(
-          LockmanSingleExecutionError.actionAlreadyRunning(existingInfo: existingInfo))
+          LockmanSingleExecutionCancellationError(
+            cancelledInfo: info,
+            boundaryId: boundaryId,
+            reason: .actionAlreadyRunning(existingInfo: existingInfo)
+          )
+        )
         failureReason = "Action '\(info.actionId)' is already locked"
       } else {
         result = .success

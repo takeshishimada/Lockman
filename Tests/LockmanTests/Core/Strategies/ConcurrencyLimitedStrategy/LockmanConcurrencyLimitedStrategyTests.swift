@@ -132,19 +132,16 @@ final class LockmanConcurrencyLimitedStrategyTests: XCTestCase {
     XCTAssertLockFailure(result)
 
     if case .failure(let error) = result,
-      let concurrencyError = error as? LockmanConcurrencyLimitedError
+      let concurrencyError = error as? LockmanConcurrencyLimitedCancellationError
     {
-      switch concurrencyError {
-      case .concurrencyLimitReached(let requestedInfo, let existingInfos, let current):
-        XCTAssertEqual(requestedInfo.concurrencyId, "file_operations")
-        XCTAssertEqual(requestedInfo.actionId, "upload3")
-        XCTAssertEqual(existingInfos.count, 2)
-        XCTAssertTrue(existingInfos.contains { $0.actionId == "upload1" })
-        XCTAssertTrue(existingInfos.contains { $0.actionId == "upload2" })
-        XCTAssertEqual(current, 2)
-      }
+      XCTAssertEqual(concurrencyError.cancelledInfo.concurrencyId, "file_operations")
+      XCTAssertEqual(concurrencyError.cancelledInfo.actionId, "upload3")
+      XCTAssertEqual(concurrencyError.existingInfos.count, 2)
+      XCTAssertTrue(concurrencyError.existingInfos.contains { $0.actionId == "upload1" })
+      XCTAssertTrue(concurrencyError.existingInfos.contains { $0.actionId == "upload2" })
+      XCTAssertEqual(concurrencyError.currentCount, 2)
     } else {
-      XCTFail("Expected LockmanConcurrencyLimitedError")
+      XCTFail("Expected LockmanConcurrencyLimitedCancellationError")
     }
 
     strategy.cleanUp(boundaryId: boundary)

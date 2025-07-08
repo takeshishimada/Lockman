@@ -107,8 +107,8 @@ struct PriorityBasedStrategyFeature {
           await send(
             .internal(
               .updateResult(button: cancelledButton, result: "Cancelled by higher priority")))
-        } else if let priorityError = error as? LockmanPriorityBasedError {
-          // Handle other priority errors if needed
+        } else if let blockedError = error as? LockmanPriorityBasedBlockedError {
+          // Handle blocked errors if needed
           // For now, we don't need special handling for higherPriorityExists and samePriorityConflict
           // as they prevent the action from starting
         }
