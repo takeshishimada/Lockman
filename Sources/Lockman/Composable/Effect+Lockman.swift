@@ -201,11 +201,12 @@ extension Effect {
     }
   }
 
-  /// Creates a concatenated effect sequence with automatic lock management.
+  /// Creates an Effect that executes multiple operations sequentially while holding a lock.
+  ///
+  /// This overload of `withLock` allows multiple effects to be concatenated and executed
+  /// sequentially while maintaining the same lock throughout the entire sequence.
   ///
   /// ## Purpose
-  /// This variant allows multiple effects to be executed sequentially while
-  /// holding the same lock throughout the entire sequence. This is useful for:
   /// - **Multi-step Operations**: Complex workflows requiring multiple async steps
   /// - **Transactional Behavior**: Ensuring atomicity across multiple operations
   /// - **Resource Coordination**: Maintaining exclusive access during complex state changes
@@ -221,8 +222,10 @@ extension Effect {
   /// but the unlock still executes to ensure proper cleanup.
   ///
   /// - Parameters:
+  ///   - concatenating: Array of effects to execute sequentially while lock is held
+  ///   - priority: Task priority for the operation (optional, used only for internal run effects)
   ///   - unlockOption: Controls when the unlock operation is executed (default: configuration value)
-  ///   - operations: Array of effects to execute sequentially while lock is held
+  ///   - handleCancellationErrors: Whether to pass CancellationError to catch handler (default: global config)
   ///   - lockFailure: Optional handler for lock acquisition failures
   ///   - action: LockmanAction providing lock information and strategy type
   ///   - boundaryId: Unique identifier for effect cancellation and lock boundary
@@ -231,9 +234,11 @@ extension Effect {
   ///   - line: Source line number for debugging (auto-populated)
   ///   - column: Source column number for debugging (auto-populated)
   /// - Returns: Concatenated effect with automatic lock management, or `.none` if lock acquisition fails
-  public static func concatenateWithLock<B: LockmanBoundaryId, A: LockmanAction>(
+  public static func withLock<B: LockmanBoundaryId, A: LockmanAction>(
+    concatenating operations: [Effect<Action>],
+    priority: TaskPriority? = nil,
     unlockOption: LockmanUnlockOption? = nil,
-    operations: [Effect<Action>],
+    handleCancellationErrors: Bool? = nil,
     lockFailure: (@Sendable (_ error: any Error, _ send: Send<Action>) async -> Void)? = nil,
     action: A,
     boundaryId: B,
@@ -365,12 +370,14 @@ extension Effect {
     handleCancellationErrors: Bool? = nil,
     lockFailure: (@Sendable (_ error: any Error, _ send: Send<Action>) async -> Void)? = nil
   ) -> Effect<Action> {
-    // This is essentially a wrapper around concatenateWithLock
+    // This is essentially a wrapper around withLock(concatenating:)
     // that provides a method chain style API
 
-    return Effect.concatenateWithLock(
+    return Effect.withLock(
+      concatenating: [self],
+      priority: nil,
       unlockOption: unlockOption,
-      operations: [self],
+      handleCancellationErrors: handleCancellationErrors,
       lockFailure: lockFailure,
       action: action,
       boundaryId: boundaryId

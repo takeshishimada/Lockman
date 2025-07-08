@@ -164,8 +164,8 @@ final class EffectLockmanErrorTests: XCTestCase {
       ]
 
       XCTExpectFailure("Effect.withLock strategy 'MockUnregisteredStrategy' not registered") {
-        let effect = Effect<Never>.concatenateWithLock(
-          operations: operations,
+        let effect = Effect<Never>.withLock(
+          concatenating: operations,
           action: action,
           boundaryId: cancelID
         )
