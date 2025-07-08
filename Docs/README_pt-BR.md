@@ -167,11 +167,12 @@ O modificador `Reducer.lock` aplica automaticamente o gerenciamento de bloqueio 
 A documentação para lançamentos e `main` estão disponíveis aqui:
 
 * [`main`](https://takeshishimada.github.io/Lockman/main/documentation/lockman/)
-* [0.13.0](https://takeshishimada.github.io/Lockman/0.13.0/documentation/lockman/)
+* [1.0.0](https://takeshishimada.github.io/Lockman/1.0.0/documentation/lockman/) ([guia de migração](https://takeshishimada.github.io/Lockman/1.0.0/documentation/lockman/migrationguides/migratingto1.0))
 
 <details>
 <summary>Outras versões</summary>
 
+* [0.13.0](https://takeshishimada.github.io/Lockman/0.13.0/documentation/lockman/)
 * [0.12.0](https://takeshishimada.github.io/Lockman/0.12.0/documentation/lockman/)
 * [0.11.0](https://takeshishimada.github.io/Lockman/0.11.0/documentation/lockman/)
 * [0.10.0](https://takeshishimada.github.io/Lockman/0.10.0/documentation/lockman/)
