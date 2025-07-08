@@ -104,7 +104,8 @@ var body: some ReducerOf<Self> {
     .lock(
         boundaryId: CancelID.userAction,
         lockFailure: { error, send in
-            if case .actionAlreadyRunning(let info) = error as? LockmanSingleExecutionError {
+            if let singleError = error as? LockmanSingleExecutionCancellationError,
+               case .actionAlreadyRunning(let info) = singleError.reason {
                 await send(.showBusyMessage("\(info.actionId) is currently running"))
             }
         }
@@ -160,23 +161,29 @@ Time: 4s  - load action request → ✅ Execute (boundary process completed)
 
 For errors that may occur with SingleExecutionStrategy and their solutions, please also refer to the common patterns on the [Error Handling](<doc:ErrorHandling>) page.
 
-### LockmanSingleExecutionError
+### LockmanSingleExecutionCancellationError
 
-**boundaryAlreadyLocked** - Boundary is already locked
-- `boundaryId`: ID of the locked boundary
-- `existingInfo`: Existing lock information
+This error conforms to `LockmanCancellationError` protocol and provides:
+- `cancelledInfo`: Information about the cancelled action
+- `boundaryId`: Where the cancellation occurred
+- `reason`: Specific reason for cancellation
 
-**actionAlreadyRunning** - Same action is already running  
-- `existingInfo`: Running action information
+**CancellationReason cases:**
+- **boundaryAlreadyLocked** - Boundary is already locked
+  - `existingInfo`: Existing lock information
+- **actionAlreadyRunning** - Same action is already running
+  - `existingInfo`: Running action information
 
 ```swift
 lockFailure: { error, send in
-    switch error as? LockmanSingleExecutionError {
-    case .boundaryAlreadyLocked(_, let existingInfo):
-        send(.showBusyMessage("Another process is running: \(existingInfo.actionId)"))
-    case .actionAlreadyRunning(let existingInfo):
-        send(.showBusyMessage("\(existingInfo.actionId) is running"))
-    default:
+    if let singleError = error as? LockmanSingleExecutionCancellationError {
+        switch singleError.reason {
+        case .boundaryAlreadyLocked(let existingInfo):
+            send(.showBusyMessage("Another process is running: \(existingInfo.actionId)"))
+        case .actionAlreadyRunning(let existingInfo):
+            send(.showBusyMessage("\(existingInfo.actionId) is running"))
+        }
+    } else {
         send(.showBusyMessage("Cannot start processing"))
     }
 }

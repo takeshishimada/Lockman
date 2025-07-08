@@ -154,18 +154,21 @@ LockmanConcurrencyLimitedInfo(
 
 ConcurrencyLimitedStrategyで発生する可能性のあるエラーと、その対処法については[Error Handling](<doc:ErrorHandling>)ページの共通パターンも参照してください。
 
-### LockmanConcurrencyLimitedError
+### LockmanConcurrencyLimitedCancellationError
 
-**concurrencyLimitReached** - 同時実行制限に到達
-- `requestedInfo`: 実行要求された処理の情報
-- `existingInfos`: 現在実行中の処理一覧  
-- `current`: 現在の同時実行数
+This error conforms to `LockmanCancellationError` protocol and provides:
+- `cancelledInfo`: Information about the cancelled action
+- `boundaryId`: Where the cancellation occurred
+- `existingInfos`: Array of currently active infos
+- `currentCount`: Current number of active executions
 
 ```swift
 lockFailure: { error, send in
-    if case .concurrencyLimitReached(let requestedInfo, let existingInfos, let current) = error as? LockmanConcurrencyLimitedError {
+    if let concurrencyError = error as? LockmanConcurrencyLimitedCancellationError {
+        let limit = concurrencyError.cancelledInfo.limit
+        let current = concurrencyError.currentCount
         await send(.concurrencyLimitReached(
-            "同時実行制限に到達しました (\(current)/\(requestedInfo.limit))"
+            "同時実行制限に到達しました (\(current)/\(limit))"
         ))
     }
 }

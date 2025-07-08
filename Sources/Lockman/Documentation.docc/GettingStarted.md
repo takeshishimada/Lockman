@@ -133,7 +133,7 @@ var body: some ReducerOf<Self> {
         boundaryId: CancelID.userAction,
         lockFailure: { error, send in
             // When processing is already in progress
-            if error is LockmanSingleExecutionError {
+            if error is LockmanSingleExecutionCancellationError {
                 await send(.internal(.updateMessage("Processing is already in progress")))
             }
         },
