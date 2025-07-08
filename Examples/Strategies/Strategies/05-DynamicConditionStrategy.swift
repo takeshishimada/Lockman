@@ -149,6 +149,7 @@ struct DynamicConditionStrategyFeature {
               error: error.localizedDescription
             )))
       }
+      .cancellable(id: CancelID.sync)
 
     case .toggleLoginTapped:
       state.$isLoggedIn.withLock { $0.toggle() }
@@ -178,6 +179,7 @@ struct DynamicConditionStrategyFeature {
               error: error.localizedDescription
             )))
       }
+      .cancellable(id: CancelID.maintenance)
 
     case .setHour(let hour):
       state.currentHour = hour
@@ -207,6 +209,7 @@ struct DynamicConditionStrategyFeature {
               error: error.localizedDescription
             )))
       }
+      .cancellable(id: CancelID.report)
 
     case .selectDay(let day):
       state.selectedDay = day

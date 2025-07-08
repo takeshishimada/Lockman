@@ -82,6 +82,7 @@ struct SingleExecutionStrategyFeature {
       } catch: { error, send in
         await send(.internal(.handleError(error)))
       }
+      .cancellable(id: CancelID.process)
     }
   }
 
@@ -112,6 +113,7 @@ struct SingleExecutionStrategyFeature {
             try await Task.sleep(nanoseconds: 2_000_000_000)  // 2 seconds
             await send(.internal(.clearTemporaryMessage))
           }
+          .cancellable(id: CancelID.process)
         } else {
           state.processStatus = .blocked
         }

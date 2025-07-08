@@ -138,6 +138,7 @@ struct GroupCoordinationStrategyFeature {
       } catch: { error, send in
         await send(.internal(.syncFailed(error.localizedDescription)))
       }
+      .cancellable(id: CancelID.sync)
 
     case .uploadDataTapped:
       return .run { send in
@@ -154,6 +155,7 @@ struct GroupCoordinationStrategyFeature {
         await send(
           .internal(.operationFailed(operation: "Upload", error: error.localizedDescription)))
       }
+      .cancellable(id: CancelID.upload)
 
     case .downloadDataTapped:
       return .run { send in
@@ -171,6 +173,7 @@ struct GroupCoordinationStrategyFeature {
         await send(
           .internal(.operationFailed(operation: "Download", error: error.localizedDescription)))
       }
+      .cancellable(id: CancelID.download)
 
     case .processDataTapped:
       return .run { send in
@@ -187,6 +190,7 @@ struct GroupCoordinationStrategyFeature {
         await send(
           .internal(.operationFailed(operation: "Process", error: error.localizedDescription)))
       }
+      .cancellable(id: CancelID.process)
 
     case .cancelSyncTapped:
       // Cancel all operations

@@ -104,6 +104,7 @@ struct ProcessFeature {
                         try await Task.sleep(nanoseconds: 3_000_000_000)
                         await send(.internal(.processCompleted))
                     }
+                    .cancellable(id: CancelID.userAction)
                 }
                 
             case let .internal(internalAction):

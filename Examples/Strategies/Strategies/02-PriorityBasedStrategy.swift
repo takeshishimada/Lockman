@@ -129,6 +129,7 @@ struct PriorityBasedStrategyFeature {
     } catch: { error, send in
       await send(.internal(.updateResult(button: buttonType, result: "Cancelled")))
     }
+    .cancellable(id: CancelID.priorityOperation)
   }
 
   // MARK: - Internal Action Handler
