@@ -7,15 +7,24 @@ import Foundation
 /// This error covers both scenarios:
 /// - When a new action is blocked due to priority conflicts
 /// - When an existing action is cancelled by preemption
+///
+/// ## Breaking Change
+/// All cases now include complete `LockmanInfo` and `boundaryId` parameters
+/// to support the `LockmanPrecedingCancellationError` protocol.
 public enum LockmanPriorityBasedError: LockmanError {
   /// A higher priority action is already running, blocking the new action.
   case higherPriorityExists(
-    requested: LockmanPriorityBasedInfo.Priority,
-    currentHighest: LockmanPriorityBasedInfo.Priority
+    requestedInfo: LockmanPriorityBasedInfo,
+    existingInfo: LockmanPriorityBasedInfo,
+    boundaryId: any LockmanBoundaryId
   )
 
   /// Same priority conflict based on the existing action's concurrency behavior.
-  case samePriorityConflict(priority: LockmanPriorityBasedInfo.Priority)
+  case samePriorityConflict(
+    requestedInfo: LockmanPriorityBasedInfo,
+    existingInfo: LockmanPriorityBasedInfo,
+    boundaryId: any LockmanBoundaryId
+  )
 
   /// The existing action was cancelled by a higher priority action.
   case precedingActionCancelled(
@@ -29,12 +38,12 @@ public enum LockmanPriorityBasedError: LockmanError {
 extension LockmanPriorityBasedError: LocalizedError {
   public var errorDescription: String? {
     switch self {
-    case .higherPriorityExists(let requested, let currentHighest):
+    case .higherPriorityExists(let requestedInfo, let existingInfo, _):
       return
-        "Cannot acquire lock: Current priority \(currentHighest) is higher than requested priority \(requested)."
-    case .samePriorityConflict(let priority):
+        "Cannot acquire lock: Current priority \(existingInfo.priority) is higher than requested priority \(requestedInfo.priority)."
+    case .samePriorityConflict(let requestedInfo, let existingInfo, _):
       return
-        "Cannot acquire lock: Another action with priority \(priority) is already running with exclusive behavior."
+        "Cannot acquire lock: Another action with priority \(existingInfo.priority) is already running with exclusive behavior."
     case .precedingActionCancelled(let cancelledInfo, _):
       return "Lock acquired, preceding action '\(cancelledInfo.actionId)' will be cancelled."
     }
@@ -48,6 +57,32 @@ extension LockmanPriorityBasedError: LocalizedError {
       return "The existing action with same priority has exclusive concurrency behavior."
     case .precedingActionCancelled:
       return "A lower priority action was preempted by a higher priority action."
+    }
+  }
+}
+
+// MARK: - LockmanPrecedingCancellationError Conformance
+
+extension LockmanPriorityBasedError: LockmanPrecedingCancellationError {
+  public var lockmanInfo: any LockmanInfo {
+    switch self {
+    case .higherPriorityExists(let requestedInfo, _, _):
+      return requestedInfo
+    case .samePriorityConflict(let requestedInfo, _, _):
+      return requestedInfo
+    case .precedingActionCancelled(let cancelledInfo, _):
+      return cancelledInfo
+    }
+  }
+
+  public var boundaryId: any LockmanBoundaryId {
+    switch self {
+    case .higherPriorityExists(_, _, let boundaryId):
+      return boundaryId
+    case .samePriorityConflict(_, _, let boundaryId):
+      return boundaryId
+    case .precedingActionCancelled(_, let boundaryId):
+      return boundaryId
     }
   }
 }

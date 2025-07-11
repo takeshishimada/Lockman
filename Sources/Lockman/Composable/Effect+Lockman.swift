@@ -557,6 +557,14 @@ extension Effect {
         info: lockmanInfo
       )
 
+      // Handle immediate unlock for preceding cancellation
+      if case .successWithPrecedingCancellation(let cancellationError) = result {
+        // Immediately unlock the cancelled action to prevent resource leaks
+        if let cancelledInfo = cancellationError.lockmanInfo as? I {
+          strategy.unlock(boundaryId: cancellationError.boundaryId, info: cancelledInfo)
+        }
+      }
+
       // Early exit if lock cannot be acquired
       if case .cancel = result {
         return result

@@ -22,7 +22,6 @@
           @LockmanPriorityBased
           enum TaskAction {
             case high
-            case medium
             case low
           }
           """
@@ -30,15 +29,12 @@
           """
           enum TaskAction {
             case high
-            case medium
             case low
 
             internal var actionName: String {
               switch self {
               case .high:
                 return "high"
-              case .medium:
-                return "medium"
               case .low:
                 return "low"
               }

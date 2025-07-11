@@ -161,8 +161,9 @@ public final class LockmanPriorityBasedStrategy: LockmanStrategy, @unchecked Sen
       // Current action has higher priority - request fails
       result = .cancel(
         LockmanPriorityBasedError.higherPriorityExists(
-          requested: requestedPriority,
-          currentHighest: currentPriority
+          requestedInfo: info,
+          existingInfo: currentHighestPriorityInfo,
+          boundaryId: boundaryId
         )
       )
       failureReason =
@@ -350,7 +351,9 @@ extension LockmanPriorityBasedStrategy {
       // → New action must wait or fail
       return .cancel(
         LockmanPriorityBasedError.samePriorityConflict(
-          priority: current.priority
+          requestedInfo: requested,
+          existingInfo: current,
+          boundaryId: boundaryId
         )
       )
 
