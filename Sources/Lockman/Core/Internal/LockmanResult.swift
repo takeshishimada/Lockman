@@ -19,12 +19,17 @@ public enum LockmanResult: Sendable {
   ///
   /// When this result is returned, the calling code should:
   /// 1. Cancel the existing operation (usually via Effect cancellation)
-  /// 2. Proceed with the new operation
+  /// 2. Immediately unlock the cancelled action to prevent resource leaks
+  /// 3. Proceed with the new operation
   ///
-  /// - Parameter error: A strategy-specific error conforming to `LockmanError`
-  ///   that describes the preceding action that will be canceled. This error
-  ///   should be handled appropriately before proceeding with cancellation.
-  case successWithPrecedingCancellation(error: any LockmanError)
+  /// ## Breaking Change
+  /// The error parameter now requires conformance to `LockmanPrecedingCancellationError`
+  /// to enable immediate unlock operations and maintain type safety.
+  ///
+  /// - Parameter error: A strategy-specific error conforming to `LockmanPrecedingCancellationError`
+  ///   that describes the preceding action that will be canceled. This error provides
+  ///   access to the cancelled action's information for immediate unlock.
+  case successWithPrecedingCancellation(error: any LockmanPrecedingCancellationError)
 
   /// Lock acquisition failed and the new action is cancelled.
   ///
@@ -49,8 +54,12 @@ extension LockmanResult: Equatable {
     switch (lhs, rhs) {
     case (.success, .success):
       return true
-    case (.successWithPrecedingCancellation, .successWithPrecedingCancellation):
-      return true
+    case (
+      .successWithPrecedingCancellation(let lhsError),
+      .successWithPrecedingCancellation(let rhsError)
+    ):
+      // Compare errors by their localized description since Error is not Equatable
+      return lhsError.localizedDescription == rhsError.localizedDescription
     case (.cancel(let lhsError), .cancel(let rhsError)):
       // Compare errors by their localized description since Error is not Equatable
       return lhsError.localizedDescription == rhsError.localizedDescription
