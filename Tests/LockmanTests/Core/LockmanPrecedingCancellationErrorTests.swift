@@ -22,10 +22,10 @@ final class LockmanPrecedingCancellationErrorTests: XCTestCase {
     )
 
     // Protocol conformance check
-    XCTAssertTrue(error is LockmanPrecedingCancellationError)
+    XCTAssertTrue(error is any LockmanPrecedingCancellationError)
 
     // Cast to protocol and verify properties
-    let protocolError = error as LockmanPrecedingCancellationError
+    let protocolError = error as any LockmanPrecedingCancellationError
     XCTAssertEqual(protocolError.lockmanInfo.actionId, "testAction")
     XCTAssertEqual(
       String(describing: protocolError.boundaryId), "TestBoundaryId(value: \"testBoundary\")")
