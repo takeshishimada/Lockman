@@ -19,6 +19,11 @@ See CLAUDE_WIP.md for v1.0 roadmap and work in progress tasks
 - Based on Composable Architecture 1.20.2
 - When modifying Package.swift, you MUST also update Package@swift-6.0 to keep them in sync
 
+## Communication Guidelines
+- **Always be honest about capabilities**: If you cannot do something, clearly state this limitation
+- **Do not pretend or simulate**: Never claim to have done something you cannot actually do
+- **Clarify when using internal tools**: When using analysis tools or performing research, be clear about what you're actually doing
+
 ## Documentation
 - Documentation is provided through SwiftDoc comments in source code and DocC documentation
 - When modifying source code, you MUST update the corresponding documentation in the same commit
