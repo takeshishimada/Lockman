@@ -38,12 +38,8 @@ public enum LockmanPriorityBasedError: LockmanError {
 extension LockmanPriorityBasedError: LocalizedError {
   public var errorDescription: String? {
     switch self {
-    case .higherPriorityExists(let requestedInfo, let existingInfo, _):
-      return
-        "Cannot acquire lock: Current priority \(existingInfo.priority) is higher than requested priority \(requestedInfo.priority)."
-    case .samePriorityConflict(let requestedInfo, let existingInfo, _):
-      return
-        "Cannot acquire lock: Another action with priority \(existingInfo.priority) is already running with exclusive behavior."
+    case .higherPriorityExists, .samePriorityConflict:
+      return "Higher priority task is running"
     case .precedingActionCancelled(let cancelledInfo, _):
       return "Lock acquired, preceding action '\(cancelledInfo.actionId)' will be cancelled."
     }

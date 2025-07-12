@@ -19,18 +19,7 @@ public enum LockmanConcurrencyLimitedError: LockmanError {
 
 extension LockmanConcurrencyLimitedError: LocalizedError {
   public var errorDescription: String? {
-    switch self {
-    case .concurrencyLimitReached(let requestedInfo, _, let currentCount):
-      let limitStr: String
-      switch requestedInfo.limit {
-      case .unlimited:
-        limitStr = "unlimited"
-      case .limited(let limit):
-        limitStr = String(limit)
-      }
-      return
-        "Concurrency limit reached for '\(requestedInfo.concurrencyId)': \(currentCount)/\(limitStr)"
-    }
+    return "Concurrency limit reached"
   }
 
   public var failureReason: String? {
