@@ -7,16 +7,7 @@ import SwiftUI
 struct SingleExecutionStrategyFeature {
   @ObservableState
   struct State: Equatable {
-    var processStatus: ProcessStatus = .idle
-    var temporaryMessage: String? = nil
-
-    enum ProcessStatus: Equatable {
-      case idle
-      case processing
-      case completed
-      case failed(String)
-      case blocked
-    }
+    var taskStatus: TaskStatus = .idle
   }
 
   @CasePathable
@@ -93,37 +84,33 @@ struct SingleExecutionStrategyFeature {
   ) -> Effect<Action> {
     switch action {
     case .processStart:
-      state.processStatus = .processing
+      state.taskStatus = .running
       return .none
 
     case .processCompleted:
-      state.processStatus = .completed
+      state.taskStatus = .completed
       return .none
 
     case .handleError(let error):
-      state.processStatus = .failed("Error: \(error.localizedDescription)")
+      state.taskStatus = .failed("Error: \(error.localizedDescription)")
       return .none
 
     case .handleLockFailure(let error):
-      if error is LockmanSingleExecutionError {
-        // Show temporary message when blocked during processing
-        if state.processStatus == .processing {
-          state.temporaryMessage = "Already running"
-          return .run { send in
-            try await Task.sleep(nanoseconds: 2_000_000_000)  // 2 seconds
-            await send(.internal(.clearTemporaryMessage))
-          }
-          .cancellable(id: CancelID.process)
+      if let cancellationError = error as? LockmanCancellationError {
+        // Handle cancellation errors that contain the actual strategy errors
+        if cancellationError.reason is LockmanSingleExecutionError {
+          state.taskStatus = .blocked
         } else {
-          state.processStatus = .blocked
+          state.taskStatus = .failed("Lock acquisition failed")
         }
+      } else if error is LockmanSingleExecutionError {
+        state.taskStatus = .blocked
       } else {
-        state.processStatus = .failed("Lock acquisition failed")
+        state.taskStatus = .failed("Lock acquisition failed")
       }
       return .none
 
     case .clearTemporaryMessage:
-      state.temporaryMessage = nil
       return .none
     }
   }
@@ -156,8 +143,8 @@ struct SingleExecutionStrategyView: View {
           // Button (left column)
           Button(action: { send(.startProcessButtonTapped) }) {
             HStack {
-              Image(systemName: iconName(for: store.processStatus))
-                .foregroundColor(iconColor(for: store.processStatus))
+              Image(systemName: store.taskStatus.iconName)
+                .foregroundColor(store.taskStatus.iconColor)
               Text("Start Process")
             }
           }
@@ -166,10 +153,9 @@ struct SingleExecutionStrategyView: View {
           Spacer()
 
           // Status display (right column)
-          Text(store.temporaryMessage ?? statusText(for: store.processStatus))
+          Text(store.taskStatus.displayText)
             .font(.caption)
-            .foregroundColor(
-              store.temporaryMessage != nil ? .orange : statusColor(for: store.processStatus))
+            .foregroundColor(store.taskStatus.displayColor)
         }
         .padding(.vertical, 8)
       }
@@ -178,83 +164,10 @@ struct SingleExecutionStrategyView: View {
       Spacer()
 
       // Debug Button
-      Button(action: {
-        print("\n📊 Current Lock State (SingleExecutionStrategy):")
-        LockmanManager.debug.printCurrentLocks(options: .compact)
-        print("")
-      }) {
-        HStack {
-          Image(systemName: "lock.doc")
-          Text("Show Current Locks in Console")
-        }
-        .font(.footnote)
-        .foregroundColor(.blue)
-      }
-      .padding(.top, 20)
+      DebugButton(strategyName: "SingleExecutionStrategy")
     }
     .navigationTitle("SingleExecutionStrategy")
     .navigationBarTitleDisplayMode(.inline)
   }
 
-  private func iconName(for status: SingleExecutionStrategyFeature.State.ProcessStatus) -> String {
-    switch status {
-    case .idle:
-      return "play.circle"
-    case .processing:
-      return "play.circle.fill"
-    case .completed:
-      return "checkmark.circle.fill"
-    case .failed:
-      return "xmark.circle.fill"
-    case .blocked:
-      return "exclamationmark.circle.fill"
-    }
-  }
-
-  private func iconColor(for status: SingleExecutionStrategyFeature.State.ProcessStatus) -> Color {
-    switch status {
-    case .idle:
-      return .blue
-    case .processing:
-      return .orange
-    case .completed:
-      return .green
-    case .failed:
-      return .red
-    case .blocked:
-      return .yellow
-    }
-  }
-
-  private func statusText(for status: SingleExecutionStrategyFeature.State.ProcessStatus) -> String
-  {
-    switch status {
-    case .idle:
-      return "Ready to start"
-    case .processing:
-      return "Processing..."
-    case .completed:
-      return "Completed successfully"
-    case .failed(let error):
-      return error
-    case .blocked:
-      return "Already running"
-    }
-  }
-
-  private func statusColor(for status: SingleExecutionStrategyFeature.State.ProcessStatus) -> Color
-  {
-    switch status {
-    case .idle:
-      return .secondary
-    case .processing:
-      return .orange
-    case .completed:
-      return .green
-    case .failed:
-      return .red
-    case .blocked:
-      return .orange
-    }
-  }
 }

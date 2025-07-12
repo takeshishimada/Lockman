@@ -57,8 +57,8 @@ struct ConcurrencyLimitedStrategyFeature {
     case `internal`(InternalAction)
 
     @LockmanCompositeStrategy(
-      LockmanConcurrencyLimitedStrategy.self,
-      LockmanSingleExecutionStrategy.self
+      LockmanSingleExecutionStrategy.self,
+      LockmanConcurrencyLimitedStrategy.self
     )
     enum ViewAction {
       case downloadButtonTapped(Int)
@@ -71,18 +71,18 @@ struct ConcurrencyLimitedStrategyFeature {
       }
 
       var lockmanInfo:
-        LockmanCompositeInfo2<LockmanConcurrencyLimitedInfo, LockmanSingleExecutionInfo>
+        LockmanCompositeInfo2<LockmanSingleExecutionInfo, LockmanConcurrencyLimitedInfo>
       {
         LockmanCompositeInfo2(
           strategyId: strategyId,  // Use macro-generated strategyId
           actionId: actionId,
-          lockmanInfoForStrategy1: LockmanConcurrencyLimitedInfo(
-            actionId: actionId,
-            group: ConcurrencyGroup.downloads
-          ),
-          lockmanInfoForStrategy2: LockmanSingleExecutionInfo(
+          lockmanInfoForStrategy1: LockmanSingleExecutionInfo(
             actionId: actionId,
             mode: .action  // Prevent duplicate execution of same download
+          ),
+          lockmanInfoForStrategy2: LockmanConcurrencyLimitedInfo(
+            actionId: actionId,
+            group: ConcurrencyGroup.downloads
           )
         )
       }
@@ -111,46 +111,21 @@ struct ConcurrencyLimitedStrategyFeature {
       boundaryId: CancelID.downloads,
       lockFailure: { error, send in
         // Handle errors from both strategies at reducer level
-        if let concurrencyError = error as? LockmanConcurrencyLimitedError {
-          switch concurrencyError {
-          case .concurrencyLimitReached(let requestedInfo, _, let currentCount):
-            if let idString = requestedInfo.actionId.split(separator: "-").last,
-              let id = Int(idString)
-            {
-              let limitStr: String
-              switch requestedInfo.limit {
-              case .unlimited:
-                limitStr = "unlimited"
-              case .limited(let limit):
-                limitStr = String(limit)
-              }
-              await send(
-                .internal(
-                  .downloadRejected(
-                    id: id,
-                    reason: "Download limit reached (\(currentCount)/\(limitStr))"
-                  )
-                )
-              )
-            }
+        if let cancellationError = error as? LockmanCancellationError {
+          // Handle cancellation errors that contain the actual strategy errors
+          if let id = extractDownloadId(from: cancellationError.reason) {
+            let reason = getSimpleErrorMessage(for: cancellationError.reason)
+            await send(.internal(.downloadRejected(id: id, reason: reason)))
           }
         } else if let singleExecutionError = error as? LockmanSingleExecutionError {
-          // Extract ID from the action ID in the error
-          var actionId: String?
-          switch singleExecutionError {
-          case .boundaryAlreadyLocked(_, let existingInfo):
-            actionId = existingInfo.actionId
-          case .actionAlreadyRunning(let existingInfo):
-            actionId = existingInfo.actionId
+          // SingleExecutionStrategy error (first strategy)
+          if let id = extractDownloadId(from: error) {
+            await send(.internal(.downloadRejected(id: id, reason: "Already running")))
           }
-
-          if let actionId = actionId,
-            let idString = actionId.split(separator: "-").last,
-            let id = Int(idString)
-          {
-            await send(
-              .internal(.downloadRejected(id: id, reason: "This download is already in progress"))
-            )
+        } else if let concurrencyError = error as? LockmanConcurrencyLimitedError {
+          // ConcurrencyLimitedStrategy error (second strategy)
+          if let id = extractDownloadId(from: error) {
+            await send(.internal(.downloadRejected(id: id, reason: "Concurrency limit reached")))
           }
         }
       },
@@ -193,8 +168,7 @@ struct ConcurrencyLimitedStrategyFeature {
   ) -> Effect<Action> {
     switch action {
     case .downloadStarted(let id):
-      state.downloads[id: id]?.status = .downloading
-      state.downloads[id: id]?.progress = 0
+      updateDownloadState(id: id, status: .downloading, progress: 0, state: &state)
       state.currentExecutionCount += 1
       return .none
 
@@ -203,24 +177,74 @@ struct ConcurrencyLimitedStrategyFeature {
       return .none
 
     case .downloadCompleted(let id):
-      state.downloads[id: id]?.status = .completed
-      state.downloads[id: id]?.progress = 1.0
+      updateDownloadState(id: id, status: .completed, progress: 1.0, state: &state)
       state.currentExecutionCount -= 1
       return .none
 
     case .downloadFailed(let id, let error):
-      state.downloads[id: id]?.status = .failed(error)
+      updateDownloadState(id: id, status: .failed(error), state: &state)
       state.currentExecutionCount -= 1
       return .none
 
     case .downloadRejected(let id, let reason):
-      // Reset progress if was previously downloading/completed
-      if state.downloads[id: id] != nil {
-        state.downloads[id: id]?.status = .rejected(reason)
-        state.downloads[id: id]?.progress = 0
-      }
+      updateDownloadState(id: id, status: .rejected(reason), progress: 0, state: &state)
       return .none
     }
+  }
+
+  // MARK: - Helper Methods
+  private func updateDownloadState(
+    id: Int,
+    status: DownloadStatus,
+    progress: Double? = nil,
+    state: inout State
+  ) {
+    guard state.downloads[id: id] != nil else { return }
+    state.downloads[id: id]?.status = status
+    if let progress = progress {
+      state.downloads[id: id]?.progress = progress
+    }
+  }
+
+  private func getSimpleErrorMessage(for error: Error) -> String {
+    if error is LockmanSingleExecutionError {
+      return "Already running"
+    } else if error is LockmanConcurrencyLimitedError {
+      return "Concurrency limit reached"
+    } else {
+      return "Operation failed"
+    }
+  }
+
+  private func extractDownloadId(from error: Error) -> Int? {
+    let actionId: String?
+
+    if let singleExecutionError = error as? LockmanSingleExecutionError {
+      // SingleExecutionStrategy error (first strategy)
+      switch singleExecutionError {
+      case .boundaryAlreadyLocked(_, let existingInfo):
+        actionId = existingInfo.actionId
+      case .actionAlreadyRunning(let existingInfo):
+        actionId = existingInfo.actionId
+      }
+    } else if let concurrencyError = error as? LockmanConcurrencyLimitedError {
+      // ConcurrencyLimitedStrategy error (second strategy)
+      switch concurrencyError {
+      case .concurrencyLimitReached(let requestedInfo, _, _):
+        actionId = requestedInfo.actionId
+      }
+    } else {
+      return nil
+    }
+
+    guard let actionId = actionId,
+      let idString = actionId.split(separator: "-").last,
+      let id = Int(idString)
+    else {
+      return nil
+    }
+
+    return id
   }
 }
 

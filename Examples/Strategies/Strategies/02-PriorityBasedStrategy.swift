@@ -19,8 +19,8 @@ struct PriorityBasedStrategyFeature {
     case `internal`(InternalAction)
 
     @LockmanCompositeStrategy(
-      LockmanPriorityBasedStrategy.self,
-      LockmanSingleExecutionStrategy.self
+      LockmanSingleExecutionStrategy.self,
+      LockmanPriorityBasedStrategy.self
     )
     enum ViewAction {
       case highButtonTapped
@@ -46,17 +46,17 @@ struct PriorityBasedStrategyFeature {
         }
       }
 
-      var lockmanInfo: LockmanCompositeInfo2<LockmanPriorityBasedInfo, LockmanSingleExecutionInfo> {
+      var lockmanInfo: LockmanCompositeInfo2<LockmanSingleExecutionInfo, LockmanPriorityBasedInfo> {
         LockmanCompositeInfo2(
           strategyId: strategyId,
           actionId: actionId,
-          lockmanInfoForStrategy1: LockmanPriorityBasedInfo(
-            actionId: actionId,
-            priority: priority
-          ),
-          lockmanInfoForStrategy2: LockmanSingleExecutionInfo(
+          lockmanInfoForStrategy1: LockmanSingleExecutionInfo(
             actionId: actionId,
             mode: .action
+          ),
+          lockmanInfoForStrategy2: LockmanPriorityBasedInfo(
+            actionId: actionId,
+            priority: priority
           )
         )
       }
@@ -139,16 +139,7 @@ struct PriorityBasedStrategyFeature {
   ) -> Effect<Action> {
     switch action {
     case .updateResult(let button, let result):
-      switch button {
-      case .high:
-        state.highButtonResult = result
-      case .lowExclusive:
-        state.lowExclusiveResult = result
-      case .lowReplaceable:
-        state.lowReplaceableResult = result
-      case .none:
-        state.noneButtonResult = result
-      }
+      updateButtonResult(button: button, result: result, state: &state)
       return .none
 
     case .handleLockFailure(let error):
@@ -163,62 +154,52 @@ struct PriorityBasedStrategyFeature {
   ) -> Effect<Action> {
     // Extract cancellation error and view action
     guard let cancellationError = error as? LockmanCancellationError,
-      let viewAction = cancellationError.action as? Action.ViewAction,
-      let priorityError = cancellationError.reason as? LockmanPriorityBasedError
+      let viewAction = cancellationError.action as? Action.ViewAction
     else {
       return .none
     }
 
-    switch priorityError {
-    case .precedingActionCancelled(let cancelledInfo, _):
-      // An existing action was cancelled
-      let button = buttonType(for: cancelledInfo.actionId)
-      let message = cancellationMessage(for: cancelledInfo.priority)
-      switch button {
-      case .high:
-        state.highButtonResult = message
-      case .lowExclusive:
-        state.lowExclusiveResult = message
-      case .lowReplaceable:
-        state.lowReplaceableResult = message
-      case .none:
-        state.noneButtonResult = message
-      }
-      return .none
-
-    case .higherPriorityExists:
-      // New action blocked by higher priority
+    // Handle different strategy errors
+    if let singleExecutionError = cancellationError.reason as? LockmanSingleExecutionError {
+      // SingleExecutionStrategy error (first strategy)
       let button = buttonType(for: viewAction)
-      switch button {
-      case .high:
-        state.highButtonResult = "Blocked by higher priority"
-      case .lowExclusive:
-        state.lowExclusiveResult = "Blocked by higher priority"
-      case .lowReplaceable:
-        state.lowReplaceableResult = "Blocked by higher priority"
-      case .none:
-        state.noneButtonResult = "Blocked by higher priority"
-      }
+      updateButtonResult(button: button, result: "Already running", state: &state)
       return .none
+    } else if let priorityError = cancellationError.reason as? LockmanPriorityBasedError {
+      // PriorityBasedStrategy error (second strategy)
+      switch priorityError {
+      case .precedingActionCancelled(let cancelledInfo, _):
+        // An existing action was cancelled
+        let button = buttonType(for: cancelledInfo.actionId)
+        let message = cancellationMessage(for: cancelledInfo.priority)
+        updateButtonResult(button: button, result: message, state: &state)
+        return .none
 
-    case .samePriorityConflict:
-      // New action blocked by same priority exclusive
-      let button = buttonType(for: viewAction)
-      switch button {
-      case .high:
-        state.highButtonResult = "Blocked by exclusive"
-      case .lowExclusive:
-        state.lowExclusiveResult = "Blocked by exclusive"
-      case .lowReplaceable:
-        state.lowReplaceableResult = "Blocked by exclusive"
-      case .none:
-        state.noneButtonResult = "Blocked by exclusive"
+      case .higherPriorityExists, .samePriorityConflict:
+        // New action blocked by priority conflict
+        let button = buttonType(for: viewAction)
+        updateButtonResult(button: button, result: "Higher priority task is running", state: &state)
+        return .none
       }
-      return .none
     }
+
+    return .none
   }
 
   // MARK: - Helper Methods
+  private func updateButtonResult(button: Action.ButtonType, result: String, state: inout State) {
+    switch button {
+    case .high:
+      state.highButtonResult = result
+    case .lowExclusive:
+      state.lowExclusiveResult = result
+    case .lowReplaceable:
+      state.lowReplaceableResult = result
+    case .none:
+      state.noneButtonResult = result
+    }
+  }
+
   private func buttonType(for action: Action.ViewAction) -> Action.ButtonType {
     switch action {
     case .highButtonTapped: return .high
@@ -382,11 +363,11 @@ struct PriorityBasedStrategyView: View {
   private func statusColor(_ result: String) -> Color {
     if result.isEmpty {
       return .secondary
-    } else if result == "Success" || result == "Replaced lower priority" {
+    } else if result == "Success" || result.contains("Replaced") {
       return .green
     } else if result.contains("Blocked") || result.contains("Failed")
-      || result.contains("Cancelled") || result == "Already running"
-      || result == "Same priority running"
+      || result.contains("Cancelled") || result.contains("Higher priority")
+      || result.contains("running")
     {
       return .red
     } else if result == "Running..." {
