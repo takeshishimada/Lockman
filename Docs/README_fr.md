@@ -168,6 +168,7 @@ Le modificateur `Reducer.lock` applique automatiquement la gestion des verrous a
 La documentation pour les versions publiées et `main` est disponible ici :
 
 * [`main`](https://takeshishimada.github.io/Lockman/main/documentation/lockman/)
+* [1.1.0](https://takeshishimada.github.io/Lockman/1.1.0/documentation/lockman/) ([guide de migration](https://takeshishimada.github.io/Lockman/1.1.0/documentation/lockman/migrationguides/migratingto1.1))
 * [1.0.0](https://takeshishimada.github.io/Lockman/1.0.0/documentation/lockman/) ([guide de migration](https://takeshishimada.github.io/Lockman/1.0.0/documentation/lockman/migrationguides/migratingto1.0))
 
 <details>
@@ -227,7 +228,7 @@ Ajoutez la dépendance à votre fichier Package.swift :
 
 ```swift
 dependencies: [
-  .package(url: "https://github.com/takeshishimada/Lockman", from: "1.0.0")
+  .package(url: "https://github.com/takeshishimada/Lockman", from: "1.1.0")
 ]
 ```
 
@@ -255,6 +256,7 @@ Ajoutez la dépendance à votre cible :
 
 | Lockman | The Composable Architecture |
 |---------|----------------------------|
+| 1.1.0   | 1.20.2                     |
 | 1.0.0   | 1.20.2                     |
 | 0.13.4  | 1.20.2                     |
 | 0.13.3  | 1.20.2                     |

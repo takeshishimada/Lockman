@@ -168,6 +168,7 @@ Il modificatore `Reducer.lock` applica automaticamente la gestione dei lock alle
 La documentazione per le release e `main` è disponibile qui:
 
 * [`main`](https://takeshishimada.github.io/Lockman/main/documentation/lockman/)
+* [1.1.0](https://takeshishimada.github.io/Lockman/1.1.0/documentation/lockman/) ([guida alla migrazione](https://takeshishimada.github.io/Lockman/1.1.0/documentation/lockman/migrationguides/migratingto1.1))
 * [1.0.0](https://takeshishimada.github.io/Lockman/1.0.0/documentation/lockman/) ([guida alla migrazione](https://takeshishimada.github.io/Lockman/1.0.0/documentation/lockman/migrationguides/migratingto1.0))
 
 <details>
@@ -227,7 +228,7 @@ Aggiungi la dipendenza al tuo file Package.swift:
 
 ```swift
 dependencies: [
-  .package(url: "https://github.com/takeshishimada/Lockman", from: "1.0.0")
+  .package(url: "https://github.com/takeshishimada/Lockman", from: "1.1.0")
 ]
 ```
 
@@ -255,6 +256,7 @@ Aggiungi la dipendenza al tuo target:
 
 | Lockman | The Composable Architecture |
 |---------|----------------------------|
+| 1.1.0   | 1.20.2                     |
 | 1.0.0   | 1.20.2                     |
 | 0.13.4  | 1.20.2                     |
 | 0.13.3  | 1.20.2                     |
