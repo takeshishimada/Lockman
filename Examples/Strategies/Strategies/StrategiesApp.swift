@@ -54,8 +54,8 @@ class AppDelegate: NSObject, UIApplicationDelegate {
 
     // Register the composite strategy used in ConcurrencyLimitedStrategy example
     let compositeStrategy = LockmanCompositeStrategy2(
-      strategy1: LockmanConcurrencyLimitedStrategy.shared,
-      strategy2: LockmanSingleExecutionStrategy.shared
+      strategy1: LockmanSingleExecutionStrategy.shared,
+      strategy2: LockmanConcurrencyLimitedStrategy.shared
     )
 
     // Debug: Print the strategy ID being registered
@@ -100,8 +100,8 @@ class AppDelegate: NSObject, UIApplicationDelegate {
 
     // Register the composite strategy used in PriorityBasedStrategy example
     let compositeStrategy = LockmanCompositeStrategy2(
-      strategy1: LockmanPriorityBasedStrategy.shared,
-      strategy2: LockmanSingleExecutionStrategy.shared
+      strategy1: LockmanSingleExecutionStrategy.shared,
+      strategy2: LockmanPriorityBasedStrategy.shared
     )
 
     // Debug: Print the strategy ID being registered

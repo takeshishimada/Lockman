@@ -6,6 +6,10 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		82D1B4772E2297EE0075A3FB /* Lockman in Frameworks */ = {isa = PBXBuildFile; productRef = 8278B5542E0059D20096EE15 /* Lockman */; };
+/* End PBXBuildFile section */
+
 /* Begin PBXFileReference section */
 		3E4F83C32DFE6AA5005B5C65 /* Strategies.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Strategies.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
@@ -23,6 +27,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				82D1B4772E2297EE0075A3FB /* Lockman in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

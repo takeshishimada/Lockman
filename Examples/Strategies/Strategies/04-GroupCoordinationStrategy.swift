@@ -103,18 +103,12 @@ struct GroupCoordinationStrategyFeature {
     .lock(
       boundaryId: CancelID.sync,
       lockFailure: { error, send in
-        // Handle group coordination errors at reducer level
-        if let groupError = error as? LockmanGroupCoordinationError {
-          switch groupError {
-          case .memberCannotJoinEmptyGroup:
-            await send(.internal(.syncFailed("No active sync session")))
-          case .leaderCannotJoinNonEmptyGroup:
-            await send(.internal(.syncFailed("Another sync is already active")))
-          case .actionAlreadyInGroup:
-            await send(.internal(.syncFailed("Operation already running")))
-          case .blockedByExclusiveLeader:
-            await send(.internal(.syncFailed("Blocked by exclusive leader")))
-          }
+        // Handle group coordination errors using simplified error messages
+        if let cancellationError = error as? LockmanCancellationError {
+          // Handle cancellation errors that contain the actual strategy errors
+          await send(.internal(.syncFailed(cancellationError.reason.localizedDescription)))
+        } else if let groupError = error as? LockmanGroupCoordinationError {
+          await send(.internal(.syncFailed(groupError.localizedDescription)))
         }
       },
       for: \.view
@@ -211,29 +205,21 @@ struct GroupCoordinationStrategyFeature {
   ) -> Effect<Action> {
     switch action {
     case .syncStarted:
-      state.syncStatus = .syncing
-      state.currentGroup = "sync"
+      updateSyncState(.syncing, group: "sync", state: &state)
       state.activeOperations.insert("Sync")
       return .none
 
     case .syncCompleted:
-      state.syncStatus = .completed
+      updateSyncState(.completed, state: &state)
       state.activeOperations.remove("Sync")
-      if state.activeOperations.isEmpty {
-        state.currentGroup = ""
-      }
+      clearGroupIfEmpty(state: &state)
       return .none
 
     case .syncFailed(let error):
-      state.syncStatus = .failed(error)
+      updateSyncState(.failed(error), state: &state)
       state.activeOperations.remove("Sync")
-      if state.activeOperations.isEmpty {
-        state.currentGroup = ""
-      }
-      // Reset all progress
-      state.uploadProgress = 0
-      state.downloadProgress = 0
-      state.processingProgress = 0
+      clearGroupIfEmpty(state: &state)
+      resetAllProgress(state: &state)
       return .none
 
     case .operationStarted(let operation):
@@ -250,17 +236,49 @@ struct GroupCoordinationStrategyFeature {
       return .none
 
     case .updateProgress(let operation, let progress):
-      switch operation {
-      case "Upload":
-        state.uploadProgress = progress
-      case "Download":
-        state.downloadProgress = progress
-      case "Process":
-        state.processingProgress = progress
-      default:
-        break
-      }
+      updateOperationProgress(operation: operation, progress: progress, state: &state)
       return .none
+    }
+  }
+
+  // MARK: - Helper Methods
+  private func updateSyncState(
+    _ status: SyncStatus,
+    group: String? = nil,
+    state: inout State
+  ) {
+    state.syncStatus = status
+    if let group = group {
+      state.currentGroup = group
+    }
+  }
+
+  private func clearGroupIfEmpty(state: inout State) {
+    if state.activeOperations.isEmpty {
+      state.currentGroup = ""
+    }
+  }
+
+  private func resetAllProgress(state: inout State) {
+    state.uploadProgress = 0
+    state.downloadProgress = 0
+    state.processingProgress = 0
+  }
+
+  private func updateOperationProgress(
+    operation: String,
+    progress: Double,
+    state: inout State
+  ) {
+    switch operation {
+    case "Upload":
+      state.uploadProgress = progress
+    case "Download":
+      state.downloadProgress = progress
+    case "Process":
+      state.processingProgress = progress
+    default:
+      break
     }
   }
 }
