@@ -10,4 +10,5 @@ This section contains migration guides to help you update your code when upgradi
 
 ### Migration Guides
 
+- <doc:MigratingTo1.1>
 - <doc:MigratingTo1.0>
