@@ -114,22 +114,18 @@ struct ConcurrencyLimitedStrategyFeature {
         if let cancellationError = error as? LockmanCancellationError {
           // Handle cancellation errors that contain the actual strategy errors
           if let id = extractDownloadId(from: cancellationError.reason) {
-            await send(
-              .internal(
-                .downloadRejected(id: id, reason: cancellationError.reason.localizedDescription)))
+            let reason = getSimpleErrorMessage(for: cancellationError.reason)
+            await send(.internal(.downloadRejected(id: id, reason: reason)))
           }
         } else if let singleExecutionError = error as? LockmanSingleExecutionError {
           // SingleExecutionStrategy error (first strategy)
           if let id = extractDownloadId(from: error) {
-            await send(
-              .internal(
-                .downloadRejected(id: id, reason: singleExecutionError.localizedDescription)))
+            await send(.internal(.downloadRejected(id: id, reason: "Already running")))
           }
         } else if let concurrencyError = error as? LockmanConcurrencyLimitedError {
           // ConcurrencyLimitedStrategy error (second strategy)
           if let id = extractDownloadId(from: error) {
-            await send(
-              .internal(.downloadRejected(id: id, reason: concurrencyError.localizedDescription)))
+            await send(.internal(.downloadRejected(id: id, reason: "Concurrency limit reached")))
           }
         }
       },
@@ -207,6 +203,16 @@ struct ConcurrencyLimitedStrategyFeature {
     state.downloads[id: id]?.status = status
     if let progress = progress {
       state.downloads[id: id]?.progress = progress
+    }
+  }
+
+  private func getSimpleErrorMessage(for error: Error) -> String {
+    if error is LockmanSingleExecutionError {
+      return "Already running"
+    } else if error is LockmanConcurrencyLimitedError {
+      return "Concurrency limit reached"
+    } else {
+      return "Operation failed"
     }
   }
 

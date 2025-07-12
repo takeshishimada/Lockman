@@ -106,9 +106,11 @@ struct GroupCoordinationStrategyFeature {
         // Handle group coordination errors using simplified error messages
         if let cancellationError = error as? LockmanCancellationError {
           // Handle cancellation errors that contain the actual strategy errors
-          await send(.internal(.syncFailed(cancellationError.reason.localizedDescription)))
+          let simpleMessage = getSimpleErrorMessage(for: cancellationError.reason)
+          await send(.internal(.syncFailed(simpleMessage)))
         } else if let groupError = error as? LockmanGroupCoordinationError {
-          await send(.internal(.syncFailed(groupError.localizedDescription)))
+          let simpleMessage = getSimpleErrorMessage(for: groupError)
+          await send(.internal(.syncFailed(simpleMessage)))
         }
       },
       for: \.view
@@ -242,6 +244,14 @@ struct GroupCoordinationStrategyFeature {
   }
 
   // MARK: - Helper Methods
+  private func getSimpleErrorMessage(for error: Error) -> String {
+    if error is LockmanGroupCoordinationError {
+      return "Group coordination failed"
+    } else {
+      return "Operation failed"
+    }
+  }
+
   private func updateSyncState(
     _ status: SyncStatus,
     group: String? = nil,

@@ -20,7 +20,13 @@ public enum LockmanSingleExecutionError: LockmanError {
 
 extension LockmanSingleExecutionError: LocalizedError {
   public var errorDescription: String? {
-    return "Already running"
+    switch self {
+    case .boundaryAlreadyLocked(let boundaryId, let existingInfo):
+      return
+        "Cannot acquire lock: boundary '\(boundaryId)' already has an active lock for action '\(existingInfo.actionId)'."
+    case .actionAlreadyRunning(let existingInfo):
+      return "Cannot acquire lock: action '\(existingInfo.actionId)' is already running."
+    }
   }
 
   public var failureReason: String? {

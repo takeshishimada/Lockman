@@ -163,8 +163,7 @@ struct PriorityBasedStrategyFeature {
     if let singleExecutionError = cancellationError.reason as? LockmanSingleExecutionError {
       // SingleExecutionStrategy error (first strategy)
       let button = buttonType(for: viewAction)
-      updateButtonResult(
-        button: button, result: singleExecutionError.localizedDescription, state: &state)
+      updateButtonResult(button: button, result: "Already running", state: &state)
       return .none
     } else if let priorityError = cancellationError.reason as? LockmanPriorityBasedError {
       // PriorityBasedStrategy error (second strategy)
@@ -179,7 +178,7 @@ struct PriorityBasedStrategyFeature {
       case .higherPriorityExists, .samePriorityConflict:
         // New action blocked by priority conflict
         let button = buttonType(for: viewAction)
-        updateButtonResult(button: button, result: error.localizedDescription, state: &state)
+        updateButtonResult(button: button, result: "Higher priority task is running", state: &state)
         return .none
       }
     }
