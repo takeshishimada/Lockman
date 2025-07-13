@@ -10,6 +10,29 @@ extension Effect {
   /// Provides automatic lock management that ensures locks are always released regardless
   /// of how the operation completes (normal, exception, cancellation, early return).
   ///
+  /// ## Automatic Cancellation Management
+  /// This method automatically applies `.cancellable(id: boundaryId)` to the operation,
+  /// eliminating the need to manually specify cancellation IDs in `.run()` methods.
+  /// The cancellation scope follows the "Guaranteed Resource Cleanup" principle:
+  /// - **Operations are cancellable**: Business logic can be cancelled using the boundaryId
+  /// - **Resource cleanup is guaranteed**: Lock release always executes regardless of cancellation
+  ///
+  /// ## Example Usage
+  /// ```swift
+  /// // Before (manual cancellation ID):
+  /// return .run { send in
+  ///   await send(.completed)
+  /// }
+  /// .cancellable(id: boundaryId)  // Manual specification required
+  /// .lock(action: action, boundaryId: boundaryId)
+  ///
+  /// // After (automatic cancellation ID):
+  /// return .run { send in
+  ///   await send(.completed)
+  /// }
+  /// .lock(action: action, boundaryId: boundaryId)  // Automatic application
+  /// ```
+  ///
   /// - Parameters:
   ///   - priority: Task priority for the underlying `.run` effect (optional)
   ///   - unlockOption: Controls when the unlock operation is executed (default: configuration value)
@@ -106,6 +129,23 @@ extension Effect {
   /// **Warning**: The caller MUST call `unlock()` in ALL code paths to avoid
   /// permanent lock acquisition.
   ///
+  /// ## Automatic Cancellation Management
+  /// Like the automatic unlock variant, this method automatically applies
+  /// `.cancellable(id: boundaryId)` to the operation, eliminating the need
+  /// to manually specify cancellation IDs in `.run()` methods.
+  ///
+  /// ## Example Usage
+  /// ```swift
+  /// return .withLock(
+  ///   operation: { send, unlock in
+  ///     defer { unlock() }  // Manual unlock control
+  ///     await send(.completed)
+  ///   },
+  ///   action: action,
+  ///   boundaryId: boundaryId
+  /// )
+  /// // No need to add .cancellable(id: boundaryId) - applied automatically
+  /// ```
   ///
   /// - Parameters:
   ///   - priority: Task priority for the underlying `.run` effect (optional)
@@ -209,6 +249,28 @@ extension Effect {
   ///
   /// Effects execute sequentially. If any fails, subsequent effects are cancelled
   /// but the unlock still executes to ensure proper cleanup.
+  ///
+  /// ## Automatic Cancellation Management
+  /// This method automatically applies `.cancellable(id: boundaryId)` to the concatenated
+  /// operations while ensuring the unlock effect is never cancelled. This follows the
+  /// "Guaranteed Resource Cleanup" principle:
+  /// - **Operations are cancellable**: All concatenated effects can be cancelled as a group
+  /// - **Resource cleanup is guaranteed**: Unlock always executes to prevent resource leaks
+  ///
+  /// ## Example Usage
+  /// ```swift
+  /// return .withLock(
+  ///   concatenating: [
+  ///     .send(.stepOne),
+  ///     .send(.stepTwo),
+  ///     .run { send in await performAsyncWork(send) }
+  ///   ],
+  ///   action: action,
+  ///   boundaryId: boundaryId
+  /// )
+  /// // All operations are automatically cancellable with boundaryId
+  /// // No manual .cancellable(id:) specification required
+  /// ```
   ///
   /// - Parameters:
   ///   - concatenating: Array of effects to execute sequentially while lock is held
@@ -335,12 +397,30 @@ extension Effect {
   /// This method provides an alternative API to `withLock` that works as a method chain.
   /// The lock strategy is automatically obtained from the provided action.
   ///
-  /// ## Usage
+  /// ## Automatic Cancellation Management
+  /// This method automatically applies `.cancellable(id: boundaryId)` to the chained effect,
+  /// eliminating the need to manually specify cancellation IDs. This provides a clean,
+  /// method-chain style API with automatic cancellation handling.
+  ///
+  /// ## Usage Examples
   /// ```swift
+  /// // Simple operation with automatic cancellation
   /// return .run { send in
-  ///   // async operation
+  ///   await performAsyncWork()
+  ///   await send(.completed)
   /// }
   /// .lock(action: action, boundaryId: Feature.self)
+  /// // No need for .cancellable(id:) - applied automatically
+  ///
+  /// // Method chaining with other effects
+  /// return .merge(
+  ///   .run { send in await send(.started) },
+  ///   .run { send in
+  ///     await performWork()
+  ///     await send(.finished)
+  ///   }
+  ///   .lock(action: action, boundaryId: MyFeature.self)
+  /// )
   /// ```
   ///
   /// ## Requirements
