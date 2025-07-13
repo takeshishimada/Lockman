@@ -11,3 +11,4 @@ xcuserdata/
 build/
 coverage.xcresult/
 Package.resolved
+.mcp.json
