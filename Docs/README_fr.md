@@ -167,7 +167,7 @@ Le modificateur `Reducer.lock` applique automatiquement la gestion des verrous a
 La documentation pour les versions publiées et `main` est disponible ici :
 
 * [`main`](https://takeshishimada.github.io/Lockman/main/documentation/lockman/)
-* [1.2.0](https://takeshishimada.github.io/Lockman/1.2.0/documentation/lockman/) ([guide de migration](https://takeshishimada.github.io/Lockman/1.2.0/documentation/lockman/migrationguides/migratingto1.2))
+* [1.2.0](https://takeshishimada.github.io/Lockman/1.2.0/documentation/lockman/) ([guide de migration](https://takeshishimada.github.io/Lockman/1.2.0/documentation/lockman/migratingto1.2))
 * [1.1.0](https://takeshishimada.github.io/Lockman/1.1.0/documentation/lockman/) ([guide de migration](https://takeshishimada.github.io/Lockman/1.1.0/documentation/lockman/migrationguides/migratingto1.1))
 * [1.0.0](https://takeshishimada.github.io/Lockman/1.0.0/documentation/lockman/) ([guide de migration](https://takeshishimada.github.io/Lockman/1.0.0/documentation/lockman/migrationguides/migratingto1.0))
 

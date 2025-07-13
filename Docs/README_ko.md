@@ -167,7 +167,7 @@ struct ProcessFeature {
 출시된 버전과 `main`에 대한 문서는 여기에서 사용할 수 있습니다:
 
 * [`main`](https://takeshishimada.github.io/Lockman/main/documentation/lockman/)
-* [1.2.0](https://takeshishimada.github.io/Lockman/1.2.0/documentation/lockman/) ([마이그레이션 가이드](https://takeshishimada.github.io/Lockman/1.2.0/documentation/lockman/migrationguides/migratingto1.2))
+* [1.2.0](https://takeshishimada.github.io/Lockman/1.2.0/documentation/lockman/) ([마이그레이션 가이드](https://takeshishimada.github.io/Lockman/1.2.0/documentation/lockman/migratingto1.2))
 * [1.1.0](https://takeshishimada.github.io/Lockman/1.1.0/documentation/lockman/) ([마이그레이션 가이드](https://takeshishimada.github.io/Lockman/1.1.0/documentation/lockman/migrationguides/migratingto1.1))
 * [1.0.0](https://takeshishimada.github.io/Lockman/1.0.0/documentation/lockman/) ([마이그레이션 가이드](https://takeshishimada.github.io/Lockman/1.0.0/documentation/lockman/migrationguides/migratingto1.0))
 
