@@ -117,7 +117,6 @@ var body: some ReducerOf<Self> {
                 try await Task.sleep(nanoseconds: 3_000_000_000)
                 await send(.processCompleted)
             }
-            .cancellable(id: CancelID.userAction)
             
         case .processStart:
             state.isProcessing = true
@@ -166,7 +165,6 @@ case .startProcessButtonTapped:
         try await Task.sleep(nanoseconds: 3_000_000_000)
         await send(.processCompleted)
     }
-    .cancellable(id: CancelID.userAction)
     .lock(
         action: action,
         boundaryId: CancelID.userAction,
