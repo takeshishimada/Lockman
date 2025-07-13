@@ -168,8 +168,8 @@ A documentação para lançamentos e `main` estão disponíveis aqui:
 
 * [`main`](https://takeshishimada.github.io/Lockman/main/documentation/lockman/)
 * [1.2.0](https://takeshishimada.github.io/Lockman/1.2.0/documentation/lockman/) ([guia de migração](https://takeshishimada.github.io/Lockman/1.2.0/documentation/lockman/migratingto1.2))
-* [1.1.0](https://takeshishimada.github.io/Lockman/1.1.0/documentation/lockman/) ([guia de migração](https://takeshishimada.github.io/Lockman/1.1.0/documentation/lockman/migrationguides/migratingto1.1))
-* [1.0.0](https://takeshishimada.github.io/Lockman/1.0.0/documentation/lockman/) ([guia de migração](https://takeshishimada.github.io/Lockman/1.0.0/documentation/lockman/migrationguides/migratingto1.0))
+* [1.1.0](https://takeshishimada.github.io/Lockman/1.1.0/documentation/lockman/) ([guia de migração](https://takeshishimada.github.io/Lockman/1.1.0/documentation/lockman/migratingto1.1))
+* [1.0.0](https://takeshishimada.github.io/Lockman/1.0.0/documentation/lockman/) ([guia de migração](https://takeshishimada.github.io/Lockman/1.0.0/documentation/lockman/migratingto1.0))
 
 <details>
 <summary>Outras versões</summary>
