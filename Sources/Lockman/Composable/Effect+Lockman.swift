@@ -63,38 +63,32 @@ extension Effect {
       filePath: filePath,
       line: line,
       column: column,
-      handler: lockFailure  // Use lockFailure for lock acquisition errors
+      handler: lockFailure
     ) { unlockToken in
       .run(
         priority: priority,
         operation: { send in
-          do {
-            // Ensure unlock happens after operation completes successfully
-            defer { unlockToken() }
+          // Guaranteed Resource Cleanup: defer ensures unlock always executes
+          defer { unlockToken() }
 
+          do {
             // Execute operation with cancellation support
             try await withTaskCancellation(id: boundaryId) {
               try await operation(send)
             }
           } catch {
-            // Handle cancellation specially to ensure proper cleanup order
+            // Handle cancellation and other errors
             if error is CancellationError {
-              defer { unlockToken() }
               let shouldHandle =
                 handleCancellationErrors ?? LockmanManager.config.handleCancellationErrors
               if shouldHandle {
                 await handler?(error, send)
               }
-              return
+            } else {
+              // For non-cancellation errors, call the handler
+              await handler?(error, send)
             }
-            // For non-cancellation errors, let the catch block handle it
-            throw error
           }
-        },
-        catch: { error, send in
-          // Ensure unlock happens before error handler
-          defer { unlockToken() }
-          await handler?(error, send)
         },
         fileID: fileID,
         filePath: filePath,
@@ -155,7 +149,6 @@ extension Effect {
     line: UInt = #line,
     column: UInt = #column
   ) -> Self {
-    // Pass the lockFailure handler to withLockCommon for lock acquisition errors
     withLockCommon(
       action: action,
       boundaryId: boundaryId,
@@ -164,7 +157,7 @@ extension Effect {
       filePath: filePath,
       line: line,
       column: column,
-      handler: lockFailure  // Use the dedicated lock failure handler
+      handler: lockFailure
     ) { unlockToken in
       .run(
         priority: priority,
@@ -175,22 +168,18 @@ extension Effect {
               try await operation(send, unlockToken)
             }
           } catch {
-            // Handle cancellation with unlock token available
+            // Handle cancellation and other errors with unlock token available
             if error is CancellationError {
               let shouldHandle =
                 handleCancellationErrors ?? LockmanManager.config.handleCancellationErrors
               if shouldHandle {
                 await handler?(error, send, unlockToken)
               }
-              return
+            } else {
+              // For non-cancellation errors, provide unlock token to handler
+              await handler?(error, send, unlockToken)
             }
-            // For non-cancellation errors, let the catch block handle it
-            throw error
           }
-        },
-        catch: { error, send in
-          // Provide unlock token to error handler for cleanup
-          await handler?(error, send, unlockToken)
         },
         fileID: fileID,
         filePath: filePath,
@@ -269,10 +258,11 @@ extension Effect {
         await autoUnlock.manualUnlock()  // Uses the configured option
       }
 
-      // Build the complete effect sequence
+      // Build the complete effect sequence with proper cancellation scope
+      // Only operations are cancellable - unlockEffect must always execute
       let builtEffect = Effect<Action>.concatenate([
-        .concatenate(operations),  // Execute all provided operations
-        unlockEffect,  // Ensure unlock happens last (with option)
+        .concatenate(operations).cancellable(id: boundaryId),  // Only operations are cancellable
+        unlockEffect,  // Resource cleanup always executes (not cancellable)
       ])
 
       // Attempt to acquire lock
