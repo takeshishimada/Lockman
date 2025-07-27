@@ -93,6 +93,45 @@ public protocol LockmanInfo: Sendable, CustomDebugStringConvertible {
   /// "concurrency: api_requests limit: limited(3)"
   /// ```
   var debugAdditionalInfo: String { get }
+
+  /// Indicates whether this action should be cancellable by future actions.
+  ///
+  /// When `true`, the effect for this action will have a cancellation ID attached,
+  /// making it cancellable by future actions in the same boundary.
+  /// When `false`, the effect will not have a cancellation ID, protecting it
+  /// from being cancelled by other actions.
+  ///
+  /// ## Strategy-Specific Behavior
+  /// Different strategies interpret their `.none` settings as exclusion from cancellation:
+  /// - **SingleExecution `.none`**: Strategy disabled → not cancellable
+  /// - **Priority `.none`**: Priority system bypassed → not cancellable
+  /// - **GroupCoordination `.none`**: Non-exclusive participation → still cancellable
+  ///
+  /// ## Usage Examples
+  /// ```swift
+  /// // SingleExecution strategy with .none mode
+  /// extension LockmanSingleExecutionInfo {
+  ///   var isCancellationTarget: Bool { mode != .none }
+  /// }
+  ///
+  /// // Priority strategy with .none priority
+  /// extension LockmanPriorityBasedInfo {
+  ///   var isCancellationTarget: Bool { priority != .none }
+  /// }
+  /// ```
+  ///
+  /// ## Implementation in buildLockEffect
+  /// ```swift
+  /// case .success:
+  ///   let shouldBeCancellable = action.lockmanInfo.isCancellationTarget
+  ///   return shouldBeCancellable ?
+  ///     effectBuilder(unlockToken).cancellable(id: boundaryId) :
+  ///     effectBuilder(unlockToken)
+  /// ```
+  ///
+  /// - Returns: `true` if this action's effect should be cancellable (default),
+  ///   `false` if this action's effect should be protected from cancellation
+  var isCancellationTarget: Bool { get }
 }
 
 // MARK: - Default Implementation
@@ -100,4 +139,11 @@ public protocol LockmanInfo: Sendable, CustomDebugStringConvertible {
 extension LockmanInfo {
   /// Default implementation returns an empty string.
   public var debugAdditionalInfo: String { "" }
+
+  /// Default implementation assumes actions are cancellation targets.
+  ///
+  /// Most actions should be subject to cancellation by other actions.
+  /// Override this property in specific strategy implementations to provide
+  /// custom behavior based on strategy-specific settings (e.g., `.none` modes).
+  public var isCancellationTarget: Bool { true }
 }

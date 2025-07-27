@@ -56,4 +56,8 @@ extension LockmanConcurrencyLimitedInfo: CustomDebugStringConvertible {
   public var debugAdditionalInfo: String {
     "concurrency: \(concurrencyId) limit: \(limit)"
   }
+
+  public var isCancellationTarget: Bool {
+    true
+  }
 }

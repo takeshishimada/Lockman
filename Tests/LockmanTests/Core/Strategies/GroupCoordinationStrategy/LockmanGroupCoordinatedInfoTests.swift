@@ -251,4 +251,51 @@ final class LockmanGroupCoordinatedInfoTests: XCTestCase {
       [AnyLockmanGroupId("group1"), AnyLockmanGroupId("group2"), AnyLockmanGroupId("group3")])
     XCTAssertEqual(info.coordinationRole, .member)
   }
+
+  // MARK: - Cancellation Target Tests
+
+  func testIsCancellationTargetForAllRoles() {
+    let noneRole = LockmanGroupCoordinatedInfo(
+      actionId: "testNone",
+      groupId: "testGroup",
+      coordinationRole: .none
+    )
+    let memberRole = LockmanGroupCoordinatedInfo(
+      actionId: "testMember",
+      groupId: "testGroup",
+      coordinationRole: .member
+    )
+    let leaderRole = LockmanGroupCoordinatedInfo(
+      actionId: "testLeader",
+      groupId: "testGroup",
+      coordinationRole: .leader(.emptyGroup)
+    )
+
+    XCTAssertTrue(noneRole.isCancellationTarget, "None role should be cancellation target")
+    XCTAssertTrue(memberRole.isCancellationTarget, "Member role should be cancellation target")
+    XCTAssertTrue(leaderRole.isCancellationTarget, "Leader role should be cancellation target")
+  }
+
+  func testIsCancellationTargetAlwaysTrueForGroupCoordination() {
+    // Group coordination strategy treats all roles as cancellation targets
+    // because even .none role participates in coordination (non-exclusive participation)
+    let testCases: [LockmanGroupCoordinationRole] = [
+      .none,
+      .member,
+      .leader(.emptyGroup),
+      .leader(.withoutMembers),
+      .leader(.withoutLeader),
+    ]
+
+    for role in testCases {
+      let info = LockmanGroupCoordinatedInfo(
+        actionId: "test_\(role)",
+        groupId: "testGroup",
+        coordinationRole: role
+      )
+      XCTAssertTrue(
+        info.isCancellationTarget,
+        "Role \(role) should always be cancellation target in group coordination")
+    }
+  }
 }

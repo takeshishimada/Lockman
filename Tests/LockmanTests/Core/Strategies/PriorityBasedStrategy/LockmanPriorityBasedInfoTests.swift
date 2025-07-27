@@ -329,6 +329,54 @@ final class LockmanPriorityBasedInfoTests: XCTestCase {
     XCTAssertLessThan(duration, 0.1)  // Should complete quickly
   }
 
+  // MARK: - Cancellation Target Tests
+
+  func testIsCancellationTargetForNonePriority() {
+    let info = TestInfoFactory.none("testNone")
+    XCTAssertFalse(info.isCancellationTarget, "None priority should not be cancellation target")
+  }
+
+  func testIsCancellationTargetForLowPriority() {
+    let lowExclusive = TestInfoFactory.lowExclusive("testLowExclusive")
+    let lowReplaceable = TestInfoFactory.lowReplaceable("testLowReplaceable")
+
+    XCTAssertTrue(
+      lowExclusive.isCancellationTarget, "Low exclusive priority should be cancellation target")
+    XCTAssertTrue(
+      lowReplaceable.isCancellationTarget, "Low replaceable priority should be cancellation target")
+  }
+
+  func testIsCancellationTargetForHighPriority() {
+    let highExclusive = TestInfoFactory.highExclusive("testHighExclusive")
+    let highReplaceable = TestInfoFactory.highReplaceable("testHighReplaceable")
+
+    XCTAssertTrue(
+      highExclusive.isCancellationTarget, "High exclusive priority should be cancellation target")
+    XCTAssertTrue(
+      highReplaceable.isCancellationTarget,
+      "High replaceable priority should be cancellation target")
+  }
+
+  func testIsCancellationTargetConsistentWithPriorityLogic() {
+    let testCases: [(LockmanPriorityBasedInfo, Bool, String)] = [
+      (TestInfoFactory.none(), false, "none priority"),
+      (TestInfoFactory.lowExclusive(), true, "low exclusive priority"),
+      (TestInfoFactory.lowReplaceable(), true, "low replaceable priority"),
+      (TestInfoFactory.highExclusive(), true, "high exclusive priority"),
+      (TestInfoFactory.highReplaceable(), true, "high replaceable priority"),
+    ]
+
+    for (info, expected, description) in testCases {
+      XCTAssertEqual(
+        info.isCancellationTarget, expected, "\(description) cancellation target mismatch")
+
+      // Verify consistency: non-none priorities should be cancellation targets
+      let isNonePriority = (info.priority == .none)
+      XCTAssertEqual(
+        info.isCancellationTarget, !isNonePriority,
+        "Cancellation target should be inverse of none priority for \(description)")
+    }
+  }
   // MARK: - Protocol Conformance
 
   func testLockmanInfoProtocolConformance() {
