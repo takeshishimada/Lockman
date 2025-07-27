@@ -73,94 +73,18 @@ extension Effect {
     line: UInt = #line,
     column: UInt = #column
   ) -> Effect<Action> {
-    do {
-      // Resolve strategy and prepare unlock mechanism
-      let strategy: AnyLockmanStrategy<A.I> = try LockmanManager.container.resolve(
-        id: action.lockmanInfo.strategyId,
-        expecting: A.I.self
-      )
-      let lockmanInfo = action.lockmanInfo
-      let unlockToken = LockmanUnlock(
-        id: boundaryId,
-        info: lockmanInfo,
-        strategy: strategy,
-        unlockOption: unlockOption ?? action.unlockOption
-      )
-
-      // Create auto-unlock manager for guaranteed cleanup
-      let autoUnlock = LockmanAutoUnlock<B, A.I>(unlockToken: unlockToken)
-
-      // Create unlock effect that will be executed last
-      let unlockEffect = Effect<Action>.run { _ in
-        await autoUnlock.manualUnlock()  // Uses the configured option
-      }
-
-      // Build the complete effect sequence with proper cancellation scope
-      // Only operations are cancellable - unlockEffect must always execute
-      let builtEffect = Effect<Action>.concatenate([
-        .concatenate(operations).cancellable(id: boundaryId),  // Only operations are cancellable
-        unlockEffect,  // Resource cleanup always executes (not cancellable)
-      ])
-
-      // Attempt to acquire lock
-      let lockResult = lock(
-        lockmanInfo: lockmanInfo,
-        strategy: strategy,
-        boundaryId: boundaryId
-      )
-
-      // Handle lock acquisition result
-      switch lockResult {
-      case .success:
-        // Lock acquired successfully, execute effects immediately
-        return builtEffect
-
-      case .successWithPrecedingCancellation(let error):
-        // Lock acquired but need to cancel existing operation first
-        // Wrap the strategy error with action context
-        let cancellationError = LockmanCancellationError(
-          action: action,
-          boundaryId: boundaryId,
-          reason: error
-        )
-        if let lockFailure = lockFailure {
-          return .concatenate(
-            .run { send in await lockFailure(cancellationError, send) },
-            .cancel(id: boundaryId),
-            builtEffect
-          )
-        }
-        return .concatenate(.cancel(id: boundaryId), builtEffect)
-
-      case .cancel(let error):
-        // Lock acquisition failed
-        // Wrap the strategy error with action context
-        let cancellationError = LockmanCancellationError(
-          action: action,
-          boundaryId: boundaryId,
-          reason: error
-        )
-        if let lockFailure = lockFailure {
-          return .run { send in
-            await lockFailure(cancellationError, send)
-          }
-        }
-        return .none
-      @unknown default:
-        return .none
-      }
-
-    } catch {
-      // Handle strategy resolution or other setup errors
-      handleError(
-        error: error,
-        fileID: fileID,
-        filePath: filePath,
-        line: line,
-        column: column
-      )
-      return .none
-    }
+    return buildEffect(
+      concatenating: operations,
+      unlockOption: unlockOption,
+      handleCancellationErrors: handleCancellationErrors,
+      lockFailure: lockFailure,
+      action: action,
+      boundaryId: boundaryId,
+      fileID: fileID,
+      filePath: filePath,
+      line: line,
+      column: column
+    )
   }
 }
 
@@ -215,17 +139,20 @@ extension Effect {
     handleCancellationErrors: Bool? = nil,
     lockFailure: (@Sendable (_ error: any Error, _ send: Send<Action>) async -> Void)? = nil
   ) -> Effect<Action> {
-    // This is essentially a wrapper around lock(concatenating:)
+    // This is essentially a wrapper around buildEffect
     // that provides a method chain style API
 
-    return Effect.lock(
+    return Effect.buildEffect(
       concatenating: [self],
-      priority: nil,
       unlockOption: unlockOption,
       handleCancellationErrors: handleCancellationErrors,
       lockFailure: lockFailure,
       action: action,
-      boundaryId: boundaryId
+      boundaryId: boundaryId,
+      fileID: #fileID,
+      filePath: #filePath,
+      line: #line,
+      column: #column
     )
   }
 }
@@ -233,261 +160,66 @@ extension Effect {
 // MARK: - Internal Implementation
 
 extension Effect {
-  /// Core logic that attempts to acquire a lock and builds the effect.
+  /// Builds an effect with lock management for concatenated operations.
   ///
-  /// ## Purpose
-  /// This internal method contains the common logic shared by all lock variants:
-  /// 1. Strategy resolution from the container
-  /// 2. Lock information extraction from the action
-  /// 3. Unlock token creation with unlock option configuration
-  /// 4. Effect building through the provided closure
+  /// This method contains the shared logic for both public lock APIs:
+  /// - `Effect.lock(concatenating:)` for multiple operations
+  /// - `Effect.lock(action:boundaryId:)` for single effect chains
   ///
-  /// ## Error Handling Strategy
-  /// This method uses a do-catch pattern to handle strategy resolution errors.
-  /// If strategy resolution fails, it calls `handleError` to provide detailed
-  /// diagnostic information and optionally calls the provided handler before
-  /// returning `.none` to prevent effect execution.
-  ///
-  /// ## Type Safety
-  /// The method maintains type safety through generic constraints:
-  /// - `B: LockmanBoundaryId`: Ensures valid boundary identifier
-  /// - `A: LockmanAction`: Ensures valid action with lock information
-  /// - `A.I`: Preserves lock information type relationship
-  ///
-  /// ## Unlock Token Lifecycle
-  /// The unlock token created here encapsulates:
-  /// - Boundary identifier for proper isolation
-  /// - Lock information for precise instance tracking
-  /// - Type-erased strategy for actual unlock operations
-  /// - Unlock option configuration for unlock execution
+  /// ## Shared Logic
+  /// 1. **Strategy Resolution**: Resolves the lock strategy from the container
+  /// 2. **Unlock Token Creation**: Creates unlock token with proper configuration
+  /// 3. **Lock Acquisition**: Attempts to acquire the lock using the resolved strategy
+  /// 4. **Effect Building**: Constructs the final effect based on lock acquisition result
   ///
   /// - Parameters:
+  ///   - operations: Array of effects to execute sequentially while lock is held
+  ///   - unlockOption: Controls when the unlock operation is executed
+  ///   - handleCancellationErrors: Whether to pass CancellationError to catch handler
+  ///   - lockFailure: Optional handler for lock acquisition failures
   ///   - action: LockmanAction providing lock information and strategy type
-  ///   - boundaryId: Unique identifier for cancellation and lock boundary
-  ///   - unlockOption: Unlock option configuration for when to execute the unlock
-  ///   - fileID, filePath, line, column: Source location for error reporting
-  ///   - effectBuilder: Closure that receives unlock token and returns built effect
-  /// - Returns: Built effect, or `.none` if setup fails
-  static func lockAndExecute<B: LockmanBoundaryId, A: LockmanAction>(
+  ///   - boundaryId: Unique identifier for effect cancellation and lock boundary
+  ///   - fileID: Source file ID for debugging
+  ///   - filePath: Source file path for debugging
+  ///   - line: Source line number for debugging
+  ///   - column: Source column number for debugging
+  /// - Returns: Effect with lock management, or `.none` if lock acquisition fails
+  private static func buildEffect<B: LockmanBoundaryId, A: LockmanAction>(
+    concatenating operations: [Effect<Action>],
+    unlockOption: LockmanUnlockOption?,
+    handleCancellationErrors: Bool?,
+    lockFailure: (@Sendable (_ error: any Error, _ send: Send<Action>) async -> Void)?,
     action: A,
     boundaryId: B,
-    unlockOption: LockmanUnlockOption,
-    fileID: StaticString,
-    filePath: StaticString,
-    line: UInt,
-    column: UInt,
-    handler: (@Sendable (_ error: any Error, _ send: Send<Action>) async -> Void)? = nil,
-    effectBuilder: @escaping (LockmanUnlock<B, A.I>) -> Effect<Action>
-  ) -> Effect<Action> {
-    do {
-      // Resolve the strategy from the container using strategyId
-      let strategy: AnyLockmanStrategy<A.I> = try LockmanManager.container.resolve(
-        id: action.lockmanInfo.strategyId,
-        expecting: A.I.self
-      )
-      let lockmanInfo = action.lockmanInfo
-
-      // Create unlock token for this specific lock acquisition with option
-      let unlockToken = LockmanUnlock(
-        id: boundaryId,
-        info: lockmanInfo,
-        strategy: strategy,
-        unlockOption: unlockOption
-      )
-
-      // Attempt to acquire lock
-      let lockResult = lock(
-        lockmanInfo: lockmanInfo,
-        strategy: strategy,
-        boundaryId: boundaryId
-      )
-
-      // Handle lock acquisition result
-      switch lockResult {
-      case .success:
-        // Lock acquired successfully, execute effect immediately
-        return effectBuilder(unlockToken)
-
-      case .successWithPrecedingCancellation(let error):
-        // Lock acquired but need to cancel existing operation first
-        // Wrap the strategy error with action context
-        let cancellationError = LockmanCancellationError(
-          action: action,
-          boundaryId: boundaryId,
-          reason: error
-        )
-        if let handler = handler {
-          return .concatenate(
-            .run { send in await handler(cancellationError, send) },
-            .cancel(id: boundaryId),
-            effectBuilder(unlockToken)
-          )
-        }
-        return .concatenate(.cancel(id: boundaryId), effectBuilder(unlockToken))
-
-      case .cancel(let error):
-        // Lock acquisition failed
-        // Wrap the strategy error with action context
-        let cancellationError = LockmanCancellationError(
-          action: action,
-          boundaryId: boundaryId,
-          reason: error
-        )
-        if let handler = handler {
-          return .run { send in
-            await handler(cancellationError, send)
-          }
-        }
-        return .none
-      @unknown default:
-        return .none
-      }
-
-    } catch {
-      // Handle and report strategy resolution errors
-      handleError(
-        error: error,
-        fileID: fileID,
-        filePath: filePath,
-        line: line,
-        column: column
-      )
-      return .none
-    }
-  }
-
-  /// Attempts to acquire a lock using the provided strategy and executes the effect if successful.
-  ///
-  /// ## Lock Acquisition Protocol
-  /// This method implements the core lock acquisition and effect execution logic:
-  /// 1. **Feasibility Check**: Call `canLock` to determine if lock can be acquired
-  /// 2. **Early Exit**: Return `.none` if lock acquisition is not possible
-  /// 3. **Lock Acquisition**: Call `lock` to actually acquire the lock
-  /// 4. **Cancellation Handling**: If existing operation needs cancellation, handle appropriately
-  /// 5. **Effect Execution**: Execute the provided effect with lock held
-  ///
-  /// ## Boundary Lock Protection
-  /// The entire lock acquisition process is protected by a boundary-specific lock
-  /// to ensure atomicity and prevent race conditions between:
-  /// - Multiple lock acquisition attempts
-  /// - Lock acquisition and release operations
-  /// - Cleanup and acquisition operations
-  ///
-  /// ## Cancellation Strategy
-  /// When `canLock` returns `.successWithPrecedingCancellation`:
-  /// 1. A cancellation effect is created for the specified boundaryId
-  /// 2. The cancellation effect is concatenated BEFORE the main effect
-  /// 3. This ensures proper ordering: cancel existing → execute new
-  ///
-  /// ## Performance Notes
-  /// - Lock feasibility check is typically O(1) hash lookup
-  /// - Boundary lock acquisition is brief (microseconds)
-  /// - Effect concatenation has minimal overhead
-  ///
-  /// - Parameters:
-  ///   - lockmanInfo: Lock information for the strategy (action ID, unique ID, etc.)
-  ///   - strategy: Type-erased strategy to use for lock operations
-  ///   - boundaryId: Boundary identifier for this lock and cancellation
-  ///   - effect: Effect to execute if lock acquisition succeeds
-  /// - Returns: Effect to execute, or `.none` if lock acquisition fails
-  static func lock<B: LockmanBoundaryId, I: LockmanInfo>(
-    lockmanInfo: I,
-    strategy: AnyLockmanStrategy<I>,
-    boundaryId: B
-  ) -> LockmanResult {
-    LockmanManager.withBoundaryLock(for: boundaryId) {
-      // Check if lock can be acquired
-      let result = strategy.canLock(
-        boundaryId: boundaryId,
-        info: lockmanInfo
-      )
-
-      // Handle immediate unlock for preceding cancellation
-      if case .successWithPrecedingCancellation(let cancellationError) = result {
-        // Immediately unlock the cancelled action to prevent resource leaks
-        if let cancelledInfo = cancellationError.lockmanInfo as? I {
-          strategy.unlock(boundaryId: cancellationError.boundaryId, info: cancelledInfo)
-        }
-      }
-
-      // Early exit if lock cannot be acquired
-      if case .cancel = result {
-        return result
-      }
-
-      // Actually acquire the lock
-      strategy.lock(
-        boundaryId: boundaryId,
-        info: lockmanInfo
-      )
-
-      // Return the result
-      return result
-    }
-  }
-
-  /// Handles errors that occur during lock operations and provides appropriate diagnostic messages.
-  ///
-  /// ## Error Analysis and Reporting
-  /// This method examines the error type and generates context-aware diagnostic messages
-  /// that help developers identify and resolve issues with lock management operations.
-  /// The diagnostics include:
-  /// - **Source Location**: Exact file, line, and column where error occurred
-  /// - **Error Context**: Specific action type and strategy type involved
-  /// - **Resolution Guidance**: Concrete steps to fix the issue
-  /// - **Code Examples**: Sample code showing correct usage
-  ///
-  /// ## Supported Error Types
-  /// Currently handles `LockmanError` types with specific guidance:
-  /// - **Strategy Not Registered**: Provides registration example
-  /// - **Strategy Already Registered**: Explains registration constraints
-  /// - **Future Extensions**: Framework for additional error types
-  ///
-  /// ## Development vs Production
-  /// In development builds, detailed diagnostics are provided to help developers
-  /// identify and fix issues quickly. In production, error handling is minimal
-  /// to avoid exposing internal details.
-  ///
-  /// ## Integration with Xcode
-  /// The `reportIssue` function integrates with Xcode's issue navigator,
-  /// providing clickable error messages that jump directly to the problematic code.
-  ///
-  /// - Parameters:
-  ///   - error: Error that was thrown during lock operation
-  ///   - fileID: File identifier where error originated (auto-populated)
-  ///   - filePath: Full file path where error originated (auto-populated)
-  ///   - line: Line number where error originated (auto-populated)
-  ///   - column: Column number where error originated (auto-populated)
-  static func handleError(
-    error: any Error,
     fileID: StaticString,
     filePath: StaticString,
     line: UInt,
     column: UInt
-  ) {
-    // Check if the error is a known LockmanRegistrationError type
-    if let error = error as? LockmanRegistrationError {
-      switch error {
-      case .strategyNotRegistered(let strategyType):
-        reportIssue(
-          "Effect.lock strategy '\(strategyType)' not registered. Register before use.",
-          fileID: fileID,
-          filePath: filePath,
-          line: line,
-          column: column
-        )
+  ) -> Effect<Action> {
+    return buildLockEffect(
+      action: action,
+      boundaryId: boundaryId,
+      unlockOption: unlockOption ?? action.unlockOption,
+      fileID: fileID,
+      filePath: filePath,
+      line: line,
+      column: column,
+      handler: lockFailure
+    ) { unlockToken in
+      // Create auto-unlock manager for guaranteed cleanup
+      let autoUnlock = LockmanAutoUnlock<B, A.I>(unlockToken: unlockToken)
 
-      case .strategyAlreadyRegistered(let strategyType):
-        reportIssue(
-          "Effect.lock strategy '\(strategyType)' already registered.",
-          fileID: fileID,
-          filePath: filePath,
-          line: line,
-          column: column
-        )
-      @unknown default:
-        break
+      // Create unlock effect that will be executed last
+      let unlockEffect = Effect<Action>.run { _ in
+        await autoUnlock.manualUnlock()  // Uses the configured option
       }
+
+      // Build the complete effect sequence with proper cancellation scope
+      // Only operations are cancellable - unlockEffect must always execute
+      return Effect<Action>.concatenate([
+        .concatenate(operations).cancellable(id: boundaryId),  // Only operations are cancellable
+        unlockEffect,  // Resource cleanup always executes (not cancellable)
+      ])
     }
   }
 }
