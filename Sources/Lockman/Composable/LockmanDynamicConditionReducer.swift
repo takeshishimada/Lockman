@@ -284,50 +284,182 @@ extension LockmanDynamicConditionReducer {
       let operation = operation as! @Sendable (Send<Action>) async throws -> Void
       let handler = handler as? @Sendable (any Error, Send<Action>) async -> Void
 
-      return Effect<Action>.lockAndExecute(
-        action: lockAction,
-        boundaryId: boundaryId,
-        unlockOption: unlockOption ?? lockAction.unlockOption,
-        fileID: fileID,
-        filePath: filePath,
-        line: line,
-        column: column,
-        handler: wrappedLockFailure
-      ) { step3UnlockToken in
-        .run(
-          priority: priority,
-          operation: { send in
-            defer { step3UnlockToken() }  // Step 3 lock cleanup
+      // Direct implementation of lockAndExecute logic
+      do {
+        // Resolve the strategy from the container using strategyId
+        let strategy: AnyLockmanStrategy<A.I> = try LockmanManager.container.resolve(
+          id: lockAction.lockmanInfo.strategyId,
+          expecting: A.I.self
+        )
+        let lockmanInfo = lockAction.lockmanInfo
 
-            // Wrap operation to ensure dynamic lock cleanup
-            let wrappedOperation: @Sendable (Send<Action>) async throws -> Void = { send in
-              defer { unlockToken() }  // Dynamic condition lock cleanup
-              try await operation(send)
-            }
+        // Create unlock token for this specific lock acquisition with option
+        let step3UnlockToken = LockmanUnlock(
+          id: boundaryId,
+          info: lockmanInfo,
+          strategy: strategy,
+          unlockOption: unlockOption ?? lockAction.unlockOption
+        )
 
-            do {
-              try await withTaskCancellation(id: boundaryId) {
-                try await wrappedOperation(send)
+        // Attempt to acquire lock
+        let lockResult = Effect<Action>.lock(
+          lockmanInfo: lockmanInfo,
+          strategy: strategy,
+          boundaryId: boundaryId
+        )
+
+        // Handle lock acquisition result
+        switch lockResult {
+        case .success:
+          // Lock acquired successfully, execute effect immediately
+          return .run(
+            priority: priority,
+            operation: { send in
+              defer { step3UnlockToken() }  // Step 3 lock cleanup
+
+              // Wrap operation to ensure dynamic lock cleanup
+              let wrappedOperation: @Sendable (Send<Action>) async throws -> Void = { send in
+                defer { unlockToken() }  // Dynamic condition lock cleanup
+                try await operation(send)
               }
-            } catch {
-              // Error handling - both defers are already registered
-              if error is CancellationError {
-                let shouldHandle =
-                  handleCancellationErrors ?? LockmanManager.config.handleCancellationErrors
-                if shouldHandle {
+
+              do {
+                try await withTaskCancellation(id: boundaryId) {
+                  try await wrappedOperation(send)
+                }
+              } catch {
+                // Error handling - both defers are already registered
+                if error is CancellationError {
+                  let shouldHandle =
+                    handleCancellationErrors ?? LockmanManager.config.handleCancellationErrors
+                  if shouldHandle {
+                    await handler?(error, send)
+                  }
+                } else {
                   await handler?(error, send)
                 }
-              } else {
-                await handler?(error, send)
               }
-            }
-          },
+            },
+            fileID: fileID,
+            filePath: filePath,
+            line: line,
+            column: column
+          )
+          .cancellable(id: boundaryId)
+
+        case .successWithPrecedingCancellation(let error):
+          // Lock acquired but need to cancel existing operation first
+          // Wrap the strategy error with action context
+          let cancellationError = LockmanCancellationError(
+            action: lockAction,
+            boundaryId: boundaryId,
+            reason: error
+          )
+          return .concatenate(
+            .run { send in await wrappedLockFailure(cancellationError, send) },
+            .cancel(id: boundaryId),
+            .run(
+              priority: priority,
+              operation: { send in
+                defer { step3UnlockToken() }  // Step 3 lock cleanup
+
+                // Wrap operation to ensure dynamic lock cleanup
+                let wrappedOperation: @Sendable (Send<Action>) async throws -> Void = { send in
+                  defer { unlockToken() }  // Dynamic condition lock cleanup
+                  try await operation(send)
+                }
+
+                do {
+                  try await withTaskCancellation(id: boundaryId) {
+                    try await wrappedOperation(send)
+                  }
+                } catch {
+                  // Error handling - both defers are already registered
+                  if error is CancellationError {
+                    let shouldHandle =
+                      handleCancellationErrors ?? LockmanManager.config.handleCancellationErrors
+                    if shouldHandle {
+                      await handler?(error, send)
+                    }
+                  } else {
+                    await handler?(error, send)
+                  }
+                }
+              },
+              fileID: fileID,
+              filePath: filePath,
+              line: line,
+              column: column
+            )
+            .cancellable(id: boundaryId)
+          )
+          return .concatenate(
+            .cancel(id: boundaryId),
+            .run(
+              priority: priority,
+              operation: { send in
+                defer { step3UnlockToken() }  // Step 3 lock cleanup
+
+                // Wrap operation to ensure dynamic lock cleanup
+                let wrappedOperation: @Sendable (Send<Action>) async throws -> Void = { send in
+                  defer { unlockToken() }  // Dynamic condition lock cleanup
+                  try await operation(send)
+                }
+
+                do {
+                  try await withTaskCancellation(id: boundaryId) {
+                    try await wrappedOperation(send)
+                  }
+                } catch {
+                  // Error handling - both defers are already registered
+                  if error is CancellationError {
+                    let shouldHandle =
+                      handleCancellationErrors ?? LockmanManager.config.handleCancellationErrors
+                    if shouldHandle {
+                      await handler?(error, send)
+                    }
+                  } else {
+                    await handler?(error, send)
+                  }
+                }
+              },
+              fileID: fileID,
+              filePath: filePath,
+              line: line,
+              column: column
+            )
+            .cancellable(id: boundaryId)
+          )
+
+        case .cancel(let error):
+          // Lock acquisition failed
+          // Wrap the strategy error with action context
+          let cancellationError = LockmanCancellationError(
+            action: lockAction,
+            boundaryId: boundaryId,
+            reason: error
+          )
+          return .run { send in
+            await wrappedLockFailure(cancellationError, send)
+          }
+          return .none
+        @unknown default:
+          return .none
+        }
+
+      } catch {
+        // Handle and report strategy resolution errors
+        Effect<Action>.handleError(
+          error: error,
           fileID: fileID,
           filePath: filePath,
           line: line,
           column: column
         )
-        .cancellable(id: boundaryId)
+        return .run { send in
+          await wrappedLockFailure(error, send)
+        }
+        return .none
       }
     } else {
       // Manual unlock case - No longer supported
