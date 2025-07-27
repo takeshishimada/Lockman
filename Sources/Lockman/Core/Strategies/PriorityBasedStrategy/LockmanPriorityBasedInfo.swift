@@ -134,6 +134,12 @@ public struct LockmanPriorityBasedInfo: LockmanInfo, Sendable, Equatable {
     }
     return result
   }
+
+  // MARK: - Cancellation Target
+
+  public var isCancellationTarget: Bool {
+    priority != .none
+  }
 }
 
 // MARK: - Priority Definition

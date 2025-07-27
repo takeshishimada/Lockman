@@ -131,4 +131,10 @@ extension LockmanGroupCoordinatedInfo: CustomDebugStringConvertible {
     let groupsStr = groupIds.map { "\($0)" }.sorted().joined(separator: ",")
     return "groups: \(groupsStr) r: \(coordinationRole)"
   }
+
+  // MARK: - Cancellation Target
+
+  public var isCancellationTarget: Bool {
+    true
+  }
 }

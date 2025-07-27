@@ -214,11 +214,17 @@ extension Effect {
         boundaryId: boundaryId
       )
 
+      // Create effect with conditional cancellation ID based on action design intent
+      let shouldBeCancellable = action.lockmanInfo.isCancellationTarget
+      let newEffect =
+        shouldBeCancellable
+        ? effectBuilder(unlockToken).cancellable(id: boundaryId) : effectBuilder(unlockToken)
+
       // Handle lock acquisition result
       switch lockResult {
       case .success:
         // Lock acquired successfully, execute effect immediately
-        return effectBuilder(unlockToken)
+        return newEffect
 
       case .successWithPrecedingCancellation(let error):
         // Lock acquired but need to cancel existing operation first
@@ -232,10 +238,11 @@ extension Effect {
           return .concatenate(
             .run { send in await handler(cancellationError, send) },
             .cancel(id: boundaryId),
-            effectBuilder(unlockToken)
+            newEffect
           )
         }
-        return .concatenate(.cancel(id: boundaryId), effectBuilder(unlockToken))
+
+        return .concatenate(.cancel(id: boundaryId), newEffect)
 
       case .cancel(let error):
         // Lock acquisition failed

@@ -116,4 +116,10 @@ public struct LockmanSingleExecutionInfo: LockmanInfo, Sendable, Equatable {
   public var debugAdditionalInfo: String {
     "mode: \(mode)"
   }
+
+  // MARK: - Cancellation Target
+
+  public var isCancellationTarget: Bool {
+    mode != .none
+  }
 }
