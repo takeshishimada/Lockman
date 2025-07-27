@@ -4,16 +4,16 @@
 
 ### Feature 1: Add unlockOption to LockmanAction
 - Add `unlockOption` property to LockmanAction protocol
-- Use action's setting when not specified in withLock/lock()
+- Use action's setting when not specified in lock()
 - Default value is `.immediate` (from `LockmanManager.config.defaultUnlockOption`)
 - Priority order:
-  1. Explicitly specified in withLock/lock() → Highest priority
+  1. Explicitly specified in lock() → Highest priority
   2. Action's unlockOption → Next priority
   3. config.defaultUnlockOption → Lowest priority
 
 ### Feature 2: Argument Label Change (Breaking Change)
 - Change `id` → `boundaryId` in all Lockman APIs
-- Affected: withLock, lock(), and related methods
+- Affected: lock() and related methods
 - Acceptable as breaking change for v1.0
 
 ### Feature 3: Reducer-level Locking (.lock() method)
@@ -34,7 +34,7 @@ public extension Reducer {
 ```
 
 ### Feature 4: Effect-level .lock() method
-- Method chain alternative to withLock
+- Method chain API for lock management
 - Strategy is obtained from LockmanAction (no need to specify)
 
 **Interface Specification:**
@@ -57,4 +57,4 @@ extension Effect {
 ## Notes
 - All features target v1.0 release
 - Feature 2 is a breaking change, acceptable for major version
-- Features 3 and 4 provide more ergonomic APIs while maintaining compatibility with existing withLock
+- Features 3 and 4 provide more ergonomic APIs for lock management

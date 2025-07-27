@@ -589,7 +589,7 @@ public struct LockmanDynamicConditionReducer<State: Sendable, Action: Sendable>:
 extension LockmanDynamicConditionReducer {
   /// Executes Step 1 and Step 2: Dynamic condition evaluation for action-level and reducer-level conditions
   @usableFromInline
-  func withLockStep1Step2<B: LockmanBoundaryId, LA: LockmanAction>(
+  func lockStep1Step2<B: LockmanBoundaryId, LA: LockmanAction>(
     state: State,
     action: Action,
     lockAction: LA,
@@ -695,9 +695,9 @@ extension LockmanDynamicConditionReducer {
     return executeStep3(unlockToken)
   }
 
-  /// Executes Step 3: Traditional withLock (automatic or manual unlock)
+  /// Executes Step 3: Traditional lock with automatic unlock only
   @usableFromInline
-  func withLockStep3<B: LockmanBoundaryId, A: LockmanAction>(
+  func lockStep3<B: LockmanBoundaryId, A: LockmanAction>(
     priority: TaskPriority?,
     unlockOption: LockmanUnlockOption?,
     handleCancellationErrors: Bool?,
@@ -732,64 +732,56 @@ extension LockmanDynamicConditionReducer {
       let operation = operation as! @Sendable (Send<Action>) async throws -> Void
       let handler = handler as? @Sendable (any Error, Send<Action>) async -> Void
 
-      // Create wrapped operation that cleans up dynamic locks after completion
-      let wrappedOperation: @Sendable (Send<Action>) async throws -> Void = { send in
-        defer {
-          // Clean up dynamic locks after operation completes (success or failure)
-          unlockToken()
-        }
-        try await operation(send)
-      }
-
-      return Effect<Action>.withLock(
-        priority: priority,
-        unlockOption: unlockOption,
-        handleCancellationErrors: handleCancellationErrors,
-        operation: wrappedOperation,
-        catch: handler,
-        lockFailure: wrappedLockFailure,
+      return Effect<Action>.lockAndExecute(
         action: lockAction,
         boundaryId: boundaryId,
+        unlockOption: unlockOption ?? lockAction.unlockOption,
         fileID: fileID,
         filePath: filePath,
         line: line,
-        column: column
-      )
+        column: column,
+        handler: wrappedLockFailure
+      ) { step3UnlockToken in
+        .run(
+          priority: priority,
+          operation: { send in
+            defer { step3UnlockToken() }  // Step 3 lock cleanup
+
+            // Wrap operation to ensure dynamic lock cleanup
+            let wrappedOperation: @Sendable (Send<Action>) async throws -> Void = { send in
+              defer { unlockToken() }  // Dynamic condition lock cleanup
+              try await operation(send)
+            }
+
+            do {
+              try await withTaskCancellation(id: boundaryId) {
+                try await wrappedOperation(send)
+              }
+            } catch {
+              // Error handling - both defers are already registered
+              if error is CancellationError {
+                let shouldHandle =
+                  handleCancellationErrors ?? LockmanManager.config.handleCancellationErrors
+                if shouldHandle {
+                  await handler?(error, send)
+                }
+              } else {
+                await handler?(error, send)
+              }
+            }
+          },
+          fileID: fileID,
+          filePath: filePath,
+          line: line,
+          column: column
+        )
+        .cancellable(id: boundaryId)
+      }
     } else {
-      // Manual unlock case
-      let operation =
-        operation as! @Sendable (Send<Action>, LockmanUnlock<B, A.I>) async throws -> Void
-      let handler =
-        handler as? @Sendable (any Error, Send<Action>, LockmanUnlock<B, A.I>) async -> Void
-
-      // Create wrapped operation that manages dynamic locks and provides manual unlock
-      let wrappedOperation: @Sendable (Send<Action>, LockmanUnlock<B, A.I>) async throws -> Void = {
-        send, unlock in
-        do {
-          try await operation(send, unlock)
-          // Clean up dynamic locks after successful operation
-          unlockToken()
-        } catch {
-          // Clean up dynamic locks on error
-          unlockToken()
-          throw error
-        }
-      }
-
-      return Effect<Action>.withLock(
-        priority: priority,
-        unlockOption: unlockOption,
-        handleCancellationErrors: handleCancellationErrors,
-        operation: wrappedOperation,
-        catch: handler,
-        lockFailure: wrappedLockFailure,
-        action: lockAction,
-        boundaryId: boundaryId,
-        fileID: fileID,
-        filePath: filePath,
-        line: line,
-        column: column
-      )
+      // Manual unlock case - No longer supported
+      // All locks are now automatically managed
+      assertionFailure("Manual unlock is no longer supported - all locks are automatically managed")
+      return .none
     }
   }
 
@@ -887,7 +879,7 @@ extension LockmanDynamicConditionReducer {
     // Capture the reducer-level condition to avoid type inference issues
     let reducerLevelCondition = self.lockCondition
 
-    return withLockStep1Step2(
+    return lockStep1Step2(
       state: state,
       action: action,
       lockAction: lockAction,
@@ -901,8 +893,8 @@ extension LockmanDynamicConditionReducer {
       line: line,
       column: column
     ) { unlockToken in
-      // Step 3: Traditional withLock using the specified strategy
-      return withLockStep3(
+      // Step 3: Traditional lock using the specified strategy
+      return lockStep3(
         priority: priority,
         unlockOption: unlockOption,
         handleCancellationErrors: handleCancellationErrors,
@@ -921,101 +913,4 @@ extension LockmanDynamicConditionReducer {
     }
   }
 
-  /// Creates an effect with manual unlock control and dynamic condition evaluation.
-  ///
-  /// This method provides explicit control over when locks are released, giving you
-  /// flexibility for complex scenarios where automatic unlock isn't sufficient.
-  ///
-  /// **Warning**: The caller MUST call `unlock()` in ALL code paths to avoid
-  /// permanent lock acquisition. Consider using the automatic version unless you
-  /// specifically need manual control.
-  ///
-  /// This method implements a multi-stage locking mechanism:
-  /// 1. Action-level condition (if specified in this call)
-  /// 2. Reducer-level condition (if specified at initialization)
-  /// 3. Traditional lock strategy (specified by lockAction)
-  ///
-  /// All conditions must pass for the operation to execute. Once passed, the final
-  /// unlock token is provided to the operation and error handlers.
-  ///
-  /// - Parameters:
-  ///   - state: Current state for condition evaluation
-  ///   - action: Current action for condition evaluation
-  ///   - priority: Task priority for the underlying `.run` effect (optional)
-  ///   - unlockOption: Controls when the unlock operation is executed
-  ///   - handleCancellationErrors: Whether to pass CancellationError to catch handler
-  ///   - operation: Async closure receiving `send` and `unlock` functions
-  ///   - handler: Optional error handler (`catch` parameter) receiving error, send, and unlock functions
-  ///   - lockFailure: Optional handler for lock acquisition failures (no unlock token)
-  ///   - lockAction: LockmanAction providing lock information and strategy type
-  ///   - boundaryId: Unique identifier for effect cancellation and lock boundary
-  ///   - lockCondition: Optional action-level condition that supplements the reducer-level condition
-  ///   - fileID: Source file identifier for debugging (auto-populated)
-  ///   - filePath: Source file path for debugging (auto-populated)
-  ///   - line: Source line number for debugging (auto-populated)
-  ///   - column: Source column number for debugging (auto-populated)
-  /// - Returns: Effect that executes with appropriate locking based on all conditions
-  public func lock<B: LockmanBoundaryId, A: LockmanAction>(
-    state: State,
-    action: Action,
-    priority: TaskPriority? = nil,
-    unlockOption: LockmanUnlockOption? = nil,
-    handleCancellationErrors: Bool? = nil,
-    operation: @escaping @Sendable (
-      _ send: Send<Action>, _ unlock: LockmanUnlock<B, A.I>
-    ) async throws -> Void,
-    catch handler: (
-      @Sendable (
-        _ error: any Error, _ send: Send<Action>,
-        _ unlock: LockmanUnlock<B, A.I>
-      ) async -> Void
-    )? = nil,
-    lockFailure: (
-      @Sendable (_ error: any Error, _ send: Send<Action>) async -> Void
-    )? = nil,
-    lockAction: A,
-    boundaryId: B,
-    lockCondition: (@Sendable (_ state: State, _ action: Action) -> LockmanResult)? = nil,
-    fileID: StaticString = #fileID,
-    filePath: StaticString = #filePath,
-    line: UInt = #line,
-    column: UInt = #column
-  ) -> Effect<Action> {
-    let actionId = lockAction.lockmanInfo.actionId
-    // Capture the reducer-level condition to avoid type inference issues
-    let reducerLevelCondition = self.lockCondition
-
-    return withLockStep1Step2(
-      state: state,
-      action: action,
-      lockAction: lockAction,
-      actionId: actionId,
-      boundaryId: boundaryId,
-      lockCondition: lockCondition,
-      reducerCondition: reducerLevelCondition,
-      lockFailure: lockFailure,
-      fileID: fileID,
-      filePath: filePath,
-      line: line,
-      column: column
-    ) { unlockToken in
-      // Step 3: Traditional withLock using the specified strategy with manual unlock
-      return withLockStep3(
-        priority: priority,
-        unlockOption: unlockOption,
-        handleCancellationErrors: handleCancellationErrors,
-        action: lockAction,
-        boundaryId: boundaryId,
-        unlockToken: unlockToken,
-        lockFailure: lockFailure,
-        fileID: fileID,
-        filePath: filePath,
-        line: line,
-        column: column,
-        automaticUnlock: false,
-        operation: operation,
-        handler: handler
-      )
-    }
-  }
 }

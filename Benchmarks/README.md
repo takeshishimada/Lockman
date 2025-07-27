@@ -17,7 +17,7 @@ Comprehensive performance benchmarks of the Lockman library have been conducted,
 swift package benchmark
 
 # Run specific benchmark
-swift package benchmark --filter ".withLock SingleExecution"
+swift package benchmark --filter ".lock SingleExecution"
 
 # List available benchmarks
 swift package benchmark list

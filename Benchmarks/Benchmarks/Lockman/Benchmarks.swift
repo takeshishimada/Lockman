@@ -47,25 +47,25 @@ let benchmarks = { @Sendable in
     blackHole(store.send(.tap))
   }
 
-  Benchmark(".withLock SingleExecution") { @MainActor benchmark async in
+  Benchmark(".lock SingleExecution") { @MainActor benchmark async in
     let store = singleExecutionRootStore()
     benchmark.startMeasurement()
     blackHole(store.send(.tapWithLock))
   }
 
-  Benchmark(".withLock PriorityBased") { @MainActor benchmark async in
+  Benchmark(".lock PriorityBased") { @MainActor benchmark async in
     let store = priorityBasedRootStore()
     benchmark.startMeasurement()
     blackHole(store.send(.tapWithLock))
   }
 
-  Benchmark(".withLock CompositeStrategy") { @MainActor benchmark async in
+  Benchmark(".lock CompositeStrategy") { @MainActor benchmark async in
     let store = compositeStrategyRootStore()
     benchmark.startMeasurement()
     blackHole(store.send(.tapWithLock))
   }
 
-  Benchmark(".withLock DynamicCondition") { @MainActor benchmark async in
+  Benchmark(".lock DynamicCondition") { @MainActor benchmark async in
     let store = dynamicConditionRootStore()
     benchmark.startMeasurement()
     blackHole(store.send(.tapWithLock))
@@ -149,10 +149,10 @@ private struct SingleExecutionFeature {
         }
 
       case .tapWithLock:
-        return .withLock(
-          operation: { send in
-            await send(.increment)
-          },
+        return .run { send in
+          await send(.increment)
+        }
+        .lock(
           action: action,
           boundaryId: CancelID.userAction
         )
@@ -196,10 +196,10 @@ private struct PriorityBasedFeature {
         }
 
       case .tapWithLock:
-        return .withLock(
-          operation: { send in
-            await send(.increment)
-          },
+        return .run { send in
+          await send(.increment)
+        }
+        .lock(
           action: action,
           boundaryId: CancelID.userAction
         )
@@ -252,10 +252,10 @@ private struct CompositeStrategyFeature {
         }
 
       case .tapWithLock:
-        return .withLock(
-          operation: { send in
-            await send(.increment)
-          },
+        return .run { send in
+          await send(.increment)
+        }
+        .lock(
           action: action,
           boundaryId: CancelID.userAction
         )
@@ -296,10 +296,10 @@ private struct DynamicConditionFeature {
         }
 
       case .tapWithLock:
-        return .withLock(
-          operation: { send in
-            await send(.increment)
-          },
+        return .run { send in
+          await send(.increment)
+        }
+        .lock(
           action: action,
           boundaryId: CancelID.userAction
         )
@@ -355,10 +355,10 @@ private struct SingleExecutionBurstFeature {
         state.activeCount += 1
         let startTime = Date()
 
-        return .withLock(
-          operation: { send in
-            await send(.process(id: id, startTime: startTime))
-          },
+        return .run { send in
+          await send(.process(id: id, startTime: startTime))
+        }
+        .lock(
           action: action,
           boundaryId: CancelID.burst
         )
@@ -427,10 +427,10 @@ private struct PriorityBasedBurstFeature {
         state.activeCount += 1
         let startTime = Date()
 
-        return .withLock(
-          operation: { send in
-            await send(.process(id: id, startTime: startTime))
-          },
+        return .run { send in
+          await send(.process(id: id, startTime: startTime))
+        }
+        .lock(
           action: action,
           boundaryId: CancelID.burst
         )

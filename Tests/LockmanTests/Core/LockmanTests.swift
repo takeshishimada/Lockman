@@ -427,7 +427,7 @@ final class LockmanFacadeTests: XCTestCase {
 
 final class LockmanIntegrationTests: XCTestCase {
   func testIntegrationPotential() async throws {
-    // This test verifies that the container setup would work with Effect.withLock
+    // This test verifies that the container setup would work with Effect.lock
     let testContainer = LockmanStrategyContainer()
     try? testContainer.register(LockmanSingleExecutionStrategy.shared)
     try? testContainer.register(LockmanPriorityBasedStrategy.shared)
@@ -435,7 +435,7 @@ final class LockmanIntegrationTests: XCTestCase {
     try await LockmanManager.withTestContainer(testContainer) {
       let container = LockmanManager.container
 
-      // Should be able to resolve strategies that Effect.withLock would need
+      // Should be able to resolve strategies that Effect.lock would need
       let singleStrategy = try container.resolve(LockmanSingleExecutionStrategy.self)
       let priorityStrategy = try container.resolve(LockmanPriorityBasedStrategy.self)
 

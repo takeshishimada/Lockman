@@ -1,7 +1,7 @@
 /// TCA integration macros for Lockman framework.
 ///
 /// These macros are designed specifically for use with The Composable Architecture (TCA)
-/// and the `Effect.withLock()` extensions. They automatically generate the necessary
+/// and the `Effect.lock()` extensions. They automatically generate the necessary
 /// boilerplate code for different locking strategies.
 
 /// A macro that generates protocol conformance and required members for single execution locking behavior.
@@ -39,10 +39,10 @@
 ///     Reduce { state, action in
 ///       switch action {
 ///       case .login:
-///         return .withLock(
-///           operation: { send in
-///             // async work
-///           },
+///         return .run { send in
+///           // async work
+///         }
+///         .lock(
 ///           action: .login,
 ///           boundaryId: "login-operation"
 ///         )
@@ -88,10 +88,10 @@ public macro LockmanSingleExecution() =
 ///     Reduce { state, action in
 ///       switch action {
 ///       case .highPriorityTask:
-///         return .withLock(
-///           operation: { send in
-///             // async work
-///           },
+///         return .run { send in
+///           // async work
+///         }
+///         .lock(
 ///           action: .highPriorityTask,
 ///           boundaryId: "priority-task"
 ///         )
@@ -148,10 +148,10 @@ public macro LockmanPriorityBased() =
 ///     Reduce { state, action in
 ///       switch action {
 ///       case .navigate:
-///         return .withLock(
-///           operation: { send in
-///             // navigation logic
-///           },
+///         return .run { send in
+///           // navigation logic
+///         }
+///         .lock(
 ///           action: .navigate(to: destination),
 ///           boundaryId: "navigation"
 ///         )
@@ -196,10 +196,10 @@ public macro LockmanGroupCoordination() =
 ///     Reduce { state, action in
 ///       switch action {
 ///       case .criticalOperation:
-///         return .withLock(
-///           operation: { send in
-///             // critical work requiring both single execution and high priority
-///           },
+///         return .run { send in
+///           // critical work requiring both single execution and high priority
+///         }
+///         .lock(
 ///           action: .criticalOperation,
 ///           boundaryId: "critical-op"
 ///         )
@@ -325,10 +325,11 @@ public macro LockmanCompositeStrategy<
 ///             return userCount < 3 && existingInfos.count < state.concurrentLimit
 ///           })
 ///
-///           await withLock(lockInfo, strategy: .dynamicCondition) {
+///           return .run { send in
 ///             let data = try await api.fetchData(userId: userId)
 ///             await send(.dataFetched(data))
 ///           }
+///           .lock(action: lockInfo, boundaryId: CancelID.fetch)
 ///         }
 ///
 ///       case .processTask(let size):
@@ -339,9 +340,11 @@ public macro LockmanCompositeStrategy<
 ///             return existingInfos.count < maxConcurrent
 ///           })
 ///
-///           await withLock(lockInfo, strategy: .dynamicCondition) {
+///           return .run { send in
 ///             try await processTask(size: size)
 ///             await send(.taskCompleted)
+///           }
+///           .lock(action: lockInfo, boundaryId: CancelID.process)
 ///           }
 ///         }
 ///       }
@@ -421,12 +424,12 @@ public macro LockmanDynamicCondition() =
 ///     Reduce { state, action in
 ///       switch action {
 ///       case .fetchUserProfile(let userId):
-///         return .withLock(
-///           operation: { send in
-///             // Only 3 concurrent API requests allowed
-///             let profile = try await api.fetchProfile(userId)
-///             await send(.profileFetched(profile))
-///           },
+///         return .run { send in
+///           // Only 3 concurrent API requests allowed
+///           let profile = try await api.fetchProfile(userId)
+///           await send(.profileFetched(profile))
+///         }
+///         .lock(
 ///           action: .fetchUserProfile(userId),
 ///           boundaryId: "fetch-profile-\(userId)"
 ///         )

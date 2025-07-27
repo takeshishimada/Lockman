@@ -113,25 +113,24 @@ var body: some ReducerOf<Self> {
 }
 ```
 
-### Advanced Usage with withLock
+### Advanced Usage with Effect.lock
 
 For cases requiring fine-grained control:
 
 ```swift
 case .saveButtonTapped:
-    return .withLock(
-        operation: { send in
-            try await saveUserData()
-            await send(.saveCompleted)
-        },
-        catch handler: { error, send in
-            await send(.saveError(error.localizedDescription))
-        },
+    return .run { send in
+        try await saveUserData()
+        await send(.saveCompleted)
+    } catch: { error, send in
+        await send(.saveError(error.localizedDescription))
+    }
+    .lock(
+        action: action,
+        boundaryId: CancelID.userAction,
         lockFailure: { error, send in
             await send(.saveBusy("Save process is currently running"))
-        },
-        action: action,
-        boundaryId: CancelID.userAction
+        }
     )
 ```
 

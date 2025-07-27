@@ -213,11 +213,13 @@ final class EffectImmediateUnlockTests: XCTestCase {
         switch action {
         case .startLowPriority:
           state.lowPriorityRunning = true
-          return Effect<Action>.withLock(
-            operation: { send, _ in
-              try? await Task.sleep(nanoseconds: 100_000_000)  // 0.1 second
-              await send(.taskCompleted(.low))
-            },
+          return .run { send in
+            try? await Task.sleep(nanoseconds: 100_000_000)  // 0.1 second
+            await send(.taskCompleted(.low))
+          }
+          .lock(
+            action: TestPriorityBasedAction.lowPriority,
+            boundaryId: CancelID.lowPriorityTask,
             lockFailure: { error, send in
               if let cancellationError = error as? LockmanCancellationError,
                 let priorityError = cancellationError.reason as? LockmanPriorityBasedError,
@@ -225,29 +227,27 @@ final class EffectImmediateUnlockTests: XCTestCase {
               {
                 await send(.lockFailureOccurred(cancelledInfo.actionId))
               }
-            },
-            action: TestPriorityBasedAction.lowPriority,
-            boundaryId: CancelID.lowPriorityTask
+            }
           )
 
         case .startHighPriority:
           state.highPriorityRunning = true
-          return Effect<Action>.withLock(
-            operation: { send, _ in
-              try? await Task.sleep(nanoseconds: 50_000_000)  // 0.05 second
-              await send(.taskCompleted(.high))
-            },
+          return .run { send in
+            try? await Task.sleep(nanoseconds: 50_000_000)  // 0.05 second
+            await send(.taskCompleted(.high))
+          }
+          .lock(
             action: TestPriorityBasedAction.highPriority,
             boundaryId: CancelID.highPriorityTask
           )
 
         case .startAnotherHighPriority:
           state.anotherHighPriorityRunning = true
-          return Effect<Action>.withLock(
-            operation: { send, _ in
-              try? await Task.sleep(nanoseconds: 30_000_000)  // 0.03 second
-              await send(.taskCompleted(.anotherHigh))
-            },
+          return .run { send in
+            try? await Task.sleep(nanoseconds: 30_000_000)  // 0.03 second
+            await send(.taskCompleted(.anotherHigh))
+          }
+          .lock(
             action: TestPriorityBasedAction.anotherHighPriority,
             boundaryId: CancelID.anotherHighPriorityTask
           )

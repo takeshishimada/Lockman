@@ -8,16 +8,16 @@ import Foundation
 /// ## Usage Examples
 /// ```swift
 /// // Wait for screen transition animation (default)
-/// .withLock(unlockOption: .transition, ...)
+/// .lock(action: action, boundaryId: id, unlockOption: .transition)
 ///
 /// // Immediate unlock when no UI transition
-/// .withLock(unlockOption: .immediate, ...)
+/// .lock(action: action, boundaryId: id, unlockOption: .immediate)
 ///
 /// // Defer until next main run loop cycle
-/// .withLock(unlockOption: .mainRunLoop, ...)
+/// .lock(action: action, boundaryId: id, unlockOption: .mainRunLoop)
 ///
 /// // Delay unlock by specific time interval
-/// .withLock(unlockOption: .delayed(1.5), ...)
+/// .lock(action: action, boundaryId: id, unlockOption: .delayed(1.5))
 /// ```
 public enum LockmanUnlockOption: Sendable, Equatable {
   /// Unlock immediately when called (current behavior).

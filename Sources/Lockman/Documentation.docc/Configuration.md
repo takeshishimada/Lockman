@@ -6,7 +6,7 @@ Configure Lockman for your application's needs.
 
 LockmanManager provides configuration functionality to set Lockman's behavior throughout the application. These settings allow you to customize default lock release timing and error handling behavior.
 
-Once configured, settings apply application-wide and can be overridden at various levels: in individual [`withLock`](<doc:Lock>) calls, [`Effect.lock`](<doc:Lock>) method chains, or when configuring [`Reducer.lock`](<doc:Lock>).
+Once configured, settings apply application-wide and can be overridden at various levels: in [`Effect.lock`](<doc:Lock>) method chains or when configuring [`Reducer.lock`](<doc:Lock>).
 
 ## Configuration Options
 
@@ -26,7 +26,7 @@ LockmanManager.config.defaultUnlockOption = .immediate
 - **`.delayed(TimeInterval)`**: Release after the specified time interval
 
 **Priority order**:
-1. Explicitly specified in method call (`withLock`, `Effect.lock`, or `Reducer.lock`) (highest priority)
+1. Explicitly specified in method call (`Effect.lock` or `Reducer.lock`) (highest priority)
 2. Action's `unlockOption` property (if implementing `LockmanAction`)
 3. `LockmanManager.config.defaultUnlockOption` (lowest priority)
 
@@ -92,14 +92,14 @@ func applicationDidFinishLaunching() {
     unlockOption: .delayed(0.5) // Override for this effect
 )
 
-// Override in withLock
-.withLock(
-    unlockOption: .transition, // Override for fine control
-    operation: { send in
-        // Processing that requires transition timing
-    },
+// Override with manual unlock timing control
+.run { send in
+    // Processing that requires transition timing
+}
+.lock(
     action: action,
-    boundaryId: CancelID.feature
+    boundaryId: CancelID.feature,
+    unlockOption: .transition // Override for fine control
 )
 ```
 

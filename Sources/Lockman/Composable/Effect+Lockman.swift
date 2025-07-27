@@ -5,241 +5,16 @@ import ComposableArchitecture
 extension Effect {
   // MARK: - Public Lock Operations
 
-  /// Creates an Effect that automatically manages lock lifecycle without requiring manual unlock.
-  ///
-  /// Provides automatic lock management that ensures locks are always released regardless
-  /// of how the operation completes (normal, exception, cancellation, early return).
-  ///
-  /// ## Automatic Cancellation Management
-  /// This method automatically applies `.cancellable(id: boundaryId)` to the operation,
-  /// eliminating the need to manually specify cancellation IDs in `.run()` methods.
-  /// The cancellation scope follows the "Guaranteed Resource Cleanup" principle:
-  /// - **Operations are cancellable**: Business logic can be cancelled using the boundaryId
-  /// - **Resource cleanup is guaranteed**: Lock release always executes regardless of cancellation
-  ///
-  /// ## Example Usage
-  /// ```swift
-  /// // Before (manual cancellation ID):
-  /// return .run { send in
-  ///   await send(.completed)
-  /// }
-  /// .cancellable(id: boundaryId)  // Manual specification required
-  /// .lock(action: action, boundaryId: boundaryId)
-  ///
-  /// // After (automatic cancellation ID):
-  /// return .run { send in
-  ///   await send(.completed)
-  /// }
-  /// .lock(action: action, boundaryId: boundaryId)  // Automatic application
-  /// ```
-  ///
-  /// - Parameters:
-  ///   - priority: Task priority for the underlying `.run` effect (optional)
-  ///   - unlockOption: Controls when the unlock operation is executed (default: configuration value)
-  ///   - handleCancellationErrors: Whether to pass CancellationError to catch handler (default: global config)
-  ///   - operation: Async closure receiving `send` function for dispatching actions
-  ///   - handler: Optional error handler receiving error and send function
-  ///   - lockFailure: Optional handler for lock acquisition failures
-  ///   - action: LockmanAction providing lock information and strategy type
-  ///   - boundaryId: Unique identifier for effect cancellation and lock boundary
-  ///   - fileID: Source file ID for debugging (auto-populated)
-  ///   - filePath: Source file path for debugging (auto-populated)
-  ///   - line: Source line number for debugging (auto-populated)
-  ///   - column: Source column number for debugging (auto-populated)
-  /// - Returns: Effect that executes under lock protection, or `.none` if lock acquisition fails
-  ///
-  /// ## Error Handling
-  /// This method supports two types of error handlers:
-  /// - `catch handler`: For errors that occur during operation execution
-  /// - `lockFailure`: For lock acquisition failures
-  ///
-  /// Lock acquisition error types include:
-  /// - `LockmanSingleExecutionCancellationError`: Single execution conflicts
-  /// - `LockmanPriorityBasedCancellationError`: Priority-based preemption
-  /// - `LockmanPriorityBasedBlockedError`: Priority-based blocking
-  /// - `LockmanGroupCoordinationCancellationError`: Group coordination conflicts
-  /// - `LockmanConcurrencyLimitedCancellationError`: Concurrency limit reached
-  /// - User-defined errors from dynamic conditions
-  public static func withLock<B: LockmanBoundaryId, A: LockmanAction>(
-    priority: TaskPriority? = nil,
-    unlockOption: LockmanUnlockOption? = nil,
-    handleCancellationErrors: Bool? = nil,
-    operation: @escaping @Sendable (_ send: Send<Action>) async throws -> Void,
-    catch handler: (
-      @Sendable (_ error: any Error, _ send: Send<Action>) async -> Void
-    )? = nil,
-    lockFailure: (
-      @Sendable (_ error: any Error, _ send: Send<Action>) async -> Void
-    )? = nil,
-    action: A,
-    boundaryId: B,
-    fileID: StaticString = #fileID,
-    filePath: StaticString = #filePath,
-    line: UInt = #line,
-    column: UInt = #column
-  ) -> Self {
-    withLockCommon(
-      action: action,
-      boundaryId: boundaryId,
-      unlockOption: unlockOption ?? action.unlockOption,
-      fileID: fileID,
-      filePath: filePath,
-      line: line,
-      column: column,
-      handler: lockFailure
-    ) { unlockToken in
-      .run(
-        priority: priority,
-        operation: { send in
-          // Guaranteed Resource Cleanup: defer ensures unlock always executes
-          defer { unlockToken() }
-
-          do {
-            // Execute operation with cancellation support
-            try await withTaskCancellation(id: boundaryId) {
-              try await operation(send)
-            }
-          } catch {
-            // Handle cancellation and other errors
-            if error is CancellationError {
-              let shouldHandle =
-                handleCancellationErrors ?? LockmanManager.config.handleCancellationErrors
-              if shouldHandle {
-                await handler?(error, send)
-              }
-            } else {
-              // For non-cancellation errors, call the handler
-              await handler?(error, send)
-            }
-          }
-        },
-        fileID: fileID,
-        filePath: filePath,
-        line: line,
-        column: column
-      )
-      .cancellable(id: boundaryId)
-    }
-  }
-
-  /// Creates an Effect that provides manual unlock control through a callback.
-  ///
-  /// Gives explicit control over when the lock is released.
-  ///
-  /// **Warning**: The caller MUST call `unlock()` in ALL code paths to avoid
-  /// permanent lock acquisition.
-  ///
-  /// ## Automatic Cancellation Management
-  /// Like the automatic unlock variant, this method automatically applies
-  /// `.cancellable(id: boundaryId)` to the operation, eliminating the need
-  /// to manually specify cancellation IDs in `.run()` methods.
-  ///
-  /// ## Example Usage
-  /// ```swift
-  /// return .withLock(
-  ///   operation: { send, unlock in
-  ///     defer { unlock() }  // Manual unlock control
-  ///     await send(.completed)
-  ///   },
-  ///   action: action,
-  ///   boundaryId: boundaryId
-  /// )
-  /// // No need to add .cancellable(id: boundaryId) - applied automatically
-  /// ```
-  ///
-  /// - Parameters:
-  ///   - priority: Task priority for the underlying `.run` effect (optional)
-  ///   - unlockOption: Controls when the unlock operation is executed (default: configuration value)
-  ///   - handleCancellationErrors: Whether to pass CancellationError to catch handler (default: global config)
-  ///   - operation: Async closure receiving `send` and `unlock` functions
-  ///   - handler: Optional error handler receiving error, send, and unlock functions
-  ///   - lockFailure: Optional handler for lock acquisition failures
-  ///   - action: LockmanAction providing lock information and strategy type
-  ///   - boundaryId: Unique identifier for effect cancellation and lock boundary
-  ///   - fileID: Source file ID for debugging (auto-populated)
-  ///   - filePath: Source file path for debugging (auto-populated)
-  ///   - line: Source line number for debugging (auto-populated)
-  ///   - column: Source column number for debugging (auto-populated)
-  /// - Returns: Effect that executes under lock protection, or `.none` if lock acquisition fails
-  ///
-  /// ## Error Handling
-  /// This method supports two types of error handlers:
-  /// - `catch handler`: For errors that occur during operation execution (receives unlock token)
-  /// - `lockFailure`: For lock acquisition failures (no unlock token available)
-  public static func withLock<B: LockmanBoundaryId, A: LockmanAction>(
-    priority: TaskPriority? = nil,
-    unlockOption: LockmanUnlockOption? = nil,
-    handleCancellationErrors: Bool? = nil,
-    operation: @escaping @Sendable (
-      _ send: Send<Action>, _ unlock: LockmanUnlock<B, A.I>
-    ) async throws -> Void,
-    catch handler: (
-      @Sendable (
-        _ error: any Error, _ send: Send<Action>,
-        _ unlock: LockmanUnlock<B, A.I>
-      ) async -> Void
-    )? = nil,
-    lockFailure: (
-      @Sendable (_ error: any Error, _ send: Send<Action>) async -> Void
-    )? = nil,
-    action: A,
-    boundaryId: B,
-    fileID: StaticString = #fileID,
-    filePath: StaticString = #filePath,
-    line: UInt = #line,
-    column: UInt = #column
-  ) -> Self {
-    withLockCommon(
-      action: action,
-      boundaryId: boundaryId,
-      unlockOption: unlockOption ?? action.unlockOption,
-      fileID: fileID,
-      filePath: filePath,
-      line: line,
-      column: column,
-      handler: lockFailure
-    ) { unlockToken in
-      .run(
-        priority: priority,
-        operation: { send in
-          do {
-            // Execute operation with manual unlock control
-            try await withTaskCancellation(id: boundaryId) {
-              try await operation(send, unlockToken)
-            }
-          } catch {
-            // Handle cancellation and other errors with unlock token available
-            if error is CancellationError {
-              let shouldHandle =
-                handleCancellationErrors ?? LockmanManager.config.handleCancellationErrors
-              if shouldHandle {
-                await handler?(error, send, unlockToken)
-              }
-            } else {
-              // For non-cancellation errors, provide unlock token to handler
-              await handler?(error, send, unlockToken)
-            }
-          }
-        },
-        fileID: fileID,
-        filePath: filePath,
-        line: line,
-        column: column
-      )
-      .cancellable(id: boundaryId)
-    }
-  }
-
   /// Creates an Effect that executes multiple operations sequentially while holding a lock.
   ///
-  /// This overload of `withLock` allows multiple effects to be concatenated and executed
+  /// This method allows multiple effects to be concatenated and executed
   /// sequentially while maintaining the same lock throughout the entire sequence.
   ///
   /// ## Purpose
   /// - **Multi-step Operations**: Complex workflows requiring multiple async steps
   /// - **Transactional Behavior**: Ensuring atomicity across multiple operations
   /// - **Resource Coordination**: Maintaining exclusive access during complex state changes
-  /// - **Migration Scenarios**: Gradual transition from multiple effects to single withLock
+  /// - **Migration Scenarios**: Gradual transition from multiple effects to single concatenated operation
   ///
   /// ## Lock Lifecycle
   /// 1. Lock is acquired before the first effect starts
@@ -259,7 +34,7 @@ extension Effect {
   ///
   /// ## Example Usage
   /// ```swift
-  /// return .withLock(
+  /// return Effect.lock(
   ///   concatenating: [
   ///     .send(.stepOne),
   ///     .send(.stepTwo),
@@ -285,7 +60,7 @@ extension Effect {
   ///   - line: Source line number for debugging (auto-populated)
   ///   - column: Source column number for debugging (auto-populated)
   /// - Returns: Concatenated effect with automatic lock management, or `.none` if lock acquisition fails
-  public static func withLock<B: LockmanBoundaryId, A: LockmanAction>(
+  public static func lock<B: LockmanBoundaryId, A: LockmanAction>(
     concatenating operations: [Effect<Action>],
     priority: TaskPriority? = nil,
     unlockOption: LockmanUnlockOption? = nil,
@@ -394,7 +169,7 @@ extension Effect {
 extension Effect {
   /// Applies lock management to this effect using a method chain style.
   ///
-  /// This method provides an alternative API to `withLock` that works as a method chain.
+  /// This method provides a method chain style API for applying lock management to effects.
   /// The lock strategy is automatically obtained from the provided action.
   ///
   /// ## Automatic Cancellation Management
@@ -440,10 +215,10 @@ extension Effect {
     handleCancellationErrors: Bool? = nil,
     lockFailure: (@Sendable (_ error: any Error, _ send: Send<Action>) async -> Void)? = nil
   ) -> Effect<Action> {
-    // This is essentially a wrapper around withLock(concatenating:)
+    // This is essentially a wrapper around lock(concatenating:)
     // that provides a method chain style API
 
-    return Effect.withLock(
+    return Effect.lock(
       concatenating: [self],
       priority: nil,
       unlockOption: unlockOption,
@@ -461,7 +236,7 @@ extension Effect {
   /// Core logic that attempts to acquire a lock and builds the effect.
   ///
   /// ## Purpose
-  /// This internal method contains the common logic shared by all `withLock` variants:
+  /// This internal method contains the common logic shared by all lock variants:
   /// 1. Strategy resolution from the container
   /// 2. Lock information extraction from the action
   /// 3. Unlock token creation with unlock option configuration
@@ -493,7 +268,7 @@ extension Effect {
   ///   - fileID, filePath, line, column: Source location for error reporting
   ///   - effectBuilder: Closure that receives unlock token and returns built effect
   /// - Returns: Built effect, or `.none` if setup fails
-  static func withLockCommon<B: LockmanBoundaryId, A: LockmanAction>(
+  static func lockAndExecute<B: LockmanBoundaryId, A: LockmanAction>(
     action: A,
     boundaryId: B,
     unlockOption: LockmanUnlockOption,
@@ -695,7 +470,7 @@ extension Effect {
       switch error {
       case .strategyNotRegistered(let strategyType):
         reportIssue(
-          "Effect.withLock strategy '\(strategyType)' not registered. Register before use.",
+          "Effect.lock strategy '\(strategyType)' not registered. Register before use.",
           fileID: fileID,
           filePath: filePath,
           line: line,
@@ -704,7 +479,7 @@ extension Effect {
 
       case .strategyAlreadyRegistered(let strategyType):
         reportIssue(
-          "Effect.withLock strategy '\(strategyType)' already registered.",
+          "Effect.lock strategy '\(strategyType)' already registered.",
           fileID: fileID,
           filePath: filePath,
           line: line,

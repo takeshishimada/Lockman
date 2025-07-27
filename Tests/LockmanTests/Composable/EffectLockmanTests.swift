@@ -4,7 +4,7 @@ import XCTest
 
 @testable import Lockman
 
-// MARK: - Effect+withLock Tests
+// MARK: - Effect+Lock Tests
 
 final class EffectWithLockSingleExecutionStrategyTests: XCTestCase {
   // MARK: - Basic Functionality Tests
@@ -208,7 +208,7 @@ final class EffectWithLockSingleExecutionStrategyTests: XCTestCase {
 
   //  // MARK: - Error Handling Tests
   //
-  //  func testwithLock handles strategy not registered error() async throws {
+  //  func testLock handles strategy not registered error() async throws {
   //  func testWithLockHandlesStrategyNotRegisteredError() async {
   //    let emptyContainer = LockmanStrategyContainer()
   //
@@ -400,38 +400,6 @@ final class EffectConcatenateWithLockTests: XCTestCase {
   }
 }
 
-// MARK: - withLock with Manual Unlock Tests
-
-final class EffectWithLockManualUnlockTests: XCTestCase {
-  func testManualUnlockInOperation() async {
-    let container = LockmanStrategyContainer()
-    let strategy = LockmanSingleExecutionStrategy()
-    try? container.register(strategy)
-
-    await LockmanManager.withTestContainer(container) {
-      let store = await TestStore(
-        initialState: TestMultiIdFeature.State(count: 0)
-      ) {
-        TestMultiIdFeature()
-      }
-
-      // When: Action with manual unlock
-      await store.send(.actionWithId2)
-      await store.receive(.increment) {
-        $0.count = 1
-      }
-      await store.finish()
-
-      // Verify that subsequent actions can execute (manual unlock worked)
-      await store.send(.actionWithId2)
-      await store.receive(.increment) {
-        $0.count = 2
-      }
-      await store.finish()
-    }
-  }
-}
-
 // MARK: - Test Helper Feature
 
 @Reducer
@@ -487,7 +455,7 @@ private struct TestConcatenateWithLockFeature {
     Reduce<State, Action> { state, action in
       switch action {
       case .executeConcatenateWithLock:
-        return .withLock(
+        return Effect.lock(
           concatenating: [
             .send(.increment),
             .send(.increment),
@@ -498,7 +466,7 @@ private struct TestConcatenateWithLockFeature {
         )
 
       case .executeConcatenateWithLockWithFailure:
-        return .withLock(
+        return Effect.lock(
           concatenating: [
             .send(.operationFailed)
           ],
@@ -508,7 +476,7 @@ private struct TestConcatenateWithLockFeature {
         )
 
       case .executeConcatenateWithLockWithCancel:
-        return .withLock(
+        return Effect.lock(
           concatenating: [
             .send(.operationCanceled)
           ],
@@ -518,7 +486,7 @@ private struct TestConcatenateWithLockFeature {
         )
 
       case .executeConcatenateWithLockEmpty:
-        return .withLock(
+        return Effect.lock(
           concatenating: [],
           unlockOption: .immediate,
           action: action,
@@ -585,23 +553,23 @@ private struct TestSingleExecutionFeature {
     Reduce<State, Action> { state, action in
       switch action {
       case .tapIncrement:
-        return .withLock(
-          unlockOption: .immediate,
-          operation: { send in
-            await send(.increment)
-          },
+        return .run { send in
+          await send(.increment)
+        }
+        .lock(
           action: action,
-          boundaryId: CancelID.userAction
+          boundaryId: CancelID.userAction,
+          unlockOption: .immediate
         )
 
       case .tapDecrement:
-        return .withLock(
-          unlockOption: .immediate,
-          operation: { send in
-            await send(.decrement)
-          },
+        return .run { send in
+          await send(.decrement)
+        }
+        .lock(
           action: action,
-          boundaryId: CancelID.userAction
+          boundaryId: CancelID.userAction,
+          unlockOption: .immediate
         )
 
       case .increment:
@@ -655,24 +623,23 @@ private struct TestMultiIdFeature {
     Reduce<State, Action> { state, action in
       switch action {
       case .actionWithId1:
-        return .withLock(
-          unlockOption: .immediate,
-          operation: { send in
-            await send(.increment)
-          },
+        return .run { send in
+          await send(.increment)
+        }
+        .lock(
           action: action,
-          boundaryId: CancelID.id1
+          boundaryId: CancelID.id1,
+          unlockOption: .immediate
         )
 
       case .actionWithId2:
-        return .withLock(
-          unlockOption: .immediate,
-          operation: { send, unlock in
-            await send(.increment)
-            unlock()
-          },
+        return .run { send in
+          await send(.increment)
+        }
+        .lock(
           action: action,
-          boundaryId: CancelID.id2
+          boundaryId: CancelID.id2,
+          unlockOption: .immediate
         )
 
       case .increment:

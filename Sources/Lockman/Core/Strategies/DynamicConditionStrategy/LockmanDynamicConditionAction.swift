@@ -27,9 +27,11 @@ import Foundation
 ///     return .success
 /// }
 ///
-/// try await withLock(info, in: boundary) {
+/// // Use with Effect.lock() for TCA integration
+/// return .run { send in
 ///     // Execute
 /// }
+/// .lock(action: action, boundaryId: boundary)
 /// ```
 public protocol LockmanDynamicConditionAction: LockmanAction {
   /// The name of the action, typically the enum case name.

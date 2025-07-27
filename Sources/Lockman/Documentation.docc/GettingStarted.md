@@ -175,34 +175,33 @@ case .startProcessButtonTapped:
     )
 ```
 
-### Using withLock for Fine-Grained Control
+### Using Effect.run with Lock
 
-When you need more control over lock lifecycle or want to handle errors differently:
+When you need traditional Effect.run behavior with lock management:
 
 ```swift
 case .startProcessButtonTapped:
-    return .withLock(
-        operation: { send in
-            await send(.processStart)
-            // Simulate heavy processing
-            try await Task.sleep(nanoseconds: 3_000_000_000)
-            await send(.processCompleted)
-        },
-        catch handler: { error, send in
-            // Handle errors during operation
-            await send(.processError(error.localizedDescription))
-        },
+    return .run { send in
+        await send(.processStart)
+        // Simulate heavy processing
+        try await Task.sleep(nanoseconds: 3_000_000_000)
+        await send(.processCompleted)
+    } catch: { error, send in
+        // Handle errors during operation
+        await send(.processError(error.localizedDescription))
+    }
+    .lock(
+        action: action,
+        boundaryId: CancelID.userAction,
         lockFailure: { error, send in
             // When processing is already in progress
-            state.message = "Processing is already in progress"
-        },
-        action: action,
-        boundaryId: CancelID.userAction
+            await send(.internal(.updateMessage("Processing is already in progress")))
+        }
     )
 ```
 
 This approach provides:
-- Separate error handlers for operation errors and lock failures
-- Manual unlock control option
-- More detailed configuration options
+- Standard TCA error handling with catch
+- Separate lock failure handler
+- Clean method chain syntax
 

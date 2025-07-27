@@ -83,7 +83,7 @@ final class LockmanDynamicConditionReducerIntegrationTests: XCTestCase {
     let lockTracker = LockTracker()
 
     // Create reducer with both conditions
-    // Note: We need to create the reducer in a way that allows us to call withLock on it
+    // Note: We need to create the reducer in a way that allows us to call lock on it
     let baseReducer = LockmanDynamicConditionReducer<TestState, TestAction>(
       { state, action in
         switch action {
@@ -104,7 +104,7 @@ final class LockmanDynamicConditionReducerIntegrationTests: XCTestCase {
       }
     )
 
-    // Wrap in another reducer that uses withLock from the base reducer
+    // Wrap in another reducer that uses lock from the base reducer
     let reducer = Reduce<TestState, TestAction> { state, action in
       switch action {
       case .increment:
@@ -143,12 +143,12 @@ final class LockmanDynamicConditionReducerIntegrationTests: XCTestCase {
       reducer
     }
 
-    // Execute the action - this will trigger the withLock effect
+    // Execute the action - this will trigger the lock effect
     await store.send(.increment) {
       $0.count = 1
     }
 
-    // Receive the action from the withLock operation
+    // Receive the action from the lock operation
     await store.receive(.setLockAcquired(true)) {
       $0.lockAcquired = true
     }
@@ -290,188 +290,6 @@ final class LockmanDynamicConditionReducerIntegrationTests: XCTestCase {
     // Verify no locks were acquired
     let locks = dynamicStrategy.getCurrentLocks()[AnyLockmanBoundaryId(cancelID)] ?? []
     XCTAssertTrue(locks.isEmpty, "No locks should be acquired when condition fails")
-  }
-
-  // MARK: - Manual Unlock Tests
-
-  @MainActor
-  func testManualUnlockVersionProvidesUnlockToken() async {
-    // Track unlock execution
-    final class UnlockTracker: @unchecked Sendable {
-      var unlockTokenReceived = false
-      var unlockCalled = false
-    }
-    let tracker = UnlockTracker()
-
-    let reducer = LockmanDynamicConditionReducer<TestState, TestAction>(
-      { state, action in
-        switch action {
-        case .increment:
-          state.count += 1
-          // Test manual unlock version
-          let tempReducer = LockmanDynamicConditionReducer<TestState, TestAction>(
-            { _, _ in .none }
-          )
-          return tempReducer.lock(
-            state: state,
-            action: action,
-            operation: { send, unlock in
-              tracker.unlockTokenReceived = true
-              // Simulate some async work
-              try? await Task.sleep(nanoseconds: 50_000_000)  // 50ms
-              // Manually unlock
-              unlock()
-              tracker.unlockCalled = true
-              await send(.setLockAcquired(true))
-            },
-            lockAction: TestLockAction(),
-            boundaryId: TestLockAction().lockmanInfo.actionId
-          )
-        case .setLockAcquired(let value):
-          state.lockAcquired = value
-          return .none
-        default:
-          return .none
-        }
-      }
-    )
-
-    let store = TestStore(initialState: TestState()) {
-      reducer
-    }
-
-    await store.send(.increment) {
-      $0.count = 1
-    }
-
-    await store.receive(.setLockAcquired(true)) {
-      $0.lockAcquired = true
-    }
-
-    XCTAssertTrue(tracker.unlockTokenReceived, "Unlock token should be provided to operation")
-    XCTAssertTrue(tracker.unlockCalled, "Unlock should be called manually")
-  }
-
-  @MainActor
-  func testManualUnlockVersionWithErrorHandler() async {
-    final class ErrorTracker: @unchecked Sendable {
-      var errorHandlerCalled = false
-      var unlockTokenInHandler = false
-    }
-    let tracker = ErrorTracker()
-
-    struct TestError: Error {}
-
-    let reducer = LockmanDynamicConditionReducer<TestState, TestAction>(
-      { state, action in
-        switch action {
-        case .increment:
-          state.count += 1
-          // Test error handling with unlock token
-          let tempReducer = LockmanDynamicConditionReducer<TestState, TestAction>(
-            { _, _ in .none }
-          )
-          return tempReducer.lock(
-            state: state,
-            action: action,
-            operation: { send, unlock in
-              // Throw an error to trigger catch handler
-              throw TestError()
-            },
-            catch: { error, send, unlock in
-              tracker.errorHandlerCalled = true
-              tracker.unlockTokenInHandler = true
-              // Important: Must call unlock in error handler
-              unlock()
-            },
-            lockAction: TestLockAction(),
-            boundaryId: TestLockAction().lockmanInfo.actionId
-          )
-        default:
-          return .none
-        }
-      }
-    )
-
-    let store = TestStore(initialState: TestState()) {
-      reducer
-    }
-
-    await store.send(.increment) {
-      $0.count = 1
-    }
-
-    // Wait for error handler to complete
-    try? await Task.sleep(nanoseconds: 100_000_000)  // 100ms
-
-    XCTAssertTrue(tracker.errorHandlerCalled, "Error handler should be called")
-    XCTAssertTrue(tracker.unlockTokenInHandler, "Unlock token should be available in error handler")
-  }
-
-  @MainActor
-  func testManualUnlockWithDynamicConditions() async {
-    final class ConditionTracker: @unchecked Sendable {
-      var conditionEvaluated = false
-      var operationExecuted = false
-      var unlockExecuted = false
-    }
-    let tracker = ConditionTracker()
-
-    let reducer = LockmanDynamicConditionReducer<TestState, TestAction>(
-      { state, action in
-        switch action {
-        case .increment:
-          state.count += 1
-          // Test manual unlock with both reducer and action level conditions
-          let tempReducer = LockmanDynamicConditionReducer<TestState, TestAction>(
-            { _, _ in .none },
-            lockCondition: { _, _ in
-              tracker.conditionEvaluated = true
-              return .success
-            }
-          )
-          return tempReducer.lock(
-            state: state,
-            action: action,
-            operation: { send, unlock in
-              tracker.operationExecuted = true
-              // Manually control when to unlock
-              try? await Task.sleep(nanoseconds: 50_000_000)  // 50ms
-              unlock()
-              tracker.unlockExecuted = true
-              await send(.setLockAcquired(true))
-            },
-            lockAction: TestLockAction(),
-            boundaryId: TestLockAction().lockmanInfo.actionId,
-            lockCondition: { _, _ in
-              // Action-level condition
-              return .success
-            }
-          )
-        case .setLockAcquired(let value):
-          state.lockAcquired = value
-          return .none
-        default:
-          return .none
-        }
-      }
-    )
-
-    let store = TestStore(initialState: TestState()) {
-      reducer
-    }
-
-    await store.send(.increment) {
-      $0.count = 1
-    }
-
-    await store.receive(.setLockAcquired(true)) {
-      $0.lockAcquired = true
-    }
-
-    XCTAssertTrue(tracker.conditionEvaluated, "Reducer-level condition should be evaluated")
-    XCTAssertTrue(tracker.operationExecuted, "Operation should execute after conditions pass")
-    XCTAssertTrue(tracker.unlockExecuted, "Manual unlock should be executed")
   }
 
   // MARK: - Lock Cleanup Tests

@@ -41,7 +41,7 @@ extension LockmanPriorityBasedError: LocalizedError {
     case .higherPriorityExists(let requestedInfo, let existingInfo, _):
       return
         "Cannot acquire lock: Current priority \(existingInfo.priority) is higher than requested priority \(requestedInfo.priority)."
-    case .samePriorityConflict(let requestedInfo, let existingInfo, _):
+    case .samePriorityConflict(_, let existingInfo, _):
       return
         "Cannot acquire lock: Another action with priority \(existingInfo.priority) is already running with exclusive behavior."
     case .precedingActionCancelled(let cancelledInfo, _):
