@@ -247,7 +247,7 @@ extension LockmanDynamicConditionReducer {
     return executeStep3(unlockToken)
   }
 
-  /// Executes Step 3: Traditional lock with automatic unlock only
+  /// Executes Step 3: Traditional lock with automatic unlock
   @usableFromInline
   func lockStep3<B: LockmanBoundaryId, A: LockmanAction>(
     priority: TaskPriority?,
@@ -261,9 +261,8 @@ extension LockmanDynamicConditionReducer {
     filePath: StaticString,
     line: UInt,
     column: UInt,
-    automaticUnlock: Bool,
-    operation: Any,
-    handler: Any?
+    operation: @escaping @Sendable (_ send: Send<Action>) async throws -> Void,
+    handler: (@Sendable (_ error: any Error, _ send: Send<Action>) async -> Void)?
   ) -> Effect<Action> {
     // Wrap the lockFailure handler to clean up dynamic locks if step 3 fails
     let wrappedLockFailure: (@Sendable (_ error: any Error, _ send: Send<Action>) async -> Void) = {
@@ -279,61 +278,50 @@ extension LockmanDynamicConditionReducer {
 
     let lockAction = action
 
-    if automaticUnlock {
-      // Automatic unlock case
-      let operation = operation as! @Sendable (Send<Action>) async throws -> Void
-      let handler = handler as? @Sendable (any Error, Send<Action>) async -> Void
+    return Effect<Action>.buildLockEffect(
+      action: lockAction,
+      boundaryId: boundaryId,
+      unlockOption: unlockOption ?? lockAction.unlockOption,
+      fileID: fileID,
+      filePath: filePath,
+      line: line,
+      column: column,
+      handler: wrappedLockFailure
+    ) { step3UnlockToken in
+      .run(
+        priority: priority,
+        operation: { send in
+          defer { step3UnlockToken() }  // Step 3 lock cleanup
 
-      return Effect<Action>.buildLockEffect(
-        action: lockAction,
-        boundaryId: boundaryId,
-        unlockOption: unlockOption ?? lockAction.unlockOption,
+          // Wrap operation to ensure dynamic lock cleanup
+          let wrappedOperation: @Sendable (Send<Action>) async throws -> Void = { send in
+            defer { unlockToken() }  // Dynamic condition lock cleanup
+            try await operation(send)
+          }
+
+          do {
+            try await withTaskCancellation(id: boundaryId) {
+              try await wrappedOperation(send)
+            }
+          } catch {
+            // Error handling - both defers are already registered
+            if error is CancellationError {
+              let shouldHandle =
+                handleCancellationErrors ?? LockmanManager.config.handleCancellationErrors
+              if shouldHandle {
+                await handler?(error, send)
+              }
+            } else {
+              await handler?(error, send)
+            }
+          }
+        },
         fileID: fileID,
         filePath: filePath,
         line: line,
-        column: column,
-        handler: wrappedLockFailure
-      ) { step3UnlockToken in
-        .run(
-          priority: priority,
-          operation: { send in
-            defer { step3UnlockToken() }  // Step 3 lock cleanup
-
-            // Wrap operation to ensure dynamic lock cleanup
-            let wrappedOperation: @Sendable (Send<Action>) async throws -> Void = { send in
-              defer { unlockToken() }  // Dynamic condition lock cleanup
-              try await operation(send)
-            }
-
-            do {
-              try await withTaskCancellation(id: boundaryId) {
-                try await wrappedOperation(send)
-              }
-            } catch {
-              // Error handling - both defers are already registered
-              if error is CancellationError {
-                let shouldHandle =
-                  handleCancellationErrors ?? LockmanManager.config.handleCancellationErrors
-                if shouldHandle {
-                  await handler?(error, send)
-                }
-              } else {
-                await handler?(error, send)
-              }
-            }
-          },
-          fileID: fileID,
-          filePath: filePath,
-          line: line,
-          column: column
-        )
-        .cancellable(id: boundaryId)
-      }
-    } else {
-      // Manual unlock case - No longer supported
-      // All locks are now automatically managed
-      assertionFailure("Manual unlock is no longer supported - all locks are automatically managed")
-      return .none
+        column: column
+      )
+      .cancellable(id: boundaryId)
     }
   }
 
@@ -458,7 +446,6 @@ extension LockmanDynamicConditionReducer {
         filePath: filePath,
         line: line,
         column: column,
-        automaticUnlock: true,
         operation: operation,
         handler: handler
       )
