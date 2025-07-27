@@ -139,7 +139,7 @@ final class DeadlockPreventionTests: XCTestCase {
 
   // MARK: - Integration Tests
 
-  /// Tests integration with Effect.withLock to ensure deadlock prevention works
+  /// Tests integration with Effect.lock to ensure deadlock prevention works
   /// in real-world usage scenarios with the Composable Architecture.
   func testIntegrationWithEffectWithLock() async throws {
     let container = LockmanStrategyContainer()
@@ -376,7 +376,7 @@ private struct ComplexBoundaryId: LockmanBoundaryId {
 }
 
 /// Test reducer implementation for integration testing.
-/// Provides a minimal reducer that uses Lockman's withLock functionality.
+/// Provides a minimal reducer that uses Lockman's lock functionality.
 @Reducer
 private struct TestFeature {
   struct State: Equatable {}
@@ -410,14 +410,13 @@ private struct TestFeature {
     Reduce { _, action in
       switch action {
       case .testAction:
-        return Effect.withLock(
-          priority: nil,
-          unlockOption: .mainRunLoop,
-          operation: { send in
-            await send(.completed)
-          },
+        return .run(priority: nil) { send in
+          await send(.completed)
+        }
+        .lock(
           action: action,
-          boundaryId: CancelID.test
+          boundaryId: CancelID.test,
+          unlockOption: .mainRunLoop
         )
       case .completed:
         return .none

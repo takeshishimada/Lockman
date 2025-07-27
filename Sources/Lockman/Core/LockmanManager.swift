@@ -13,13 +13,13 @@ public enum LockmanManager {
   struct Configuration: Sendable {
     /// The default unlock option to use when not explicitly specified.
     ///
-    /// This value is used by all `withLock` methods
+    /// This value is used by all lock methods
     /// when the `unlockOption` parameter is not provided.
     ///
     /// Default value is `.immediate` for immediate unlock behavior.
     var defaultUnlockOption: LockmanUnlockOption = .immediate
 
-    /// Controls whether CancellationError should be passed to error handlers in withLock operations.
+    /// Controls whether CancellationError should be passed to error handlers in lock operations.
     ///
     /// When `true`, CancellationError is passed to the catch handler if provided.
     /// When `false`, CancellationError is silently ignored and not passed to handlers.
@@ -40,7 +40,7 @@ public enum LockmanManager {
   public enum config {
     /// The default unlock option to use when not explicitly specified.
     ///
-    /// This value is used by all `withLock` methods
+    /// This value is used by all lock methods
     /// when the `unlockOption` parameter is not provided.
     ///
     /// Default value is `.immediate` for immediate unlock behavior.
@@ -57,7 +57,7 @@ public enum LockmanManager {
       }
     }
 
-    /// Controls whether CancellationError should be passed to error handlers in withLock operations.
+    /// Controls whether CancellationError should be passed to error handlers in lock operations.
     ///
     /// When `true`, CancellationError is passed to the catch handler if provided.
     /// When `false`, CancellationError is silently ignored and not passed to handlers.

@@ -77,13 +77,13 @@ final class EffectLockmanErrorTests: XCTestCase {
 
       // XCTExpectFailure to handle the reportIssue call
       XCTExpectFailure(
-        "Effect.withLock strategy 'MockUnregisteredStrategy' not registered. Register before use."
+        "Effect.lock strategy 'MockUnregisteredStrategy' not registered. Register before use."
       ) {
         // This should return a valid effect but the operation should not execute
-        let effect = Effect<Never>.withLock(
-          operation: { _ in
-            operationExecuted.setValue(true)
-          },
+        let effect = Effect<Never>.run { _ in
+          operationExecuted.setValue(true)
+        }
+        .lock(
           action: action,
           boundaryId: cancelID
         )
@@ -109,10 +109,10 @@ final class EffectLockmanErrorTests: XCTestCase {
       let cancelID = "test-cancel-id"
 
       // This should create a valid effect since strategy is registered
-      let effect = Effect<Never>.withLock(
-        operation: { _ in
-          // This operation would execute in a real environment
-        },
+      let effect = Effect<Never>.run { _ in
+        // This operation would execute in a real environment
+      }
+      .lock(
         action: action,
         boundaryId: cancelID
       )
@@ -122,7 +122,7 @@ final class EffectLockmanErrorTests: XCTestCase {
     }
   }
 
-  func testWithLockManualUnlockHandlesUnregisteredStrategy() async {
+  func testWithLockHandlesUnregisteredStrategyWithOperation() async {
     let testContainer = LockmanStrategyContainer()
 
     await LockmanManager.withTestContainer(testContainer) {
@@ -131,13 +131,13 @@ final class EffectLockmanErrorTests: XCTestCase {
       let operationExecuted = LockIsolated(false)
       let unlockProvided = LockIsolated(false)
 
-      XCTExpectFailure("Effect.withLock strategy 'MockUnregisteredStrategy' not registered") {
-        let effect = Effect<Never>.withLock(
-          operation: { _, _ in
-            operationExecuted.setValue(true)
-            unlockProvided.setValue(true)
-            XCTFail("Operation should not execute with unregistered strategy")
-          },
+      XCTExpectFailure("Effect.lock strategy 'MockUnregisteredStrategy' not registered") {
+        let effect = Effect<Never>.run { _ in
+          operationExecuted.setValue(true)
+          unlockProvided.setValue(true)
+          XCTFail("Operation should not execute with unregistered strategy")
+        }
+        .lock(
           action: action,
           boundaryId: cancelID
         )
@@ -163,8 +163,8 @@ final class EffectLockmanErrorTests: XCTestCase {
         }
       ]
 
-      XCTExpectFailure("Effect.withLock strategy 'MockUnregisteredStrategy' not registered") {
-        let effect = Effect<Never>.withLock(
+      XCTExpectFailure("Effect.lock strategy 'MockUnregisteredStrategy' not registered") {
+        let effect = Effect<Never>.lock(
           concatenating: operations,
           action: action,
           boundaryId: cancelID
@@ -183,7 +183,7 @@ final class EffectLockmanErrorTests: XCTestCase {
 
     // This would typically call reportIssue in a real environment
     // For testing, we verify that the error handling path is reachable
-    XCTExpectFailure("Effect.withLock strategy 'MockUnregisteredStrategy' not registered") {
+    XCTExpectFailure("Effect.lock strategy 'MockUnregisteredStrategy' not registered") {
       Effect<Never>.handleError(
         error: error,
         fileID: #fileID,
@@ -200,8 +200,7 @@ final class EffectLockmanErrorTests: XCTestCase {
   func testHandleErrorProcessesStrategyAlreadyRegisteredCorrectly() {
     let error = LockmanRegistrationError.strategyAlreadyRegistered("LockmanSingleExecutionStrategy")
 
-    XCTExpectFailure("Effect.withLock strategy 'LockmanSingleExecutionStrategy' already registered")
-    {
+    XCTExpectFailure("Effect.lock strategy 'LockmanSingleExecutionStrategy' already registered") {
       Effect<Never>.handleError(
         error: error,
         fileID: #fileID,
@@ -243,14 +242,11 @@ final class EffectLockmanErrorTests: XCTestCase {
       let action = MockValidAction.testAction  // Requires LockmanSingleExecutionStrategy
       let cancelID = "integration-test"
 
-      XCTExpectFailure("Effect.withLock strategy 'LockmanSingleExecutionStrategy' not registered") {
-        let effect = Effect<Never>.withLock(
-          operation: { _ in
-            XCTFail("Should not execute due to missing strategy")
-          },
-          catch: { _, _ in
-            // Error handling would occur here in real usage
-          },
+      XCTExpectFailure("Effect.lock strategy 'LockmanSingleExecutionStrategy' not registered") {
+        let effect = Effect<Never>.run { _ in
+          XCTFail("Should not execute due to missing strategy")
+        }
+        .lock(
           action: action,
           boundaryId: cancelID
         )
@@ -270,11 +266,11 @@ final class EffectLockmanErrorTests: XCTestCase {
       ]
 
       for action in actions {
-        XCTExpectFailure("Effect.withLock strategy 'MockUnregisteredStrategy' not registered") {
-          let effect = Effect<Never>.withLock(
-            operation: { _ in
-              XCTFail("No operations should execute")
-            },
+        XCTExpectFailure("Effect.lock strategy 'MockUnregisteredStrategy' not registered") {
+          let effect = Effect<Never>.run { _ in
+            XCTFail("No operations should execute")
+          }
+          .lock(
             action: action,
             boundaryId: "multi-error-test"
           )
@@ -295,11 +291,11 @@ final class EffectLockmanErrorTests: XCTestCase {
       let action = MockValidAction.testAction
       let cancelID = "recovery-test-1"
 
-      XCTExpectFailure("Effect.withLock strategy 'LockmanSingleExecutionStrategy' not registered") {
-        let effect1 = Effect<Never>.withLock(
-          operation: { _ in
-            XCTFail("Should fail without registration")
-          },
+      XCTExpectFailure("Effect.lock strategy 'LockmanSingleExecutionStrategy' not registered") {
+        let effect1 = Effect<Never>.run { _ in
+          XCTFail("Should fail without registration")
+        }
+        .lock(
           action: action,
           boundaryId: cancelID
         )
@@ -316,10 +312,10 @@ final class EffectLockmanErrorTests: XCTestCase {
       let action = MockValidAction.testAction
       let cancelID = "recovery-test-2"
 
-      let effect2 = Effect<Never>.withLock(
-        operation: { _ in
-          // This would execute successfully in real environment
-        },
+      let effect2 = Effect<Never>.run { _ in
+        // This would execute successfully in real environment
+      }
+      .lock(
         action: action,
         boundaryId: cancelID
       )
@@ -334,7 +330,7 @@ final class EffectLockmanErrorTests: XCTestCase {
     let originalError = LockmanRegistrationError.strategyNotRegistered("DetailedStrategyName")
 
     // Verify error information is preserved through handleError
-    XCTExpectFailure("Effect.withLock strategy 'DetailedStrategyName' not registered") {
+    XCTExpectFailure("Effect.lock strategy 'DetailedStrategyName' not registered") {
       Effect<Never>.handleError(
         error: originalError,
         fileID: #fileID,
@@ -362,7 +358,7 @@ final class EffectLockmanErrorTests: XCTestCase {
     let testColumn: UInt = 10
 
     // Verify that source location parameters are accepted
-    XCTExpectFailure("Effect.withLock strategy 'TestStrategy' already registered") {
+    XCTExpectFailure("Effect.lock strategy 'TestStrategy' already registered") {
       Effect<Never>.handleError(
         error: error,
         fileID: testFileID,
@@ -390,7 +386,7 @@ final class EffectLockmanErrorTests: XCTestCase {
 
     let error = LockmanRegistrationError.strategyNotRegistered("")
 
-    XCTExpectFailure("Effect.withLock strategy '' not registered") {
+    XCTExpectFailure("Effect.lock strategy '' not registered") {
       Effect<Never>.handleError(
         error: error,
         fileID: #fileID,
@@ -415,7 +411,7 @@ final class EffectLockmanErrorTests: XCTestCase {
 
     let error = LockmanRegistrationError.strategyNotRegistered("UnicodeStrategy🌟")
 
-    XCTExpectFailure("Effect.withLock strategy 'UnicodeStrategy🌟' not registered") {
+    XCTExpectFailure("Effect.lock strategy 'UnicodeStrategy🌟' not registered") {
       Effect<Never>.handleError(
         error: error,
         fileID: #fileID,

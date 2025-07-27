@@ -10,7 +10,7 @@ Unlocking in Lockman is a mechanism for properly releasing acquired locks. It en
 
 ### Automatic Release
 
-When using [Reducer.lock](<doc:Lock>), [Effect.lock](<doc:Lock>), or the auto-release version of [withLock](<doc:Lock>), locks are automatically released at the following timings:
+When using [Reducer.lock](<doc:Lock>) or [Effect.lock](<doc:Lock>), locks are automatically released at the following timings:
 
 - **On normal completion**: When processing completes normally
 - **On exception**: When an error occurs
@@ -21,17 +21,9 @@ Automatic release is implemented using defer blocks, ensuring that locks are rel
 
 ### Manual Release
 
-Manual release is only available in the manual release version of [withLock](<doc:Lock>). When using [Reducer.lock](<doc:Lock>) or [Effect.lock](<doc:Lock>), locks are always automatically managed.
+Manual release functionality has been removed in Lockman v1.3.0. All locks are now automatically managed when using [Reducer.lock](<doc:Lock>) or [Effect.lock](<doc:Lock>).
 
-**Important constraints:**
-- You must call unlock() in all code paths
-- Forgetting to call unlock() causes permanent lock acquisition state
-- Proper release is necessary even in conditional branches and error handling
-
-**Unlock object characteristics:**
-- Conforms to the Sendable protocol, allowing it to be passed when calling other actions
-- Designed for use across multiple screens and actions
-- Enables shared lock state and coordinated release between actions
+For cases where you need fine-grained control over lock timing, use the `unlockOption` parameter to control when the automatic unlock occurs.
 
 ### Release Options
 
@@ -92,69 +84,4 @@ return .run { send in
 )
 ```
 
-### Auto-release with withLock
-
-```swift
-.withLock(
-  operation: { send in
-    // Execute processing
-    try await someAsyncWork()
-    await send(.completed)
-    // Lock is automatically released here
-  },
-  catch handler: { error, send in
-    // Automatically released after error handling
-    await send(.failed(error))
-  },
-  action: action,
-  boundaryId: CancelID.feature
-)
-```
-
-### Manual Release Usage Example
-
-Basic usage example:
-
-```swift
-.withLock(
-  operation: { send, unlock in
-    try await firstOperation()
-    
-    if shouldEarlyReturn {
-      unlock() // Early release
-      return
-    }
-    
-    try await secondOperation()
-    unlock() // Required: Final release
-  },
-  catch handler: { error, send, unlock in
-    // Error handling
-    unlock() // Release on error too
-    send(.failed(error))
-  },
-  action: action,
-  boundaryId: cancelID
-)
-```
-
-Example of release in another screen's delegate:
-
-```swift
-.withLock(
-  operation: { send, unlock in
-    // Pass unlock object to another screen and transition
-    send(.delegate(unlock: unlock))
-  },
-  action: action,
-  boundaryId: cancelID
-)
-
-// Receive and release on the delegate side
-case .modal(.delegate(let unlock)):
-  return .run { send in
-    // Release after modal processing completion
-    unlock()
-  }
-```
 

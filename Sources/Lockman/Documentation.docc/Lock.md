@@ -119,69 +119,15 @@ return .run { send in
 
 **Features:**
 - Method chain style for natural TCA integration
-- Internally uses `withLock(concatenating:)`
-- Same lock management guarantees as `withLock`
+- Internally uses `lock(concatenating:)`
+- Same lock management guarantees
 
-### withLock (Auto-release Version)
-
-The most basic and recommended usage. Automatically manages lock acquisition and release.
-
-```swift
-.withLock(
-  priority: .userInitiated, // Optional: Task priority
-  unlockOption: .immediate, // Optional: Lock release timing
-  operation: { send in /* Processing */ },
-  catch handler: { error, send in /* Error handling */ }, // Optional
-  lockFailure: { error, send in /* Lock acquisition failure handling */ }, // Optional
-  action: action,
-  boundaryId: cancelID
-)
-```
-
-**Parameters:**
-- `priority`: Task priority (optional)
-- `unlockOption`: Lock release timing (optional, uses priority order: withLock parameter > action's unlockOption > config default)
-- `handleCancellationErrors`: Handling of cancellation errors (optional, default is configured value)
-- `operation`: Processing to execute under exclusive control
-- `catch handler`: Error handler (optional)
-- `lockFailure`: Handler for lock acquisition failure (optional)
-- `action`: Current action
-- `cancelID`: Effect cancellation identifier
-
-**Features:**
-- Automatic lock management
-- Reliable lock release on normal completion, exception, or cancellation
-- Error handling capability
-
-### withLock (Manual Release Version)
-
-Used when you want to manually control the lock release timing. Parameters are the same as the auto-release version, but an unlock parameter is added to `operation` and `catch handler`.
-
-```swift
-.withLock(
-  operation: { send, unlock in 
-    /* Processing */
-    unlock() // Manual release
-  },
-  catch handler: { error, send, unlock in 
-    unlock() // Release on error too
-  },
-  action: action,
-  boundaryId: cancelID
-)
-```
-
-**Features:**
-- Explicit lock release control
-- Finer control possible
-- **Important**: You must call unlock() in all code paths (see [Unlock](<doc:Unlock>) page for details)
-
-### withLock(concatenating:)
+### lock(concatenating:)
 
 Maintains the same lock while executing multiple Effects sequentially.
 
 ```swift
-.withLock(
+.lock(
   concatenating: [
     .run { send in /* Processing 1 */ },
     .run { send in /* Processing 2 */ },
@@ -206,9 +152,8 @@ When determining the unlock timing, Lockman follows this priority order:
 
 1. **Explicitly specified in method call** (highest priority)
    ```swift
-   .withLock(
+   .lock(
      unlockOption: .transition, // This takes precedence
-     operation: { send in /* ... */ },
      action: action,
      boundaryId: cancelID
    )

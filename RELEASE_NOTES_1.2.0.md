@@ -33,15 +33,15 @@ return .run { send in
 
 ### Improved Cancellation Scope Management
 - **Precise cancellation control**: Only business operations are cancellable, not resource cleanup
-- **Safer concatenated operations**: Enhanced `Effect.withLock(concatenating:)` with proper cancellation scope
-- **Consistent error handling**: Improved error handling patterns across all withLock variants
+- **Safer concatenated operations**: Enhanced `Effect.lock(concatenating:)` with proper cancellation scope
+- **Consistent error handling**: Improved error handling patterns across all lock variants
 
 ## 📚 Comprehensive Documentation
 
 ### Enhanced API Documentation
 - **Before/after examples**: Clear migration guidance showing manual vs automatic cancellation
 - **Design principles**: Detailed explanation of "Guaranteed Resource Cleanup" principle
-- **Usage patterns**: Comprehensive examples for all Effect.withLock variants
+- **Usage patterns**: Comprehensive examples for all Effect.lock variants
 - **Method chaining examples**: Demonstrations of clean, chain-style API usage
 
 ## 🧪 Robust Testing

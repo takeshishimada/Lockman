@@ -141,31 +141,6 @@ final class EffectAutomaticCancellationTests: XCTestCase {
     }
   }
 
-  func testManualUnlockStillWorksWithAutomaticCancellation() async {
-    let container = LockmanStrategyContainer()
-    let strategy = LockmanSingleExecutionStrategy()
-    try? container.register(strategy)
-
-    await LockmanManager.withTestContainer(container) {
-      let store = await TestStore(
-        initialState: AutoCancellationTestFeature.State()
-      ) {
-        AutoCancellationTestFeature()
-      }
-
-      await store.send(.startOperation) {
-        $0.isRunning = true
-      }
-
-      await store.receive(\.operationCompleted) {
-        $0.isRunning = false
-        $0.completedCount = 1
-      }
-
-      await store.finish()
-    }
-  }
-
   func testConcatenatingOperationsWithAutomaticCancellation() async {
     let container = LockmanStrategyContainer()
     let strategy = LockmanSingleExecutionStrategy()
