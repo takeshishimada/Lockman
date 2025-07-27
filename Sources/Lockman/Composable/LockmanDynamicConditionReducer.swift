@@ -284,7 +284,7 @@ extension LockmanDynamicConditionReducer {
       let operation = operation as! @Sendable (Send<Action>) async throws -> Void
       let handler = handler as? @Sendable (any Error, Send<Action>) async -> Void
 
-      return Effect<Action>.lockAndExecute(
+      return Effect<Action>.buildLockEffect(
         action: lockAction,
         boundaryId: boundaryId,
         unlockOption: unlockOption ?? lockAction.unlockOption,
@@ -359,7 +359,7 @@ extension LockmanDynamicConditionReducer {
     )
 
     // Check condition and acquire lock if successful
-    let result = Effect<Action>.lock(
+    let result = Effect<Action>.acquireLock(
       lockmanInfo: dynamicInfo,
       strategy: strategy,
       boundaryId: boundaryId
