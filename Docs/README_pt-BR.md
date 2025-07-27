@@ -166,13 +166,14 @@ O modificador `Reducer.lock` aplica automaticamente o gerenciamento de bloqueio 
 A documentação para lançamentos e `main` estão disponíveis aqui:
 
 * [`main`](https://takeshishimada.github.io/Lockman/main/documentation/lockman/)
+* [1.3.0](https://takeshishimada.github.io/Lockman/1.3.0/documentation/lockman/) ([guia de migração](https://takeshishimada.github.io/Lockman/1.3.0/documentation/lockman/migratingto1.3))
 * [1.2.0](https://takeshishimada.github.io/Lockman/1.2.0/documentation/lockman/) ([guia de migração](https://takeshishimada.github.io/Lockman/1.2.0/documentation/lockman/migratingto1.2))
 * [1.1.0](https://takeshishimada.github.io/Lockman/1.1.0/documentation/lockman/) ([guia de migração](https://takeshishimada.github.io/Lockman/1.1.0/documentation/lockman/migratingto1.1))
-* [1.0.0](https://takeshishimada.github.io/Lockman/1.0.0/documentation/lockman/) ([guia de migração](https://takeshishimada.github.io/Lockman/1.0.0/documentation/lockman/migratingto1.0))
 
 <details>
 <summary>Outras versões</summary>
 
+* [1.0.0](https://takeshishimada.github.io/Lockman/1.0.0/documentation/lockman/) ([guia de migração](https://takeshishimada.github.io/Lockman/1.0.0/documentation/lockman/migratingto1.0))
 * [0.13.0](https://takeshishimada.github.io/Lockman/0.13.0/documentation/lockman/)
 * [0.12.0](https://takeshishimada.github.io/Lockman/0.12.0/documentation/lockman/)
 * [0.11.0](https://takeshishimada.github.io/Lockman/0.11.0/documentation/lockman/)
@@ -227,7 +228,7 @@ Adicione a dependência ao seu arquivo Package.swift:
 
 ```swift
 dependencies: [
-  .package(url: "https://github.com/takeshishimada/Lockman", from: "1.2.0")
+  .package(url: "https://github.com/takeshishimada/Lockman", from: "1.3.0")
 ]
 ```
 
@@ -255,6 +256,7 @@ Adicione a dependência ao seu alvo:
 
 | Lockman | The Composable Architecture |
 |---------|----------------------------|
+| 1.3.0   | 1.20.2                     |
 | 1.2.0   | 1.20.2                     |
 | 1.1.0   | 1.20.2                     |
 | 1.0.0   | 1.20.2                     |

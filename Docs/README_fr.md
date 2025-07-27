@@ -166,13 +166,14 @@ Le modificateur `Reducer.lock` applique automatiquement la gestion des verrous a
 La documentation pour les versions publiées et `main` est disponible ici :
 
 * [`main`](https://takeshishimada.github.io/Lockman/main/documentation/lockman/)
+* [1.3.0](https://takeshishimada.github.io/Lockman/1.3.0/documentation/lockman/) ([guide de migration](https://takeshishimada.github.io/Lockman/1.3.0/documentation/lockman/migratingto1.3))
 * [1.2.0](https://takeshishimada.github.io/Lockman/1.2.0/documentation/lockman/) ([guide de migration](https://takeshishimada.github.io/Lockman/1.2.0/documentation/lockman/migratingto1.2))
 * [1.1.0](https://takeshishimada.github.io/Lockman/1.1.0/documentation/lockman/) ([guide de migration](https://takeshishimada.github.io/Lockman/1.1.0/documentation/lockman/migratingto1.1))
-* [1.0.0](https://takeshishimada.github.io/Lockman/1.0.0/documentation/lockman/) ([guide de migration](https://takeshishimada.github.io/Lockman/1.0.0/documentation/lockman/migratingto1.0))
 
 <details>
 <summary>Autres versions</summary>
 
+* [1.0.0](https://takeshishimada.github.io/Lockman/1.0.0/documentation/lockman/) ([guide de migration](https://takeshishimada.github.io/Lockman/1.0.0/documentation/lockman/migratingto1.0))
 * [0.13.0](https://takeshishimada.github.io/Lockman/0.13.0/documentation/lockman/)
 * [0.12.0](https://takeshishimada.github.io/Lockman/0.12.0/documentation/lockman/)
 * [0.11.0](https://takeshishimada.github.io/Lockman/0.11.0/documentation/lockman/)
@@ -227,7 +228,7 @@ Ajoutez la dépendance à votre fichier Package.swift :
 
 ```swift
 dependencies: [
-  .package(url: "https://github.com/takeshishimada/Lockman", from: "1.2.0")
+  .package(url: "https://github.com/takeshishimada/Lockman", from: "1.3.0")
 ]
 ```
 
@@ -255,6 +256,7 @@ Ajoutez la dépendance à votre cible :
 
 | Lockman | The Composable Architecture |
 |---------|----------------------------|
+| 1.3.0   | 1.20.2                     |
 | 1.2.0   | 1.20.2                     |
 | 1.1.0   | 1.20.2                     |
 | 1.0.0   | 1.20.2                     |
