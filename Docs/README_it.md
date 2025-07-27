@@ -4,7 +4,6 @@
 [![Swift](https://img.shields.io/badge/Swift-5.9%20%7C%205.10%20%7C%206.0-ED523F.svg?style=flat)](https://swift.org/download/)
 [![Platforms](https://img.shields.io/badge/Platforms-iOS%20%7C%20macOS%20%7C%20tvOS%20%7C%20watchOS%20%7C%20Mac%20Catalyst-333333.svg?style=flat)](https://developer.apple.com/)
 
-[English](../README.md) | [日本語](README_ja.md) | [简体中文](README_zh-CN.md) | [繁體中文](README_zh-TW.md) | [Español](README_es.md) | [Français](README_fr.md) | [Deutsch](README_de.md) | [한국어](README_ko.md) | [Português](README_pt-BR.md) | [Italiano](README_it.md)
 
 Lockman è una libreria Swift che risolve i problemi di controllo esclusivo delle azioni nelle applicazioni The Composable Architecture (TCA), con reattività, trasparenza e design dichiarativo in mente.
 
@@ -285,6 +284,21 @@ Aggiungi la dipendenza al tuo target:
 | 0.1.0   | 1.17.1                     |
 
 </details>
+
+## Translations
+
+This documentation is also available in other languages:
+
+- [English](../README.md)
+- [日本語 (Japanese)](README_ja.md)
+- [简体中文 (Simplified Chinese)](README_zh-CN.md)
+- [繁體中文 (Traditional Chinese)](README_zh-TW.md)
+- [Español (Spanish)](README_es.md)
+- [Français (French)](README_fr.md)
+- [Deutsch (German)](README_de.md)
+- [한국어 (Korean)](README_ko.md)
+- [Português (Portuguese)](README_pt-BR.md)
+- [Italiano (Italian)](README_it.md)
 
 ## Comunità
 
