@@ -114,7 +114,7 @@ public struct LockmanDynamicConditionReducer<State: Sendable, Action: Sendable>:
     self._lockCondition = lockCondition
   }
 
-  /// Initializes with an existing Reduce instance.
+  /// Initializes the reducer with an existing Reduce instance.
   ///
   /// - Parameters:
   ///   - base: An existing Reduce instance.

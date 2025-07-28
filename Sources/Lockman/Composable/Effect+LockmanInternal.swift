@@ -176,7 +176,10 @@ extension Effect {
   ///   - action: LockmanAction providing lock information and strategy type
   ///   - boundaryId: Unique identifier for cancellation and lock boundary
   ///   - unlockOption: Unlock option configuration for when to execute the unlock
-  ///   - fileID, filePath, line, column: Source location for error reporting
+  ///   - fileID: Source file ID for error reporting
+  ///   - filePath: Source file path for error reporting
+  ///   - line: Source line number for error reporting
+  ///   - column: Source column number for error reporting
   ///   - handler: Optional error handler for lock acquisition failures
   ///   - effectBuilder: Closure that receives unlock token and returns built effect
   /// - Returns: Built effect, or `.none` if setup fails

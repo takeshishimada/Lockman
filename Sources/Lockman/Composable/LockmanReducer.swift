@@ -5,7 +5,7 @@ import Foundation
 /// A reducer wrapper that applies Lockman locking to effects produced by actions conforming to `LockmanAction`.
 ///
 /// `LockmanReducer` intercepts effects from the base reducer and automatically applies
-/// locking behavior to actions that implement the `LockmanAction` protocol. Actions that
+/// locking behavior to actions that conform to a `LockmanAction` protocol. Actions that
 /// don't conform to `LockmanAction` pass through unchanged.
 ///
 /// ## Example
@@ -14,7 +14,7 @@ import Foundation
 /// struct Feature {
 ///   struct State: Equatable { }
 ///
-///   enum Action: LockmanAction {
+///   enum Action: LockmanSingleExecutionAction {
 ///     case fetch
 ///     case fetchResponse(Result<Data, Error>)
 ///
