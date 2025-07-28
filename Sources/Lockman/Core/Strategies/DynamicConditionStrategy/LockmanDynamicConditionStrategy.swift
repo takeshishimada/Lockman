@@ -65,9 +65,10 @@ public final class LockmanDynamicConditionStrategy: LockmanStrategy, @unchecked 
   /// business logic defined at runtime.
   ///
   /// - Parameters:
-  ///   - boundaryId: The boundary identifier
-  ///   - info: The lock information containing the dynamic condition
-  /// - Returns: The result from evaluating the dynamic condition
+  ///   - boundaryId: A unique boundary identifier conforming to `LockmanBoundaryId`
+  ///   - info: Dynamic condition lock information containing the condition closure to evaluate
+  /// - Returns: `.success` if the condition allows the lock, `.cancel` if the condition fails,
+  ///   or `.successWithPrecedingCancellation` if the condition succeeds with prior cancellations
   public func canLock<B: LockmanBoundaryId>(
     boundaryId: B,
     info: LockmanDynamicConditionInfo
@@ -92,11 +93,14 @@ public final class LockmanDynamicConditionStrategy: LockmanStrategy, @unchecked 
     return result
   }
 
-  /// Acquires a lock for the specified boundary and action.
+  /// Acquires a lock by registering it in the dynamic condition tracking state.
+  ///
+  /// This method should only be called after `canLock` returns a success result.
+  /// The lock will be tracked using the actionId as the key.
   ///
   /// - Parameters:
-  ///   - boundaryId: The boundary identifier
-  ///   - info: The lock information to register
+  ///   - boundaryId: A unique boundary identifier conforming to `LockmanBoundaryId`
+  ///   - info: Dynamic condition lock information to register in the tracking state
   public func lock<B: LockmanBoundaryId>(
     boundaryId: B,
     info: LockmanDynamicConditionInfo
@@ -111,8 +115,8 @@ public final class LockmanDynamicConditionStrategy: LockmanStrategy, @unchecked 
   /// actionId exist (e.g., from LockmanDynamicConditionReducer's multi-step locking).
   ///
   /// - Parameters:
-  ///   - boundaryId: The boundary identifier
-  ///   - info: The lock information containing the actionId to remove
+  ///   - boundaryId: A unique boundary identifier conforming to `LockmanBoundaryId`
+  ///   - info: Dynamic condition lock information containing the actionId to remove
   public func unlock<B: LockmanBoundaryId>(
     boundaryId: B,
     info: LockmanDynamicConditionInfo
@@ -121,24 +125,24 @@ public final class LockmanDynamicConditionStrategy: LockmanStrategy, @unchecked 
     state.removeAll(id: boundaryId, key: info.actionId)
   }
 
-  /// Removes all active locks across all boundaries.
+  /// Removes all active locks across all boundaries and action groups.
   public func cleanUp() {
     state.removeAll()
   }
 
-  /// Removes all active locks for the specified boundary.
+  /// Removes all active locks for the specified boundary across all action groups.
   ///
-  /// - Parameter boundaryId: The boundary identifier whose locks should be removed
+  /// - Parameter boundaryId: A unique boundary identifier conforming to `LockmanBoundaryId`
   public func cleanUp<B: LockmanBoundaryId>(boundaryId: B) {
     state.removeAll(id: boundaryId)
   }
 
-  /// Returns current locks information for debugging.
+  /// Returns current locks information for debugging purposes.
   ///
   /// Provides a snapshot of all currently held locks across all boundaries.
   /// The returned dictionary maps boundary identifiers to their active lock information.
   ///
-  /// - Returns: Dictionary of boundary IDs to their active locks
+  /// - Returns: A dictionary mapping boundary identifiers to their associated lock information
   public func getCurrentLocks() -> [AnyLockmanBoundaryId: [any LockmanInfo]] {
     var result: [AnyLockmanBoundaryId: [any LockmanInfo]] = [:]
 
