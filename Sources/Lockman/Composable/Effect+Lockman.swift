@@ -5,7 +5,7 @@ import ComposableArchitecture
 extension Effect {
   // MARK: - Public Lock Operations
 
-  /// Creates an Effect that executes multiple operations sequentially while holding a lock.
+  /// Creates an effect that executes multiple operations sequentially while holding a lock.
   ///
   /// This method allows multiple effects to be concatenated and executed
   /// sequentially while maintaining the same lock throughout the entire sequence.
@@ -22,7 +22,7 @@ extension Effect {
   /// 3. Lock is automatically released after all effects complete (using configured option)
   /// 4. If any effect fails, lock is still properly released
   ///
-  /// Effects execute sequentially. If any fails, subsequent effects are cancelled
+  /// Effects execute sequentially. If any effect fails, subsequent effects are cancelled,
   /// but the unlock still executes to ensure proper cleanup.
   ///
   /// ## Automatic Cancellation Management

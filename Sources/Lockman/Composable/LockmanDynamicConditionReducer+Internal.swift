@@ -33,7 +33,7 @@ extension LockmanDynamicConditionReducer {
 
   // MARK: - Layer 1: Condition Evaluation
 
-  /// Evaluates dynamic conditions for both reducer-level and action-level with proper lock cleanup
+  /// Evaluates dynamic conditions for both reducer-level and action-level with proper lock cleanup.
   ///
   /// This method handles the two-stage dynamic lock process:
   /// 1. Reducer-level condition evaluation (dynamic lock condition)
@@ -111,7 +111,7 @@ extension LockmanDynamicConditionReducer {
     }
   }
 
-  /// Evaluates a single dynamic condition and attempts lock acquisition
+  /// Evaluates a single dynamic condition and attempts lock acquisition.
   ///
   /// - Parameters:
   ///   - condition: Optional condition to evaluate
@@ -165,7 +165,7 @@ extension LockmanDynamicConditionReducer {
 
   // MARK: - Step 3: Effect Construction with Condition Handling
 
-  /// Builds lock effect with condition evaluation result handling
+  /// Builds a lock effect with condition evaluation result handling.
   ///
   /// This method handles Step 3 of the dynamic lock process: creating an effect based on
   /// the condition evaluation results and executing the operation with proper cleanup.

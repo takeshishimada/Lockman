@@ -173,7 +173,7 @@ public macro LockmanGroupCoordination() =
 /// - `actionName` property that returns the enum case name as a String
 /// - `strategyId` property that returns a unique identifier for the composite strategy
 ///
-/// **Important**: You must implement the `lockmanInfo` property to provide strategy-specific details
+/// **Important**: You must implement the `lockmanInfo` property to provide strategy-specific details.
 ///
 /// Example usage with TCA:
 /// ```swift
@@ -290,7 +290,7 @@ public macro LockmanCompositeStrategy<
 /// - `lockmanInfo` property with default condition (always success)
 /// - Default `strategyId` implementation is provided by the protocol
 ///
-/// The macro enables you to define custom locking conditions at runtime based on:
+/// This macro enables you to define custom locking conditions at runtime based on:
 /// - Current state values
 /// - Other locks in the same boundary
 /// - Time-based conditions

@@ -49,7 +49,7 @@ extension Reducer {
   /// }
   /// ```
   ///
-  /// - Parameter condition: Function that evaluates the current state and action
+  /// - Parameter condition: A function that evaluates the current state and action
   ///                       to determine if a lock should be acquired.
   /// - Returns: A `LockmanDynamicConditionReducer` reducer that evaluates conditions before acquiring locks
   public func lock(
@@ -162,7 +162,7 @@ extension Reducer {
   /// Applies Lockman locking to effects with support for nested actions (2 paths).
   ///
   /// This overload supports the ViewAction pattern in TCA where actions may be nested
-  /// within enum cases. It checks the root action and the specified nested paths.
+  /// within enum cases. It checks both the root action and the specified nested paths.
   ///
   /// ## Usage
   /// ```swift
@@ -221,7 +221,7 @@ extension Reducer {
   /// Applies Lockman locking to effects with support for nested actions (3 paths).
   ///
   /// This overload supports the ViewAction pattern in TCA where actions may be nested
-  /// within enum cases. It checks the root action and the specified nested paths.
+  /// within enum cases. It checks both the root action and the specified nested paths.
   ///
   /// - Parameters:
   ///   - boundaryId: The boundary identifier for locking.
@@ -270,7 +270,7 @@ extension Reducer {
   /// Applies Lockman locking to effects with support for nested actions (4 paths).
   ///
   /// This overload supports the ViewAction pattern in TCA where actions may be nested
-  /// within enum cases. It checks the root action and the specified nested paths.
+  /// within enum cases. It checks both the root action and the specified nested paths.
   ///
   /// - Parameters:
   ///   - boundaryId: The boundary identifier for locking.
@@ -322,7 +322,7 @@ extension Reducer {
   /// Applies Lockman locking to effects with support for nested actions (5 paths).
   ///
   /// This overload supports the ViewAction pattern in TCA where actions may be nested
-  /// within enum cases. It checks the root action and the specified nested paths.
+  /// within enum cases. It checks both the root action and the specified nested paths.
   ///
   /// - Parameters:
   ///   - boundaryId: The boundary identifier for locking.
