@@ -5,53 +5,53 @@
 [![Platforms](https://img.shields.io/badge/Platforms-iOS%20%7C%20macOS%20%7C%20tvOS%20%7C%20watchOS%20%7C%20Mac%20Catalyst-333333.svg?style=flat)](https://developer.apple.com/)
 
 
-Lockman é uma biblioteca Swift que resolve problemas de controle exclusivo de ações em aplicações The Composable Architecture (TCA), com responsividade, transparência e design declarativo em mente.
+Lockman 是一个 Swift 库，旨在解决 The Composable Architecture (TCA) 应用程序中的并发动作控制问题，注重响应性、透明性和声明式设计。
 
-* [Filosofia de Design](#filosofia-de-design)
-* [Visão Geral](#visão-geral)
-* [Exemplo Básico](#exemplo-básico)
-* [Instalação](#instalação)
-* [Comunidade](#comunidade)
+* [设计理念](#设计理念)
+* [概述](#概述)
+* [基本示例](#基本示例)
+* [安装](#安装)
+* [社区](#社区)
 
-## Filosofia de Design
+## 设计理念
 
-### Princípios de Designing Fluid Interfaces
+### Designing Fluid Interfaces 原则
 
-O "Designing Fluid Interfaces" da WWDC18 apresentou princípios para interfaces excepcionais:
+WWDC18 的"Designing Fluid Interfaces"提出了卓越界面的原则：
 
-* **Resposta Imediata e Redirecionamento Contínuo** - Responsividade que não permite nem 10ms de atraso
-* **Movimento de Toque e Conteúdo Um-para-Um** - O conteúdo segue o dedo durante operações de arraste
-* **Feedback Contínuo** - Reação imediata a todas as interações
-* **Detecção de Gestos Paralelos** - Reconhecendo múltiplos gestos simultaneamente
-* **Consistência Espacial** - Mantendo consistência de posição durante animações
-* **Interações Leves, Saída Amplificada** - Grandes efeitos a partir de pequenas entradas
+* **即时响应和持续重定向** - 不允许有 10 毫秒延迟的响应性
+* **一对一的触摸和内容移动** - 拖动操作时内容跟随手指
+* **持续反馈** - 对所有交互的即时反应
+* **并行手势检测** - 同时识别多个手势
+* **空间一致性** - 动画期间保持位置一致性
+* **轻量级交互，放大输出** - 小输入产生大效果
 
-### Desafios Tradicionais
+### 传统挑战
 
-O desenvolvimento tradicional de UI resolveu problemas simplesmente proibindo pressionamentos simultâneos de botões e execuções duplicadas. Essas abordagens se tornaram fatores que prejudicam a experiência do usuário no design moderno de interfaces fluidas.
+传统 UI 开发通过简单地禁止同时按下按钮和重复执行来解决问题。这些方法已成为现代流畅界面设计中阻碍用户体验的因素。
 
-Os usuários esperam algum tipo de feedback mesmo ao pressionar botões simultaneamente. É crucial separar claramente a resposta imediata na camada de UI do controle apropriado de exclusão mútua na camada de lógica de negócios.
+用户期望即使同时按下按钮也能获得某种形式的反馈。在 UI 层的即时响应与业务逻辑层的适当互斥控制之间进行清晰分离至关重要。
 
-## Visão Geral
+## 概述
 
-Lockman fornece as seguintes estratégias de controle para abordar problemas comuns no desenvolvimento de aplicativos:
+Lockman 提供以下控制策略来解决应用开发中的常见问题：
 
-* **Execução Única**: Previne execução duplicada da mesma ação
-* **Baseado em Prioridade**: Controle e cancelamento de ação baseado em prioridade
-* **Coordenação de Grupo**: Controle de grupo através de papéis líder/membro
-* **Condição Dinâmica**: Controle dinâmico baseado em condições de tempo de execução
-* **Concorrência Limitada**: Limita o número de execuções concorrentes por grupo
-* **Estratégia Composta**: Combinação de múltiplas estratégias
+* **Single Execution**：防止相同动作的重复执行
+* **Priority Based**：基于优先级的动作控制和取消
+* **Group Coordination**：通过领导者/成员角色进行组控制
+* **Dynamic Condition**：基于运行时条件的动态控制
+* **Concurrency Limited**：限制每组的并发执行数量
+* **Composite Strategy**：多种策略的组合
 
-## Exemplos
+## 示例
 
-| Estratégia de Execução Única | Estratégia Baseada em Prioridade | Estratégia de Concorrência Limitada |
-|------------------------------|----------------------------------|-------------------------------------|
-| ![Estratégia de Execução Única](../Sources/Lockman/Documentation.docc/images/01-SingleExecutionStrategy.gif) | ![Estratégia Baseada em Prioridade](../Sources/Lockman/Documentation.docc/images/02-PriorityBasedStrategy.gif) | ![Estratégia de Concorrência Limitada](../Sources/Lockman/Documentation.docc/images/03-ConcurrencyLimitedStrategy.gif) |
+| Single Execution Strategy | Priority Based Strategy | Concurrency Limited Strategy |
+|--------------------------|------------------------|------------------------------|
+| ![Single Execution Strategy](../Sources/Lockman/Documentation.docc/images/01-SingleExecutionStrategy.gif) | ![Priority Based Strategy](../Sources/Lockman/Documentation.docc/images/02-PriorityBasedStrategy.gif) | ![Concurrency Limited Strategy](../Sources/Lockman/Documentation.docc/images/03-ConcurrencyLimitedStrategy.gif) |
 
-## Exemplo de Código
+## 代码示例
 
-Veja como implementar um recurso que previne execução duplicada de processos usando o macro `@LockmanSingleExecution`:
+以下是如何使用 `@LockmanSingleExecution` 宏实现防止进程重复执行的功能：
 
 ```swift
 import CasePaths
@@ -99,7 +99,7 @@ struct ProcessFeature {
                 case .startProcessButtonTapped:
                     return .run { send in
                         await send(.internal(.processStart))
-                        // Simular processamento pesado
+                        // 模拟重处理
                         try await Task.sleep(nanoseconds: 3_000_000_000)
                         await send(.internal(.processCompleted))
                     }
@@ -109,12 +109,12 @@ struct ProcessFeature {
                 switch internalAction {
                 case .processStart:
                     state.isProcessing = true
-                    state.message = "Processamento iniciado..."
+                    state.message = "处理已开始..."
                     return .none
                     
                 case .processCompleted:
                     state.isProcessing = false
-                    state.message = "Processamento concluído"
+                    state.message = "处理已完成"
                     return .none
                     
                 case .updateMessage(let message):
@@ -126,10 +126,10 @@ struct ProcessFeature {
         .lock(
             boundaryId: CancelID.userAction,
             lockFailure: { error, send in
-                // Quando o processamento já está em andamento
+                // 当处理已经在进行中时
                 if error is LockmanSingleExecutionError {
-                    // Atualizar mensagem através de uma ação em vez de mutação direta do estado
-                    await send(.internal(.updateMessage("O processamento já está em andamento")))
+                    // 通过动作更新消息而不是直接修改状态
+                    await send(.internal(.updateMessage("处理已经在进行中")))
                 }
             },
             for: \.view
@@ -138,9 +138,9 @@ struct ProcessFeature {
 }
 ```
 
-O modificador `Reducer.lock` aplica automaticamente o gerenciamento de bloqueio às ações que estão em conformidade com `LockmanAction`. Como a enumeração `ViewAction` está marcada com `@LockmanSingleExecution`, a ação `startProcessButtonTapped` não será executada enquanto o processamento estiver em andamento. O parâmetro `for: \.view` instrui o Lockman a verificar a conformidade com `LockmanAction` para ações aninhadas no caso `view`.
+`Reducer.lock` 修饰符自动对符合 `LockmanAction` 的动作应用锁管理。由于 `ViewAction` 枚举被标记为 `@LockmanSingleExecution`，`startProcessButtonTapped` 动作在处理进行中时不会被执行。`for: \.view` 参数告诉 Lockman 检查嵌套在 `view` 情况中的动作的 `LockmanAction` 一致性。
 
-### Exemplo de Saída de Debug
+### 调试输出示例
 
 ```
 ✅ [Lockman] canLock succeeded - Strategy: SingleExecution, BoundaryId: process, Info: LockmanSingleExecutionInfo(actionId: 'startProcessButtonTapped', uniqueId: 7BFC785A-3D25-4722-B9BC-A3A63A7F49FC, mode: boundary)
@@ -161,19 +161,19 @@ O modificador `Reducer.lock` aplica automaticamente o gerenciamento de bloqueio 
 └─────────────────┴──────────────────┴──────────────────────────────────────┴─────────────────┘
 ```
 
-## Documentação
+## 文档
 
-A documentação para lançamentos e `main` estão disponíveis aqui:
+发布版本和 `main` 分支的文档可在此处获取：
 
 * [`main`](https://takeshishimada.github.io/Lockman/main/documentation/lockman/)
-* [1.3.0](https://takeshishimada.github.io/Lockman/1.3.0/documentation/lockman/) ([guia de migração](https://takeshishimada.github.io/Lockman/1.3.0/documentation/lockman/migratingto1.3))
-* [1.2.0](https://takeshishimada.github.io/Lockman/1.2.0/documentation/lockman/) ([guia de migração](https://takeshishimada.github.io/Lockman/1.2.0/documentation/lockman/migratingto1.2))
-* [1.1.0](https://takeshishimada.github.io/Lockman/1.1.0/documentation/lockman/) ([guia de migração](https://takeshishimada.github.io/Lockman/1.1.0/documentation/lockman/migratingto1.1))
+* [1.3.0](https://takeshishimada.github.io/Lockman/1.3.0/documentation/lockman/) ([迁移指南](https://takeshishimada.github.io/Lockman/1.3.0/documentation/lockman/migratingto1.3))
+* [1.2.0](https://takeshishimada.github.io/Lockman/1.2.0/documentation/lockman/) ([迁移指南](https://takeshishimada.github.io/Lockman/1.2.0/documentation/lockman/migratingto1.2))
+* [1.1.0](https://takeshishimada.github.io/Lockman/1.1.0/documentation/lockman/) ([迁移指南](https://takeshishimada.github.io/Lockman/1.1.0/documentation/lockman/migratingto1.1))
 
 <details>
-<summary>Outras versões</summary>
+<summary>其他版本</summary>
 
-* [1.0.0](https://takeshishimada.github.io/Lockman/1.0.0/documentation/lockman/) ([guia de migração](https://takeshishimada.github.io/Lockman/1.0.0/documentation/lockman/migratingto1.0))
+* [1.0.0](https://takeshishimada.github.io/Lockman/1.0.0/documentation/lockman/) ([迁移指南](https://takeshishimada.github.io/Lockman/1.0.0/documentation/lockman/migratingto1.0))
 * [0.13.0](https://takeshishimada.github.io/Lockman/0.13.0/documentation/lockman/)
 * [0.12.0](https://takeshishimada.github.io/Lockman/0.12.0/documentation/lockman/)
 * [0.11.0](https://takeshishimada.github.io/Lockman/0.11.0/documentation/lockman/)
@@ -188,35 +188,35 @@ A documentação para lançamentos e `main` estão disponíveis aqui:
 
 </details>
 
-Existem vários artigos na documentação que você pode achar úteis à medida que se familiariza com a biblioteca:
+文档中有许多文章可以帮助您更好地使用该库：
 
-### Essenciais
-* [Começando](https://takeshishimada.github.io/Lockman/main/documentation/lockman/gettingstarted) - Aprenda como integrar Lockman em sua aplicação TCA
-* [Visão Geral de Limites](https://takeshishimada.github.io/Lockman/main/documentation/lockman/boundaryoverview) - Entenda o conceito de limites em Lockman
-* [Bloquear](https://takeshishimada.github.io/Lockman/main/documentation/lockman/lock) - Entendendo o mecanismo de bloqueio
-* [Desbloquear](https://takeshishimada.github.io/Lockman/main/documentation/lockman/unlock) - Entendendo o mecanismo de desbloqueio
-* [Escolhendo uma Estratégia](https://takeshishimada.github.io/Lockman/main/documentation/lockman/choosingstrategy) - Selecione a estratégia certa para seu caso de uso
-* [Configuração](https://takeshishimada.github.io/Lockman/main/documentation/lockman/configuration) - Configure Lockman para as necessidades de sua aplicação
-* [Tratamento de Erros](https://takeshishimada.github.io/Lockman/main/documentation/lockman/errorhandling) - Aprenda sobre padrões comuns de tratamento de erros
-* [Guia de Depuração](https://takeshishimada.github.io/Lockman/main/documentation/lockman/debuggingguide) - Depure problemas relacionados ao Lockman em sua aplicação
+### 基础知识
+* [入门指南](https://takeshishimada.github.io/Lockman/main/documentation/lockman/gettingstarted) - 了解如何将 Lockman 集成到您的 TCA 应用程序中
+* [边界概述](https://takeshishimada.github.io/Lockman/main/documentation/lockman/boundaryoverview) - 理解 Lockman 中的边界概念
+* [锁定](https://takeshishimada.github.io/Lockman/main/documentation/lockman/lock) - 理解锁定机制
+* [解锁](https://takeshishimada.github.io/Lockman/main/documentation/lockman/unlock) - 理解解锁机制
+* [选择策略](https://takeshishimada.github.io/Lockman/main/documentation/lockman/choosingstrategy) - 为您的用例选择合适的策略
+* [配置](https://takeshishimada.github.io/Lockman/main/documentation/lockman/configuration) - 根据应用程序需求配置 Lockman
+* [错误处理](https://takeshishimada.github.io/Lockman/main/documentation/lockman/errorhandling) - 了解常见的错误处理模式
+* [调试指南](https://takeshishimada.github.io/Lockman/main/documentation/lockman/debuggingguide) - 调试应用程序中与 Lockman 相关的问题
 
-### Estratégias
-* [Estratégia de Execução Única](https://takeshishimada.github.io/Lockman/main/documentation/lockman/singleexecutionstrategy) - Previne execução duplicada
-* [Estratégia Baseada em Prioridade](https://takeshishimada.github.io/Lockman/main/documentation/lockman/prioritybasedstrategy) - Controle baseado em prioridade
-* [Estratégia de Concorrência Limitada](https://takeshishimada.github.io/Lockman/main/documentation/lockman/concurrencylimitedstrategy) - Limita execuções concorrentes
-* [Estratégia de Coordenação de Grupo](https://takeshishimada.github.io/Lockman/main/documentation/lockman/groupcoordinationstrategy) - Coordena ações relacionadas
-* [Estratégia de Condição Dinâmica](https://takeshishimada.github.io/Lockman/main/documentation/lockman/dynamicconditionstrategy) - Controle dinâmico em tempo de execução
-* [Estratégia Composta](https://takeshishimada.github.io/Lockman/main/documentation/lockman/compositestrategy) - Combina múltiplas estratégias
+### 策略
+* [Single Execution Strategy](https://takeshishimada.github.io/Lockman/main/documentation/lockman/singleexecutionstrategy) - 防止重复执行
+* [Priority Based Strategy](https://takeshishimada.github.io/Lockman/main/documentation/lockman/prioritybasedstrategy) - 基于优先级的控制
+* [Concurrency Limited Strategy](https://takeshishimada.github.io/Lockman/main/documentation/lockman/concurrencylimitedstrategy) - 限制并发执行
+* [Group Coordination Strategy](https://takeshishimada.github.io/Lockman/main/documentation/lockman/groupcoordinationstrategy) - 协调相关动作
+* [Dynamic Condition Strategy](https://takeshishimada.github.io/Lockman/main/documentation/lockman/dynamicconditionstrategy) - 动态运行时控制
+* [Composite Strategy](https://takeshishimada.github.io/Lockman/main/documentation/lockman/compositestrategy) - 组合多种策略
 
-Nota: A documentação está disponível apenas em inglês.
+注：文档仅提供英文版本。
 
-## Instalação
+## 安装
 
-Lockman pode ser instalado usando [Swift Package Manager](https://swift.org/package-manager/).
+Lockman 可以使用 [Swift Package Manager](https://swift.org/package-manager/) 进行安装。
 
 ### Xcode
 
-No Xcode, selecione File → Add Package Dependencies e insira a seguinte URL:
+在 Xcode 中，选择 File → Add Package Dependencies 并输入以下 URL：
 
 ```
 https://github.com/takeshishimada/Lockman
@@ -224,7 +224,7 @@ https://github.com/takeshishimada/Lockman
 
 ### Package.swift
 
-Adicione a dependência ao seu arquivo Package.swift:
+将依赖项添加到您的 Package.swift 文件中：
 
 ```swift
 dependencies: [
@@ -232,7 +232,7 @@ dependencies: [
 ]
 ```
 
-Adicione a dependência ao seu alvo:
+将依赖项添加到您的目标中：
 
 ```swift
 .target(
@@ -243,20 +243,26 @@ Adicione a dependência ao seu alvo:
 )
 ```
 
-### Requisitos
+### 系统要求
 
-| Plataforma | Versão Mínima |
-|------------|---------------|
-| iOS        | 13.0          |
-| macOS      | 10.15         |
-| tvOS       | 13.0          |
-| watchOS    | 6.0           |
+| 平台      | 最低版本 |
+|----------|---------|
+| iOS      | 13.0    |
+| macOS    | 10.15   |
+| tvOS     | 13.0    |
+| watchOS  | 6.0     |
 
-### Compatibilidade de Versão
+### 版本兼容性
 
 | Lockman | The Composable Architecture |
 |---------|----------------------------|
 | 1.3.0   | 1.20.2                     |
+
+<details>
+<summary>其他版本</summary>
+
+| Lockman | The Composable Architecture |
+|---------|----------------------------|
 | 1.2.0   | 1.20.2                     |
 | 1.1.0   | 1.20.2                     |
 | 1.0.0   | 1.20.2                     |
@@ -270,12 +276,6 @@ Adicione a dependência ao seu alvo:
 | 0.10.0  | 1.19.0                     |
 | 0.9.0   | 1.18.0                     |
 | 0.8.0   | 1.17.1                     |
-
-<details>
-<summary>Outras versões</summary>
-
-| Lockman | The Composable Architecture |
-|---------|----------------------------|
 | 0.7.0   | 1.17.1                     |
 | 0.6.0   | 1.17.1                     |
 | 0.5.0   | 1.17.1                     |
@@ -302,20 +302,20 @@ This documentation is also available in other languages:
 - [Português (Portuguese)](README_pt-BR.md)
 - [Italiano (Italian)](README_it.md)
 
-## Comunidade
+## 社区
 
-### Discussão e Ajuda
+### 讨论和帮助
 
-Perguntas e discussões podem ser realizadas no [GitHub Discussions](https://github.com/takeshishimada/Lockman/discussions).
+可以在 [GitHub Discussions](https://github.com/takeshishimada/Lockman/discussions) 上进行问题讨论。
 
-### Relatórios de Bugs
+### 错误报告
 
-Se você encontrar um bug, por favor reporte em [Issues](https://github.com/takeshishimada/Lockman/issues).
+如果发现错误，请在 [Issues](https://github.com/takeshishimada/Lockman/issues) 上报告。
 
-### Contribuindo
+### 贡献
 
-Se você gostaria de contribuir para a biblioteca, por favor abra um PR com um link para ele!
+如果您想为该库做出贡献，请创建一个 PR 并附上相关链接！
 
-## Licença
+## 许可证
 
-Esta biblioteca é lançada sob a Licença MIT. Veja o arquivo [LICENSE](./LICENSE) para detalhes.
+本库基于 MIT 许可证发布。详情请参阅 [LICENSE](./LICENSE) 文件。
