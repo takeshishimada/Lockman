@@ -73,17 +73,16 @@ extension Effect {
     line: UInt = #line,
     column: UInt = #column
   ) -> Effect<Action> {
-    return buildEffect(
-      concatenating: operations,
-      unlockOption: unlockOption,
-      handleCancellationErrors: handleCancellationErrors,
-      lockFailure: lockFailure,
+    return buildLockEffect(
+      operations: operations,
       action: action,
       boundaryId: boundaryId,
+      unlockOption: unlockOption ?? action.unlockOption,
       fileID: fileID,
       filePath: filePath,
       line: line,
-      column: column
+      column: column,
+      handler: lockFailure
     )
   }
 }
@@ -139,87 +138,19 @@ extension Effect {
     handleCancellationErrors: Bool? = nil,
     lockFailure: (@Sendable (_ error: any Error, _ send: Send<Action>) async -> Void)? = nil
   ) -> Effect<Action> {
-    // This is essentially a wrapper around buildEffect
+    // This is essentially a wrapper around buildLockEffect
     // that provides a method chain style API
 
-    return Effect.buildEffect(
-      concatenating: [self],
-      unlockOption: unlockOption,
-      handleCancellationErrors: handleCancellationErrors,
-      lockFailure: lockFailure,
-      action: action,
-      boundaryId: boundaryId,
-      fileID: #fileID,
-      filePath: #filePath,
-      line: #line,
-      column: #column
-    )
-  }
-}
-
-// MARK: - Internal Implementation
-
-extension Effect {
-  /// Builds an effect with lock management for concatenated operations.
-  ///
-  /// This method contains the shared logic for both public lock APIs:
-  /// - `Effect.lock(concatenating:)` for multiple operations
-  /// - `Effect.lock(action:boundaryId:)` for single effect chains
-  ///
-  /// ## Shared Logic
-  /// 1. **Strategy Resolution**: Resolves the lock strategy from the container
-  /// 2. **Unlock Token Creation**: Creates unlock token with proper configuration
-  /// 3. **Lock Acquisition**: Attempts to acquire the lock using the resolved strategy
-  /// 4. **Effect Building**: Constructs the final effect based on lock acquisition result
-  ///
-  /// - Parameters:
-  ///   - operations: Array of effects to execute sequentially while lock is held
-  ///   - unlockOption: Controls when the unlock operation is executed
-  ///   - handleCancellationErrors: Whether to pass CancellationError to catch handler
-  ///   - lockFailure: Optional handler for lock acquisition failures
-  ///   - action: LockmanAction providing lock information and strategy type
-  ///   - boundaryId: Unique identifier for effect cancellation and lock boundary
-  ///   - fileID: Source file ID for debugging
-  ///   - filePath: Source file path for debugging
-  ///   - line: Source line number for debugging
-  ///   - column: Source column number for debugging
-  /// - Returns: Effect with lock management, or `.none` if lock acquisition fails
-  private static func buildEffect<B: LockmanBoundaryId, A: LockmanAction>(
-    concatenating operations: [Effect<Action>],
-    unlockOption: LockmanUnlockOption?,
-    handleCancellationErrors: Bool?,
-    lockFailure: (@Sendable (_ error: any Error, _ send: Send<Action>) async -> Void)?,
-    action: A,
-    boundaryId: B,
-    fileID: StaticString,
-    filePath: StaticString,
-    line: UInt,
-    column: UInt
-  ) -> Effect<Action> {
-    return buildLockEffect(
+    return Effect.buildLockEffect(
+      operations: [self],
       action: action,
       boundaryId: boundaryId,
       unlockOption: unlockOption ?? action.unlockOption,
-      fileID: fileID,
-      filePath: filePath,
-      line: line,
-      column: column,
+      fileID: #fileID,
+      filePath: #filePath,
+      line: #line,
+      column: #column,
       handler: lockFailure
-    ) { unlockToken in
-      // Create auto-unlock manager for guaranteed cleanup
-      let autoUnlock = LockmanAutoUnlock<B, A.I>(unlockToken: unlockToken)
-
-      // Create unlock effect that will be executed last
-      let unlockEffect = Effect<Action>.run { _ in
-        await autoUnlock.manualUnlock()  // Uses the configured option
-      }
-
-      // Build the complete effect sequence with proper cancellation scope
-      // Only operations are cancellable - unlockEffect must always execute
-      return Effect<Action>.concatenate([
-        .concatenate(operations).cancellable(id: boundaryId),  // Only operations are cancellable
-        unlockEffect,  // Resource cleanup always executes (not cancellable)
-      ])
-    }
+    )
   }
 }

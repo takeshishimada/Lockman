@@ -138,14 +138,18 @@ extension Effect {
     }
   }
 
-  /// Builds an effect with lock acquisition using the provided builder.
+  /// Builds an effect with lock acquisition and automatic unlock.
   ///
   /// ## Purpose
   /// This internal method contains the common logic shared by all lock variants:
   /// 1. Strategy resolution from the container
   /// 2. Lock information extraction from the action
-  /// 3. Unlock token creation with unlock option configuration
-  /// 4. Effect building through the provided closure
+  /// 3. Lock acquisition and result handling
+  /// 4. Direct effect concatenation with unlock effect
+  ///
+  /// ## Simplified Architecture
+  /// This method directly creates the unlock effect and concatenates it with the operations,
+  /// eliminating the need for complex closure patterns and intermediate wrappers.
   ///
   /// ## Error Handling Strategy
   /// This method uses a do-catch pattern to handle strategy resolution errors.
@@ -159,20 +163,13 @@ extension Effect {
   /// - `A: LockmanAction`: Ensures valid action with lock information
   /// - `A.I`: Preserves lock information type relationship
   ///
-  /// ## Unlock Token Lifecycle
-  /// The unlock token created here encapsulates:
-  /// - Boundary identifier for proper isolation
-  /// - Lock information for precise instance tracking
-  /// - Type-erased strategy for actual unlock operations
-  /// - Unlock option configuration for unlock execution
-  ///
-  /// ## Effect Builder Pattern
-  /// This method uses the effect builder pattern to allow different callers
-  /// to construct effects in their own way while sharing the common lock
-  /// acquisition logic. The builder receives an unlock token and must return
-  /// the appropriate effect for execution.
+  /// ## Effect Execution Order
+  /// The returned effect executes in this order:
+  /// 1. Operations (cancellable as a group)
+  /// 2. Unlock effect (non-cancellable, always executes)
   ///
   /// - Parameters:
+  ///   - operations: Array of effects to execute while lock is held
   ///   - action: LockmanAction providing lock information and strategy type
   ///   - boundaryId: Unique identifier for cancellation and lock boundary
   ///   - unlockOption: Unlock option configuration for when to execute the unlock
@@ -181,9 +178,9 @@ extension Effect {
   ///   - line: Source line number for error reporting
   ///   - column: Source column number for error reporting
   ///   - handler: Optional error handler for lock acquisition failures
-  ///   - effectBuilder: Closure that receives unlock token and returns built effect
   /// - Returns: Built effect, or `.none` if setup fails
   static func buildLockEffect<B: LockmanBoundaryId, A: LockmanAction>(
+    operations: [Effect<Action>],
     action: A,
     boundaryId: B,
     unlockOption: LockmanUnlockOption,
@@ -191,8 +188,7 @@ extension Effect {
     filePath: StaticString,
     line: UInt,
     column: UInt,
-    handler: (@Sendable (_ error: any Error, _ send: Send<Action>) async -> Void)? = nil,
-    effectBuilder: @escaping (LockmanUnlock<B, A.I>) -> Effect<Action>
+    handler: (@Sendable (_ error: any Error, _ send: Send<Action>) async -> Void)? = nil
   ) -> Effect<Action> {
     do {
       // Resolve the strategy from the container using strategyId
@@ -202,6 +198,13 @@ extension Effect {
       )
       let lockmanInfo = action.lockmanInfo
 
+      // Attempt to acquire lock
+      let lockResult = acquireLock(
+        lockmanInfo: lockmanInfo,
+        strategy: strategy,
+        boundaryId: boundaryId
+      )
+
       // Create unlock token for this specific lock acquisition with option
       let unlockToken = LockmanUnlock(
         id: boundaryId,
@@ -210,24 +213,23 @@ extension Effect {
         unlockOption: unlockOption
       )
 
-      // Attempt to acquire lock
-      let lockResult = acquireLock(
-        lockmanInfo: lockmanInfo,
-        strategy: strategy,
-        boundaryId: boundaryId
-      )
+      // Create unlock effect that executes the unlock operation
+      let unlockEffect = Effect<Action>.run { _ in
+        unlockToken()  // Execute unlock with configured option
+      }
 
-      // Create effect with conditional cancellation ID based on action design intent
+      // Create complete effect with conditional cancellation for operations only
       let shouldBeCancellable = action.lockmanInfo.isCancellationTarget
-      let newEffect =
-        shouldBeCancellable
-        ? effectBuilder(unlockToken).cancellable(id: boundaryId) : effectBuilder(unlockToken)
+      let finalOperations = shouldBeCancellable
+        ? operations.map { $0.cancellable(id: boundaryId) }
+        : operations
+      let completeEffect = Effect<Action>.concatenate(finalOperations + [unlockEffect])
 
       // Handle lock acquisition result
       switch lockResult {
       case .success:
-        // Lock acquired successfully, execute effect immediately
-        return newEffect
+        // Lock acquired successfully, execute complete effect immediately
+        return completeEffect
 
       case .successWithPrecedingCancellation(let error):
         // Lock acquired but need to cancel existing operation first
@@ -238,14 +240,14 @@ extension Effect {
           reason: error
         )
         if let handler = handler {
-          return .concatenate(
+          return .concatenate([
             .run { send in await handler(cancellationError, send) },
             .cancel(id: boundaryId),
-            newEffect
-          )
+            completeEffect,
+          ])
         }
 
-        return .concatenate(.cancel(id: boundaryId), newEffect)
+        return .concatenate([.cancel(id: boundaryId), completeEffect])
 
       case .cancel(let error):
         // Lock acquisition failed
