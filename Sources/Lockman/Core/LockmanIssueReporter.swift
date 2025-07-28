@@ -34,7 +34,7 @@ public enum LockmanDefaultIssueReporter: LockmanIssueReporter {
 
 /// Global issue reporter configuration.
 public enum LockmanIssueReporting {
-  /// The current issue reporter. Defaults to `DefaultIssueReporter`.
+  /// The current issue reporter. Defaults to `LockmanDefaultIssueReporter`.
   private static let _reporter = LockIsolated<any LockmanIssueReporter.Type>(
     LockmanDefaultIssueReporter.self)
 

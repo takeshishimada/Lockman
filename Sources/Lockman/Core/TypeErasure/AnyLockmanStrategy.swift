@@ -133,9 +133,9 @@ public struct AnyLockmanStrategy<I: LockmanInfo>: LockmanStrategy, Sendable {
     _strategyId
   }
 
-  /// Creates a strategy identifier for the type-erased strategy.
+  /// Creates a generic strategy identifier for type-erased strategies.
   ///
-  /// Note: This method returns a generic identifier as type-erased strategies
+  /// Note: This method returns a generic identifier since type-erased strategies
   /// don't have their own specific identity. The actual strategy ID comes from
   /// the wrapped concrete strategy instance.
   ///
@@ -265,7 +265,7 @@ public struct AnyLockmanStrategy<I: LockmanInfo>: LockmanStrategy, Sendable {
     _cleanUpById(boundaryId)
   }
 
-  /// Returns current locks information for debugging.
+  /// Returns current lock information for debugging.
   ///
   /// This method provides a snapshot of all currently held locks managed by the
   /// underlying concrete strategy. The implementation delegates to the concrete

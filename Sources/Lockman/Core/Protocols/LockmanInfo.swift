@@ -87,7 +87,7 @@ public protocol LockmanInfo: Sendable, CustomDebugStringConvertible {
   /// "mode: boundary"
   ///
   /// // PriorityBasedInfo
-  /// "priority: high b: .exclusive"
+  /// "priority: high behavior: .exclusive"
   ///
   /// // ConcurrencyLimitedInfo
   /// "concurrency: api_requests limit: limited(3)"

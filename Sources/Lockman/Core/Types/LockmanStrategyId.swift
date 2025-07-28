@@ -157,16 +157,16 @@ public struct LockmanStrategyId: Hashable, Sendable, CustomStringConvertible,
 // MARK: - Common Strategy IDs
 
 extension LockmanStrategyId {
-  /// The default strategy ID for single execution strategy.
+  /// The strategy ID for single execution strategy.
   public static let singleExecution = LockmanStrategyId(type: LockmanSingleExecutionStrategy.self)
 
-  /// The default strategy ID for priority-based strategy.
+  /// The strategy ID for priority-based strategy.
   public static let priorityBased = LockmanStrategyId(type: LockmanPriorityBasedStrategy.self)
 
-  /// The default strategy ID for group coordination strategy.
+  /// The strategy ID for group coordination strategy.
   public static let groupCoordination = LockmanStrategyId(
     type: LockmanGroupCoordinationStrategy.self)
 
-  /// The default strategy ID for dynamic condition strategy.
+  /// The strategy ID for dynamic condition strategy.
   public static let dynamicCondition = LockmanStrategyId(type: LockmanDynamicConditionStrategy.self)
 }

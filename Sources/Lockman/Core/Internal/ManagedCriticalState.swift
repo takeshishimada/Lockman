@@ -2,6 +2,7 @@
 
 import Darwin
 
+/// A managed buffer that safely wraps state with an unfair lock for synchronization.
 final class LockedBuffer<State>: ManagedBuffer<State, os_unfair_lock> {
   deinit {
     _ = self.withUnsafeMutablePointerToElements { lock in
@@ -10,6 +11,10 @@ final class LockedBuffer<State>: ManagedBuffer<State, os_unfair_lock> {
   }
 }
 
+/// A thread-safe wrapper for mutable state using os_unfair_lock for synchronization.
+///
+/// This structure provides safe concurrent access to mutable state by protecting
+/// all mutations and reads with an unfair lock.
 struct ManagedCriticalState<State> {
   let buffer: ManagedBuffer<State, os_unfair_lock>
 
@@ -22,6 +27,10 @@ struct ManagedCriticalState<State> {
     }
   }
 
+  /// Executes a closure with exclusive access to the protected state.
+  ///
+  /// - Parameter critical: A closure that receives mutable access to the state
+  /// - Returns: The value returned by the critical closure
   @discardableResult
   func withCriticalRegion<R>(
     _ critical: (inout State) throws -> R

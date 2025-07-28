@@ -62,7 +62,7 @@ public enum LockmanUnlockOption: Sendable, Equatable {
   /// using `DispatchQueue.main.asyncAfter`. This provides precise control over
   /// unlock behavior for custom coordination scenarios.
   ///
-  /// - Parameter TimeInterval: Number of seconds to delay the unlock operation
+  /// - Parameter interval: Number of seconds to delay the unlock operation
   ///
   /// ## Use Cases
   /// - Custom animation durations

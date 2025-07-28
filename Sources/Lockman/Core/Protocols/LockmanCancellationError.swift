@@ -75,13 +75,13 @@ public struct LockmanCancellationError: LockmanError {
 // MARK: - LocalizedError Conformance
 
 extension LockmanCancellationError: LocalizedError {
+  /// The error description, delegated to the underlying strategy error.
   public var errorDescription: String? {
-    // Delegate to the underlying error's description
     reason.errorDescription
   }
 
+  /// The failure reason, delegated to the underlying strategy error.
   public var failureReason: String? {
-    // Delegate to the underlying error's failure reason
     reason.failureReason
   }
 }

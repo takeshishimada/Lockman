@@ -8,7 +8,7 @@ import Foundation
 /// ensuring consistent error handling across different components.
 ///
 /// ## Error Types
-/// All cancellation errors conform to `LockmanCancellationError` protocol:
+/// Lockman provides several error types for different cancellation scenarios:
 /// - `LockmanSingleExecutionCancellationError`: When single execution blocks new actions
 /// - `LockmanPriorityBasedCancellationError`: When actions are preempted by priority
 /// - `LockmanPriorityBasedBlockedError`: When actions are blocked by priority

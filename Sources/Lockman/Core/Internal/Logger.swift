@@ -2,6 +2,11 @@
 
 import OSLog
 
+/// Internal logger for Lockman framework events and debugging information.
+///
+/// This logger provides platform-appropriate logging capabilities, using OSLog on supported platforms
+/// and falling back to print statements for SwiftUI previews. In release builds, logging operations
+/// are optimized away completely.
 #if swift(<5.10)
   @MainActor(unsafe)
 #else

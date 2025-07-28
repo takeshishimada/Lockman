@@ -832,9 +832,9 @@ where S1.I == I1, S2.I == I2, S3.I == I3, S4.I == I4, S5.I == I5 {
 
 // MARK: - Private Extensions
 
-private extension Array where Element == LockmanResult {
+extension Array where Element == LockmanResult {
   /// Returns true if all results are .success
-  var allSuccessful: Bool {
+  fileprivate var allSuccessful: Bool {
     return allSatisfy { result in
       if case .success = result { return true }
       return false

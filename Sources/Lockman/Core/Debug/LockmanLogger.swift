@@ -84,7 +84,9 @@ public final class LockmanLogger: @unchecked Sendable {
 
   /// Logs current lock state information.
   ///
-  /// This method is used internally by printCurrentLocks to output formatted lock information.
+  /// This method is used internally by `printCurrentLocks` to output formatted lock information.
+  /// Unlike other logging methods, this always prints to stdout when explicitly requested,
+  /// even if debug logging is disabled.
   public func logLockState(_ message: String) {
     #if DEBUG
       guard isEnabled else {

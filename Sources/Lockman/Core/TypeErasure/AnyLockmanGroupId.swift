@@ -54,7 +54,7 @@ public struct AnyLockmanGroupId: Hashable, @unchecked Sendable {
 
   // MARK: - Hashable Implementation
 
-  /// Compares two `AnyLockmanGroupId` instances for equality by comparing their underlying `AnyHashable` values.
+  /// Compares two `AnyLockmanGroupId` instances for equality.
   ///
   /// Two instances are equal if their wrapped values are equal according to
   /// the underlying type's equality implementation.
@@ -71,8 +71,10 @@ public struct AnyLockmanGroupId: Hashable, @unchecked Sendable {
     lhs.base == rhs.base
   }
 
-  /// Generates hash values that include type information to prevent
-  /// different group ID types with identical values from colliding.
+  /// Generates a hash value for this group ID.
+  ///
+  /// The hash includes type information to prevent different group ID types
+  /// with identical values from colliding.
   ///
   /// - Parameter hasher: The hasher to use when combining the components of this instance
   ///

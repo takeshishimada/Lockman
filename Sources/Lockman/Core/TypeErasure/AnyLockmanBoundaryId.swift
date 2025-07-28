@@ -50,7 +50,7 @@ public struct AnyLockmanBoundaryId: Hashable, @unchecked Sendable {
 
   // MARK: - Hashable Implementation
 
-  /// Compares two `AnyLockmanBoundaryId` instances for equality by comparing their underlying `AnyHashable` values.
+  /// Compares two `AnyLockmanBoundaryId` instances for equality.
   ///
   /// Two instances are equal if their wrapped values are equal according to
   /// the underlying type's equality implementation.
@@ -67,8 +67,10 @@ public struct AnyLockmanBoundaryId: Hashable, @unchecked Sendable {
     lhs.base == rhs.base
   }
 
-  /// Generates hash values that include type information to prevent
-  /// different boundary ID types with identical values from colliding.
+  /// Generates a hash value for this boundary ID.
+  ///
+  /// The hash includes type information to prevent different boundary ID types
+  /// with identical values from colliding.
   ///
   /// - Parameter hasher: The hasher to use when combining the components of this instance
   ///
