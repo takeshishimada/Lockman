@@ -180,7 +180,7 @@ where S1.I == I1, S2.I == I2 {
     }
 
     // If all strategies succeeded without cancellation, operation succeeds
-    if results.allSatisfy({ $0 == .success }) {
+    if results.allSuccessful {
       return .success
     }
 
@@ -375,7 +375,7 @@ where S1.I == I1, S2.I == I2, S3.I == I3 {
       }
     }
 
-    if results.allSatisfy({ $0 == .success }) {
+    if results.allSuccessful {
       return .success
     }
 
@@ -581,7 +581,7 @@ where S1.I == I1, S2.I == I2, S3.I == I3, S4.I == I4 {
       }
     }
 
-    if results.allSatisfy({ $0 == .success }) {
+    if results.allSuccessful {
       return .success
     }
 
@@ -819,7 +819,7 @@ where S1.I == I1, S2.I == I2, S3.I == I3, S4.I == I4, S5.I == I5 {
       }
     }
 
-    if results.allSatisfy({ $0 == .success }) {
+    if results.allSuccessful {
       return .success
     }
 
@@ -827,5 +827,17 @@ where S1.I == I1, S2.I == I2, S3.I == I3, S4.I == I4, S5.I == I5 {
     // At this point, we know at least one result is not .success, so it must be
     // .successWithPrecedingCancellation, which means cancellationError is set
     return .successWithPrecedingCancellation(error: cancellationError!)
+  }
+}
+
+// MARK: - Private Extensions
+
+private extension Array where Element == LockmanResult {
+  /// Returns true if all results are .success
+  var allSuccessful: Bool {
+    return allSatisfy { result in
+      if case .success = result { return true }
+      return false
+    }
   }
 }
