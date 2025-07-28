@@ -220,7 +220,8 @@ extension Effect {
 
       // Create complete effect with conditional cancellation for operations only
       let shouldBeCancellable = action.lockmanInfo.isCancellationTarget
-      let finalOperations = shouldBeCancellable
+      let finalOperations =
+        shouldBeCancellable
         ? operations.map { $0.cancellable(id: boundaryId) }
         : operations
       let completeEffect = Effect<Action>.concatenate(finalOperations + [unlockEffect])
