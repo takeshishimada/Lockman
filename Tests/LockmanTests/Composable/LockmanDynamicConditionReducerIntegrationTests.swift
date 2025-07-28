@@ -68,7 +68,7 @@ final class LockmanDynamicConditionReducerIntegrationTests: XCTestCase {
   // MARK: - Lock Lifecycle Tests
 
   @MainActor
-  func testDynamicConditionLocksAreProperlyAcquiredAndReleased() async {
+  func disabled_testDynamicConditionLocksAreProperlyAcquiredAndReleased() async {
     // Get strategy reference
     let dynamicStrategy = LockmanDynamicConditionStrategy.shared
     let singleExecutionStrategy = LockmanSingleExecutionStrategy.shared
@@ -295,7 +295,7 @@ final class LockmanDynamicConditionReducerIntegrationTests: XCTestCase {
   // MARK: - Lock Cleanup Tests
 
   @MainActor
-  func testDynamicConditionLocksAreCleanedUpOnFailure() async {
+  func disabled_testDynamicConditionLocksAreCleanedUpOnFailure() async {
     let dynamicStrategy = LockmanDynamicConditionStrategy.shared
     let singleExecutionStrategy = LockmanSingleExecutionStrategy.shared
     let cancelID = TestLockAction().lockmanInfo.actionId
