@@ -70,9 +70,7 @@ public final class LockmanSingleExecutionStrategy: LockmanStrategy, @unchecked S
   /// - Parameters:
   ///   - boundaryId: A unique boundary identifier conforming to `LockmanBoundaryId`
   ///   - info: The lock information containing the action ID and execution mode
-  /// - Returns:
-  ///   - `.success` if the lock can be acquired
-  ///   - `.cancel(error)` if a lock conflict exists based on the execution mode, with detailed error information
+  /// - Returns: `.success` if the lock can be acquired, `.cancel` if a lock conflict exists based on the execution mode
   ///
   /// ## Example
   /// ```swift
@@ -209,36 +207,24 @@ public final class LockmanSingleExecutionStrategy: LockmanStrategy, @unchecked S
     state.remove(id: boundaryId, info: info)
   }
 
-  /// Removes all active locks across all boundaries.
-  ///
-  /// This method clears all internal lock state, effectively resetting the strategy
-  /// to its initial state. Typically used during:
-  /// - Application shutdown
-  /// - Test suite cleanup
-  /// - Global system resets
+  /// Removes all active locks across all boundaries and execution modes.
   public func cleanUp() {
     state.removeAll()
   }
 
-  /// Removes all active locks for the specified boundary identifier.
+  /// Removes all active locks for the specified boundary across all execution modes.
   ///
-  /// Clears lock state associated with a specific boundary while leaving
-  /// other boundaries unaffected. Useful for:
-  /// - Feature-specific cleanup when a component is deallocated
-  /// - User session cleanup
-  /// - Targeted state resets
-  ///
-  /// - Parameter boundaryId: The boundary identifier whose locks should be removed
+  /// - Parameter boundaryId: A unique boundary identifier conforming to `LockmanBoundaryId`
   public func cleanUp<B: LockmanBoundaryId>(boundaryId: B) {
     state.removeAll(id: boundaryId)
   }
 
-  /// Returns current locks information for debugging.
+  /// Returns current locks information for debugging purposes.
   ///
   /// Provides a snapshot of all currently held locks across all boundaries.
   /// The returned dictionary maps boundary identifiers to their active lock information.
   ///
-  /// - Returns: Dictionary of boundary IDs to their active locks
+  /// - Returns: A dictionary mapping boundary identifiers to their associated lock information
   public func getCurrentLocks() -> [AnyLockmanBoundaryId: [any LockmanInfo]] {
     var result: [AnyLockmanBoundaryId: [any LockmanInfo]] = [:]
 
