@@ -206,14 +206,6 @@ extension LockmanDynamicConditionReducer {
       return .none
     }
 
-    // Create unlock token for dynamic condition evaluation
-    let unlockToken = LockmanUnlock(
-      id: boundaryId,
-      info: LockmanDynamicConditionInfo(actionId: actionId),
-      strategy: strategy,
-      unlockOption: unlockOption ?? .immediate
-    )
-
     // Step 2: Evaluate conditions (dynamic lock condition and lock call)
     let conditionResult = evaluateConditions(
       dynamicLockCondition: dynamicLockCondition,
@@ -228,7 +220,9 @@ extension LockmanDynamicConditionReducer {
     // Step 3: Build effect and handle condition evaluation result
     return buildLockEffect(
       conditionResult: conditionResult,
-      unlockToken: unlockToken,
+      strategy: strategy,
+      actionId: actionId,
+      unlockOption: unlockOption ?? .immediate,
       lockAction: lockAction,
       boundaryId: boundaryId,
       priority: priority,

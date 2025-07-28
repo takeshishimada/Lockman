@@ -172,7 +172,9 @@ extension LockmanDynamicConditionReducer {
   ///
   /// - Parameters:
   ///   - conditionResult: Result from Step 2 condition evaluation
-  ///   - unlockToken: Unlock token for dynamic condition locks
+  ///   - strategy: Strategy for dynamic condition locks
+  ///   - actionId: Action identifier for unlock token creation
+  ///   - unlockOption: Controls when the unlock operation is executed
   ///   - lockAction: LockmanAction providing lock information
   ///   - boundaryId: Boundary identifier for lock management
   ///   - priority: Task priority for the operation
@@ -187,7 +189,9 @@ extension LockmanDynamicConditionReducer {
   @usableFromInline
   func buildLockEffect<B: LockmanBoundaryId, LA: LockmanAction>(
     conditionResult: ConditionEvaluationResult,
-    unlockToken: LockmanUnlock<B, LockmanDynamicConditionInfo>,
+    strategy: AnyLockmanStrategy<LockmanDynamicConditionInfo>,
+    actionId: LockmanActionId,
+    unlockOption: LockmanUnlockOption,
     lockAction: LA,
     boundaryId: B,
     priority: TaskPriority?,
@@ -199,6 +203,14 @@ extension LockmanDynamicConditionReducer {
     line: UInt,
     column: UInt
   ) -> Effect<Action> {
+
+    // Create unlock token for dynamic condition evaluation (moved from caller)
+    let unlockToken = LockmanUnlock(
+      id: boundaryId,
+      info: LockmanDynamicConditionInfo(actionId: actionId),
+      strategy: strategy,
+      unlockOption: unlockOption
+    )
 
     // Create base effect with conditional cancellation ID based on action design intent
     let shouldBeCancellable = lockAction.lockmanInfo.isCancellationTarget
