@@ -1,8 +1,10 @@
-/// A group identifier used by Lockman strategies, combining `Hashable` and `Sendable`
-/// to ensure unique and concurrent-safe keys.
+/// A protocol composition for group identifiers used by Lockman coordination strategies.
 ///
-/// This type alias enables any type that is both `Hashable` and `Sendable` to be used
-/// as a group identifier in coordination strategies.
+/// This typealias combines `Hashable` and `Sendable` to ensure group IDs
+/// can be used as dictionary keys and passed safely across concurrent contexts.
+///
+/// Any type that is both `Hashable` and `Sendable` can be used as a group identifier
+/// in coordination strategies.
 ///
 /// ## Usage Examples
 /// ```swift

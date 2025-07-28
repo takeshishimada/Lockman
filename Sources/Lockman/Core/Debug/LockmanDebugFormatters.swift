@@ -1,6 +1,9 @@
 import Foundation
 
-/// Formatters for debug output
+/// Formatters for debug output and lock table display.
+///
+/// This extension provides formatting utilities for displaying lock information
+/// in human-readable tables with customizable options.
 extension LockmanManager.debug {
   /// Options for formatting debug output
   public struct FormatOptions: Sendable {
@@ -40,7 +43,12 @@ extension LockmanManager.debug {
     )
   }
 
-  /// Formats a strategy name according to options
+  /// Formats a strategy name according to the specified options.
+  ///
+  /// - Parameters:
+  ///   - fullName: The full strategy name to format
+  ///   - options: Formatting options to apply
+  /// - Returns: The formatted strategy name
   static func formatStrategyName(_ fullName: String, options: FormatOptions) -> String {
     guard options.useShortStrategyNames else {
       return fullName
@@ -74,7 +82,12 @@ extension LockmanManager.debug {
     }
   }
 
-  /// Formats a boundary ID according to options
+  /// Formats a boundary ID according to the specified options.
+  ///
+  /// - Parameters:
+  ///   - boundaryId: The boundary ID string to format
+  ///   - options: Formatting options to apply
+  /// - Returns: The formatted boundary ID
   static func formatBoundaryId(_ boundaryId: String, options: FormatOptions) -> String {
     // Always clean up the raw boundary ID format first
     var cleaned = boundaryId
@@ -143,7 +156,9 @@ extension LockmanManager.debug {
     return cleanContent
   }
 
-  /// Prints current locks with custom formatting options
+  /// Prints a formatted table of all current locks across all strategies.
+  ///
+  /// - Parameter options: Formatting options for the table display
   public static func printCurrentLocks(options: FormatOptions = .default) {
     let container = LockmanManager.container
     var allLocks: [(strategy: String, boundaryId: String, info: any LockmanInfo)] = []

@@ -24,16 +24,16 @@
 /// final class MyStrategy: LockmanStrategy {
 ///   typealias I = MyLockInfo
 ///
-///   func canLock<B: LockmanBoundaryId>(id: B, info: I) -> LockmanResult {
+///   func canLock<B: LockmanBoundaryId>(boundaryId: B, info: I) -> LockmanResult {
 ///     // Check if lock can be acquired
 ///     return .success
 ///   }
 ///
-///   func lock<B: LockmanBoundaryId>(id: B, info: I) {
+///   func lock<B: LockmanBoundaryId>(boundaryId: B, info: I) {
 ///     // Acquire the lock
 ///   }
 ///
-///   func unlock<B: LockmanBoundaryId>(id: B, info: I) {
+///   func unlock<B: LockmanBoundaryId>(boundaryId: B, info: I) {
 ///     // Release the lock
 ///   }
 ///
@@ -41,7 +41,7 @@
 ///     // Clean up all state
 ///   }
 ///
-///   func cleanUp<B: LockmanBoundaryId>(id: B) {
+///   func cleanUp<B: LockmanBoundaryId>(boundaryId: B) {
 ///     // Clean up state for specific boundary
 ///   }
 /// }

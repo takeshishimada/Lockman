@@ -65,7 +65,7 @@ public protocol LockmanAction: Sendable {
   var unlockOption: LockmanUnlockOption { get }
 }
 
-// Default implementation for backward compatibility
+// MARK: - Default Implementation
 extension LockmanAction {
   /// Default unlock option uses the global configuration setting.
   public var unlockOption: LockmanUnlockOption {

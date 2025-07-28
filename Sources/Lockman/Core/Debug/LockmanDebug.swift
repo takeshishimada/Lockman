@@ -79,8 +79,9 @@ extension LockmanManager {
 // MARK: - Protocol for Composite Info Introspection
 
 /// Protocol for composite info types to expose their sub-infos.
-/// Internal protocol used only for debug introspection of composite strategies.
-/// Not part of the public API to avoid exposing implementation details.
+///
+/// This internal protocol is used only for debug introspection of composite strategies.
+/// It is not part of the public API to avoid exposing implementation details.
 internal protocol LockmanCompositeInfo {
   func allInfos() -> [any LockmanInfo]
 }

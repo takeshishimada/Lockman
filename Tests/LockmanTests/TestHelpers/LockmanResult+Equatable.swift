@@ -1,4 +1,5 @@
 import Foundation
+
 @testable import Lockman
 
 // MARK: - Test-Only Equatable Conformance
