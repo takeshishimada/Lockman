@@ -114,6 +114,15 @@ public final class LockmanGroupCoordinationStrategy: LockmanStrategy, @unchecked
 
   // MARK: - LockmanStrategy
 
+  /// Checks if locks can be acquired for group coordination based on roles and policies.
+  ///
+  /// Evaluates group coordination rules including leader entry policies and member constraints.
+  /// All specified groups must satisfy their conditions for the lock to be acquired.
+  ///
+  /// - Parameters:
+  ///   - boundaryId: A unique boundary identifier conforming to `LockmanBoundaryId`
+  ///   - info: Group coordination lock information containing group IDs and coordination role
+  /// - Returns: `.success` if all groups allow the coordination, `.cancel` if any group blocks it
   public func canLock<B: LockmanBoundaryId>(
     boundaryId: B,
     info: LockmanGroupCoordinatedInfo
@@ -217,6 +226,14 @@ public final class LockmanGroupCoordinationStrategy: LockmanStrategy, @unchecked
     return result
   }
 
+  /// Acquires locks by registering the action in all specified group coordination states.
+  ///
+  /// This method should only be called after `canLock` returns a success result.
+  /// The action will be registered as an active member in all specified groups.
+  ///
+  /// - Parameters:
+  ///   - boundaryId: A unique boundary identifier conforming to `LockmanBoundaryId`
+  ///   - info: Group coordination lock information containing group IDs and coordination role
   public func lock<B: LockmanBoundaryId>(
     boundaryId: B,
     info: LockmanGroupCoordinatedInfo
@@ -243,6 +260,13 @@ public final class LockmanGroupCoordinationStrategy: LockmanStrategy, @unchecked
     }
   }
 
+  /// Releases locks by removing the action from all specified group coordination states.
+  ///
+  /// The action will be removed from all specified groups, and empty groups will be cleaned up automatically.
+  ///
+  /// - Parameters:
+  ///   - boundaryId: A unique boundary identifier conforming to `LockmanBoundaryId`
+  ///   - info: Group coordination lock information containing group IDs and coordination role
   public func unlock<B: LockmanBoundaryId>(
     boundaryId: B,
     info: LockmanGroupCoordinatedInfo
@@ -268,12 +292,16 @@ public final class LockmanGroupCoordinationStrategy: LockmanStrategy, @unchecked
     }
   }
 
+  /// Removes all active locks across all boundaries and groups.
   public func cleanUp() {
     storage.withCriticalRegion { storage in
       storage.removeAll()
     }
   }
 
+  /// Removes all active locks for the specified boundary across all groups.
+  ///
+  /// - Parameter boundaryId: A unique boundary identifier conforming to `LockmanBoundaryId`
   public func cleanUp<B: LockmanBoundaryId>(boundaryId: B) {
     storage.withCriticalRegion { storage in
       let anyBoundaryId = AnyLockmanBoundaryId(boundaryId)
@@ -281,12 +309,12 @@ public final class LockmanGroupCoordinationStrategy: LockmanStrategy, @unchecked
     }
   }
 
-  /// Returns current locks information for debugging.
+  /// Returns current locks information for debugging purposes.
   ///
-  /// Provides a snapshot of all currently held locks across all boundaries.
+  /// Provides a snapshot of all currently held locks across all boundaries and groups.
   /// The returned dictionary maps boundary identifiers to their active lock information.
   ///
-  /// - Returns: Dictionary of boundary IDs to their active locks
+  /// - Returns: A dictionary mapping boundary identifiers to their associated lock information
   public func getCurrentLocks() -> [AnyLockmanBoundaryId: [any LockmanInfo]] {
     storage.withCriticalRegion { storage in
       var result: [AnyLockmanBoundaryId: [any LockmanInfo]] = [:]

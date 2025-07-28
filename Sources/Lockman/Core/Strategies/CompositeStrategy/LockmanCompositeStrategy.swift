@@ -60,6 +60,12 @@ where S1.I == I1, S2.I == I2 {
   }
 
   /// Checks if locks can be acquired from all component strategies.
+  ///
+  /// - Parameters:
+  ///   - boundaryId: A unique boundary identifier conforming to `LockmanBoundaryId`
+  ///   - info: Composite lock information containing details for both strategies
+  /// - Returns: `.success` if all strategies can acquire locks, `.cancel` if any strategy fails,
+  ///   or `.successWithPrecedingCancellation` if locks can be acquired but with prior cancellations
   public func canLock<B: LockmanBoundaryId>(
     boundaryId: B,
     info: LockmanCompositeInfo2<I1, I2>
@@ -104,6 +110,7 @@ where S1.I == I1, S2.I == I2 {
     return result
   }
 
+  /// Acquires locks from all component strategies in the specified order.
   ///
   /// This method should only be called after `canLock` returns a success result.
   /// All strategies will acquire their locks in the order they were specified.
@@ -119,6 +126,11 @@ where S1.I == I1, S2.I == I2 {
     strategy2.lock(boundaryId: boundaryId, info: info.lockmanInfoForStrategy2)
   }
 
+  /// Releases locks from all component strategies in reverse order (LIFO).
+  ///
+  /// - Parameters:
+  ///   - boundaryId: A unique boundary identifier conforming to `LockmanBoundaryId`
+  ///   - info: Composite lock information containing details for both strategies
   public func unlock<B: LockmanBoundaryId>(
     boundaryId: B,
     info: LockmanCompositeInfo2<I1, I2>
@@ -128,17 +140,25 @@ where S1.I == I1, S2.I == I2 {
     strategy1.unlock(boundaryId: boundaryId, info: info.lockmanInfoForStrategy1)
   }
 
+  /// Performs cleanup operations on all component strategies.
   public func cleanUp() {
     strategy1.cleanUp()
     strategy2.cleanUp()
   }
 
+  /// Performs cleanup operations on all component strategies for a specific boundary.
+  ///
+  /// - Parameter boundaryId: A unique boundary identifier conforming to `LockmanBoundaryId`
   public func cleanUp<B: LockmanBoundaryId>(boundaryId: B) {
     strategy1.cleanUp(boundaryId: boundaryId)
     strategy2.cleanUp(boundaryId: boundaryId)
   }
 
-  /// Returns current locks information for debugging.
+  /// Returns current locks information from all component strategies for debugging.
+  ///
+  /// This method merges lock information from all component strategies.
+  ///
+  /// - Returns: A dictionary mapping boundary IDs to arrays of lock information
   public func getCurrentLocks() -> [AnyLockmanBoundaryId: [any LockmanInfo]] {
     var result: [AnyLockmanBoundaryId: [any LockmanInfo]] = [:]
 
@@ -246,6 +266,13 @@ where S1.I == I1, S2.I == I2, S3.I == I3 {
     LockmanStrategyId(name: "CompositeStrategy3")
   }
 
+  /// Checks if locks can be acquired from all component strategies.
+  ///
+  /// - Parameters:
+  ///   - boundaryId: A unique boundary identifier conforming to `LockmanBoundaryId`
+  ///   - info: Composite lock information containing details for all three strategies
+  /// - Returns: `.success` if all strategies can acquire locks, `.cancel` if any strategy fails,
+  ///   or `.successWithPrecedingCancellation` if locks can be acquired but with prior cancellations
   public func canLock<B: LockmanBoundaryId>(
     boundaryId: B,
     info: LockmanCompositeInfo3<I1, I2, I3>
@@ -303,6 +330,14 @@ where S1.I == I1, S2.I == I2, S3.I == I3 {
     return result
   }
 
+  /// Acquires locks from all component strategies in the specified order.
+  ///
+  /// This method should only be called after `canLock` returns a success result.
+  /// All strategies will acquire their locks in the order they were specified.
+  ///
+  /// - Parameters:
+  ///   - boundaryId: A unique boundary identifier conforming to `LockmanBoundaryId`
+  ///   - info: Composite lock information containing details for all strategies
   public func lock<B: LockmanBoundaryId>(
     boundaryId: B,
     info: LockmanCompositeInfo3<I1, I2, I3>
@@ -312,7 +347,11 @@ where S1.I == I1, S2.I == I2, S3.I == I3 {
     strategy3.lock(boundaryId: boundaryId, info: info.lockmanInfoForStrategy3)
   }
 
-  /// Releases locks from all component strategies in reverse order.
+  /// Releases locks from all component strategies in reverse order (LIFO).
+  ///
+  /// - Parameters:
+  ///   - boundaryId: A unique boundary identifier conforming to `LockmanBoundaryId`
+  ///   - info: Composite lock information containing details for all strategies
   public func unlock<B: LockmanBoundaryId>(
     boundaryId: B,
     info: LockmanCompositeInfo3<I1, I2, I3>
@@ -323,19 +362,27 @@ where S1.I == I1, S2.I == I2, S3.I == I3 {
     strategy1.unlock(boundaryId: boundaryId, info: info.lockmanInfoForStrategy1)
   }
 
+  /// Performs cleanup operations on all component strategies.
   public func cleanUp() {
     strategy1.cleanUp()
     strategy2.cleanUp()
     strategy3.cleanUp()
   }
 
+  /// Performs cleanup operations on all component strategies for a specific boundary.
+  ///
+  /// - Parameter boundaryId: A unique boundary identifier conforming to `LockmanBoundaryId`
   public func cleanUp<B: LockmanBoundaryId>(boundaryId: B) {
     strategy1.cleanUp(boundaryId: boundaryId)
     strategy2.cleanUp(boundaryId: boundaryId)
     strategy3.cleanUp(boundaryId: boundaryId)
   }
 
-  /// Returns current locks information for debugging.
+  /// Returns current locks information from all component strategies for debugging.
+  ///
+  /// This method merges lock information from all component strategies.
+  ///
+  /// - Returns: A dictionary mapping boundary IDs to arrays of lock information
   public func getCurrentLocks() -> [AnyLockmanBoundaryId: [any LockmanInfo]] {
     var result: [AnyLockmanBoundaryId: [any LockmanInfo]] = [:]
 
@@ -431,6 +478,13 @@ where S1.I == I1, S2.I == I2, S3.I == I3, S4.I == I4 {
     LockmanStrategyId(name: "CompositeStrategy4")
   }
 
+  /// Checks if locks can be acquired from all component strategies.
+  ///
+  /// - Parameters:
+  ///   - boundaryId: A unique boundary identifier conforming to `LockmanBoundaryId`
+  ///   - info: Composite lock information containing details for all strategies
+  /// - Returns: `.success` if all strategies can acquire locks, `.cancel` if any strategy fails,
+  ///   or `.successWithPrecedingCancellation` if locks can be acquired but with prior cancellations
   public func canLock<B: LockmanBoundaryId>(
     boundaryId: B,
     info: LockmanCompositeInfo4<I1, I2, I3, I4>
@@ -501,6 +555,14 @@ where S1.I == I1, S2.I == I2, S3.I == I3, S4.I == I4 {
     return result
   }
 
+  /// Acquires locks from all component strategies in the specified order.
+  ///
+  /// This method should only be called after `canLock` returns a success result.
+  /// All strategies will acquire their locks in the order they were specified.
+  ///
+  /// - Parameters:
+  ///   - boundaryId: A unique boundary identifier conforming to `LockmanBoundaryId`
+  ///   - info: Composite lock information containing details for all strategies
   public func lock<B: LockmanBoundaryId>(
     boundaryId: B,
     info: LockmanCompositeInfo4<I1, I2, I3, I4>
@@ -511,6 +573,11 @@ where S1.I == I1, S2.I == I2, S3.I == I3, S4.I == I4 {
     strategy4.lock(boundaryId: boundaryId, info: info.lockmanInfoForStrategy4)
   }
 
+  /// Releases locks from all component strategies in reverse order (LIFO).
+  ///
+  /// - Parameters:
+  ///   - boundaryId: A unique boundary identifier conforming to `LockmanBoundaryId`
+  ///   - info: Composite lock information containing details for all strategies
   public func unlock<B: LockmanBoundaryId>(
     boundaryId: B,
     info: LockmanCompositeInfo4<I1, I2, I3, I4>
@@ -522,6 +589,7 @@ where S1.I == I1, S2.I == I2, S3.I == I3, S4.I == I4 {
     strategy1.unlock(boundaryId: boundaryId, info: info.lockmanInfoForStrategy1)
   }
 
+  /// Performs cleanup operations on all component strategies.
   public func cleanUp() {
     strategy1.cleanUp()
     strategy2.cleanUp()
@@ -529,6 +597,9 @@ where S1.I == I1, S2.I == I2, S3.I == I3, S4.I == I4 {
     strategy4.cleanUp()
   }
 
+  /// Performs cleanup operations on all component strategies for a specific boundary.
+  ///
+  /// - Parameter boundaryId: A unique boundary identifier conforming to `LockmanBoundaryId`
   public func cleanUp<B: LockmanBoundaryId>(boundaryId: B) {
     strategy1.cleanUp(boundaryId: boundaryId)
     strategy2.cleanUp(boundaryId: boundaryId)
@@ -536,7 +607,11 @@ where S1.I == I1, S2.I == I2, S3.I == I3, S4.I == I4 {
     strategy4.cleanUp(boundaryId: boundaryId)
   }
 
-  /// Returns current locks information for debugging.
+  /// Returns current locks information from all component strategies for debugging.
+  ///
+  /// This method merges lock information from all component strategies.
+  ///
+  /// - Returns: A dictionary mapping boundary IDs to arrays of lock information
   public func getCurrentLocks() -> [AnyLockmanBoundaryId: [any LockmanInfo]] {
     var result: [AnyLockmanBoundaryId: [any LockmanInfo]] = [:]
 
@@ -647,6 +722,13 @@ where S1.I == I1, S2.I == I2, S3.I == I3, S4.I == I4, S5.I == I5 {
     LockmanStrategyId(name: "CompositeStrategy5")
   }
 
+  /// Checks if locks can be acquired from all component strategies.
+  ///
+  /// - Parameters:
+  ///   - boundaryId: A unique boundary identifier conforming to `LockmanBoundaryId`
+  ///   - info: Composite lock information containing details for all strategies
+  /// - Returns: `.success` if all strategies can acquire locks, `.cancel` if any strategy fails,
+  ///   or `.successWithPrecedingCancellation` if locks can be acquired but with prior cancellations
   public func canLock<B: LockmanBoundaryId>(
     boundaryId: B,
     info: LockmanCompositeInfo5<I1, I2, I3, I4, I5>
@@ -730,6 +812,14 @@ where S1.I == I1, S2.I == I2, S3.I == I3, S4.I == I4, S5.I == I5 {
     return result
   }
 
+  /// Acquires locks from all component strategies in the specified order.
+  ///
+  /// This method should only be called after `canLock` returns a success result.
+  /// All strategies will acquire their locks in the order they were specified.
+  ///
+  /// - Parameters:
+  ///   - boundaryId: A unique boundary identifier conforming to `LockmanBoundaryId`
+  ///   - info: Composite lock information containing details for all strategies
   public func lock<B: LockmanBoundaryId>(
     boundaryId: B,
     info: LockmanCompositeInfo5<I1, I2, I3, I4, I5>
@@ -741,6 +831,11 @@ where S1.I == I1, S2.I == I2, S3.I == I3, S4.I == I4, S5.I == I5 {
     strategy5.lock(boundaryId: boundaryId, info: info.lockmanInfoForStrategy5)
   }
 
+  /// Releases locks from all component strategies in reverse order (LIFO).
+  ///
+  /// - Parameters:
+  ///   - boundaryId: A unique boundary identifier conforming to `LockmanBoundaryId`
+  ///   - info: Composite lock information containing details for all strategies
   public func unlock<B: LockmanBoundaryId>(
     boundaryId: B,
     info: LockmanCompositeInfo5<I1, I2, I3, I4, I5>
@@ -753,6 +848,7 @@ where S1.I == I1, S2.I == I2, S3.I == I3, S4.I == I4, S5.I == I5 {
     strategy1.unlock(boundaryId: boundaryId, info: info.lockmanInfoForStrategy1)
   }
 
+  /// Performs cleanup operations on all component strategies.
   public func cleanUp() {
     strategy1.cleanUp()
     strategy2.cleanUp()
@@ -761,6 +857,9 @@ where S1.I == I1, S2.I == I2, S3.I == I3, S4.I == I4, S5.I == I5 {
     strategy5.cleanUp()
   }
 
+  /// Performs cleanup operations on all component strategies for a specific boundary.
+  ///
+  /// - Parameter boundaryId: A unique boundary identifier conforming to `LockmanBoundaryId`
   public func cleanUp<B: LockmanBoundaryId>(boundaryId: B) {
     strategy1.cleanUp(boundaryId: boundaryId)
     strategy2.cleanUp(boundaryId: boundaryId)
@@ -769,7 +868,11 @@ where S1.I == I1, S2.I == I2, S3.I == I3, S4.I == I4, S5.I == I5 {
     strategy5.cleanUp(boundaryId: boundaryId)
   }
 
-  /// Returns current locks information for debugging.
+  /// Returns current locks information from all component strategies for debugging.
+  ///
+  /// This method merges lock information from all component strategies.
+  ///
+  /// - Returns: A dictionary mapping boundary IDs to arrays of lock information
   public func getCurrentLocks() -> [AnyLockmanBoundaryId: [any LockmanInfo]] {
     var result: [AnyLockmanBoundaryId: [any LockmanInfo]] = [:]
 

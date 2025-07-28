@@ -111,7 +111,8 @@ public final class LockmanPriorityBasedStrategy: LockmanStrategy, @unchecked Sen
   /// - Parameters:
   ///   - boundaryId: A unique boundary identifier conforming to `LockmanBoundaryId`
   ///   - info: Priority-based lock information containing action ID and priority
-  /// - Returns: A `LockmanResult` indicating the outcome of the lock evaluation
+  /// - Returns: `.success` if the lock can be acquired, `.cancel` if conflicts exist,
+  ///   or `.successWithPrecedingCancellation` if the lock can be acquired by canceling existing actions
   public func canLock<B: LockmanBoundaryId>(
     boundaryId: B,
     info: LockmanPriorityBasedInfo
@@ -247,43 +248,24 @@ public final class LockmanPriorityBasedStrategy: LockmanStrategy, @unchecked Sen
     state.remove(id: boundaryId, info: info)
   }
 
-  /// Removes all priority-based locks across all boundaries.
-  ///
-  /// Clears all internal lock state, effectively resetting the strategy to its
-  /// initial state. This operation affects all boundaries simultaneously.
-  ///
-  /// ## Use Cases
-  /// - Application shutdown sequences
-  /// - Global system resets during development
-  /// - Test suite cleanup between test cases
-  /// - Emergency cleanup scenarios
+  /// Removes all priority-based locks across all boundaries and priority levels.
   public func cleanUp() {
     state.removeAll()
   }
 
-  /// Removes all priority-based locks for the specified boundary identifier.
+  /// Removes all priority-based locks for the specified boundary across all priority levels.
   ///
-  /// Provides targeted cleanup for specific boundaries while preserving
-  /// lock state for other boundaries. This allows fine-grained control
-  /// over which priority contexts to reset.
-  ///
-  /// ## Use Cases
-  /// - Feature-specific cleanup when components are deallocated
-  /// - User session cleanup when users log out
-  /// - Scoped cleanup for temporary contexts or workflows
-  /// - Partial system resets during development
-  ///
-  /// - Parameter boundaryId: The boundary identifier whose locks should be removed
+  /// - Parameter boundaryId: A unique boundary identifier conforming to `LockmanBoundaryId`
   public func cleanUp<B: LockmanBoundaryId>(boundaryId: B) {
     state.removeAll(id: boundaryId)
   }
 
-  /// Returns current locks information for debugging.
+  /// Returns current locks information for debugging purposes.
   ///
   /// Provides a snapshot of all currently held locks across all boundaries.
   /// The returned dictionary maps boundary identifiers to their active lock information.
   ///
-  /// - Returns: Dictionary of boundary IDs to their active locks
+  /// - Returns: A dictionary mapping boundary identifiers to their associated lock information
   public func getCurrentLocks() -> [AnyLockmanBoundaryId: [any LockmanInfo]] {
     var result: [AnyLockmanBoundaryId: [any LockmanInfo]] = [:]
 
