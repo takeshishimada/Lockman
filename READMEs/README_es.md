@@ -257,6 +257,12 @@ Agrega la dependencia a tu objetivo:
 | Lockman | The Composable Architecture |
 |---------|----------------------------|
 | 1.3.0   | 1.20.2                     |
+
+<details>
+<summary>Otras versiones</summary>
+
+| Lockman | The Composable Architecture |
+|---------|----------------------------|
 | 1.2.0   | 1.20.2                     |
 | 1.1.0   | 1.20.2                     |
 | 1.0.0   | 1.20.2                     |
@@ -270,12 +276,6 @@ Agrega la dependencia a tu objetivo:
 | 0.10.0  | 1.19.0                     |
 | 0.9.0   | 1.18.0                     |
 | 0.8.0   | 1.17.1                     |
-
-<details>
-<summary>Otras versiones</summary>
-
-| Lockman | The Composable Architecture |
-|---------|----------------------------|
 | 0.7.0   | 1.17.1                     |
 | 0.6.0   | 1.17.1                     |
 | 0.5.0   | 1.17.1                     |

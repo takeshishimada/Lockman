@@ -5,53 +5,53 @@
 [![Platforms](https://img.shields.io/badge/Platforms-iOS%20%7C%20macOS%20%7C%20tvOS%20%7C%20watchOS%20%7C%20Mac%20Catalyst-333333.svg?style=flat)](https://developer.apple.com/)
 
 
-Lockman è una libreria Swift che risolve i problemi di controllo esclusivo delle azioni nelle applicazioni The Composable Architecture (TCA), con reattività, trasparenza e design dichiarativo in mente.
+Lockman é uma biblioteca Swift que resolve problemas de controle exclusivo de ações em aplicações The Composable Architecture (TCA), com responsividade, transparência e design declarativo em mente.
 
-* [Filosofia di Design](#filosofia-di-design)
-* [Panoramica](#panoramica)
-* [Esempio Base](#esempio-base)
-* [Installazione](#installazione)
-* [Comunità](#comunità)
+* [Filosofia de Design](#filosofia-de-design)
+* [Visão Geral](#visão-geral)
+* [Exemplo Básico](#exemplo-básico)
+* [Instalação](#instalação)
+* [Comunidade](#comunidade)
 
-## Filosofia di Design
+## Filosofia de Design
 
-### Principi di Designing Fluid Interfaces
+### Princípios de Designing Fluid Interfaces
 
-"Designing Fluid Interfaces" della WWDC18 ha presentato principi per interfacce eccezionali:
+O "Designing Fluid Interfaces" da WWDC18 apresentou princípios para interfaces excepcionais:
 
-* **Risposta Immediata e Reindirizzamento Continuo** - Reattività che non permette nemmeno 10ms di ritardo
-* **Movimento di Tocco e Contenuto Uno-a-Uno** - Il contenuto segue il dito durante le operazioni di trascinamento
-* **Feedback Continuo** - Reazione immediata a tutte le interazioni
-* **Rilevamento di Gesti Paralleli** - Riconoscimento di più gesti simultaneamente
-* **Coerenza Spaziale** - Mantenimento della coerenza di posizione durante le animazioni
-* **Interazioni Leggere, Output Amplificato** - Grandi effetti da piccoli input
+* **Resposta Imediata e Redirecionamento Contínuo** - Responsividade que não permite nem 10ms de atraso
+* **Movimento de Toque e Conteúdo Um-para-Um** - O conteúdo segue o dedo durante operações de arraste
+* **Feedback Contínuo** - Reação imediata a todas as interações
+* **Detecção de Gestos Paralelos** - Reconhecendo múltiplos gestos simultaneamente
+* **Consistência Espacial** - Mantendo consistência de posição durante animações
+* **Interações Leves, Saída Amplificada** - Grandes efeitos a partir de pequenas entradas
 
-### Sfide Tradizionali
+### Desafios Tradicionais
 
-Lo sviluppo tradizionale dell'UI ha risolto i problemi semplicemente proibendo pressioni simultanee di pulsanti ed esecuzioni duplicate. Questi approcci sono diventati fattori che ostacolano l'esperienza utente nel moderno design di interfacce fluide.
+O desenvolvimento tradicional de UI resolveu problemas simplesmente proibindo pressionamentos simultâneos de botões e execuções duplicadas. Essas abordagens se tornaram fatores que prejudicam a experiência do usuário no design moderno de interfaces fluidas.
 
-Gli utenti si aspettano qualche forma di feedback anche quando premono i pulsanti simultaneamente. È cruciale separare chiaramente la risposta immediata al livello UI dal controllo appropriato di esclusione reciproca al livello della logica di business.
+Os usuários esperam algum tipo de feedback mesmo ao pressionar botões simultaneamente. É crucial separar claramente a resposta imediata na camada de UI do controle apropriado de exclusão mútua na camada de lógica de negócios.
 
-## Panoramica
+## Visão Geral
 
-Lockman fornisce le seguenti strategie di controllo per affrontare problemi comuni nello sviluppo di app:
+Lockman fornece as seguintes estratégias de controle para abordar problemas comuns no desenvolvimento de aplicativos:
 
-* **Esecuzione Singola**: Previene l'esecuzione duplicata della stessa azione
-* **Basata su Priorità**: Controllo e cancellazione delle azioni basata su priorità
-* **Coordinamento di Gruppo**: Controllo di gruppo attraverso ruoli leader/membro
-* **Condizione Dinamica**: Controllo dinamico basato su condizioni runtime
-* **Concorrenza Limitata**: Limita il numero di esecuzioni concorrenti per gruppo
-* **Strategia Composita**: Combinazione di più strategie
+* **Execução Única**: Previne execução duplicada da mesma ação
+* **Baseado em Prioridade**: Controle e cancelamento de ação baseado em prioridade
+* **Coordenação de Grupo**: Controle de grupo através de papéis líder/membro
+* **Condição Dinâmica**: Controle dinâmico baseado em condições de tempo de execução
+* **Concorrência Limitada**: Limita o número de execuções concorrentes por grupo
+* **Estratégia Composta**: Combinação de múltiplas estratégias
 
-## Esempi
+## Exemplos
 
-| Strategia di Esecuzione Singola | Strategia Basata su Priorità | Strategia di Concorrenza Limitata |
-|----------------------------------|------------------------------|-----------------------------------|
-| ![Strategia di Esecuzione Singola](../Sources/Lockman/Documentation.docc/images/01-SingleExecutionStrategy.gif) | ![Strategia Basata su Priorità](../Sources/Lockman/Documentation.docc/images/02-PriorityBasedStrategy.gif) | ![Strategia di Concorrenza Limitata](../Sources/Lockman/Documentation.docc/images/03-ConcurrencyLimitedStrategy.gif) |
+| Estratégia de Execução Única | Estratégia Baseada em Prioridade | Estratégia de Concorrência Limitada |
+|------------------------------|----------------------------------|-------------------------------------|
+| ![Estratégia de Execução Única](../Sources/Lockman/Documentation.docc/images/01-SingleExecutionStrategy.gif) | ![Estratégia Baseada em Prioridade](../Sources/Lockman/Documentation.docc/images/02-PriorityBasedStrategy.gif) | ![Estratégia de Concorrência Limitada](../Sources/Lockman/Documentation.docc/images/03-ConcurrencyLimitedStrategy.gif) |
 
-## Esempio di Codice
+## Exemplo de Código
 
-Ecco come implementare una funzionalità che previene l'esecuzione duplicata di processi usando il macro `@LockmanSingleExecution`:
+Veja como implementar um recurso que previne execução duplicada de processos usando o macro `@LockmanSingleExecution`:
 
 ```swift
 import CasePaths
@@ -99,7 +99,7 @@ struct ProcessFeature {
                 case .startProcessButtonTapped:
                     return .run { send in
                         await send(.internal(.processStart))
-                        // Simula elaborazione pesante
+                        // Simular processamento pesado
                         try await Task.sleep(nanoseconds: 3_000_000_000)
                         await send(.internal(.processCompleted))
                     }
@@ -109,12 +109,12 @@ struct ProcessFeature {
                 switch internalAction {
                 case .processStart:
                     state.isProcessing = true
-                    state.message = "Elaborazione avviata..."
+                    state.message = "Processamento iniciado..."
                     return .none
                     
                 case .processCompleted:
                     state.isProcessing = false
-                    state.message = "Elaborazione completata"
+                    state.message = "Processamento concluído"
                     return .none
                     
                 case .updateMessage(let message):
@@ -126,10 +126,10 @@ struct ProcessFeature {
         .lock(
             boundaryId: CancelID.userAction,
             lockFailure: { error, send in
-                // Quando l'elaborazione è già in corso
+                // Quando o processamento já está em andamento
                 if error is LockmanSingleExecutionError {
-                    // Aggiorna il messaggio tramite un'azione invece di mutazione diretta dello stato
-                    await send(.internal(.updateMessage("L'elaborazione è già in corso")))
+                    // Atualizar mensagem através de uma ação em vez de mutação direta do estado
+                    await send(.internal(.updateMessage("O processamento já está em andamento")))
                 }
             },
             for: \.view
@@ -138,9 +138,9 @@ struct ProcessFeature {
 }
 ```
 
-Il modificatore `Reducer.lock` applica automaticamente la gestione dei lock alle azioni che si conformano a `LockmanAction`. Poiché l'enumerazione `ViewAction` è contrassegnata con `@LockmanSingleExecution`, l'azione `startProcessButtonTapped` non verrà eseguita mentre l'elaborazione è in corso. Il parametro `for: \.view` indica a Lockman di controllare la conformità a `LockmanAction` per le azioni annidate nel caso `view`.
+O modificador `Reducer.lock` aplica automaticamente o gerenciamento de bloqueio às ações que estão em conformidade com `LockmanAction`. Como a enumeração `ViewAction` está marcada com `@LockmanSingleExecution`, a ação `startProcessButtonTapped` não será executada enquanto o processamento estiver em andamento. O parâmetro `for: \.view` instrui o Lockman a verificar a conformidade com `LockmanAction` para ações aninhadas no caso `view`.
 
-### Esempio di Output di Debug
+### Exemplo de Saída de Debug
 
 ```
 ✅ [Lockman] canLock succeeded - Strategy: SingleExecution, BoundaryId: process, Info: LockmanSingleExecutionInfo(actionId: 'startProcessButtonTapped', uniqueId: 7BFC785A-3D25-4722-B9BC-A3A63A7F49FC, mode: boundary)
@@ -161,19 +161,19 @@ Il modificatore `Reducer.lock` applica automaticamente la gestione dei lock alle
 └─────────────────┴──────────────────┴──────────────────────────────────────┴─────────────────┘
 ```
 
-## Documentazione
+## Documentação
 
-La documentazione per le release e `main` è disponibile qui:
+A documentação para lançamentos e `main` estão disponíveis aqui:
 
 * [`main`](https://takeshishimada.github.io/Lockman/main/documentation/lockman/)
-* [1.3.0](https://takeshishimada.github.io/Lockman/1.3.0/documentation/lockman/) ([guida alla migrazione](https://takeshishimada.github.io/Lockman/1.3.0/documentation/lockman/migratingto1.3))
-* [1.2.0](https://takeshishimada.github.io/Lockman/1.2.0/documentation/lockman/) ([guida alla migrazione](https://takeshishimada.github.io/Lockman/1.2.0/documentation/lockman/migratingto1.2))
-* [1.1.0](https://takeshishimada.github.io/Lockman/1.1.0/documentation/lockman/) ([guida alla migrazione](https://takeshishimada.github.io/Lockman/1.1.0/documentation/lockman/migratingto1.1))
+* [1.3.0](https://takeshishimada.github.io/Lockman/1.3.0/documentation/lockman/) ([guia de migração](https://takeshishimada.github.io/Lockman/1.3.0/documentation/lockman/migratingto1.3))
+* [1.2.0](https://takeshishimada.github.io/Lockman/1.2.0/documentation/lockman/) ([guia de migração](https://takeshishimada.github.io/Lockman/1.2.0/documentation/lockman/migratingto1.2))
+* [1.1.0](https://takeshishimada.github.io/Lockman/1.1.0/documentation/lockman/) ([guia de migração](https://takeshishimada.github.io/Lockman/1.1.0/documentation/lockman/migratingto1.1))
 
 <details>
-<summary>Altre versioni</summary>
+<summary>Outras versões</summary>
 
-* [1.0.0](https://takeshishimada.github.io/Lockman/1.0.0/documentation/lockman/) ([guida alla migrazione](https://takeshishimada.github.io/Lockman/1.0.0/documentation/lockman/migratingto1.0))
+* [1.0.0](https://takeshishimada.github.io/Lockman/1.0.0/documentation/lockman/) ([guia de migração](https://takeshishimada.github.io/Lockman/1.0.0/documentation/lockman/migratingto1.0))
 * [0.13.0](https://takeshishimada.github.io/Lockman/0.13.0/documentation/lockman/)
 * [0.12.0](https://takeshishimada.github.io/Lockman/0.12.0/documentation/lockman/)
 * [0.11.0](https://takeshishimada.github.io/Lockman/0.11.0/documentation/lockman/)
@@ -188,35 +188,35 @@ La documentazione per le release e `main` è disponibile qui:
 
 </details>
 
-Ci sono numerosi articoli nella documentazione che potresti trovare utili mentre prendi confidenza con la libreria:
+Existem vários artigos na documentação que você pode achar úteis à medida que se familiariza com a biblioteca:
 
-### Essenziali
-* [Iniziare](https://takeshishimada.github.io/Lockman/main/documentation/lockman/gettingstarted) - Impara come integrare Lockman nella tua applicazione TCA
-* [Panoramica dei Confini](https://takeshishimada.github.io/Lockman/main/documentation/lockman/boundaryoverview) - Comprendi il concetto di confini in Lockman
-* [Lock](https://takeshishimada.github.io/Lockman/main/documentation/lockman/lock) - Comprendere il meccanismo di blocco
-* [Unlock](https://takeshishimada.github.io/Lockman/main/documentation/lockman/unlock) - Comprendere il meccanismo di sblocco
-* [Scegliere una Strategia](https://takeshishimada.github.io/Lockman/main/documentation/lockman/choosingstrategy) - Seleziona la strategia giusta per il tuo caso d'uso
-* [Configurazione](https://takeshishimada.github.io/Lockman/main/documentation/lockman/configuration) - Configura Lockman per le esigenze della tua applicazione
-* [Gestione degli Errori](https://takeshishimada.github.io/Lockman/main/documentation/lockman/errorhandling) - Impara i pattern comuni di gestione degli errori
-* [Guida al Debug](https://takeshishimada.github.io/Lockman/main/documentation/lockman/debuggingguide) - Esegui il debug dei problemi relativi a Lockman nella tua applicazione
+### Essenciais
+* [Começando](https://takeshishimada.github.io/Lockman/main/documentation/lockman/gettingstarted) - Aprenda como integrar Lockman em sua aplicação TCA
+* [Visão Geral de Limites](https://takeshishimada.github.io/Lockman/main/documentation/lockman/boundaryoverview) - Entenda o conceito de limites em Lockman
+* [Bloquear](https://takeshishimada.github.io/Lockman/main/documentation/lockman/lock) - Entendendo o mecanismo de bloqueio
+* [Desbloquear](https://takeshishimada.github.io/Lockman/main/documentation/lockman/unlock) - Entendendo o mecanismo de desbloqueio
+* [Escolhendo uma Estratégia](https://takeshishimada.github.io/Lockman/main/documentation/lockman/choosingstrategy) - Selecione a estratégia certa para seu caso de uso
+* [Configuração](https://takeshishimada.github.io/Lockman/main/documentation/lockman/configuration) - Configure Lockman para as necessidades de sua aplicação
+* [Tratamento de Erros](https://takeshishimada.github.io/Lockman/main/documentation/lockman/errorhandling) - Aprenda sobre padrões comuns de tratamento de erros
+* [Guia de Depuração](https://takeshishimada.github.io/Lockman/main/documentation/lockman/debuggingguide) - Depure problemas relacionados ao Lockman em sua aplicação
 
-### Strategie
-* [Strategia di Esecuzione Singola](https://takeshishimada.github.io/Lockman/main/documentation/lockman/singleexecutionstrategy) - Previene l'esecuzione duplicata
-* [Strategia Basata su Priorità](https://takeshishimada.github.io/Lockman/main/documentation/lockman/prioritybasedstrategy) - Controllo basato su priorità
-* [Strategia di Concorrenza Limitata](https://takeshishimada.github.io/Lockman/main/documentation/lockman/concurrencylimitedstrategy) - Limita le esecuzioni concorrenti
-* [Strategia di Coordinamento di Gruppo](https://takeshishimada.github.io/Lockman/main/documentation/lockman/groupcoordinationstrategy) - Coordina le azioni correlate
-* [Strategia di Condizione Dinamica](https://takeshishimada.github.io/Lockman/main/documentation/lockman/dynamicconditionstrategy) - Controllo dinamico runtime
-* [Strategia Composita](https://takeshishimada.github.io/Lockman/main/documentation/lockman/compositestrategy) - Combina più strategie
+### Estratégias
+* [Estratégia de Execução Única](https://takeshishimada.github.io/Lockman/main/documentation/lockman/singleexecutionstrategy) - Previne execução duplicada
+* [Estratégia Baseada em Prioridade](https://takeshishimada.github.io/Lockman/main/documentation/lockman/prioritybasedstrategy) - Controle baseado em prioridade
+* [Estratégia de Concorrência Limitada](https://takeshishimada.github.io/Lockman/main/documentation/lockman/concurrencylimitedstrategy) - Limita execuções concorrentes
+* [Estratégia de Coordenação de Grupo](https://takeshishimada.github.io/Lockman/main/documentation/lockman/groupcoordinationstrategy) - Coordena ações relacionadas
+* [Estratégia de Condição Dinâmica](https://takeshishimada.github.io/Lockman/main/documentation/lockman/dynamicconditionstrategy) - Controle dinâmico em tempo de execução
+* [Estratégia Composta](https://takeshishimada.github.io/Lockman/main/documentation/lockman/compositestrategy) - Combina múltiplas estratégias
 
-Nota: La documentazione è disponibile solo in inglese.
+Nota: A documentação está disponível apenas em inglês.
 
-## Installazione
+## Instalação
 
-Lockman può essere installato usando [Swift Package Manager](https://swift.org/package-manager/).
+Lockman pode ser instalado usando [Swift Package Manager](https://swift.org/package-manager/).
 
 ### Xcode
 
-In Xcode, seleziona File → Add Package Dependencies e inserisci il seguente URL:
+No Xcode, selecione File → Add Package Dependencies e insira a seguinte URL:
 
 ```
 https://github.com/takeshishimada/Lockman
@@ -224,7 +224,7 @@ https://github.com/takeshishimada/Lockman
 
 ### Package.swift
 
-Aggiungi la dipendenza al tuo file Package.swift:
+Adicione a dependência ao seu arquivo Package.swift:
 
 ```swift
 dependencies: [
@@ -232,7 +232,7 @@ dependencies: [
 ]
 ```
 
-Aggiungi la dipendenza al tuo target:
+Adicione a dependência ao seu alvo:
 
 ```swift
 .target(
@@ -243,20 +243,26 @@ Aggiungi la dipendenza al tuo target:
 )
 ```
 
-### Requisiti
+### Requisitos
 
-| Piattaforma | Versione Minima |
-|-------------|-----------------|
-| iOS         | 13.0            |
-| macOS       | 10.15           |
-| tvOS        | 13.0            |
-| watchOS     | 6.0             |
+| Plataforma | Versão Mínima |
+|------------|---------------|
+| iOS        | 13.0          |
+| macOS      | 10.15         |
+| tvOS       | 13.0          |
+| watchOS    | 6.0           |
 
-### Compatibilità delle Versioni
+### Compatibilidade de Versão
 
 | Lockman | The Composable Architecture |
 |---------|----------------------------|
 | 1.3.0   | 1.20.2                     |
+
+<details>
+<summary>Outras versões</summary>
+
+| Lockman | The Composable Architecture |
+|---------|----------------------------|
 | 1.2.0   | 1.20.2                     |
 | 1.1.0   | 1.20.2                     |
 | 1.0.0   | 1.20.2                     |
@@ -270,12 +276,6 @@ Aggiungi la dipendenza al tuo target:
 | 0.10.0  | 1.19.0                     |
 | 0.9.0   | 1.18.0                     |
 | 0.8.0   | 1.17.1                     |
-
-<details>
-<summary>Altre versioni</summary>
-
-| Lockman | The Composable Architecture |
-|---------|----------------------------|
 | 0.7.0   | 1.17.1                     |
 | 0.6.0   | 1.17.1                     |
 | 0.5.0   | 1.17.1                     |
@@ -302,20 +302,20 @@ This documentation is also available in other languages:
 - [Português (Portuguese)](README_pt-BR.md)
 - [Italiano (Italian)](README_it.md)
 
-## Comunità
+## Comunidade
 
-### Discussione e Aiuto
+### Discussão e Ajuda
 
-Domande e discussioni possono essere tenute su [GitHub Discussions](https://github.com/takeshishimada/Lockman/discussions).
+Perguntas e discussões podem ser realizadas no [GitHub Discussions](https://github.com/takeshishimada/Lockman/discussions).
 
-### Segnalazioni di Bug
+### Relatórios de Bugs
 
-Se trovi un bug, per favore segnalalo su [Issues](https://github.com/takeshishimada/Lockman/issues).
+Se você encontrar um bug, por favor reporte em [Issues](https://github.com/takeshishimada/Lockman/issues).
 
-### Contribuire
+### Contribuindo
 
-Se desideri contribuire alla libreria, per favore apri una PR con un link ad essa!
+Se você gostaria de contribuir para a biblioteca, por favor abra um PR com um link para ele!
 
-## Licenza
+## Licença
 
-Questa libreria è rilasciata sotto licenza MIT. Vedi il file [LICENSE](./LICENSE) per i dettagli.
+Esta biblioteca é lançada sob a Licença MIT. Veja o arquivo [LICENSE](./LICENSE) para detalhes.

@@ -254,25 +254,25 @@ Add the dependency to your target:
 | Lockman | The Composable Architecture |
 |---------|----------------------------|
 | 1.3.0   | 1.20.2                     |
-| 1.2.0   | 1.20.2                     |
-| 1.1.0   | 1.20.2                     |
-| 1.0.0   | 1.20.2                     |
-| 0.12.0  | 1.20.1                     |
-| 0.11.0  | 1.19.1                     |
-| 0.10.0  | 1.19.0                     |
-| 0.9.0   | 1.18.0                     |
-| 0.8.0   | 1.17.1                     |
 
 <details>
 <summary>Other versions</summary>
 
 | Lockman | The Composable Architecture |
 |---------|----------------------------|
+| 1.2.0   | 1.20.2                     |
+| 1.1.0   | 1.20.2                     |
+| 1.0.0   | 1.20.2                     |
 | 0.13.4  | 1.20.2                     |
 | 0.13.3  | 1.20.2                     |
 | 0.13.2  | 1.20.2                     |
 | 0.13.1  | 1.20.2                     |
 | 0.13.0  | 1.20.2                     |
+| 0.12.0  | 1.20.1                     |
+| 0.11.0  | 1.19.1                     |
+| 0.10.0  | 1.19.0                     |
+| 0.9.0   | 1.18.0                     |
+| 0.8.0   | 1.17.1                     |
 | 0.7.0   | 1.17.1                     |
 | 0.6.0   | 1.17.1                     |
 | 0.5.0   | 1.17.1                     |
@@ -289,15 +289,15 @@ Add the dependency to your target:
 The following translations of this README have been contributed by members of the community:
 
 - [English](README.md)
-- [Japanese](Docs/README_ja.md)
-- [Simplified Chinese](Docs/README_zh-CN.md)
-- [Traditional Chinese](Docs/README_zh-TW.md)
-- [Spanish](Docs/README_es.md)
-- [French](Docs/README_fr.md)
-- [German](Docs/README_de.md)
-- [Korean](Docs/README_ko.md)
-- [Portuguese](Docs/README_pt-BR.md)
-- [Italian](Docs/README_it.md)
+- [Japanese](READMEs/README_ja.md)
+- [Simplified Chinese](READMEs/README_zh-CN.md)
+- [Traditional Chinese](READMEs/README_zh-TW.md)
+- [Spanish](READMEs/README_es.md)
+- [French](READMEs/README_fr.md)
+- [German](READMEs/README_de.md)
+- [Korean](READMEs/README_ko.md)
+- [Portuguese](READMEs/README_pt-BR.md)
+- [Italian](READMEs/README_it.md)
 
 ## Community
 
