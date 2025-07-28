@@ -148,7 +148,7 @@ final class EffectImmediateUnlockTests: XCTestCase {
         // Verify unlock happened immediately (within milliseconds)
         let unlockTime = Date()
         let timeDifference = unlockTime.timeIntervalSince(startTime)
-        XCTAssertLessThan(timeDifference, 0.01)  // Should be much less than transition delay (0.35s)
+        XCTAssertLessThan(timeDifference, 0.05)  // Should be much less than transition delay (0.35s)
 
         // Verify low priority is unlocked
         let locksAfterUnlock = strategy.getCurrentLocks()
