@@ -239,26 +239,28 @@ extension LockmanDynamicConditionReducer {
     case .successWithPrecedingCancellation(let precedingError):
       // Handle preceding cancellation at Dynamic Condition level
       // This is separate from Business Lock level precedingError handling
+      let cancellationError = LockmanCancellationError(
+        action: lockAction,
+        boundaryId: boundaryId,
+        reason: precedingError as! any LockmanError
+      )
+
+      // Build effects array conditionally
+      var effects: [Effect<Action>] = []
+
+      // Add failure handler if provided
       if let lockFailure = lockFailure {
-        let cancellationError = LockmanCancellationError(
-          action: lockAction,
-          boundaryId: boundaryId,
-          reason: precedingError as! any LockmanError
-        )
-        return .concatenate(
+        effects.append(
           .run { send in
             await lockFailure(cancellationError, send)
-          },
-          .cancel(id: boundaryId),
-          conditionallyLockCancellableEffect
-        )
+          })
       }
 
-      // No failure handler provided, just cancel and proceed
-      return .concatenate(
-        .cancel(id: boundaryId),
-        conditionallyLockCancellableEffect
-      )
+      // Always add cancellation and main effect
+      effects.append(.cancel(id: boundaryId))
+      effects.append(conditionallyLockCancellableEffect)
+
+      return .concatenate(effects)
 
     case .failure(let error, let step):
       // Clean up dynamic locks based on which step failed
