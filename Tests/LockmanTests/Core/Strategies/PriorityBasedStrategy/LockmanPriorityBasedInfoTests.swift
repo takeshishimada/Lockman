@@ -407,7 +407,7 @@ final class LockmanPriorityBasedInfoIntegrationTests: XCTestCase {
   //    state.add(boundaryId: boundaryId, info: info3)
   //
   //    // Verify state contains all infos in order
-  //    let currents = state.currents(boundaryId: boundaryId)
+  //    let currents = state.currentLocks(in: boundaryId)
   //    XCTAssertEqual(currents.count, 3)
   //    XCTAssertEqual(currents[0], info1)
   //    XCTAssertEqual(currents[1], info2)
@@ -415,20 +415,20 @@ final class LockmanPriorityBasedInfoIntegrationTests: XCTestCase {
   //
   //    // Remove by instance
   //    state.remove(boundaryId: boundaryId, info: info2)
-  //    let afterRemove  = state.currents(boundaryId: boundaryId)
+  //    let afterRemove  = state.currentLocks(in: boundaryId)
   //    XCTAssertEqual(afterRemove.count, 2)
   //    XCTAssertEqual(afterRemove[0], info1)
   //    XCTAssertEqual(afterRemove[1], info3)
   //
   //    // Remove by action ID
   //    state.remove(boundaryId: boundaryId, actionId: info1.actionId)
-  //    let afterActionIdRemove  = state.currents(boundaryId: boundaryId)
+  //    let afterActionIdRemove  = state.currentLocks(in: boundaryId)
   //    XCTAssertEqual(afterActionIdRemove.count, 1)
   //    XCTAssertEqual(afterActionIdRemove[0], info3)
   //
   //    // Clean up
   //    state.removeAll()
-  //    XCTAssertTrue(state.currents(boundaryId: boundaryId).isEmpty)
+  //    XCTAssertTrue(state.currentLocks(in: boundaryId).isEmpty)
   //  }
 
   func testPriorityBasedSortingBehavior() {

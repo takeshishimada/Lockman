@@ -95,7 +95,7 @@ public final class LockmanSingleExecutionStrategy: LockmanStrategy, @unchecked S
 
     case .boundary:
       // Exclusive per boundary - check if any lock exists
-      let currentLocks = state.currents(boundaryId: boundaryId)
+      let currentLocks = state.currentLocks(in: boundaryId)
       if currentLocks.isEmpty {
         result = .success
       } else {
@@ -111,8 +111,8 @@ public final class LockmanSingleExecutionStrategy: LockmanStrategy, @unchecked S
 
     case .action:
       // Exclusive per action - check if same actionId exists
-      if state.contains(boundaryId: boundaryId, key: info.actionId) {
-        let existingInfo = state.currents(boundaryId: boundaryId, key: info.actionId).first!
+      if state.hasActiveLocks(in: boundaryId, matching: info.actionId) {
+        let existingInfo = state.currentLocks(in: boundaryId, matching: info.actionId).first!
         result = .cancel(
           LockmanSingleExecutionError.actionAlreadyRunning(
             existingInfo: existingInfo
@@ -229,7 +229,7 @@ public final class LockmanSingleExecutionStrategy: LockmanStrategy, @unchecked S
     var result: [AnyLockmanBoundaryId: [any LockmanInfo]] = [:]
 
     // Get all boundaries and their locks from the state
-    let allLocks = state.getAllLocks()
+    let allLocks = state.allActiveLocks()
 
     for (boundaryId, lockInfos) in allLocks {
       result[boundaryId] = lockInfos.map { $0 as any LockmanInfo }

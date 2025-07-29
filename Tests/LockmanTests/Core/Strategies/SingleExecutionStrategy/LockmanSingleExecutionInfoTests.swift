@@ -240,7 +240,7 @@ final class LockmanSingleExecutionInfoIntegrationTests: XCTestCase {
     state.add(boundaryId: boundaryId, info: info1)
     state.add(boundaryId: boundaryId, info: info2)
 
-    let currents = state.currents(boundaryId: boundaryId)
+    let currents = state.currentLocks(in: boundaryId)
     XCTAssertEqual(currents.count, 2)
     XCTAssertTrue(currents.contains(info1))
     XCTAssertTrue(currents.contains(info2))
@@ -251,7 +251,7 @@ final class LockmanSingleExecutionInfoIntegrationTests: XCTestCase {
 
     // Test removal
     state.remove(boundaryId: boundaryId, info: info2)
-    let afterRemoval = state.currents(boundaryId: boundaryId)
+    let afterRemoval = state.currentLocks(in: boundaryId)
     XCTAssertEqual(afterRemoval.count, 1)
     XCTAssertEqual(afterRemoval[0], info1)
   }
