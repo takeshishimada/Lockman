@@ -239,7 +239,7 @@ public final class LockmanStrategyContainer: @unchecked Sendable {
   /// ```swift
   /// let strategy: AnyLockmanStrategy<LockmanSingleExecutionInfo> =
   ///   try container.resolve(id: .singleExecution)
-  /// let result = strategy.canLock(id: boundaryId, info: lockInfo)
+  /// let result = strategy.canLock(boundaryId: boundaryId, info: lockInfo)
   /// ```
   public func resolve<I: LockmanInfo>(
     id: LockmanStrategyId,
@@ -390,13 +390,13 @@ public final class LockmanStrategyContainer: @unchecked Sendable {
     }
   }
 
-  /// Invokes `cleanUp(id:)` on all registered strategies for a specific boundary.
+  /// Invokes `cleanUp(boundaryId:)` on all registered strategies for a specific boundary.
   ///
   /// This method iterates through all registered strategies and calls their
-  /// `cleanUp(id:)` method to clear state associated with the given boundary identifier.
+  /// `cleanUp(boundaryId:)` method to clear state associated with the given boundary identifier.
   /// Useful when a feature or component is being deallocated.
   ///
-  /// - Parameter id: The `LockmanBoundaryId` whose associated lock state should be cleared
+  /// - Parameter boundaryId: The `LockmanBoundaryId` whose associated lock state should be cleared
   ///
   /// ## Error Handling
   /// Similar to `cleanUp()`, errors in individual strategy cleanup are logged

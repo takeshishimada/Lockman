@@ -105,7 +105,7 @@ public final class LockmanDynamicConditionStrategy: LockmanStrategy, @unchecked 
     boundaryId: B,
     info: LockmanDynamicConditionInfo
   ) {
-    state.add(id: boundaryId, info: info)
+    state.add(boundaryId: boundaryId, info: info)
   }
 
   /// Releases all locks with the same actionId.
@@ -122,7 +122,7 @@ public final class LockmanDynamicConditionStrategy: LockmanStrategy, @unchecked 
     info: LockmanDynamicConditionInfo
   ) {
     // Remove all locks with the same actionId
-    state.removeAll(id: boundaryId, key: info.actionId)
+    state.removeAll(boundaryId: boundaryId, key: info.actionId)
   }
 
   /// Removes all active locks across all boundaries and action groups.
@@ -134,7 +134,7 @@ public final class LockmanDynamicConditionStrategy: LockmanStrategy, @unchecked 
   ///
   /// - Parameter boundaryId: A unique boundary identifier conforming to `LockmanBoundaryId`
   public func cleanUp<B: LockmanBoundaryId>(boundaryId: B) {
-    state.removeAll(id: boundaryId)
+    state.removeAll(boundaryId: boundaryId)
   }
 
   /// Returns current locks information for debugging purposes.

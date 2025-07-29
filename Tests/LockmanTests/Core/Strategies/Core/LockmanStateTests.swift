@@ -66,9 +66,9 @@ final class LockmanStateTests: XCTestCase {
     let boundaryId = TestBoundaryId(value: "test")
     let info = TestLockmanInfo(id: "1")
 
-    state.add(id: boundaryId, info: info)
+    state.add(boundaryId: boundaryId, info: info)
 
-    let currents = state.currents(id: boundaryId)
+    let currents = state.currents(boundaryId: boundaryId)
     XCTAssertEqual(currents.count, 1)
     XCTAssertEqual(currents.first?.actionId, "1")
   }
@@ -80,11 +80,11 @@ final class LockmanStateTests: XCTestCase {
     let info2 = TestLockmanInfo(id: "2")
     let info3 = TestLockmanInfo(id: "3")
 
-    state.add(id: boundaryId, info: info1)
-    state.add(id: boundaryId, info: info2)
-    state.add(id: boundaryId, info: info3)
+    state.add(boundaryId: boundaryId, info: info1)
+    state.add(boundaryId: boundaryId, info: info2)
+    state.add(boundaryId: boundaryId, info: info3)
 
-    let currents = state.currents(id: boundaryId)
+    let currents = state.currents(boundaryId: boundaryId)
     XCTAssertEqual(currents.count, 3)
     XCTAssertEqual(currents.map(\.actionId), ["1", "2", "3"])
   }
@@ -96,11 +96,11 @@ final class LockmanStateTests: XCTestCase {
     let info1 = TestLockmanInfo(id: "1")
     let info2 = TestLockmanInfo(id: "2")
 
-    state.add(id: boundary1, info: info1)
-    state.add(id: boundary2, info: info2)
+    state.add(boundaryId: boundary1, info: info1)
+    state.add(boundaryId: boundary2, info: info2)
 
-    let currents1 = state.currents(id: boundary1)
-    let currents2 = state.currents(id: boundary2)
+    let currents1 = state.currents(boundaryId: boundary1)
+    let currents2 = state.currents(boundaryId: boundary2)
 
     XCTAssertEqual(currents1.count, 1)
     XCTAssertEqual(currents1.first?.actionId, "1")
@@ -113,10 +113,10 @@ final class LockmanStateTests: XCTestCase {
     let boundaryId = TestBoundaryId(value: "test")
     let info = TestLockmanInfo(id: "1")
 
-    state.add(id: boundaryId, info: info)
-    state.removeAll(id: boundaryId)
+    state.add(boundaryId: boundaryId, info: info)
+    state.removeAll(boundaryId: boundaryId)
 
-    let currents = state.currents(id: boundaryId)
+    let currents = state.currents(boundaryId: boundaryId)
     XCTAssertTrue(currents.isEmpty)
   }
 
@@ -127,13 +127,13 @@ final class LockmanStateTests: XCTestCase {
     let info2 = TestLockmanInfo(id: "2")
     let info3 = TestLockmanInfo(id: "3")
 
-    state.add(id: boundaryId, info: info1)
-    state.add(id: boundaryId, info: info2)
-    state.add(id: boundaryId, info: info3)
+    state.add(boundaryId: boundaryId, info: info1)
+    state.add(boundaryId: boundaryId, info: info2)
+    state.add(boundaryId: boundaryId, info: info3)
 
-    state.remove(id: boundaryId, info: info3)
+    state.remove(boundaryId: boundaryId, info: info3)
 
-    let currents = state.currents(id: boundaryId)
+    let currents = state.currents(boundaryId: boundaryId)
     XCTAssertEqual(currents.count, 2)
     XCTAssertEqual(currents.map(\.actionId), ["1", "2"])
   }
@@ -143,9 +143,9 @@ final class LockmanStateTests: XCTestCase {
     let boundaryId = TestBoundaryId(value: "non-existent")
 
     // Should not crash
-    state.removeAll(id: boundaryId)
+    state.removeAll(boundaryId: boundaryId)
 
-    let currents = state.currents(id: boundaryId)
+    let currents = state.currents(boundaryId: boundaryId)
     XCTAssertTrue(currents.isEmpty)
   }
 
@@ -153,7 +153,7 @@ final class LockmanStateTests: XCTestCase {
     let state = LockmanState<TestLockmanInfo, LockmanActionId>()
     let boundaryId = TestBoundaryId(value: "test")
 
-    let currents = state.currents(id: boundaryId)
+    let currents = state.currents(boundaryId: boundaryId)
     XCTAssertTrue(currents.isEmpty)
   }
 
@@ -164,13 +164,13 @@ final class LockmanStateTests: XCTestCase {
     let info1 = TestLockmanInfo(id: "1")
     let info2 = TestLockmanInfo(id: "2")
 
-    state.add(id: boundary1, info: info1)
-    state.add(id: boundary2, info: info2)
+    state.add(boundaryId: boundary1, info: info1)
+    state.add(boundaryId: boundary2, info: info2)
 
     state.removeAll()
 
-    let currents1 = state.currents(id: boundary1)
-    let currents2 = state.currents(id: boundary2)
+    let currents1 = state.currents(boundaryId: boundary1)
+    let currents2 = state.currents(boundaryId: boundary2)
 
     XCTAssertTrue(currents1.isEmpty)
     XCTAssertTrue(currents2.isEmpty)
@@ -183,13 +183,13 @@ final class LockmanStateTests: XCTestCase {
     let info1 = TestLockmanInfo(id: "1")
     let info2 = TestLockmanInfo(id: "2")
 
-    state.add(id: boundary1, info: info1)
-    state.add(id: boundary2, info: info2)
+    state.add(boundaryId: boundary1, info: info1)
+    state.add(boundaryId: boundary2, info: info2)
 
-    state.removeAll(id: boundary1)
+    state.removeAll(boundaryId: boundary1)
 
-    let currents1 = state.currents(id: boundary1)
-    let currents2 = state.currents(id: boundary2)
+    let currents1 = state.currents(boundaryId: boundary1)
+    let currents2 = state.currents(boundaryId: boundary2)
 
     XCTAssertTrue(currents1.isEmpty)
     XCTAssertEqual(currents2.count, 1)
@@ -207,12 +207,12 @@ final class LockmanStateTests: XCTestCase {
       for i in 0..<iterations {
         group.addTask {
           let info = TestLockmanInfo(id: "\(i)")
-          state.add(id: boundaryId, info: info)
+          state.add(boundaryId: boundaryId, info: info)
         }
       }
     }
 
-    let currents = state.currents(id: boundaryId)
+    let currents = state.currents(boundaryId: boundaryId)
     XCTAssertEqual(currents.count, iterations, "All concurrent adds should succeed")
   }
 
@@ -226,14 +226,14 @@ final class LockmanStateTests: XCTestCase {
         group.addTask {
           let boundaryId = TestBoundaryId("boundary\(i % boundaryCount)")
           let info = TestLockmanInfo(id: "\(i)")
-          state.add(id: boundaryId, info: info)
+          state.add(boundaryId: boundaryId, info: info)
         }
       }
     }
 
     for i in 0..<boundaryCount {
       let boundaryId = TestBoundaryId("boundary\(i)")
-      let currents = state.currents(id: boundaryId)
+      let currents = state.currents(boundaryId: boundaryId)
       let expectedCount = iterations / boundaryCount
       XCTAssertEqual(
         currents.count, expectedCount, "Each boundary should have \(expectedCount) entries")
@@ -249,7 +249,7 @@ final class LockmanStateTests: XCTestCase {
 
     // First, add some entries
     for info in infoList {
-      state.add(id: boundaryId, info: info)
+      state.add(boundaryId: boundaryId, info: info)
     }
 
     await withTaskGroup(of: Void.self) { group in
@@ -257,17 +257,17 @@ final class LockmanStateTests: XCTestCase {
       for i in iterations..<(iterations * 2) {
         group.addTask {
           let info = TestLockmanInfo(id: "\(i)")
-          state.add(id: boundaryId, info: info)
+          state.add(boundaryId: boundaryId, info: info)
         }
       }
 
       // Remove entries
       for info in infoList {
-        state.remove(id: boundaryId, info: info)
+        state.remove(boundaryId: boundaryId, info: info)
       }
     }
 
-    let currents = state.currents(id: boundaryId)
+    let currents = state.currents(boundaryId: boundaryId)
     XCTAssertEqual(currents.count, iterations)
   }
 
@@ -277,13 +277,13 @@ final class LockmanStateTests: XCTestCase {
 
     // Add some initial data
     for i in 0..<10 {
-      state.add(id: boundaryId, info: TestLockmanInfo(id: "\(i)"))
+      state.add(boundaryId: boundaryId, info: TestLockmanInfo(id: "\(i)"))
     }
 
     let results = await withTaskGroup(of: Int.self, returning: [Int].self) { group in
       for _ in 0..<100 {
         group.addTask {
-          state.currents(id: boundaryId).count
+          state.currents(boundaryId: boundaryId).count
         }
       }
 
@@ -306,17 +306,17 @@ final class LockmanStateTests: XCTestCase {
     let infoList = (1...5).map { TestLockmanInfo(id: "\($0)") }
     // Add in order
     for info in infoList {
-      state.add(id: boundaryId, info: info)
+      state.add(boundaryId: boundaryId, info: info)
     }
 
     // Remove and verify LIFO order
     for info in infoList.reversed() {
-      let currents = state.currents(id: boundaryId)
+      let currents = state.currents(boundaryId: boundaryId)
       XCTAssertEqual(currents.last?.uniqueId, info.uniqueId)
-      state.remove(id: boundaryId, info: info)
+      state.remove(boundaryId: boundaryId, info: info)
     }
 
-    XCTAssertTrue(state.currents(id: boundaryId).isEmpty)
+    XCTAssertTrue(state.currents(boundaryId: boundaryId).isEmpty)
   }
 
   func testLargeNumberOfEntries() {
@@ -325,10 +325,10 @@ final class LockmanStateTests: XCTestCase {
     let count = 1000  // Reduced from 10000 for reasonable test time
 
     for i in 0..<count {
-      state.add(id: boundaryId, info: TestLockmanInfo(id: "\(i)"))
+      state.add(boundaryId: boundaryId, info: TestLockmanInfo(id: "\(i)"))
     }
 
-    let currents = state.currents(id: boundaryId)
+    let currents = state.currents(boundaryId: boundaryId)
     XCTAssertEqual(currents.count, count)
 
     // Verify order is maintained
@@ -341,14 +341,14 @@ final class LockmanStateTests: XCTestCase {
     let state = LockmanState<TestLockmanInfo, LockmanActionId>()
     let boundaryId = TestBoundaryId(value: "test")
 
-    state.add(id: boundaryId, info: TestLockmanInfo(id: "1"))
+    state.add(boundaryId: boundaryId, info: TestLockmanInfo(id: "1"))
 
     // Multiple cleanups should be safe
-    state.removeAll(id: boundaryId)
-    state.removeAll(id: boundaryId)
+    state.removeAll(boundaryId: boundaryId)
+    state.removeAll(boundaryId: boundaryId)
     state.removeAll()
 
-    XCTAssertTrue(state.currents(id: boundaryId).isEmpty)
+    XCTAssertTrue(state.currents(boundaryId: boundaryId).isEmpty)
   }
 
   // MARK: - Data Integrity Tests
@@ -359,10 +359,10 @@ final class LockmanStateTests: XCTestCase {
     let testData = ["first", "second", "third", "fourth", "fifth"]
 
     for id in testData {
-      state.add(id: boundaryId, info: TestLockmanInfo(id: id))
+      state.add(boundaryId: boundaryId, info: TestLockmanInfo(id: id))
     }
 
-    let currents = state.currents(id: boundaryId)
+    let currents = state.currents(boundaryId: boundaryId)
     XCTAssertTrue(currents.map(\.actionId) == testData)
   }
 
@@ -373,18 +373,18 @@ final class LockmanStateTests: XCTestCase {
     let boundary3 = TestBoundaryId(value: "isolated3")
 
     // Add different data to each boundary
-    state.add(id: boundary1, info: TestLockmanInfo(id: "a"))
-    state.add(id: boundary2, info: TestLockmanInfo(id: "b"))
-    state.add(id: boundary3, info: TestLockmanInfo(id: "c"))
+    state.add(boundaryId: boundary1, info: TestLockmanInfo(id: "a"))
+    state.add(boundaryId: boundary2, info: TestLockmanInfo(id: "b"))
+    state.add(boundaryId: boundary3, info: TestLockmanInfo(id: "c"))
 
     // Operations on one boundary should not affect others
-    state.removeAll(id: boundary1)
+    state.removeAll(boundaryId: boundary1)
 
-    XCTAssertTrue(state.currents(id: boundary1).isEmpty)
-    XCTAssertTrue(state.currents(id: boundary2).count == 1)
-    XCTAssertTrue(state.currents(id: boundary3).count == 1)
-    XCTAssertTrue(state.currents(id: boundary2).first?.actionId == "b")
-    XCTAssertTrue(state.currents(id: boundary3).first?.actionId == "c")
+    XCTAssertTrue(state.currents(boundaryId: boundary1).isEmpty)
+    XCTAssertTrue(state.currents(boundaryId: boundary2).count == 1)
+    XCTAssertTrue(state.currents(boundaryId: boundary3).count == 1)
+    XCTAssertTrue(state.currents(boundaryId: boundary2).first?.actionId == "b")
+    XCTAssertTrue(state.currents(boundaryId: boundary3).first?.actionId == "c")
   }
 
   func testComplexSequenceOperations() {
@@ -392,14 +392,14 @@ final class LockmanStateTests: XCTestCase {
     let boundaryId = TestBoundaryId(value: "complex")
 
     // Complex sequence: add, add, remove, add, remove, remove
-    state.add(id: boundaryId, info: TestLockmanInfo(id: "1"))
-    state.add(id: boundaryId, info: TestLockmanInfo(id: "2"))
-    state.removeAll(id: boundaryId)  // Remove "2"
-    state.add(id: boundaryId, info: TestLockmanInfo(id: "3"))
-    state.removeAll(id: boundaryId)  // Remove "3"
-    state.removeAll(id: boundaryId)  // Remove "1"
+    state.add(boundaryId: boundaryId, info: TestLockmanInfo(id: "1"))
+    state.add(boundaryId: boundaryId, info: TestLockmanInfo(id: "2"))
+    state.removeAll(boundaryId: boundaryId)  // Remove "2"
+    state.add(boundaryId: boundaryId, info: TestLockmanInfo(id: "3"))
+    state.removeAll(boundaryId: boundaryId)  // Remove "3"
+    state.removeAll(boundaryId: boundaryId)  // Remove "1"
 
-    XCTAssertTrue(state.currents(id: boundaryId).isEmpty)
+    XCTAssertTrue(state.currents(boundaryId: boundaryId).isEmpty)
   }
 
   // MARK: - Memory Management Tests
@@ -410,20 +410,20 @@ final class LockmanStateTests: XCTestCase {
 
     // Add many entries
     for i in 0..<100 {
-      state.add(id: boundaryId, info: TestLockmanInfo(id: "\(i)"))
+      state.add(boundaryId: boundaryId, info: TestLockmanInfo(id: "\(i)"))
     }
 
     // Remove all entries
     for _ in 0..<100 {
-      state.removeAll(id: boundaryId)
+      state.removeAll(boundaryId: boundaryId)
     }
 
     // State should be completely empty
-    XCTAssertTrue(state.currents(id: boundaryId).isEmpty)
+    XCTAssertTrue(state.currents(boundaryId: boundaryId).isEmpty)
 
     // Should be able to add again without issues
-    state.add(id: boundaryId, info: TestLockmanInfo(id: "new"))
-    XCTAssertTrue(state.currents(id: boundaryId).count == 1)
+    state.add(boundaryId: boundaryId, info: TestLockmanInfo(id: "new"))
+    XCTAssertTrue(state.currents(boundaryId: boundaryId).count == 1)
   }
 
   func testCleanupWithMixedBoundaryStates() {
@@ -434,21 +434,21 @@ final class LockmanStateTests: XCTestCase {
 
     // fullBoundary has entries
     for i in 0..<5 {
-      state.add(id: fullBoundary, info: TestLockmanInfo(id: "full_\(i)"))
+      state.add(boundaryId: fullBoundary, info: TestLockmanInfo(id: "full_\(i)"))
     }
 
     // partialBoundary has entries then some removed
     for i in 0..<3 {
-      state.add(id: partialBoundary, info: TestLockmanInfo(id: "partial_\(i)"))
+      state.add(boundaryId: partialBoundary, info: TestLockmanInfo(id: "partial_\(i)"))
     }
 
     // Clean up specific boundaries
-    state.removeAll(id: emptyBoundary)  // Should be safe
-    state.removeAll(id: fullBoundary)
+    state.removeAll(boundaryId: emptyBoundary)  // Should be safe
+    state.removeAll(boundaryId: fullBoundary)
 
-    XCTAssertTrue(state.currents(id: emptyBoundary).isEmpty)
-    XCTAssertTrue(state.currents(id: fullBoundary).isEmpty)
-    XCTAssertTrue(state.currents(id: partialBoundary).count == 3)
+    XCTAssertTrue(state.currents(boundaryId: emptyBoundary).isEmpty)
+    XCTAssertTrue(state.currents(boundaryId: fullBoundary).isEmpty)
+    XCTAssertTrue(state.currents(boundaryId: partialBoundary).count == 3)
   }
 }
 
@@ -573,9 +573,9 @@ final class LockmanStatePerformanceTests: XCTestCase {
 
     for i in 0..<iterations {
       let info = TestLockmanInfo(id: "\(i)")
-      state.add(id: boundaryId, info: info)
+      state.add(boundaryId: boundaryId, info: info)
       if i % 2 == 0 {
-        state.remove(id: boundaryId, info: info)
+        state.remove(boundaryId: boundaryId, info: info)
       }
     }
 
@@ -586,7 +586,7 @@ final class LockmanStatePerformanceTests: XCTestCase {
     XCTAssertLessThan(duration, 1.0)
 
     // Verify final state
-    let finalCount = state.currents(id: boundaryId).count
+    let finalCount = state.currents(boundaryId: boundaryId).count
     XCTAssertEqual(finalCount, iterations / 2)  // Half were removed
   }
 
@@ -600,7 +600,7 @@ final class LockmanStatePerformanceTests: XCTestCase {
     for i in 0..<boundaryCount {
       let boundaryId = TestBoundaryId(value: "boundary_\(i)")
       for j in 0..<entriesPerBoundary {
-        state.add(id: boundaryId, info: TestLockmanInfo(id: "\(i)_\(j)"))
+        state.add(boundaryId: boundaryId, info: TestLockmanInfo(id: "\(i)_\(j)"))
       }
     }
 
@@ -612,7 +612,7 @@ final class LockmanStatePerformanceTests: XCTestCase {
     // Verify all boundaries have correct number of entries
     for i in 0..<boundaryCount {
       let boundaryId = TestBoundaryId(value: "boundary_\(i)")
-      XCTAssertTrue(state.currents(id: boundaryId).count == entriesPerBoundary)
+      XCTAssertTrue(state.currents(boundaryId: boundaryId).count == entriesPerBoundary)
     }
   }
 
@@ -629,9 +629,9 @@ final class LockmanStatePerformanceTests: XCTestCase {
           let boundaryId = TestBoundaryId(value: "task_\(taskId)")
           for i in 0..<operationsPerTask {
             let info = TestLockmanInfo(id: "\(taskId)_\(i)")
-            state.add(id: boundaryId, info: info)
+            state.add(boundaryId: boundaryId, info: info)
             if i % 3 == 0 {
-              state.remove(id: boundaryId, info: info)
+              state.remove(boundaryId: boundaryId, info: info)
             }
           }
         }
@@ -646,7 +646,7 @@ final class LockmanStatePerformanceTests: XCTestCase {
     // Verify each task's boundary has expected number of entries
     for taskId in 0..<taskCount {
       let boundaryId = TestBoundaryId(value: "task_\(taskId)")
-      let currents = state.currents(id: boundaryId)
+      let currents = state.currents(boundaryId: boundaryId)
       let currentCount = currents.count
       let expectedCount = operationsPerTask - (operationsPerTask / 3) - 1
       XCTAssertEqual(currentCount, expectedCount)
