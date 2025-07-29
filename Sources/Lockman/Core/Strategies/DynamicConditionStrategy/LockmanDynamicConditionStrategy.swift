@@ -147,7 +147,7 @@ public final class LockmanDynamicConditionStrategy: LockmanStrategy, @unchecked 
     var result: [AnyLockmanBoundaryId: [any LockmanInfo]] = [:]
 
     // Get all boundaries and their locks from the state
-    let allLocks = state.getAllLocks()
+    let allLocks = state.allActiveLocks()
 
     for (boundaryId, lockInfos) in allLocks {
       result[boundaryId] = lockInfos.map { $0 as any LockmanInfo }

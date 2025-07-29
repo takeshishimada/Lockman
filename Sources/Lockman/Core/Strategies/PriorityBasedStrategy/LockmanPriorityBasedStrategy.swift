@@ -136,7 +136,7 @@ public final class LockmanPriorityBasedStrategy: LockmanStrategy, @unchecked Sen
     }
 
     // Get all current locks for this boundary
-    let currentLocks = state.currents(boundaryId: boundaryId)
+    let currentLocks = state.currentLocks(in: boundaryId)
 
     // Filter out non-priority actions for priority comparison
     let priorityLocks = currentLocks.filter { $0.priority != .none }
@@ -270,7 +270,7 @@ public final class LockmanPriorityBasedStrategy: LockmanStrategy, @unchecked Sen
     var result: [AnyLockmanBoundaryId: [any LockmanInfo]] = [:]
 
     // Get all boundaries and their locks from the state
-    let allLocks = state.getAllLocks()
+    let allLocks = state.allActiveLocks()
 
     for (boundaryId, lockInfos) in allLocks {
       result[boundaryId] = lockInfos.map { $0 as any LockmanInfo }

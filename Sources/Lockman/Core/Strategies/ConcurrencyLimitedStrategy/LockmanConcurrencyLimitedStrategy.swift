@@ -38,7 +38,7 @@ public final class LockmanConcurrencyLimitedStrategy: LockmanStrategy, @unchecke
     info: LockmanConcurrencyLimitedInfo
   ) -> LockmanResult {
     // Use the key-based query for efficient lookup
-    let currentCount = state.count(boundaryId: boundaryId, key: info.concurrencyId)
+    let currentCount = state.activeLockCount(in: boundaryId, matching: info.concurrencyId)
 
     let result: LockmanResult
     var failureReason: String?
@@ -46,7 +46,7 @@ public final class LockmanConcurrencyLimitedStrategy: LockmanStrategy, @unchecke
     if info.limit.isExceeded(currentCount: currentCount) {
       if case .limited(let limit) = info.limit {
         // Get existing infos in the same concurrency group
-        let existingInfos = state.currents(boundaryId: boundaryId, key: info.concurrencyId)
+        let existingInfos = state.currentLocks(in: boundaryId, matching: info.concurrencyId)
 
         result = .cancel(
           LockmanConcurrencyLimitedError.concurrencyLimitReached(
@@ -110,7 +110,7 @@ public final class LockmanConcurrencyLimitedStrategy: LockmanStrategy, @unchecke
     boundaryId: B
   ) {
     // Get all locks for this boundary and remove them one by one
-    let currentLocks = state.currents(boundaryId: boundaryId)
+    let currentLocks = state.currentLocks(in: boundaryId)
     for info in currentLocks {
       state.remove(boundaryId: boundaryId, info: info)
     }
@@ -128,7 +128,7 @@ public final class LockmanConcurrencyLimitedStrategy: LockmanStrategy, @unchecke
     var result: [AnyLockmanBoundaryId: [any LockmanInfo]] = [:]
 
     // Get all boundaries and their locks from the state
-    let allLocks = state.getAllLocks()
+    let allLocks = state.allActiveLocks()
 
     for (boundaryId, lockInfos) in allLocks {
       result[boundaryId] = lockInfos.map { $0 as any LockmanInfo }

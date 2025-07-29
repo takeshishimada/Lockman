@@ -64,23 +64,23 @@ final class LockmanStateGenericTests: XCTestCase {
     state.add(boundaryId: boundaryId, info: info3)
 
     // Test contains with custom key
-    XCTAssertTrue(state.contains(boundaryId: boundaryId, key: "network"))
-    XCTAssertTrue(state.contains(boundaryId: boundaryId, key: "storage"))
-    XCTAssertFalse(state.contains(boundaryId: boundaryId, key: "compute"))
+    XCTAssertTrue(state.hasActiveLocks(in: boundaryId, matching: "network"))
+    XCTAssertTrue(state.hasActiveLocks(in: boundaryId, matching: "storage"))
+    XCTAssertFalse(state.hasActiveLocks(in: boundaryId, matching: "compute"))
 
     // Test count by custom key
-    XCTAssertEqual(state.count(boundaryId: boundaryId, key: "network"), 2)
-    XCTAssertEqual(state.count(boundaryId: boundaryId, key: "storage"), 1)
-    XCTAssertEqual(state.count(boundaryId: boundaryId, key: "compute"), 0)
+    XCTAssertEqual(state.activeLockCount(in: boundaryId, matching: "network"), 2)
+    XCTAssertEqual(state.activeLockCount(in: boundaryId, matching: "storage"), 1)
+    XCTAssertEqual(state.activeLockCount(in: boundaryId, matching: "compute"), 0)
 
     // Test currents by custom key
-    let networkInfos = state.currents(boundaryId: boundaryId, key: "network")
+    let networkInfos = state.currentLocks(in: boundaryId, matching: "network")
     XCTAssertEqual(networkInfos.count, 2)
     XCTAssertTrue(networkInfos.contains { $0.actionId == "action1" })
     XCTAssertTrue(networkInfos.contains { $0.actionId == "action2" })
 
     // Test keys retrieval
-    let keys = state.keys(boundaryId: boundaryId)
+    let keys = state.activeKeys(in: boundaryId)
     XCTAssertEqual(keys, Set(["network", "storage"]))
   }
 
@@ -106,19 +106,19 @@ final class LockmanStateGenericTests: XCTestCase {
     let key3 = CompositeKey(category: "storage", priority: 1)
 
     // Test contains with composite key
-    XCTAssertTrue(state.contains(boundaryId: boundaryId, key: key1))
-    XCTAssertTrue(state.contains(boundaryId: boundaryId, key: key2))
-    XCTAssertTrue(state.contains(boundaryId: boundaryId, key: key3))
+    XCTAssertTrue(state.hasActiveLocks(in: boundaryId, matching: key1))
+    XCTAssertTrue(state.hasActiveLocks(in: boundaryId, matching: key2))
+    XCTAssertTrue(state.hasActiveLocks(in: boundaryId, matching: key3))
     XCTAssertFalse(
-      state.contains(boundaryId: boundaryId, key: CompositeKey(category: "compute", priority: 1)))
+      state.hasActiveLocks(in: boundaryId, matching: CompositeKey(category: "compute", priority: 1)))
 
     // Test count with composite key
-    XCTAssertEqual(state.count(boundaryId: boundaryId, key: key1), 2)
-    XCTAssertEqual(state.count(boundaryId: boundaryId, key: key2), 1)
-    XCTAssertEqual(state.count(boundaryId: boundaryId, key: key3), 1)
+    XCTAssertEqual(state.activeLockCount(in: boundaryId, matching: key1), 2)
+    XCTAssertEqual(state.activeLockCount(in: boundaryId, matching: key2), 1)
+    XCTAssertEqual(state.activeLockCount(in: boundaryId, matching: key3), 1)
 
     // Test currents with composite key
-    let networkP1Infos = state.currents(boundaryId: boundaryId, key: key1)
+    let networkP1Infos = state.currentLocks(in: boundaryId, matching: key1)
     XCTAssertEqual(networkP1Infos.count, 2)
     XCTAssertTrue(networkP1Infos.allSatisfy { $0.category == "network" && $0.priority == 1 })
   }
@@ -135,12 +135,12 @@ final class LockmanStateGenericTests: XCTestCase {
     state.add(boundaryId: boundaryId, info: TestInfo(actionId: "a3", category: "storage"))
     state.add(boundaryId: boundaryId, info: TestInfo(actionId: "a4", category: "compute"))
 
-    XCTAssertEqual(state.currents(boundaryId: boundaryId).count, 4)
+    XCTAssertEqual(state.currentLocks(in: boundaryId).count, 4)
 
     // Remove all with "network" category
     state.removeAll(boundaryId: boundaryId, key: "network")
 
-    let remaining = state.currents(boundaryId: boundaryId)
+    let remaining = state.currentLocks(in: boundaryId)
     XCTAssertEqual(remaining.count, 2)
     XCTAssertFalse(remaining.contains { $0.category == "network" })
     XCTAssertTrue(remaining.contains { $0.category == "storage" })
@@ -148,7 +148,7 @@ final class LockmanStateGenericTests: XCTestCase {
 
     // Try removing non-existent key
     state.removeAll(boundaryId: boundaryId, key: "nonexistent")
-    XCTAssertEqual(state.currents(boundaryId: boundaryId).count, 2)  // Should not change
+    XCTAssertEqual(state.currentLocks(in: boundaryId).count, 2)  // Should not change
   }
 
   func testRemoveAllWithEmptyBoundary() {
@@ -159,7 +159,7 @@ final class LockmanStateGenericTests: XCTestCase {
     state.removeAll(boundaryId: boundaryId, key: "network")
 
     // Should not crash and should remain empty
-    XCTAssertTrue(state.currents(boundaryId: boundaryId).isEmpty)
+    XCTAssertTrue(state.currentLocks(in: boundaryId).isEmpty)
   }
 
   func testRemoveAllLastKeyInBoundary() {
@@ -174,8 +174,8 @@ final class LockmanStateGenericTests: XCTestCase {
     state.removeAll(boundaryId: boundaryId, key: "network")
 
     // Boundary should be completely empty
-    XCTAssertTrue(state.currents(boundaryId: boundaryId).isEmpty)
-    XCTAssertTrue(state.keys(boundaryId: boundaryId).isEmpty)
+    XCTAssertTrue(state.currentLocks(in: boundaryId).isEmpty)
+    XCTAssertTrue(state.activeKeys(in: boundaryId).isEmpty)
   }
 
   // MARK: - Bulk Query Operations Tests
@@ -188,14 +188,14 @@ final class LockmanStateGenericTests: XCTestCase {
     let boundary3 = TestBoundaryId("b3")
 
     // Initially empty
-    XCTAssertTrue(state.allBoundaryIds().isEmpty)
+    XCTAssertTrue(state.activeBoundaryIds().isEmpty)
 
     // Add to different boundaries
     state.add(boundaryId: boundary1, info: TestInfo(actionId: "a1", category: "cat1"))
     state.add(boundaryId: boundary2, info: TestInfo(actionId: "a2", category: "cat2"))
     state.add(boundaryId: boundary3, info: TestInfo(actionId: "a3", category: "cat3"))
 
-    let allBoundaryIds = state.allBoundaryIds()
+    let allBoundaryIds = state.activeBoundaryIds()
     XCTAssertEqual(allBoundaryIds.count, 3)
     XCTAssertTrue(allBoundaryIds.contains(AnyLockmanBoundaryId(boundary1)))
     XCTAssertTrue(allBoundaryIds.contains(AnyLockmanBoundaryId(boundary2)))
@@ -204,7 +204,7 @@ final class LockmanStateGenericTests: XCTestCase {
     // Remove one boundary
     state.removeAll(boundaryId: boundary2)
 
-    let remainingBoundaryIds = state.allBoundaryIds()
+    let remainingBoundaryIds = state.activeBoundaryIds()
     XCTAssertEqual(remainingBoundaryIds.count, 2)
     XCTAssertFalse(remainingBoundaryIds.contains(AnyLockmanBoundaryId(boundary2)))
   }
@@ -216,7 +216,7 @@ final class LockmanStateGenericTests: XCTestCase {
     let boundary2 = TestBoundaryId("b2")
 
     // Initially zero
-    XCTAssertEqual(state.totalLockCount(), 0)
+    XCTAssertEqual(state.totalActiveLockCount(), 0)
 
     // Add locks to different boundaries
     state.add(boundaryId: boundary1, info: TestInfo(actionId: "a1", category: "cat1"))
@@ -225,19 +225,19 @@ final class LockmanStateGenericTests: XCTestCase {
     state.add(boundaryId: boundary2, info: TestInfo(actionId: "a4", category: "cat2"))
     state.add(boundaryId: boundary2, info: TestInfo(actionId: "a5", category: "cat3"))
 
-    XCTAssertEqual(state.totalLockCount(), 5)
+    XCTAssertEqual(state.totalActiveLockCount(), 5)
 
     // Remove some locks
     state.removeAll(boundaryId: boundary1, key: "cat1")
-    XCTAssertEqual(state.totalLockCount(), 4)
+    XCTAssertEqual(state.totalActiveLockCount(), 4)
 
     // Remove entire boundary
     state.removeAll(boundaryId: boundary2)
-    XCTAssertEqual(state.totalLockCount(), 1)
+    XCTAssertEqual(state.totalActiveLockCount(), 1)
 
     // Remove all
     state.removeAll()
-    XCTAssertEqual(state.totalLockCount(), 0)
+    XCTAssertEqual(state.totalActiveLockCount(), 0)
   }
 
   func testGetAllLocks() {
@@ -247,7 +247,7 @@ final class LockmanStateGenericTests: XCTestCase {
     let boundary2 = TestBoundaryId("b2")
 
     // Initially empty
-    XCTAssertTrue(state.getAllLocks().isEmpty)
+    XCTAssertTrue(state.allActiveLocks().isEmpty)
 
     // Add locks
     let info1 = TestInfo(actionId: "a1", category: "cat1")
@@ -258,7 +258,7 @@ final class LockmanStateGenericTests: XCTestCase {
     state.add(boundaryId: boundary1, info: info2)
     state.add(boundaryId: boundary2, info: info3)
 
-    let allLocks = state.getAllLocks()
+    let allLocks = state.allActiveLocks()
     XCTAssertEqual(allLocks.count, 2)
 
     let boundary1Locks = allLocks[AnyLockmanBoundaryId(boundary1)]
@@ -290,25 +290,25 @@ final class LockmanStateGenericTests: XCTestCase {
     }
 
     // Verify initial state
-    XCTAssertEqual(state.count(boundaryId: boundaryId, key: "network"), 2)
-    XCTAssertEqual(state.count(boundaryId: boundaryId, key: "storage"), 2)
-    XCTAssertEqual(state.count(boundaryId: boundaryId, key: "compute"), 1)
+    XCTAssertEqual(state.activeLockCount(in: boundaryId, matching: "network"), 2)
+    XCTAssertEqual(state.activeLockCount(in: boundaryId, matching: "storage"), 2)
+    XCTAssertEqual(state.activeLockCount(in: boundaryId, matching: "compute"), 1)
 
     // Remove individual items
     state.remove(boundaryId: boundaryId, info: infos[0])  // Remove one network
-    XCTAssertEqual(state.count(boundaryId: boundaryId, key: "network"), 1)
+    XCTAssertEqual(state.activeLockCount(in: boundaryId, matching: "network"), 1)
 
     // Remove by key
     state.removeAll(boundaryId: boundaryId, key: "storage")
-    XCTAssertEqual(state.count(boundaryId: boundaryId, key: "storage"), 0)
-    XCTAssertFalse(state.contains(boundaryId: boundaryId, key: "storage"))
+    XCTAssertEqual(state.activeLockCount(in: boundaryId, matching: "storage"), 0)
+    XCTAssertFalse(state.hasActiveLocks(in: boundaryId, matching: "storage"))
 
     // Verify keys are updated
-    let keys = state.keys(boundaryId: boundaryId)
+    let keys = state.activeKeys(in: boundaryId)
     XCTAssertEqual(keys, Set(["network", "compute"]))
 
     // Verify total count
-    XCTAssertEqual(state.currents(boundaryId: boundaryId).count, 2)
+    XCTAssertEqual(state.currentLocks(in: boundaryId).count, 2)
   }
 
   func testIndexCleanupAfterPartialRemovals() {
@@ -324,13 +324,13 @@ final class LockmanStateGenericTests: XCTestCase {
 
     // Remove one by one
     state.remove(boundaryId: boundaryId, info: info1)
-    XCTAssertTrue(state.contains(boundaryId: boundaryId, key: "network"))
-    XCTAssertEqual(state.count(boundaryId: boundaryId, key: "network"), 1)
+    XCTAssertTrue(state.hasActiveLocks(in: boundaryId, matching: "network"))
+    XCTAssertEqual(state.activeLockCount(in: boundaryId, matching: "network"), 1)
 
     state.remove(boundaryId: boundaryId, info: info2)
-    XCTAssertFalse(state.contains(boundaryId: boundaryId, key: "network"))
-    XCTAssertEqual(state.count(boundaryId: boundaryId, key: "network"), 0)
-    XCTAssertTrue(state.keys(boundaryId: boundaryId).isEmpty)
+    XCTAssertFalse(state.hasActiveLocks(in: boundaryId, matching: "network"))
+    XCTAssertEqual(state.activeLockCount(in: boundaryId, matching: "network"), 0)
+    XCTAssertTrue(state.activeKeys(in: boundaryId).isEmpty)
   }
 
   // MARK: - Memory and Performance Tests
@@ -346,12 +346,12 @@ final class LockmanStateGenericTests: XCTestCase {
     }
 
     // Verify all keys are tracked
-    XCTAssertEqual(state.keys(boundaryId: boundaryId).count, 1000)
-    XCTAssertEqual(state.currents(boundaryId: boundaryId).count, 1000)
+    XCTAssertEqual(state.activeKeys(in: boundaryId).count, 1000)
+    XCTAssertEqual(state.currentLocks(in: boundaryId).count, 1000)
 
     // Each key should have exactly one info
     for i in 0..<1000 {
-      XCTAssertEqual(state.count(boundaryId: boundaryId, key: "category\(i)"), 1)
+      XCTAssertEqual(state.activeLockCount(in: boundaryId, matching: "category\(i)"), 1)
     }
   }
 
@@ -372,8 +372,8 @@ final class LockmanStateGenericTests: XCTestCase {
     // These should be O(1) operations
     for i in 0..<100 {
       let category = "category\(i % 10)"
-      _ = state.contains(boundaryId: boundaryId, key: category)
-      _ = state.count(boundaryId: boundaryId, key: category)
+      _ = state.hasActiveLocks(in: boundaryId, matching: category)
+      _ = state.activeLockCount(in: boundaryId, matching: category)
     }
 
     let duration = Date().timeIntervalSince(startTime)
@@ -381,7 +381,7 @@ final class LockmanStateGenericTests: XCTestCase {
 
     // Verify counts
     for i in 0..<10 {
-      XCTAssertEqual(state.count(boundaryId: boundaryId, key: "category\(i)"), 100)
+      XCTAssertEqual(state.activeLockCount(in: boundaryId, matching: "category\(i)"), 100)
     }
   }
 
@@ -428,11 +428,11 @@ final class LockmanStateGenericTests: XCTestCase {
     }
 
     // Get all currents - should preserve order
-    let allCurrents = state.currents(boundaryId: boundaryId)
+    let allCurrents = state.currentLocks(in: boundaryId)
     XCTAssertEqual(allCurrents.map(\.actionId), ["first", "second", "third", "fourth", "fifth"])
 
     // Get currents by key - should preserve relative order
-    let networkCurrents = state.currents(boundaryId: boundaryId, key: "network")
+    let networkCurrents = state.currentLocks(in: boundaryId, matching: "network")
     XCTAssertEqual(networkCurrents.map(\.actionId), ["first", "third", "fifth"])
   }
 
@@ -454,16 +454,16 @@ final class LockmanStateGenericTests: XCTestCase {
       for i in 0..<50 {
         group.addTask {
           let category = "category\(i % 5)"
-          _ = state.contains(boundaryId: boundaryId, key: category)
-          _ = state.count(boundaryId: boundaryId, key: category)
-          _ = state.currents(boundaryId: boundaryId, key: category)
+          _ = state.hasActiveLocks(in: boundaryId, matching: category)
+          _ = state.activeLockCount(in: boundaryId, matching: category)
+          _ = state.currentLocks(in: boundaryId, matching: category)
         }
       }
     }
 
     // Verify final state
-    XCTAssertEqual(state.currents(boundaryId: boundaryId).count, 100)
-    XCTAssertEqual(state.keys(boundaryId: boundaryId).count, 5)
+    XCTAssertEqual(state.currentLocks(in: boundaryId).count, 100)
+    XCTAssertEqual(state.activeKeys(in: boundaryId).count, 5)
   }
 
   func testEmptyKeyHandling() {
@@ -475,12 +475,12 @@ final class LockmanStateGenericTests: XCTestCase {
     state.add(boundaryId: boundaryId, info: info)
 
     // Should work with empty key
-    XCTAssertTrue(state.contains(boundaryId: boundaryId, key: ""))
-    XCTAssertEqual(state.count(boundaryId: boundaryId, key: ""), 1)
-    XCTAssertEqual(state.currents(boundaryId: boundaryId, key: "").count, 1)
+    XCTAssertTrue(state.hasActiveLocks(in: boundaryId, matching: ""))
+    XCTAssertEqual(state.activeLockCount(in: boundaryId, matching: ""), 1)
+    XCTAssertEqual(state.currentLocks(in: boundaryId, matching: "").count, 1)
 
     // Remove with empty key
     state.removeAll(boundaryId: boundaryId, key: "")
-    XCTAssertTrue(state.currents(boundaryId: boundaryId).isEmpty)
+    XCTAssertTrue(state.currentLocks(in: boundaryId).isEmpty)
   }
 }
