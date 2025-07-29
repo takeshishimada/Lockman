@@ -226,6 +226,18 @@ final class LockmanState<I: LockmanInfo, K: Hashable & Sendable>: Sendable {
     }
   }
 
+  /// Returns all currently active locks in guaranteed insertion order.
+  ///
+  /// This semantic method provides a more descriptive alternative to `currents(boundaryId:)`.
+  /// OrderedDictionary preserves insertion order, so this method returns
+  /// locks in the exact order they were added to the boundary.
+  ///
+  /// - Parameter boundaryId: The boundary identifier to query
+  /// - Returns: Array of active locks in insertion order
+  func currentLocks<B: LockmanBoundaryId>(in boundaryId: B) -> [I] {
+    return currents(boundaryId: boundaryId)
+  }
+
   // MARK: - Key-based Query Operations
 
   /// Checks if a specific key exists in the boundary - O(1) operation.
@@ -245,6 +257,23 @@ final class LockmanState<I: LockmanInfo, K: Hashable & Sendable>: Sendable {
     return index.withCriticalRegion { index in
       index[boundaryKey]?[key] != nil
     }
+  }
+
+  /// Checks if there are active locks with a specific key in the boundary - O(1) operation.
+  ///
+  /// This semantic method provides a more descriptive alternative to `contains(boundaryId:key:)`.
+  /// This method provides constant-time lookup for key existence,
+  /// making it ideal for strategies that need to check conflicts.
+  ///
+  /// - Parameters:
+  ///   - boundaryId: The boundary identifier
+  ///   - key: The key to check
+  /// - Returns: true if there are active locks with the specified key in the boundary
+  ///
+  /// ## Complexity
+  /// O(1) - Direct hash table lookup
+  func hasActiveLocks<B: LockmanBoundaryId>(in boundaryId: B, matching key: K) -> Bool {
+    return contains(boundaryId: boundaryId, key: key)
   }
 
   /// Returns all locks with a specific key in the boundary.
@@ -285,6 +314,20 @@ final class LockmanState<I: LockmanInfo, K: Hashable & Sendable>: Sendable {
     }
   }
 
+  /// Returns all currently active locks with a specific key in the boundary.
+  ///
+  /// This semantic method provides a more descriptive alternative to `currents(boundaryId:key:)`.
+  /// This method efficiently retrieves all locks matching the given key,
+  /// maintaining the original insertion order.
+  ///
+  /// - Parameters:
+  ///   - boundaryId: The boundary identifier
+  ///   - key: The key to filter by
+  /// - Returns: Array of active locks with the specified key in insertion order
+  func currentLocks<B: LockmanBoundaryId>(in boundaryId: B, matching key: K) -> [I] {
+    return currents(boundaryId: boundaryId, key: key)
+  }
+
   /// Returns the count of locks with a specific key - O(1) operation.
   ///
   /// - Parameters:
@@ -296,6 +339,18 @@ final class LockmanState<I: LockmanInfo, K: Hashable & Sendable>: Sendable {
     return index.withCriticalRegion { index in
       index[boundaryKey]?[key]?.count ?? 0
     }
+  }
+
+  /// Returns the count of active locks with a specific key - O(1) operation.
+  ///
+  /// This semantic method provides a more descriptive alternative to `count(boundaryId:key:)`.
+  ///
+  /// - Parameters:
+  ///   - boundaryId: The boundary identifier
+  ///   - key: The key to count
+  /// - Returns: Number of active locks with the specified key
+  func activeLockCount<B: LockmanBoundaryId>(in boundaryId: B, matching key: K) -> Int {
+    return count(boundaryId: boundaryId, key: key)
   }
 
   /// Returns all unique keys in the boundary - O(1) operation.
@@ -310,6 +365,16 @@ final class LockmanState<I: LockmanInfo, K: Hashable & Sendable>: Sendable {
       }
       return Set()
     }
+  }
+
+  /// Returns all unique active keys in the boundary - O(1) operation.
+  ///
+  /// This semantic method provides a more descriptive alternative to `keys(boundaryId:)`.
+  ///
+  /// - Parameter boundaryId: The boundary identifier
+  /// - Returns: Set of all unique active keys in the boundary
+  func activeKeys<B: LockmanBoundaryId>(in boundaryId: B) -> Set<K> {
+    return keys(boundaryId: boundaryId)
   }
 
   // MARK: - Bulk Operations
@@ -342,6 +407,15 @@ final class LockmanState<I: LockmanInfo, K: Hashable & Sendable>: Sendable {
     }
   }
 
+  /// Returns all boundary identifiers that have active locks.
+  ///
+  /// This semantic method provides a more descriptive alternative to `allBoundaryIds()`.
+  ///
+  /// - Returns: Array of boundary identifiers that have active locks
+  func activeBoundaryIds() -> [AnyLockmanBoundaryId] {
+    return allBoundaryIds()
+  }
+
   /// Returns the total number of locks across all boundaries.
   func totalLockCount() -> Int {
     storage.withCriticalRegion { storage in
@@ -349,6 +423,15 @@ final class LockmanState<I: LockmanInfo, K: Hashable & Sendable>: Sendable {
         total + boundaryDict.count
       }
     }
+  }
+
+  /// Returns the total number of active locks across all boundaries.
+  ///
+  /// This semantic method provides a more descriptive alternative to `totalLockCount()`.
+  ///
+  /// - Returns: Total count of active locks across all boundaries
+  func totalActiveLockCount() -> Int {
+    return totalLockCount()
   }
 
   /// Returns all locks grouped by boundary for debugging purposes.
@@ -365,6 +448,17 @@ final class LockmanState<I: LockmanInfo, K: Hashable & Sendable>: Sendable {
       }
       return result
     }
+  }
+
+  /// Returns all active locks grouped by boundary for debugging purposes.
+  ///
+  /// This semantic method provides a more descriptive alternative to `getAllLocks()`.
+  /// This method provides a complete snapshot of all locks across all boundaries,
+  /// suitable for debugging and inspection tools.
+  ///
+  /// - Returns: Dictionary mapping boundary IDs to arrays of active lock information
+  func allActiveLocks() -> [AnyLockmanBoundaryId: [I]] {
+    return getAllLocks()
   }
 }
 
@@ -420,5 +514,48 @@ extension LockmanState where K == LockmanActionId {
   /// Convenience method that calls the generic key-based method.
   func actionIds<B: LockmanBoundaryId>(boundaryId: B) -> Set<LockmanActionId> {
     keys(boundaryId: boundaryId)
+  }
+
+  // MARK: - Semantic ActionId-specific convenience methods
+
+  /// Returns all currently active locks in guaranteed insertion order.
+  ///
+  /// Semantic convenience method that calls the generic method.
+  func currentLocks<B: LockmanBoundaryId>(in boundaryId: B) -> [I] {
+    return currents(boundaryId: boundaryId)
+  }
+
+  /// Checks if there are active locks with a specific actionId in the boundary.
+  ///
+  /// Semantic convenience method that calls the generic method.
+  func hasActiveLocks<B: LockmanBoundaryId>(in boundaryId: B, matching actionId: LockmanActionId)
+    -> Bool
+  {
+    return contains(boundaryId: boundaryId, actionId: actionId)
+  }
+
+  /// Returns all currently active locks with a specific actionId in the boundary.
+  ///
+  /// Semantic convenience method that calls the generic method.
+  func currentLocks<B: LockmanBoundaryId>(in boundaryId: B, matching actionId: LockmanActionId)
+    -> [I]
+  {
+    return currents(boundaryId: boundaryId, actionId: actionId)
+  }
+
+  /// Returns the count of active locks with a specific actionId.
+  ///
+  /// Semantic convenience method that calls the generic method.
+  func activeLockCount<B: LockmanBoundaryId>(in boundaryId: B, matching actionId: LockmanActionId)
+    -> Int
+  {
+    return count(boundaryId: boundaryId, actionId: actionId)
+  }
+
+  /// Returns all unique active actionIds in the boundary.
+  ///
+  /// Semantic convenience method that calls the generic method.
+  func activeActionIds<B: LockmanBoundaryId>(in boundaryId: B) -> Set<LockmanActionId> {
+    return actionIds(boundaryId: boundaryId)
   }
 }
