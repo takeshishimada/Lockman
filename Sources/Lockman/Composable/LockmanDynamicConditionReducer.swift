@@ -187,15 +187,20 @@ extension LockmanDynamicConditionReducer {
     let actionId = lockAction.lockmanInfo.actionId
     let dynamicLockCondition = self.lockCondition
 
-    // Step 1: Resolve dynamic lock strategy
-    let strategy: AnyLockmanStrategy<LockmanDynamicConditionInfo>
+    // Step 1: Resolve strategies
+    let dynamicStrategy: AnyLockmanStrategy<LockmanDynamicConditionInfo>
+    let actionStrategy: AnyLockmanStrategy<LA.I>
     do {
-      strategy = try LockmanManager.container.resolve(
+      dynamicStrategy = try LockmanManager.container.resolve(
         id: .dynamicCondition,
         expecting: LockmanDynamicConditionInfo.self
       )
+      actionStrategy = try LockmanManager.container.resolve(
+        id: lockAction.lockmanInfo.strategyId,
+        expecting: LA.I.self
+      )
     } catch {
-      // Failed to resolve dynamic lock strategy (configuration error)
+      // Failed to resolve strategies (configuration error)
       Effect<Action>.handleError(
         error: error,
         fileID: fileID,
@@ -212,7 +217,9 @@ extension LockmanDynamicConditionReducer {
       lockCondition: lockCondition,
       state: state,
       action: action,
-      strategy: strategy,
+      dynamicStrategy: dynamicStrategy,
+      actionStrategy: actionStrategy,
+      lockmanAction: lockAction,
       actionId: actionId,
       boundaryId: boundaryId
     )
@@ -220,7 +227,8 @@ extension LockmanDynamicConditionReducer {
     // Step 3: Build effect and handle condition evaluation result
     return buildLockEffect(
       conditionResult: conditionResult,
-      strategy: strategy,
+      dynamicStrategy: dynamicStrategy,
+      actionStrategy: actionStrategy,
       actionId: actionId,
       unlockOption: unlockOption ?? .immediate,
       lockAction: lockAction,

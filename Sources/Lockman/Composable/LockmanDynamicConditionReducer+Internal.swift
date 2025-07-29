@@ -47,17 +47,21 @@ extension LockmanDynamicConditionReducer {
   ///   - lockCondition: Optional condition specific to this lock call
   ///   - state: Current state for condition evaluation
   ///   - action: Current action for condition evaluation
-  ///   - strategy: Strategy for dynamic condition locks
+  ///   - dynamicStrategy: Strategy for dynamic condition locks (Step 1)
+  ///   - actionStrategy: Strategy for action-specific locks (Step 2)
+  ///   - lockmanAction: Action providing lock information
   ///   - actionId: Action identifier for lock management
   ///   - boundaryId: Boundary identifier for lock management
   /// - Returns: Result indicating whether all conditions passed
   @usableFromInline
-  func evaluateConditions<B: LockmanBoundaryId>(
+  func evaluateConditions<B: LockmanBoundaryId, A: LockmanAction>(
     dynamicLockCondition: (@Sendable (_ state: State, _ action: Action) -> LockmanResult)?,
     lockCondition: (@Sendable (_ state: State, _ action: Action) -> LockmanResult)?,
     state: State,
     action: Action,
-    strategy: AnyLockmanStrategy<LockmanDynamicConditionInfo>,
+    dynamicStrategy: AnyLockmanStrategy<LockmanDynamicConditionInfo>,
+    actionStrategy: AnyLockmanStrategy<A.I>,
+    lockmanAction: A,
     actionId: LockmanActionId,
     boundaryId: B
   ) -> ConditionEvaluationResult {
@@ -67,7 +71,7 @@ extension LockmanDynamicConditionReducer {
       condition: dynamicLockCondition,
       state: state,
       action: action,
-      strategy: strategy,
+      strategy: dynamicStrategy,
       actionId: actionId,
       boundaryId: boundaryId
     )
@@ -91,7 +95,8 @@ extension LockmanDynamicConditionReducer {
       condition: lockCondition,
       state: state,
       action: action,
-      strategy: strategy,
+      strategy: actionStrategy,
+      lockmanAction: lockmanAction,
       actionId: actionId,
       boundaryId: boundaryId
     )
@@ -163,6 +168,79 @@ extension LockmanDynamicConditionReducer {
     }
   }
 
+  /// Evaluates a single condition and attempts lock acquisition using a generic strategy.
+  ///
+  /// This overload allows evaluation with different strategy types beyond just dynamic conditions.
+  /// It's designed to work with action-specific strategies that use their own LockmanInfo types.
+  ///
+  /// - Parameters:
+  ///   - condition: Optional condition to evaluate
+  ///   - state: Current state for condition evaluation
+  ///   - action: Current action for condition evaluation
+  ///   - strategy: Strategy for lock management (generic type)
+  ///   - lockmanAction: Action providing lock information for the strategy
+  ///   - actionId: Action identifier for lock management
+  ///   - boundaryId: Boundary identifier for lock management
+  /// - Returns: Result indicating success, failure, or success with preceding cancellation
+  @usableFromInline
+  func evaluateSingleCondition<B: LockmanBoundaryId, I: LockmanInfo>(
+    condition: (@Sendable (_ state: State, _ action: Action) -> LockmanResult)?,
+    state: State,
+    action: Action,
+    strategy: AnyLockmanStrategy<I>,
+    lockmanAction: any LockmanAction,
+    actionId: LockmanActionId,
+    boundaryId: B
+  ) -> SingleConditionResult {
+
+    // If no condition provided, consider it successful
+    guard let condition = condition else {
+      return .success
+    }
+
+    // Use the action's lock information for the strategy
+    guard let lockmanInfo = lockmanAction.lockmanInfo as? I else {
+      // Type mismatch - this shouldn't happen if called correctly
+      return .failure(LockmanRegistrationError.strategyNotRegistered("\(I.self)"))
+    }
+
+    // Evaluate condition first
+    let conditionResult = condition(state, action)
+    switch conditionResult {
+    case .cancel(let error):
+      return .failure(error)
+    case .success:
+      // Condition passed, proceed with lock acquisition
+      break
+    case .successWithPrecedingCancellation:
+      // Store the error for later handling, but proceed with lock acquisition
+      // This will be properly handled by the lock acquisition result
+      break
+    @unknown default:
+      break
+    }
+
+    // Check condition and acquire lock if successful
+    let result = Effect<Action>.acquireLock(
+      lockmanInfo: lockmanInfo,
+      strategy: strategy,
+      boundaryId: boundaryId
+    )
+
+    // Handle result
+    switch result {
+    case .cancel(let error):
+      return .failure(error)
+    case .successWithPrecedingCancellation(let error):
+      // Lock acquired but with preceding cancellation
+      return .successWithPrecedingCancellation(error)
+    case .success:
+      return .success
+    @unknown default:
+      return .success
+    }
+  }
+
   // MARK: - Step 3: Effect Construction with Condition Handling
 
   /// Builds a lock effect with condition evaluation result handling.
@@ -170,9 +248,13 @@ extension LockmanDynamicConditionReducer {
   /// This method handles Step 3 of the dynamic lock process: creating an effect based on
   /// the condition evaluation results and executing the operation with proper cleanup.
   ///
+  /// In Pure Dynamic Condition architecture, both dynamic and action strategies may acquire locks
+  /// during condition evaluation, so both need proper cleanup handling.
+  ///
   /// - Parameters:
   ///   - conditionResult: Result from Step 2 condition evaluation
-  ///   - strategy: Strategy for dynamic condition locks
+  ///   - dynamicStrategy: Strategy for dynamic condition locks (Step 1)
+  ///   - actionStrategy: Strategy for action-specific locks (Step 2)
   ///   - actionId: Action identifier for unlock token creation
   ///   - unlockOption: Controls when the unlock operation is executed
   ///   - lockAction: LockmanAction providing lock information
@@ -189,7 +271,8 @@ extension LockmanDynamicConditionReducer {
   @usableFromInline
   func buildLockEffect<B: LockmanBoundaryId, LA: LockmanAction>(
     conditionResult: ConditionEvaluationResult,
-    strategy: AnyLockmanStrategy<LockmanDynamicConditionInfo>,
+    dynamicStrategy: AnyLockmanStrategy<LockmanDynamicConditionInfo>,
+    actionStrategy: AnyLockmanStrategy<LA.I>,
     actionId: LockmanActionId,
     unlockOption: LockmanUnlockOption,
     lockAction: LA,
@@ -204,11 +287,18 @@ extension LockmanDynamicConditionReducer {
     column: UInt
   ) -> Effect<Action> {
 
-    // Create unlock token for dynamic condition evaluation (moved from caller)
-    let unlockToken = LockmanUnlock(
+    // Create unlock tokens for both strategies
+    let dynamicUnlockToken = LockmanUnlock(
       id: boundaryId,
       info: LockmanDynamicConditionInfo(actionId: actionId),
-      strategy: strategy,
+      strategy: dynamicStrategy,
+      unlockOption: unlockOption
+    )
+
+    let actionUnlockToken = LockmanUnlock(
+      id: boundaryId,
+      info: lockAction.lockmanInfo,
+      strategy: actionStrategy,
       unlockOption: unlockOption
     )
 
@@ -217,8 +307,12 @@ extension LockmanDynamicConditionReducer {
     let baseEffect = Effect<Action>.run(
       priority: priority,
       operation: { send in
-        // Only handle dynamic condition lock cleanup
-        defer { unlockToken() }
+        // Handle cleanup for both dynamic and action locks
+        defer {
+          // Clean up both locks when operation completes
+          dynamicUnlockToken()
+          actionUnlockToken()
+        }
 
         // Execute the operation directly - no business lock management here
         try await withTaskCancellation(id: boundaryId) {
@@ -226,8 +320,9 @@ extension LockmanDynamicConditionReducer {
         }
       },
       catch: { error, send in
-        // Error handling with dynamic lock cleanup
-        unlockToken()
+        // Error handling with cleanup for both locks
+        dynamicUnlockToken()
+        actionUnlockToken()
         await handler?(error, send)
       },
       fileID: fileID,
@@ -275,12 +370,13 @@ extension LockmanDynamicConditionReducer {
       return .concatenate(effects)
 
     case .failure(let error, let step):
-      // Clean up dynamic locks based on which step failed
+      // Clean up locks based on which step failed
       // If step 1 (dynamic lock condition) succeeds but step 2 (lock call condition) fails,
       // we need to unlock step 1's locks
       if step == .lockCondition {
-        unlockToken()
+        dynamicUnlockToken()
       }
+      // Note: If step 2 fails, action lock was never acquired, so no need to unlock it
 
       if let lockFailure = lockFailure {
         // Wrap the error with action context for better debugging
