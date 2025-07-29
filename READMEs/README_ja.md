@@ -225,7 +225,7 @@ Package.swiftファイルに依存関係を追加：
 
 ```swift
 dependencies: [
-  .package(url: "https://github.com/takeshishimada/Lockman", from: "1.3.1")
+  .package(url: "https://github.com/takeshishimada/Lockman", from: "1.3.2")
 ]
 ```
 
@@ -253,6 +253,7 @@ dependencies: [
 
 | Lockman | The Composable Architecture |
 |---------|----------------------------|
+| 1.3.2   | 1.20.2                     |
 | 1.3.1   | 1.20.2                     |
 
 <details>
