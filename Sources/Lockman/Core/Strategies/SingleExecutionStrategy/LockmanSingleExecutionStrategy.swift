@@ -95,7 +95,7 @@ public final class LockmanSingleExecutionStrategy: LockmanStrategy, @unchecked S
 
     case .boundary:
       // Exclusive per boundary - check if any lock exists
-      let currentLocks = state.currents(id: boundaryId)
+      let currentLocks = state.currents(boundaryId: boundaryId)
       if currentLocks.isEmpty {
         result = .success
       } else {
@@ -111,8 +111,8 @@ public final class LockmanSingleExecutionStrategy: LockmanStrategy, @unchecked S
 
     case .action:
       // Exclusive per action - check if same actionId exists
-      if state.contains(id: boundaryId, key: info.actionId) {
-        let existingInfo = state.currents(id: boundaryId, key: info.actionId).first!
+      if state.contains(boundaryId: boundaryId, key: info.actionId) {
+        let existingInfo = state.currents(boundaryId: boundaryId, key: info.actionId).first!
         result = .cancel(
           LockmanSingleExecutionError.actionAlreadyRunning(
             existingInfo: existingInfo
@@ -162,7 +162,7 @@ public final class LockmanSingleExecutionStrategy: LockmanStrategy, @unchecked S
     boundaryId: B,
     info: LockmanSingleExecutionInfo
   ) {
-    state.add(id: boundaryId, info: info)
+    state.add(boundaryId: boundaryId, info: info)
   }
 
   /// Releases a previously acquired lock for the specified boundary and action.
@@ -204,7 +204,7 @@ public final class LockmanSingleExecutionStrategy: LockmanStrategy, @unchecked S
     boundaryId: B,
     info: LockmanSingleExecutionInfo
   ) {
-    state.remove(id: boundaryId, info: info)
+    state.remove(boundaryId: boundaryId, info: info)
   }
 
   /// Removes all active locks across all boundaries and execution modes.
@@ -216,7 +216,7 @@ public final class LockmanSingleExecutionStrategy: LockmanStrategy, @unchecked S
   ///
   /// - Parameter boundaryId: A unique boundary identifier conforming to `LockmanBoundaryId`
   public func cleanUp<B: LockmanBoundaryId>(boundaryId: B) {
-    state.removeAll(id: boundaryId)
+    state.removeAll(boundaryId: boundaryId)
   }
 
   /// Returns current locks information for debugging purposes.

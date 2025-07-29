@@ -136,7 +136,7 @@ public final class LockmanPriorityBasedStrategy: LockmanStrategy, @unchecked Sen
     }
 
     // Get all current locks for this boundary
-    let currentLocks = state.currents(id: boundaryId)
+    let currentLocks = state.currents(boundaryId: boundaryId)
 
     // Filter out non-priority actions for priority comparison
     let priorityLocks = currentLocks.filter { $0.priority != .none }
@@ -224,7 +224,7 @@ public final class LockmanPriorityBasedStrategy: LockmanStrategy, @unchecked Sen
     boundaryId: B,
     info: LockmanPriorityBasedInfo
   ) {
-    state.add(id: boundaryId, info: info)
+    state.add(boundaryId: boundaryId, info: info)
   }
 
   /// Releases a previously acquired priority-based lock.
@@ -245,7 +245,7 @@ public final class LockmanPriorityBasedStrategy: LockmanStrategy, @unchecked Sen
     boundaryId: B,
     info: LockmanPriorityBasedInfo
   ) {
-    state.remove(id: boundaryId, info: info)
+    state.remove(boundaryId: boundaryId, info: info)
   }
 
   /// Removes all priority-based locks across all boundaries and priority levels.
@@ -257,7 +257,7 @@ public final class LockmanPriorityBasedStrategy: LockmanStrategy, @unchecked Sen
   ///
   /// - Parameter boundaryId: A unique boundary identifier conforming to `LockmanBoundaryId`
   public func cleanUp<B: LockmanBoundaryId>(boundaryId: B) {
-    state.removeAll(id: boundaryId)
+    state.removeAll(boundaryId: boundaryId)
   }
 
   /// Returns current locks information for debugging purposes.

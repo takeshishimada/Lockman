@@ -38,7 +38,7 @@ public final class LockmanConcurrencyLimitedStrategy: LockmanStrategy, @unchecke
     info: LockmanConcurrencyLimitedInfo
   ) -> LockmanResult {
     // Use the key-based query for efficient lookup
-    let currentCount = state.count(id: boundaryId, key: info.concurrencyId)
+    let currentCount = state.count(boundaryId: boundaryId, key: info.concurrencyId)
 
     let result: LockmanResult
     var failureReason: String?
@@ -46,7 +46,7 @@ public final class LockmanConcurrencyLimitedStrategy: LockmanStrategy, @unchecke
     if info.limit.isExceeded(currentCount: currentCount) {
       if case .limited(let limit) = info.limit {
         // Get existing infos in the same concurrency group
-        let existingInfos = state.currents(id: boundaryId, key: info.concurrencyId)
+        let existingInfos = state.currents(boundaryId: boundaryId, key: info.concurrencyId)
 
         result = .cancel(
           LockmanConcurrencyLimitedError.concurrencyLimitReached(
@@ -88,7 +88,7 @@ public final class LockmanConcurrencyLimitedStrategy: LockmanStrategy, @unchecke
     boundaryId: B,
     info: LockmanConcurrencyLimitedInfo
   ) {
-    state.add(id: boundaryId, info: info)
+    state.add(boundaryId: boundaryId, info: info)
   }
 
   /// Releases a lock by removing it from the concurrency tracking state.
@@ -100,7 +100,7 @@ public final class LockmanConcurrencyLimitedStrategy: LockmanStrategy, @unchecke
     boundaryId: B,
     info: LockmanConcurrencyLimitedInfo
   ) {
-    state.remove(id: boundaryId, info: info)
+    state.remove(boundaryId: boundaryId, info: info)
   }
 
   /// Removes all locks for a specific boundary across all concurrency groups.
@@ -110,9 +110,9 @@ public final class LockmanConcurrencyLimitedStrategy: LockmanStrategy, @unchecke
     boundaryId: B
   ) {
     // Get all locks for this boundary and remove them one by one
-    let currentLocks = state.currents(id: boundaryId)
+    let currentLocks = state.currents(boundaryId: boundaryId)
     for info in currentLocks {
-      state.remove(id: boundaryId, info: info)
+      state.remove(boundaryId: boundaryId, info: info)
     }
   }
 

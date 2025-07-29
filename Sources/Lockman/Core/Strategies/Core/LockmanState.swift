@@ -69,13 +69,13 @@ final class LockmanState<I: LockmanInfo, K: Hashable & Sendable>: Sendable {
   /// for efficient key-based lookups.
   ///
   /// - Parameters:
-  ///   - id: The boundary identifier
+  ///   - boundaryId: The boundary identifier
   ///   - info: The lock info to add
   ///
   /// ## Complexity
   /// O(1) - Direct ordered dictionary insertion and dual index update
-  func add<B: LockmanBoundaryId>(id: B, info: I) {
-    let boundaryKey = AnyLockmanBoundaryId(id)
+  func add<B: LockmanBoundaryId>(boundaryId: B, info: I) {
+    let boundaryKey = AnyLockmanBoundaryId(boundaryId)
     let indexKey = keyExtractor(info)
 
     storage.withCriticalRegion { storage in
@@ -93,15 +93,15 @@ final class LockmanState<I: LockmanInfo, K: Hashable & Sendable>: Sendable {
   /// maintaining consistency between both the primary storage and key index.
   ///
   /// - Parameters:
-  ///   - id: The boundary identifier
+  ///   - boundaryId: The boundary identifier
   ///   - key: The key whose locks should be removed
   ///
   /// ## Complexity
   /// O(n) - Where n is the total number of locks in the boundary
   /// However, if k (locks to remove) << n (total locks), this is still efficient
   /// due to O(1) Set lookup for each item
-  func removeAll<B: LockmanBoundaryId>(id: B, key: K) {
-    let boundaryKey = AnyLockmanBoundaryId(id)
+  func removeAll<B: LockmanBoundaryId>(boundaryId: B, key: K) {
+    let boundaryKey = AnyLockmanBoundaryId(boundaryId)
 
     // Get all UUIDs for this key
     let uuidsToRemove = index.withCriticalRegion { index in
@@ -144,13 +144,13 @@ final class LockmanState<I: LockmanInfo, K: Hashable & Sendable>: Sendable {
   /// the key index by removing the lock from both data structures.
   ///
   /// - Parameters:
-  ///   - id: The boundary identifier
+  ///   - boundaryId: The boundary identifier
   ///   - info: The lock info to remove (identified by uniqueId)
   ///
   /// ## Complexity
   /// O(1) - Direct key removal from OrderedDictionary and dual index update
-  func remove<B: LockmanBoundaryId>(id: B, info: any LockmanInfo) {
-    let boundaryKey = AnyLockmanBoundaryId(id)
+  func remove<B: LockmanBoundaryId>(boundaryId: B, info: any LockmanInfo) {
+    let boundaryKey = AnyLockmanBoundaryId(boundaryId)
 
     // First, get the info to access key for index cleanup
     let removedInfo = storage.withCriticalRegion { storage -> I? in
@@ -214,10 +214,10 @@ final class LockmanState<I: LockmanInfo, K: Hashable & Sendable>: Sendable {
   /// OrderedDictionary preserves insertion order, so this method returns
   /// locks in the exact order they were added to the boundary.
   ///
-  /// - Parameter id: The boundary identifier to query
+  /// - Parameter boundaryId: The boundary identifier to query
   /// - Returns: Array of locks in insertion order
-  func currents<B: LockmanBoundaryId>(id: B) -> [I] {
-    let boundaryKey = AnyLockmanBoundaryId(id)
+  func currents<B: LockmanBoundaryId>(boundaryId: B) -> [I] {
+    let boundaryKey = AnyLockmanBoundaryId(boundaryId)
     return storage.withCriticalRegion { storage in
       guard let boundaryDict = storage[boundaryKey] else {
         return []
@@ -234,14 +234,14 @@ final class LockmanState<I: LockmanInfo, K: Hashable & Sendable>: Sendable {
   /// making it ideal for strategies that need to check conflicts.
   ///
   /// - Parameters:
-  ///   - id: The boundary identifier
+  ///   - boundaryId: The boundary identifier
   ///   - key: The key to check
   /// - Returns: true if the key exists in the boundary
   ///
   /// ## Complexity
   /// O(1) - Direct hash table lookup
-  func contains<B: LockmanBoundaryId>(id: B, key: K) -> Bool {
-    let boundaryKey = AnyLockmanBoundaryId(id)
+  func contains<B: LockmanBoundaryId>(boundaryId: B, key: K) -> Bool {
+    let boundaryKey = AnyLockmanBoundaryId(boundaryId)
     return index.withCriticalRegion { index in
       index[boundaryKey]?[key] != nil
     }
@@ -253,11 +253,11 @@ final class LockmanState<I: LockmanInfo, K: Hashable & Sendable>: Sendable {
   /// maintaining the original insertion order.
   ///
   /// - Parameters:
-  ///   - id: The boundary identifier
+  ///   - boundaryId: The boundary identifier
   ///   - key: The key to filter by
   /// - Returns: Array of locks with the specified key in insertion order
-  func currents<B: LockmanBoundaryId>(id: B, key: K) -> [I] {
-    let boundaryKey = AnyLockmanBoundaryId(id)
+  func currents<B: LockmanBoundaryId>(boundaryId: B, key: K) -> [I] {
+    let boundaryKey = AnyLockmanBoundaryId(boundaryId)
 
     let uuids = index.withCriticalRegion { index in
       index[boundaryKey]?[key] ?? []
@@ -288,11 +288,11 @@ final class LockmanState<I: LockmanInfo, K: Hashable & Sendable>: Sendable {
   /// Returns the count of locks with a specific key - O(1) operation.
   ///
   /// - Parameters:
-  ///   - id: The boundary identifier
+  ///   - boundaryId: The boundary identifier
   ///   - key: The key to count
   /// - Returns: Number of locks with the specified key
-  func count<B: LockmanBoundaryId>(id: B, key: K) -> Int {
-    let boundaryKey = AnyLockmanBoundaryId(id)
+  func count<B: LockmanBoundaryId>(boundaryId: B, key: K) -> Int {
+    let boundaryKey = AnyLockmanBoundaryId(boundaryId)
     return index.withCriticalRegion { index in
       index[boundaryKey]?[key]?.count ?? 0
     }
@@ -300,10 +300,10 @@ final class LockmanState<I: LockmanInfo, K: Hashable & Sendable>: Sendable {
 
   /// Returns all unique keys in the boundary - O(1) operation.
   ///
-  /// - Parameter id: The boundary identifier
+  /// - Parameter boundaryId: The boundary identifier
   /// - Returns: Set of all unique keys in the boundary
-  func keys<B: LockmanBoundaryId>(id: B) -> Set<K> {
-    let boundaryKey = AnyLockmanBoundaryId(id)
+  func keys<B: LockmanBoundaryId>(boundaryId: B) -> Set<K> {
+    let boundaryKey = AnyLockmanBoundaryId(boundaryId)
     return index.withCriticalRegion { index in
       if let boundaryIndex = index[boundaryKey] {
         return Set(boundaryIndex.keys)
@@ -325,8 +325,8 @@ final class LockmanState<I: LockmanInfo, K: Hashable & Sendable>: Sendable {
   }
 
   /// Removes all locks for a specific boundary.
-  func removeAll<B: LockmanBoundaryId>(id: B) {
-    let boundaryKey = AnyLockmanBoundaryId(id)
+  func removeAll<B: LockmanBoundaryId>(boundaryId: B) {
+    let boundaryKey = AnyLockmanBoundaryId(boundaryId)
     storage.withCriticalRegion { storage in
       storage.removeValue(forKey: boundaryKey)
     }
@@ -390,35 +390,35 @@ extension LockmanState where K == LockmanActionId {
   /// Checks if a specific actionId exists in the boundary.
   ///
   /// Convenience method that calls the generic key-based method.
-  func contains<B: LockmanBoundaryId>(id: B, actionId: LockmanActionId) -> Bool {
-    contains(id: id, key: actionId)
+  func contains<B: LockmanBoundaryId>(boundaryId: B, actionId: LockmanActionId) -> Bool {
+    contains(boundaryId: boundaryId, key: actionId)
   }
 
   /// Returns all locks with a specific actionId in the boundary.
   ///
   /// Convenience method that calls the generic key-based method.
-  func currents<B: LockmanBoundaryId>(id: B, actionId: LockmanActionId) -> [I] {
-    currents(id: id, key: actionId)
+  func currents<B: LockmanBoundaryId>(boundaryId: B, actionId: LockmanActionId) -> [I] {
+    currents(boundaryId: boundaryId, key: actionId)
   }
 
   /// Returns the count of locks with a specific actionId.
   ///
   /// Convenience method that calls the generic key-based method.
-  func count<B: LockmanBoundaryId>(id: B, actionId: LockmanActionId) -> Int {
-    count(id: id, key: actionId)
+  func count<B: LockmanBoundaryId>(boundaryId: B, actionId: LockmanActionId) -> Int {
+    count(boundaryId: boundaryId, key: actionId)
   }
 
   /// Removes all locks with a specific actionId from the boundary.
   ///
   /// Convenience method that calls the generic key-based method.
-  func removeAll<B: LockmanBoundaryId>(id: B, actionId: LockmanActionId) {
-    removeAll(id: id, key: actionId)
+  func removeAll<B: LockmanBoundaryId>(boundaryId: B, actionId: LockmanActionId) {
+    removeAll(boundaryId: boundaryId, key: actionId)
   }
 
   /// Returns all unique actionIds in the boundary.
   ///
   /// Convenience method that calls the generic key-based method.
-  func actionIds<B: LockmanBoundaryId>(id: B) -> Set<LockmanActionId> {
-    keys(id: id)
+  func actionIds<B: LockmanBoundaryId>(boundaryId: B) -> Set<LockmanActionId> {
+    keys(boundaryId: boundaryId)
   }
 }

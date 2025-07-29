@@ -47,7 +47,7 @@ final class LockmanStateActionIndexTests: XCTestCase {
     let state = LockmanState<TestInfo, LockmanActionId>()
     let boundary = TestBoundaryId(value: "test")
 
-    XCTAssertFalse(state.contains(id: boundary, actionId: "nonexistent"))
+    XCTAssertFalse(state.contains(boundaryId: boundary, actionId: "nonexistent"))
   }
 
   func testContainsReturnsTrueAfterAddingAction() async throws {
@@ -55,10 +55,10 @@ final class LockmanStateActionIndexTests: XCTestCase {
     let boundary = TestBoundaryId(value: "test")
     let info = TestInfo(actionId: "action1")
 
-    state.add(id: boundary, info: info)
+    state.add(boundaryId: boundary, info: info)
 
-    XCTAssertTrue(state.contains(id: boundary, actionId: "action1"))
-    XCTAssertFalse(state.contains(id: boundary, actionId: "action2"))
+    XCTAssertTrue(state.contains(boundaryId: boundary, actionId: "action1"))
+    XCTAssertFalse(state.contains(boundaryId: boundary, actionId: "action2"))
   }
 
   func testContainsReturnsFalseAfterRemovingAction() async throws {
@@ -66,11 +66,11 @@ final class LockmanStateActionIndexTests: XCTestCase {
     let boundary = TestBoundaryId(value: "test")
     let info = TestInfo(actionId: "action1")
 
-    state.add(id: boundary, info: info)
-    XCTAssertTrue(state.contains(id: boundary, actionId: "action1"))
+    state.add(boundaryId: boundary, info: info)
+    XCTAssertTrue(state.contains(boundaryId: boundary, actionId: "action1"))
 
-    state.remove(id: boundary, info: info)
-    XCTAssertFalse(state.contains(id: boundary, actionId: "action1"))
+    state.remove(boundaryId: boundary, info: info)
+    XCTAssertFalse(state.contains(boundaryId: boundary, actionId: "action1"))
   }
 
   // MARK: - currents(id:actionId:) Tests
@@ -79,7 +79,7 @@ final class LockmanStateActionIndexTests: XCTestCase {
     let state = LockmanState<TestInfo, LockmanActionId>()
     let boundary = TestBoundaryId(value: "test")
 
-    let results = state.currents(id: boundary, actionId: "nonexistent")
+    let results = state.currents(boundaryId: boundary, actionId: "nonexistent")
     XCTAssertTrue(results.isEmpty)
   }
 
@@ -91,12 +91,12 @@ final class LockmanStateActionIndexTests: XCTestCase {
     let info2 = TestInfo(actionId: "action2")
     let info3 = TestInfo(actionId: "action1")
 
-    state.add(id: boundary, info: info1)
-    state.add(id: boundary, info: info2)
-    state.add(id: boundary, info: info3)
+    state.add(boundaryId: boundary, info: info1)
+    state.add(boundaryId: boundary, info: info2)
+    state.add(boundaryId: boundary, info: info3)
 
-    let action1Results = state.currents(id: boundary, actionId: "action1")
-    let action2Results = state.currents(id: boundary, actionId: "action2")
+    let action1Results = state.currents(boundaryId: boundary, actionId: "action1")
+    let action2Results = state.currents(boundaryId: boundary, actionId: "action2")
 
     XCTAssertEqual(action1Results.count, 2)
     XCTAssertEqual(action2Results.count, 1)
@@ -114,11 +114,11 @@ final class LockmanStateActionIndexTests: XCTestCase {
     let info2 = TestInfo(actionId: "action1")
     let info3 = TestInfo(actionId: "action1")
 
-    state.add(id: boundary, info: info1)
-    state.add(id: boundary, info: info2)
-    state.add(id: boundary, info: info3)
+    state.add(boundaryId: boundary, info: info1)
+    state.add(boundaryId: boundary, info: info2)
+    state.add(boundaryId: boundary, info: info3)
 
-    let results = state.currents(id: boundary, actionId: "action1")
+    let results = state.currents(boundaryId: boundary, actionId: "action1")
 
     XCTAssertEqual(results.count, 3)
     XCTAssertEqual(results[0].uniqueId, info1.uniqueId)
@@ -132,7 +132,7 @@ final class LockmanStateActionIndexTests: XCTestCase {
     let state = LockmanState<TestInfo, LockmanActionId>()
     let boundary = TestBoundaryId(value: "test")
 
-    XCTAssertEqual(state.count(id: boundary, actionId: "nonexistent"), 0)
+    XCTAssertEqual(state.count(boundaryId: boundary, actionId: "nonexistent"), 0)
   }
 
   func testCountReturnsCorrectNumber() async throws {
@@ -143,13 +143,13 @@ final class LockmanStateActionIndexTests: XCTestCase {
     let info2 = TestInfo(actionId: "action1")
     let info3 = TestInfo(actionId: "action2")
 
-    state.add(id: boundary, info: info1)
-    state.add(id: boundary, info: info2)
-    state.add(id: boundary, info: info3)
+    state.add(boundaryId: boundary, info: info1)
+    state.add(boundaryId: boundary, info: info2)
+    state.add(boundaryId: boundary, info: info3)
 
-    XCTAssertEqual(state.count(id: boundary, actionId: "action1"), 2)
-    XCTAssertEqual(state.count(id: boundary, actionId: "action2"), 1)
-    XCTAssertEqual(state.count(id: boundary, actionId: "action3"), 0)
+    XCTAssertEqual(state.count(boundaryId: boundary, actionId: "action1"), 2)
+    XCTAssertEqual(state.count(boundaryId: boundary, actionId: "action2"), 1)
+    XCTAssertEqual(state.count(boundaryId: boundary, actionId: "action3"), 0)
   }
 
   // MARK: - ActionIds Tests
@@ -158,7 +158,7 @@ final class LockmanStateActionIndexTests: XCTestCase {
     let state = LockmanState<TestInfo, LockmanActionId>()
     let boundary = TestBoundaryId(value: "test")
 
-    let actionIds = state.actionIds(id: boundary)
+    let actionIds = state.actionIds(boundaryId: boundary)
     XCTAssertTrue(actionIds.isEmpty)
   }
 
@@ -166,12 +166,12 @@ final class LockmanStateActionIndexTests: XCTestCase {
     let state = LockmanState<TestInfo, LockmanActionId>()
     let boundary = TestBoundaryId(value: "test")
 
-    state.add(id: boundary, info: TestInfo(actionId: "action1"))
-    state.add(id: boundary, info: TestInfo(actionId: "action2"))
-    state.add(id: boundary, info: TestInfo(actionId: "action1"))  // Duplicate
-    state.add(id: boundary, info: TestInfo(actionId: "action3"))
+    state.add(boundaryId: boundary, info: TestInfo(actionId: "action1"))
+    state.add(boundaryId: boundary, info: TestInfo(actionId: "action2"))
+    state.add(boundaryId: boundary, info: TestInfo(actionId: "action1"))  // Duplicate
+    state.add(boundaryId: boundary, info: TestInfo(actionId: "action3"))
 
-    let actionIds = state.actionIds(id: boundary)
+    let actionIds = state.actionIds(boundaryId: boundary)
 
     XCTAssertEqual(actionIds.count, 3)
     XCTAssertTrue(actionIds.contains("action1"))
@@ -186,16 +186,16 @@ final class LockmanStateActionIndexTests: XCTestCase {
     let boundary1 = TestBoundaryId(value: "boundary1")
     let boundary2 = TestBoundaryId(value: "boundary2")
 
-    state.add(id: boundary1, info: TestInfo(actionId: "action1"))
-    state.add(id: boundary2, info: TestInfo(actionId: "action1"))
+    state.add(boundaryId: boundary1, info: TestInfo(actionId: "action1"))
+    state.add(boundaryId: boundary2, info: TestInfo(actionId: "action1"))
 
-    XCTAssertTrue(state.contains(id: boundary1, actionId: "action1"))
-    XCTAssertTrue(state.contains(id: boundary2, actionId: "action1"))
+    XCTAssertTrue(state.contains(boundaryId: boundary1, actionId: "action1"))
+    XCTAssertTrue(state.contains(boundaryId: boundary2, actionId: "action1"))
 
-    state.removeAll(id: boundary1)
+    state.removeAll(boundaryId: boundary1)
 
-    XCTAssertFalse(state.contains(id: boundary1, actionId: "action1"))
-    XCTAssertTrue(state.contains(id: boundary2, actionId: "action1"))
+    XCTAssertFalse(state.contains(boundaryId: boundary1, actionId: "action1"))
+    XCTAssertTrue(state.contains(boundaryId: boundary2, actionId: "action1"))
   }
 
   // MARK: - Performance Tests
@@ -206,14 +206,14 @@ final class LockmanStateActionIndexTests: XCTestCase {
 
     // Add many different actions
     for i in 0..<1000 {
-      state.add(id: boundary, info: TestInfo(actionId: "action\(i)"))
+      state.add(boundaryId: boundary, info: TestInfo(actionId: "action\(i)"))
     }
 
     let startTime = CFAbsoluteTimeGetCurrent()
 
     // Perform many lookups
     for i in 0..<1000 {
-      _ = state.contains(id: boundary, actionId: "action\(i)")
+      _ = state.contains(boundaryId: boundary, actionId: "action\(i)")
     }
 
     let endTime = CFAbsoluteTimeGetCurrent()
@@ -230,10 +230,10 @@ final class LockmanStateActionIndexTests: XCTestCase {
     let boundary = TestBoundaryId(value: "test")
 
     let info = TestInfo(actionId: "")
-    state.add(id: boundary, info: info)
+    state.add(boundaryId: boundary, info: info)
 
-    XCTAssertTrue(state.contains(id: boundary, actionId: ""))
-    XCTAssertEqual(state.count(id: boundary, actionId: ""), 1)
+    XCTAssertTrue(state.contains(boundaryId: boundary, actionId: ""))
+    XCTAssertEqual(state.count(boundaryId: boundary, actionId: ""), 1)
   }
 
   func testHandlesUnicodeActionIds() async throws {
@@ -242,10 +242,10 @@ final class LockmanStateActionIndexTests: XCTestCase {
 
     let actionId = "🚀アクション💻"
     let info = TestInfo(actionId: actionId)
-    state.add(id: boundary, info: info)
+    state.add(boundaryId: boundary, info: info)
 
-    XCTAssertTrue(state.contains(id: boundary, actionId: actionId))
-    XCTAssertEqual(state.currents(id: boundary, actionId: actionId).count, 1)
+    XCTAssertTrue(state.contains(boundaryId: boundary, actionId: actionId))
+    XCTAssertEqual(state.currents(boundaryId: boundary, actionId: actionId).count, 1)
   }
 
   // MARK: - Cleanup Tests
@@ -254,14 +254,14 @@ final class LockmanStateActionIndexTests: XCTestCase {
     let state = LockmanState<TestInfo, LockmanActionId>()
     let boundary = TestBoundaryId(value: "test")
 
-    state.add(id: boundary, info: TestInfo(actionId: "action1"))
-    state.add(id: boundary, info: TestInfo(actionId: "action2"))
+    state.add(boundaryId: boundary, info: TestInfo(actionId: "action1"))
+    state.add(boundaryId: boundary, info: TestInfo(actionId: "action2"))
 
     state.removeAll()
 
-    XCTAssertFalse(state.contains(id: boundary, actionId: "action1"))
-    XCTAssertFalse(state.contains(id: boundary, actionId: "action2"))
-    XCTAssertTrue(state.actionIds(id: boundary).isEmpty)
+    XCTAssertFalse(state.contains(boundaryId: boundary, actionId: "action1"))
+    XCTAssertFalse(state.contains(boundaryId: boundary, actionId: "action2"))
+    XCTAssertTrue(state.actionIds(boundaryId: boundary).isEmpty)
   }
 
   func testRemoveAllWithBoundaryClearsBoundaryActionIndex() async throws {
@@ -269,13 +269,13 @@ final class LockmanStateActionIndexTests: XCTestCase {
     let boundary1 = TestBoundaryId(value: "boundary1")
     let boundary2 = TestBoundaryId(value: "boundary2")
 
-    state.add(id: boundary1, info: TestInfo(actionId: "action1"))
-    state.add(id: boundary2, info: TestInfo(actionId: "action1"))
+    state.add(boundaryId: boundary1, info: TestInfo(actionId: "action1"))
+    state.add(boundaryId: boundary2, info: TestInfo(actionId: "action1"))
 
-    state.removeAll(id: boundary1)
+    state.removeAll(boundaryId: boundary1)
 
-    XCTAssertFalse(state.contains(id: boundary1, actionId: "action1"))
-    XCTAssertTrue(state.contains(id: boundary2, actionId: "action1"))
+    XCTAssertFalse(state.contains(boundaryId: boundary1, actionId: "action1"))
+    XCTAssertTrue(state.contains(boundaryId: boundary2, actionId: "action1"))
   }
 
   // MARK: - removeAll(id:actionId:) Tests
@@ -289,22 +289,22 @@ final class LockmanStateActionIndexTests: XCTestCase {
     let info2 = TestInfo(actionId: "action1")
     let info3 = TestInfo(actionId: "action2")
 
-    state.add(id: boundary, info: info1)
-    state.add(id: boundary, info: info2)
-    state.add(id: boundary, info: info3)
+    state.add(boundaryId: boundary, info: info1)
+    state.add(boundaryId: boundary, info: info2)
+    state.add(boundaryId: boundary, info: info3)
 
     // Verify initial state
-    XCTAssertEqual(state.count(id: boundary, actionId: "action1"), 2)
-    XCTAssertEqual(state.count(id: boundary, actionId: "action2"), 1)
+    XCTAssertEqual(state.count(boundaryId: boundary, actionId: "action1"), 2)
+    XCTAssertEqual(state.count(boundaryId: boundary, actionId: "action2"), 1)
 
     // Remove all locks with actionId "action1"
-    state.removeAll(id: boundary, actionId: "action1")
+    state.removeAll(boundaryId: boundary, actionId: "action1")
 
     // Verify removal
-    XCTAssertEqual(state.count(id: boundary, actionId: "action1"), 0)
-    XCTAssertFalse(state.contains(id: boundary, actionId: "action1"))
-    XCTAssertEqual(state.count(id: boundary, actionId: "action2"), 1)
-    XCTAssertTrue(state.contains(id: boundary, actionId: "action2"))
+    XCTAssertEqual(state.count(boundaryId: boundary, actionId: "action1"), 0)
+    XCTAssertFalse(state.contains(boundaryId: boundary, actionId: "action1"))
+    XCTAssertEqual(state.count(boundaryId: boundary, actionId: "action2"), 1)
+    XCTAssertTrue(state.contains(boundaryId: boundary, actionId: "action2"))
   }
 
   func testRemoveAllByActionIdEmptyCase() async throws {
@@ -312,10 +312,10 @@ final class LockmanStateActionIndexTests: XCTestCase {
     let boundary = TestBoundaryId(value: "test")
 
     // Try to remove non-existent actionId
-    state.removeAll(id: boundary, actionId: "nonexistent")
+    state.removeAll(boundaryId: boundary, actionId: "nonexistent")
 
     // Should not crash and state should remain empty
-    XCTAssertEqual(state.currents(id: boundary).count, 0)
+    XCTAssertEqual(state.currents(boundaryId: boundary).count, 0)
   }
 
   func testRemoveAllByActionIdPreservesOtherActions() async throws {
@@ -323,18 +323,18 @@ final class LockmanStateActionIndexTests: XCTestCase {
     let boundary = TestBoundaryId(value: "test")
 
     // Add locks with different actionIds
-    state.add(id: boundary, info: TestInfo(actionId: "action1"))
-    state.add(id: boundary, info: TestInfo(actionId: "action2"))
-    state.add(id: boundary, info: TestInfo(actionId: "action3"))
+    state.add(boundaryId: boundary, info: TestInfo(actionId: "action1"))
+    state.add(boundaryId: boundary, info: TestInfo(actionId: "action2"))
+    state.add(boundaryId: boundary, info: TestInfo(actionId: "action3"))
 
     // Remove only action2
-    state.removeAll(id: boundary, actionId: "action2")
+    state.removeAll(boundaryId: boundary, actionId: "action2")
 
     // Verify only action2 was removed
-    XCTAssertTrue(state.contains(id: boundary, actionId: "action1"))
-    XCTAssertFalse(state.contains(id: boundary, actionId: "action2"))
-    XCTAssertTrue(state.contains(id: boundary, actionId: "action3"))
-    XCTAssertEqual(state.currents(id: boundary).count, 2)
+    XCTAssertTrue(state.contains(boundaryId: boundary, actionId: "action1"))
+    XCTAssertFalse(state.contains(boundaryId: boundary, actionId: "action2"))
+    XCTAssertTrue(state.contains(boundaryId: boundary, actionId: "action3"))
+    XCTAssertEqual(state.currents(boundaryId: boundary).count, 2)
   }
 
   func testRemoveAllByActionIdMultipleBoundaries() async throws {
@@ -343,15 +343,15 @@ final class LockmanStateActionIndexTests: XCTestCase {
     let boundary2 = TestBoundaryId(value: "boundary2")
 
     // Add same actionId to different boundaries
-    state.add(id: boundary1, info: TestInfo(actionId: "action1"))
-    state.add(id: boundary2, info: TestInfo(actionId: "action1"))
+    state.add(boundaryId: boundary1, info: TestInfo(actionId: "action1"))
+    state.add(boundaryId: boundary2, info: TestInfo(actionId: "action1"))
 
     // Remove from boundary1 only
-    state.removeAll(id: boundary1, actionId: "action1")
+    state.removeAll(boundaryId: boundary1, actionId: "action1")
 
     // Verify isolation between boundaries
-    XCTAssertFalse(state.contains(id: boundary1, actionId: "action1"))
-    XCTAssertTrue(state.contains(id: boundary2, actionId: "action1"))
+    XCTAssertFalse(state.contains(boundaryId: boundary1, actionId: "action1"))
+    XCTAssertTrue(state.contains(boundaryId: boundary2, actionId: "action1"))
   }
 
   func testRemoveAllByActionIdConcurrent() async throws {
@@ -364,7 +364,7 @@ final class LockmanStateActionIndexTests: XCTestCase {
       for i in 0..<iterations {
         group.addTask {
           let actionId = "action\(i % 10)"  // 10 different action IDs
-          state.add(id: boundary, info: TestInfo(actionId: actionId))
+          state.add(boundaryId: boundary, info: TestInfo(actionId: actionId))
         }
       }
     }
@@ -373,19 +373,19 @@ final class LockmanStateActionIndexTests: XCTestCase {
     await withTaskGroup(of: Void.self) { group in
       // Remove action5
       group.addTask {
-        state.removeAll(id: boundary, actionId: "action5")
+        state.removeAll(boundaryId: boundary, actionId: "action5")
       }
 
       // Add more action5 locks
       for _ in 0..<10 {
         group.addTask {
-          state.add(id: boundary, info: TestInfo(actionId: "action5"))
+          state.add(boundaryId: boundary, info: TestInfo(actionId: "action5"))
         }
       }
     }
 
     // Verify state is consistent (action5 count depends on timing)
-    let action5Count = state.count(id: boundary, actionId: "action5")
+    let action5Count = state.count(boundaryId: boundary, actionId: "action5")
     XCTAssertTrue(action5Count >= 0 && action5Count <= 10)
   }
 }
