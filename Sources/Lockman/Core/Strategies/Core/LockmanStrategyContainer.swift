@@ -377,8 +377,8 @@ public final class LockmanStrategyContainer: @unchecked Sendable {
   /// shutdown or global reset scenarios.
   ///
   /// ## Error Handling
-  /// If any strategy's cleanup operation fails, the error is logged but
-  /// cleanup continues for remaining strategies to ensure best-effort cleanup.
+  /// This operation is designed to be safe and cannot fail. Individual strategy
+  /// cleanup operations are expected to handle their own cleanup gracefully.
   ///
   /// ## Complexity
   /// O(n) where n is the number of registered strategies
@@ -399,8 +399,8 @@ public final class LockmanStrategyContainer: @unchecked Sendable {
   /// - Parameter boundaryId: The `LockmanBoundaryId` whose associated lock state should be cleared
   ///
   /// ## Error Handling
-  /// Similar to `cleanUp()`, errors in individual strategy cleanup are logged
-  /// but don't prevent cleanup of other strategies.
+  /// This operation is designed to be safe and cannot fail. Individual strategy
+  /// cleanup operations are expected to handle their own cleanup gracefully.
   ///
   /// ## Complexity
   /// O(n) where n is the number of registered strategies
