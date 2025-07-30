@@ -141,8 +141,10 @@ public final class LockmanPriorityBasedStrategy: LockmanStrategy, @unchecked Sen
     // Filter out non-priority actions for priority comparison
     let priorityLocks = currentLocks.filter { $0.priority != .none }
 
-    // If no priority-based locks exist, we can proceed
-    guard let currentHighestPriorityInfo = priorityLocks.last else {
+    // Get the most recently added priority action as the behavioral reference
+    // OrderedDictionary guarantees insertion order, so .last gives us the latest priority action
+    // In same-priority conflict resolution, the most recent action's behavior determines the outcome
+    guard let mostRecentPriorityInfo = priorityLocks.last else {
       result = .success
 
       LockmanLogger.shared.logCanLock(
@@ -154,7 +156,7 @@ public final class LockmanPriorityBasedStrategy: LockmanStrategy, @unchecked Sen
       return result
     }
 
-    let currentPriority = currentHighestPriorityInfo.priority
+    let currentPriority = mostRecentPriorityInfo.priority
     let requestedPriority = requestedInfo.priority
 
     // Compare priority levels using the Comparable implementation
@@ -163,16 +165,16 @@ public final class LockmanPriorityBasedStrategy: LockmanStrategy, @unchecked Sen
       result = .cancel(
         LockmanPriorityBasedError.higherPriorityExists(
           requestedInfo: info,
-          existingInfo: currentHighestPriorityInfo,
+          existingInfo: mostRecentPriorityInfo,
           boundaryId: boundaryId
         )
       )
       failureReason =
-        "Higher priority action '\(currentHighestPriorityInfo.actionId)' (priority: \(currentPriority)) is currently locked"
+        "Higher priority action '\(mostRecentPriorityInfo.actionId)' (priority: \(currentPriority)) is currently locked"
     } else if currentPriority == requestedPriority {
       // Same priority level - apply existing action's concurrency behavior
       let behaviorResult = applySamePriorityBehavior(
-        current: currentHighestPriorityInfo,
+        current: mostRecentPriorityInfo,
         requested: requestedInfo,
         boundaryId: boundaryId
       )
@@ -180,19 +182,19 @@ public final class LockmanPriorityBasedStrategy: LockmanStrategy, @unchecked Sen
 
       if case .cancel = behaviorResult {
         failureReason =
-          "Same priority action '\(currentHighestPriorityInfo.actionId)' with exclusive behavior is already running"
+          "Same priority action '\(mostRecentPriorityInfo.actionId)' with exclusive behavior is already running"
       } else if case .successWithPrecedingCancellation(_) = behaviorResult {
-        cancelledInfo = (currentHighestPriorityInfo.actionId, currentHighestPriorityInfo.uniqueId)
+        cancelledInfo = (mostRecentPriorityInfo.actionId, mostRecentPriorityInfo.uniqueId)
       }
     } else {
       // Requested action has higher priority - can preempt current
       result = .successWithPrecedingCancellation(
         error: LockmanPriorityBasedError.precedingActionCancelled(
-          cancelledInfo: currentHighestPriorityInfo,
+          cancelledInfo: mostRecentPriorityInfo,
           boundaryId: boundaryId
         )
       )
-      cancelledInfo = (currentHighestPriorityInfo.actionId, currentHighestPriorityInfo.uniqueId)
+      cancelledInfo = (mostRecentPriorityInfo.actionId, mostRecentPriorityInfo.uniqueId)
     }
 
     LockmanLogger.shared.logCanLock(
