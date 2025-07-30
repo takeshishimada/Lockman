@@ -34,19 +34,24 @@ import OrderedCollections
 /// - **Ordered iteration**: O(k) - Natural order preservation
 /// - **Latest/Earliest access**: O(1) - Index-based access
 final class LockmanState<I: LockmanInfo, K: Hashable & Sendable>: Sendable {
+  // MARK: - Private Types
+
+  /// Combined data structure for thread-safe atomic operations
+  private struct StateData {
+    /// Storage using OrderedDictionary for optimal performance and ordering
+    var storage: [AnyLockmanBoundaryId: OrderedDictionary<UUID, I>] = [:]
+
+    /// Secondary index for O(1) key-based lookups.
+    /// This index dramatically improves performance for key-based queries,
+    /// enabling constant-time contains() and count() operations.
+    /// Maps: BoundaryId -> Key -> Set of UUIDs
+    var index: [AnyLockmanBoundaryId: [K: Set<UUID>]] = [:]
+  }
+
   // MARK: - Private Properties
 
-  /// Storage using OrderedDictionary for optimal performance and ordering
-  private let storage = ManagedCriticalState<[AnyLockmanBoundaryId: OrderedDictionary<UUID, I>]>([:]
-  )
-
-  /// Secondary index for O(1) key-based lookups.
-  /// This index dramatically improves performance for key-based queries,
-  /// enabling constant-time contains() and count() operations.
-  /// Maps: BoundaryId -> Key -> Set of UUIDs
-  private let index = ManagedCriticalState<
-    [AnyLockmanBoundaryId: [K: Set<UUID>]]
-  >([:])
+  /// Unified data with single lock for complete atomicity
+  private let data = ManagedCriticalState<StateData>(StateData())
 
   /// Function to extract the key from lock info
   private let keyExtractor: @Sendable (I) -> K
@@ -78,12 +83,12 @@ final class LockmanState<I: LockmanInfo, K: Hashable & Sendable>: Sendable {
     let boundaryKey = AnyLockmanBoundaryId(boundaryId)
     let indexKey = keyExtractor(info)
 
-    storage.withCriticalRegion { storage in
-      storage[boundaryKey, default: OrderedDictionary<UUID, I>()][info.uniqueId] = info
-    }
+    data.withCriticalRegion { data in
+      // Update storage
+      data.storage[boundaryKey, default: OrderedDictionary<UUID, I>()][info.uniqueId] = info
 
-    index.withCriticalRegion { index in
-      index[boundaryKey, default: [:]][indexKey, default: []].insert(info.uniqueId)
+      // Update index atomically
+      data.index[boundaryKey, default: [:]][indexKey, default: []].insert(info.uniqueId)
     }
   }
 
@@ -103,37 +108,33 @@ final class LockmanState<I: LockmanInfo, K: Hashable & Sendable>: Sendable {
   func removeAll<B: LockmanBoundaryId>(boundaryId: B, key: K) {
     let boundaryKey = AnyLockmanBoundaryId(boundaryId)
 
-    // Get all UUIDs for this key
-    let uuidsToRemove = index.withCriticalRegion { index in
-      index[boundaryKey]?[key] ?? []
-    }
+    data.withCriticalRegion { data in
+      // Get all UUIDs for this key from index
+      guard let uuidsToRemove = data.index[boundaryKey]?[key],
+        !uuidsToRemove.isEmpty
+      else { return }
 
-    guard !uuidsToRemove.isEmpty else { return }
-
-    // Remove from storage using filter (more efficient for bulk removal)
-    storage.withCriticalRegion { storage in
-      guard var boundaryDict = storage[boundaryKey] else { return }
+      // Remove from storage using filter (more efficient for bulk removal)
+      guard var boundaryDict = data.storage[boundaryKey] else { return }
 
       // Filter out all UUIDs in one operation
       boundaryDict = boundaryDict.filter { !uuidsToRemove.contains($0.key) }
 
       if boundaryDict.isEmpty {
-        storage.removeValue(forKey: boundaryKey)
+        data.storage.removeValue(forKey: boundaryKey)
       } else {
-        storage[boundaryKey] = boundaryDict
+        data.storage[boundaryKey] = boundaryDict
       }
-    }
 
-    // Remove from key index
-    index.withCriticalRegion { index in
-      guard var boundaryIndex = index[boundaryKey] else { return }
+      // Remove from key index atomically
+      guard var boundaryIndex = data.index[boundaryKey] else { return }
 
       boundaryIndex.removeValue(forKey: key)
 
       if boundaryIndex.isEmpty {
-        index.removeValue(forKey: boundaryKey)
+        data.index.removeValue(forKey: boundaryKey)
       } else {
-        index[boundaryKey] = boundaryIndex
+        data.index[boundaryKey] = boundaryIndex
       }
     }
   }
@@ -152,40 +153,29 @@ final class LockmanState<I: LockmanInfo, K: Hashable & Sendable>: Sendable {
   func remove<B: LockmanBoundaryId>(boundaryId: B, info: any LockmanInfo) {
     let boundaryKey = AnyLockmanBoundaryId(boundaryId)
 
-    // First, get the info to access key for index cleanup
-    let removedInfo = storage.withCriticalRegion { storage -> I? in
-      guard let boundaryDict = storage[boundaryKey],
-        let info = boundaryDict[info.uniqueId]
+    data.withCriticalRegion { data in
+      // First, get the info to access key for index cleanup
+      guard let boundaryDict = data.storage[boundaryKey],
+        let removedInfo = boundaryDict[info.uniqueId] as? I
       else {
-        return nil
-      }
-      return info
-    }
-
-    guard let removedInfo = removedInfo else {
-      return
-    }
-
-    let indexKey = keyExtractor(removedInfo)
-
-    storage.withCriticalRegion { storage in
-      guard var boundaryDict = storage[boundaryKey] else {
         return
       }
 
-      boundaryDict.removeValue(forKey: info.uniqueId)
+      let indexKey = keyExtractor(removedInfo)
 
-      // Clean up empty boundary
-      if boundaryDict.isEmpty {
-        storage.removeValue(forKey: boundaryKey)
+      // Remove from storage
+      var updatedBoundaryDict = boundaryDict
+      updatedBoundaryDict.removeValue(forKey: info.uniqueId)
+
+      // Clean up empty boundary in storage
+      if updatedBoundaryDict.isEmpty {
+        data.storage.removeValue(forKey: boundaryKey)
       } else {
-        storage[boundaryKey] = boundaryDict
+        data.storage[boundaryKey] = updatedBoundaryDict
       }
-    }
 
-    // Update key index
-    index.withCriticalRegion { index in
-      guard var boundaryIndex = index[boundaryKey],
+      // Update key index atomically
+      guard var boundaryIndex = data.index[boundaryKey],
         var keySet = boundaryIndex[indexKey]
       else {
         return
@@ -200,9 +190,9 @@ final class LockmanState<I: LockmanInfo, K: Hashable & Sendable>: Sendable {
       }
 
       if boundaryIndex.isEmpty {
-        index.removeValue(forKey: boundaryKey)
+        data.index.removeValue(forKey: boundaryKey)
       } else {
-        index[boundaryKey] = boundaryIndex
+        data.index[boundaryKey] = boundaryIndex
       }
     }
   }
@@ -218,8 +208,8 @@ final class LockmanState<I: LockmanInfo, K: Hashable & Sendable>: Sendable {
   /// - Returns: Array of active locks in insertion order
   func currentLocks<B: LockmanBoundaryId>(in boundaryId: B) -> [I] {
     let boundaryKey = AnyLockmanBoundaryId(boundaryId)
-    return storage.withCriticalRegion { storage in
-      guard let boundaryDict = storage[boundaryKey] else {
+    return data.withCriticalRegion { data in
+      guard let boundaryDict = data.storage[boundaryKey] else {
         return []
       }
       return Array(boundaryDict.values)
@@ -242,8 +232,8 @@ final class LockmanState<I: LockmanInfo, K: Hashable & Sendable>: Sendable {
   /// O(1) - Direct hash table lookup
   func hasActiveLocks<B: LockmanBoundaryId>(in boundaryId: B, matching key: K) -> Bool {
     let boundaryKey = AnyLockmanBoundaryId(boundaryId)
-    return index.withCriticalRegion { index in
-      index[boundaryKey]?[key] != nil
+    return data.withCriticalRegion { data in
+      data.index[boundaryKey]?[key] != nil
     }
   }
 
@@ -259,19 +249,20 @@ final class LockmanState<I: LockmanInfo, K: Hashable & Sendable>: Sendable {
   func currentLocks<B: LockmanBoundaryId>(in boundaryId: B, matching key: K) -> [I] {
     let boundaryKey = AnyLockmanBoundaryId(boundaryId)
 
-    let uuids = index.withCriticalRegion { index in
-      index[boundaryKey]?[key] ?? []
-    }
-
-    guard !uuids.isEmpty else {
-      return []
-    }
-
-    return storage.withCriticalRegion { storage in
-      guard let boundaryDict = storage[boundaryKey] else {
+    return data.withCriticalRegion { data in
+      // Get UUIDs from index
+      guard let uuids = data.index[boundaryKey]?[key],
+        !uuids.isEmpty
+      else {
         return []
       }
 
+      // Get storage data
+      guard let boundaryDict = data.storage[boundaryKey] else {
+        return []
+      }
+
+      // Map and sort in single atomic operation
       return uuids.compactMap { uuid in
         boundaryDict[uuid]
       }.sorted { first, second in
@@ -293,8 +284,8 @@ final class LockmanState<I: LockmanInfo, K: Hashable & Sendable>: Sendable {
   /// - Returns: Number of active locks with the specified key
   func activeLockCount<B: LockmanBoundaryId>(in boundaryId: B, matching key: K) -> Int {
     let boundaryKey = AnyLockmanBoundaryId(boundaryId)
-    return index.withCriticalRegion { index in
-      index[boundaryKey]?[key]?.count ?? 0
+    return data.withCriticalRegion { data in
+      data.index[boundaryKey]?[key]?.count ?? 0
     }
   }
 
@@ -304,8 +295,8 @@ final class LockmanState<I: LockmanInfo, K: Hashable & Sendable>: Sendable {
   /// - Returns: Set of all unique active keys in the boundary
   func activeKeys<B: LockmanBoundaryId>(in boundaryId: B) -> Set<K> {
     let boundaryKey = AnyLockmanBoundaryId(boundaryId)
-    return index.withCriticalRegion { index in
-      if let boundaryIndex = index[boundaryKey] {
+    return data.withCriticalRegion { data in
+      if let boundaryIndex = data.index[boundaryKey] {
         return Set(boundaryIndex.keys)
       }
       return Set()
@@ -316,36 +307,32 @@ final class LockmanState<I: LockmanInfo, K: Hashable & Sendable>: Sendable {
 
   /// Removes all locks across all boundaries.
   func removeAll() {
-    storage.withCriticalRegion { storage in
-      storage.removeAll(keepingCapacity: true)
-    }
-    index.withCriticalRegion { index in
-      index.removeAll(keepingCapacity: true)
+    data.withCriticalRegion { data in
+      data.storage.removeAll(keepingCapacity: true)
+      data.index.removeAll(keepingCapacity: true)
     }
   }
 
   /// Removes all locks for a specific boundary.
   func removeAll<B: LockmanBoundaryId>(boundaryId: B) {
     let boundaryKey = AnyLockmanBoundaryId(boundaryId)
-    storage.withCriticalRegion { storage in
-      storage.removeValue(forKey: boundaryKey)
-    }
-    index.withCriticalRegion { index in
-      index.removeValue(forKey: boundaryKey)
+    data.withCriticalRegion { data in
+      data.storage.removeValue(forKey: boundaryKey)
+      data.index.removeValue(forKey: boundaryKey)
     }
   }
 
   /// Returns all boundary identifiers that have active locks.
   func activeBoundaryIds() -> [AnyLockmanBoundaryId] {
-    storage.withCriticalRegion { storage in
-      Array(storage.keys)
+    data.withCriticalRegion { data in
+      Array(data.storage.keys)
     }
   }
 
   /// Returns the total number of active locks across all boundaries.
   func totalActiveLockCount() -> Int {
-    storage.withCriticalRegion { storage in
-      storage.values.reduce(0) { total, boundaryDict in
+    data.withCriticalRegion { data in
+      data.storage.values.reduce(0) { total, boundaryDict in
         total + boundaryDict.count
       }
     }
@@ -358,9 +345,9 @@ final class LockmanState<I: LockmanInfo, K: Hashable & Sendable>: Sendable {
   ///
   /// - Returns: Dictionary mapping boundary IDs to arrays of active lock information
   func allActiveLocks() -> [AnyLockmanBoundaryId: [I]] {
-    storage.withCriticalRegion { storage in
+    data.withCriticalRegion { data in
       var result: [AnyLockmanBoundaryId: [I]] = [:]
-      for (boundaryId, boundaryDict) in storage {
+      for (boundaryId, boundaryDict) in data.storage {
         result[boundaryId] = Array(boundaryDict.values)
       }
       return result

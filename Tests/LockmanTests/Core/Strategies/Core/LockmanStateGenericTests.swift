@@ -110,7 +110,8 @@ final class LockmanStateGenericTests: XCTestCase {
     XCTAssertTrue(state.hasActiveLocks(in: boundaryId, matching: key2))
     XCTAssertTrue(state.hasActiveLocks(in: boundaryId, matching: key3))
     XCTAssertFalse(
-      state.hasActiveLocks(in: boundaryId, matching: CompositeKey(category: "compute", priority: 1)))
+      state.hasActiveLocks(in: boundaryId, matching: CompositeKey(category: "compute", priority: 1))
+    )
 
     // Test count with composite key
     XCTAssertEqual(state.activeLockCount(in: boundaryId, matching: key1), 2)
