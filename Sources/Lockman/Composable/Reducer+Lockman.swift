@@ -146,13 +146,15 @@ extension Reducer {
       unlockOption: unlockOption,
       lockFailure: lockFailure,
       extractLockmanAction: { action in
-        // First check if root action conforms to LockmanAction
+        // First check the provided path (more specific)
+        if let value = action[case: path1] {
+          if let lockmanAction = value as? any LockmanAction {
+            return lockmanAction
+          }
+        }
+        // Fallback to root action (less specific)
         if let lockmanAction = action as? any LockmanAction {
           return lockmanAction
-        }
-        // Then check the provided path
-        if let value = action[case: path1] {
-          return value as? any LockmanAction
         }
         return nil
       }
@@ -197,11 +199,7 @@ extension Reducer {
       unlockOption: unlockOption,
       lockFailure: lockFailure,
       extractLockmanAction: { action in
-        // First check if root action conforms to LockmanAction
-        if let lockmanAction = action as? any LockmanAction {
-          return lockmanAction
-        }
-        // Then check the provided paths
+        // First check the provided paths (more specific)
         let paths: [(Action) -> Any?] = [
           { $0[case: path1] },
           { $0[case: path2] },
@@ -212,6 +210,10 @@ extension Reducer {
               return lockmanAction
             }
           }
+        }
+        // Fallback to root action (less specific)
+        if let lockmanAction = action as? any LockmanAction {
+          return lockmanAction
         }
         return nil
       }
@@ -245,11 +247,7 @@ extension Reducer {
       unlockOption: unlockOption,
       lockFailure: lockFailure,
       extractLockmanAction: { action in
-        // First check if root action conforms to LockmanAction
-        if let lockmanAction = action as? any LockmanAction {
-          return lockmanAction
-        }
-        // Then check the provided paths
+        // First check the provided paths (more specific)
         let paths: [(Action) -> Any?] = [
           { $0[case: path1] },
           { $0[case: path2] },
@@ -261,6 +259,10 @@ extension Reducer {
               return lockmanAction
             }
           }
+        }
+        // Fallback to root action (less specific)
+        if let lockmanAction = action as? any LockmanAction {
+          return lockmanAction
         }
         return nil
       }
@@ -296,11 +298,7 @@ extension Reducer {
       unlockOption: unlockOption,
       lockFailure: lockFailure,
       extractLockmanAction: { action in
-        // First check if root action conforms to LockmanAction
-        if let lockmanAction = action as? any LockmanAction {
-          return lockmanAction
-        }
-        // Then check the provided paths
+        // First check the provided paths (more specific)
         let paths: [(Action) -> Any?] = [
           { $0[case: path1] },
           { $0[case: path2] },
@@ -313,6 +311,10 @@ extension Reducer {
               return lockmanAction
             }
           }
+        }
+        // Fallback to root action (less specific)
+        if let lockmanAction = action as? any LockmanAction {
+          return lockmanAction
         }
         return nil
       }
@@ -350,11 +352,7 @@ extension Reducer {
       unlockOption: unlockOption,
       lockFailure: lockFailure,
       extractLockmanAction: { action in
-        // First check if root action conforms to LockmanAction
-        if let lockmanAction = action as? any LockmanAction {
-          return lockmanAction
-        }
-        // Then check the provided paths
+        // First check the provided paths (more specific)
         let paths: [(Action) -> Any?] = [
           { $0[case: path1] },
           { $0[case: path2] },
@@ -368,6 +366,10 @@ extension Reducer {
               return lockmanAction
             }
           }
+        }
+        // Fallback to root action (less specific)
+        if let lockmanAction = action as? any LockmanAction {
+          return lockmanAction
         }
         return nil
       }
