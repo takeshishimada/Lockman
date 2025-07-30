@@ -186,32 +186,37 @@ where S1.I == I1, S2.I == I2 {
   /// - Returns: The coordinated result following composite strategy rules
   private func coordinateResults(_ results: LockmanResult...) -> LockmanResult {
     var cancellationError: (any LockmanPrecedingCancellationError)?
+    var hasCancellation = false
 
-    // If any strategy failed, the entire operation fails
-    // Return the first failure with its error
+    // Process all results and handle immediate failures
     for result in results {
-      if case .cancel(let error) = result {
+      switch result {
+      case .cancel(let error):
+        // Any failure causes immediate composite failure
         return .cancel(error)
+      case .successWithPrecedingCancellation(let error):
+        if cancellationError == nil {
+          cancellationError = error
+        }
+        hasCancellation = true
+      case .success:
+        // Pure success, no action needed
+        break
+      @unknown default:
+        // Handle future enum cases defensively
+        LockmanLogger.shared.logLockState("CompositeStrategy: Unknown LockmanResult case: \(result)")
+        break
       }
-      // Capture the first cancellation error we encounter
-      if case .successWithPrecedingCancellation(let error) = result, cancellationError == nil {
-        cancellationError = error
-      }
     }
 
-    // If all strategies succeeded without cancellation, operation succeeds
-    if results.allSuccessful {
-      return .success
+    // At this point, no .cancel results exist
+    if hasCancellation {
+      // Safe to force unwrap: hasCancellation == true guarantees cancellationError != nil
+      return .successWithPrecedingCancellation(error: cancellationError!)
     }
 
-    // If any strategy requires cancellation, the operation requires cancellation
-    // Use the first cancellation error we found
-    if let error = cancellationError {
-      return .successWithPrecedingCancellation(error: error)
-    }
-
-    // This shouldn't happen if the enum is properly handled
-    fatalError("Unexpected state: successWithPrecedingCancellation expected but no error found")
+    // All results are .success
+    return .success
   }
 }
 
@@ -410,26 +415,37 @@ where S1.I == I1, S2.I == I2, S3.I == I3 {
 
   private func coordinateResults(_ results: LockmanResult...) -> LockmanResult {
     var cancellationError: (any LockmanPrecedingCancellationError)?
+    var hasCancellation = false
 
-    // If any strategy failed, return the first failure with its error
+    // Process all results and handle immediate failures
     for result in results {
-      if case .cancel(let error) = result {
+      switch result {
+      case .cancel(let error):
+        // Any failure causes immediate composite failure
         return .cancel(error)
-      }
-      // Capture the first cancellation error we encounter
-      if case .successWithPrecedingCancellation(let error) = result, cancellationError == nil {
-        cancellationError = error
+      case .successWithPrecedingCancellation(let error):
+        if cancellationError == nil {
+          cancellationError = error
+        }
+        hasCancellation = true
+      case .success:
+        // Pure success, no action needed
+        break
+      @unknown default:
+        // Handle future enum cases defensively
+        LockmanLogger.shared.logLockState("CompositeStrategy: Unknown LockmanResult case: \(result)")
+        break
       }
     }
 
-    if results.allSuccessful {
-      return .success
+    // At this point, no .cancel results exist
+    if hasCancellation {
+      // Safe to force unwrap: hasCancellation == true guarantees cancellationError != nil
+      return .successWithPrecedingCancellation(error: cancellationError!)
     }
 
-    // If any strategy requires cancellation, use the first cancellation error
-    // At this point, we know at least one result is not .success, so it must be
-    // .successWithPrecedingCancellation, which means cancellationError is set
-    return .successWithPrecedingCancellation(error: cancellationError!)
+    // All results are .success
+    return .success
   }
 }
 
@@ -644,26 +660,37 @@ where S1.I == I1, S2.I == I2, S3.I == I3, S4.I == I4 {
 
   private func coordinateResults(_ results: LockmanResult...) -> LockmanResult {
     var cancellationError: (any LockmanPrecedingCancellationError)?
+    var hasCancellation = false
 
-    // If any strategy failed, return the first failure with its error
+    // Process all results and handle immediate failures
     for result in results {
-      if case .cancel(let error) = result {
+      switch result {
+      case .cancel(let error):
+        // Any failure causes immediate composite failure
         return .cancel(error)
-      }
-      // Capture the first cancellation error we encounter
-      if case .successWithPrecedingCancellation(let error) = result, cancellationError == nil {
-        cancellationError = error
+      case .successWithPrecedingCancellation(let error):
+        if cancellationError == nil {
+          cancellationError = error
+        }
+        hasCancellation = true
+      case .success:
+        // Pure success, no action needed
+        break
+      @unknown default:
+        // Handle future enum cases defensively
+        LockmanLogger.shared.logLockState("CompositeStrategy: Unknown LockmanResult case: \(result)")
+        break
       }
     }
 
-    if results.allSuccessful {
-      return .success
+    // At this point, no .cancel results exist
+    if hasCancellation {
+      // Safe to force unwrap: hasCancellation == true guarantees cancellationError != nil
+      return .successWithPrecedingCancellation(error: cancellationError!)
     }
 
-    // If any strategy requires cancellation, use the first cancellation error
-    // At this point, we know at least one result is not .success, so it must be
-    // .successWithPrecedingCancellation, which means cancellationError is set
-    return .successWithPrecedingCancellation(error: cancellationError!)
+    // All results are .success
+    return .success
   }
 }
 
@@ -910,37 +937,36 @@ where S1.I == I1, S2.I == I2, S3.I == I3, S4.I == I4, S5.I == I5 {
 
   private func coordinateResults(_ results: LockmanResult...) -> LockmanResult {
     var cancellationError: (any LockmanPrecedingCancellationError)?
+    var hasCancellation = false
 
-    // If any strategy failed, return the first failure with its error
+    // Process all results and handle immediate failures
     for result in results {
-      if case .cancel(let error) = result {
+      switch result {
+      case .cancel(let error):
+        // Any failure causes immediate composite failure
         return .cancel(error)
+      case .successWithPrecedingCancellation(let error):
+        if cancellationError == nil {
+          cancellationError = error
+        }
+        hasCancellation = true
+      case .success:
+        // Pure success, no action needed
+        break
+      @unknown default:
+        // Handle future enum cases defensively
+        LockmanLogger.shared.logLockState("CompositeStrategy: Unknown LockmanResult case: \(result)")
+        break
       }
-      // Capture the first cancellation error we encounter
-      if case .successWithPrecedingCancellation(let error) = result, cancellationError == nil {
-        cancellationError = error
-      }
     }
 
-    if results.allSuccessful {
-      return .success
+    // At this point, no .cancel results exist
+    if hasCancellation {
+      // Safe to force unwrap: hasCancellation == true guarantees cancellationError != nil
+      return .successWithPrecedingCancellation(error: cancellationError!)
     }
 
-    // If any strategy requires cancellation, use the first cancellation error
-    // At this point, we know at least one result is not .success, so it must be
-    // .successWithPrecedingCancellation, which means cancellationError is set
-    return .successWithPrecedingCancellation(error: cancellationError!)
-  }
-}
-
-// MARK: - Private Extensions
-
-extension Array where Element == LockmanResult {
-  /// Returns true if all results are .success
-  fileprivate var allSuccessful: Bool {
-    return allSatisfy { result in
-      if case .success = result { return true }
-      return false
-    }
+    // All results are .success
+    return .success
   }
 }
