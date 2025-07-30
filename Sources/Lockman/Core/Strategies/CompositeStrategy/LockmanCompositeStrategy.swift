@@ -208,8 +208,8 @@ where S1.I == I1, S2.I == I2 {
     }
 
     // Return result based on whether we found any cancellation
-    if let error = cancellationError {
-      return .successWithPrecedingCancellation(error: error)
+    if let cancellationError {
+      return .successWithPrecedingCancellation(error: cancellationError)
     }
 
     // All results are .success
@@ -434,8 +434,8 @@ where S1.I == I1, S2.I == I2, S3.I == I3 {
     }
 
     // Return result based on whether we found any cancellation
-    if let error = cancellationError {
-      return .successWithPrecedingCancellation(error: error)
+    if let cancellationError {
+      return .successWithPrecedingCancellation(error: cancellationError)
     }
 
     // All results are .success
@@ -676,8 +676,8 @@ where S1.I == I1, S2.I == I2, S3.I == I3, S4.I == I4 {
     }
 
     // Return result based on whether we found any cancellation
-    if let error = cancellationError {
-      return .successWithPrecedingCancellation(error: error)
+    if let cancellationError {
+      return .successWithPrecedingCancellation(error: cancellationError)
     }
 
     // All results are .success
@@ -950,8 +950,8 @@ where S1.I == I1, S2.I == I2, S3.I == I3, S4.I == I4, S5.I == I5 {
     }
 
     // Return result based on whether we found any cancellation
-    if let error = cancellationError {
-      return .successWithPrecedingCancellation(error: error)
+    if let cancellationError {
+      return .successWithPrecedingCancellation(error: cancellationError)
     }
 
     // All results are .success
