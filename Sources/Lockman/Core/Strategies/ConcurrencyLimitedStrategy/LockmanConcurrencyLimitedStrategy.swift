@@ -109,11 +109,7 @@ public final class LockmanConcurrencyLimitedStrategy: LockmanStrategy, @unchecke
   public func cleanUp<B: LockmanBoundaryId>(
     boundaryId: B
   ) {
-    // Get all locks for this boundary and remove them one by one
-    let currentLocks = state.currentLocks(in: boundaryId)
-    for info in currentLocks {
-      state.remove(boundaryId: boundaryId, info: info)
-    }
+    state.removeAll(boundaryId: boundaryId)
   }
 
   /// Removes all locks across all boundaries and concurrency groups.
