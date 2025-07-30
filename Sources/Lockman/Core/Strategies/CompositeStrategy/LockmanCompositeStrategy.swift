@@ -204,15 +204,22 @@ where S1.I == I1, S2.I == I2 {
         break
       @unknown default:
         // Handle future enum cases defensively
-        LockmanLogger.shared.logLockState("CompositeStrategy: Unknown LockmanResult case: \(result)")
+        LockmanLogger.shared.logLockState(
+          "CompositeStrategy: Unknown LockmanResult case: \(result)")
         break
       }
     }
 
     // At this point, no .cancel results exist
     if hasCancellation {
-      // Safe to force unwrap: hasCancellation == true guarantees cancellationError != nil
-      return .successWithPrecedingCancellation(error: cancellationError!)
+      guard let error = cancellationError else {
+        // This should never happen: hasCancellation=true guarantees cancellationError != nil
+        LockmanLogger.shared.logLockState(
+          "CompositeStrategy: Logic error - hasCancellation=true but cancellationError=nil"
+        )
+        return .success  // Safe fallback
+      }
+      return .successWithPrecedingCancellation(error: error)
     }
 
     // All results are .success
@@ -433,15 +440,22 @@ where S1.I == I1, S2.I == I2, S3.I == I3 {
         break
       @unknown default:
         // Handle future enum cases defensively
-        LockmanLogger.shared.logLockState("CompositeStrategy: Unknown LockmanResult case: \(result)")
+        LockmanLogger.shared.logLockState(
+          "CompositeStrategy: Unknown LockmanResult case: \(result)")
         break
       }
     }
 
     // At this point, no .cancel results exist
     if hasCancellation {
-      // Safe to force unwrap: hasCancellation == true guarantees cancellationError != nil
-      return .successWithPrecedingCancellation(error: cancellationError!)
+      guard let error = cancellationError else {
+        // This should never happen: hasCancellation=true guarantees cancellationError != nil
+        LockmanLogger.shared.logLockState(
+          "CompositeStrategy: Logic error - hasCancellation=true but cancellationError=nil"
+        )
+        return .success  // Safe fallback
+      }
+      return .successWithPrecedingCancellation(error: error)
     }
 
     // All results are .success
@@ -678,15 +692,22 @@ where S1.I == I1, S2.I == I2, S3.I == I3, S4.I == I4 {
         break
       @unknown default:
         // Handle future enum cases defensively
-        LockmanLogger.shared.logLockState("CompositeStrategy: Unknown LockmanResult case: \(result)")
+        LockmanLogger.shared.logLockState(
+          "CompositeStrategy: Unknown LockmanResult case: \(result)")
         break
       }
     }
 
     // At this point, no .cancel results exist
     if hasCancellation {
-      // Safe to force unwrap: hasCancellation == true guarantees cancellationError != nil
-      return .successWithPrecedingCancellation(error: cancellationError!)
+      guard let error = cancellationError else {
+        // This should never happen: hasCancellation=true guarantees cancellationError != nil
+        LockmanLogger.shared.logLockState(
+          "CompositeStrategy: Logic error - hasCancellation=true but cancellationError=nil"
+        )
+        return .success  // Safe fallback
+      }
+      return .successWithPrecedingCancellation(error: error)
     }
 
     // All results are .success
@@ -955,15 +976,22 @@ where S1.I == I1, S2.I == I2, S3.I == I3, S4.I == I4, S5.I == I5 {
         break
       @unknown default:
         // Handle future enum cases defensively
-        LockmanLogger.shared.logLockState("CompositeStrategy: Unknown LockmanResult case: \(result)")
+        LockmanLogger.shared.logLockState(
+          "CompositeStrategy: Unknown LockmanResult case: \(result)")
         break
       }
     }
 
     // At this point, no .cancel results exist
     if hasCancellation {
-      // Safe to force unwrap: hasCancellation == true guarantees cancellationError != nil
-      return .successWithPrecedingCancellation(error: cancellationError!)
+      guard let error = cancellationError else {
+        // This should never happen: hasCancellation=true guarantees cancellationError != nil
+        LockmanLogger.shared.logLockState(
+          "CompositeStrategy: Logic error - hasCancellation=true but cancellationError=nil"
+        )
+        return .success  // Safe fallback
+      }
+      return .successWithPrecedingCancellation(error: error)
     }
 
     // All results are .success
