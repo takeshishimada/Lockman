@@ -200,7 +200,7 @@ public final class LockmanGroupCoordinationStrategy: LockmanStrategy, @unchecked
 
         case .member:
           // Members can only join when group has active participants
-          if groupState == nil || groupState!.isEmpty {
+          if groupState?.isEmpty != false {
             failureReason = "Member cannot join: group '\(groupId)' has no active participants"
             return .cancel(
               LockmanGroupCoordinationError.memberCannotJoinEmptyGroup(
