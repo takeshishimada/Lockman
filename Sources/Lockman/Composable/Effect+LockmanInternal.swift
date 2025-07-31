@@ -37,7 +37,7 @@ extension Effect {
   ///   - boundaryId: Boundary identifier for this lock and cancellation
   ///   - effect: Effect to execute if lock acquisition succeeds
   /// - Returns: Effect to execute, or `.none` if lock acquisition fails
-  static func acquireLock<B: LockmanBoundaryId, I: LockmanInfo>(
+  public static func acquireLock<B: LockmanBoundaryId, I: LockmanInfo>(
     lockmanInfo: I,
     strategy: AnyLockmanStrategy<I>,
     boundaryId: B
@@ -280,5 +280,6 @@ extension Effect {
       return .none
     }
   }
+
 
 }
