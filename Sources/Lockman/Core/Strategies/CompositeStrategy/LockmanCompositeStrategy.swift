@@ -202,7 +202,8 @@ where S1.I == I1, S2.I == I2 {
         break
       @unknown default:
         // Handle future enum cases defensively
-        LockmanLogger.shared.logLockState("CompositeStrategy: Unknown LockmanResult case: \(result)")
+        LockmanLogger.shared.logLockState(
+          "CompositeStrategy: Unknown LockmanResult case: \(result)")
         break
       }
     }
@@ -428,7 +429,8 @@ where S1.I == I1, S2.I == I2, S3.I == I3 {
         break
       @unknown default:
         // Handle future enum cases defensively
-        LockmanLogger.shared.logLockState("CompositeStrategy: Unknown LockmanResult case: \(result)")
+        LockmanLogger.shared.logLockState(
+          "CompositeStrategy: Unknown LockmanResult case: \(result)")
         break
       }
     }
@@ -670,7 +672,8 @@ where S1.I == I1, S2.I == I2, S3.I == I3, S4.I == I4 {
         break
       @unknown default:
         // Handle future enum cases defensively
-        LockmanLogger.shared.logLockState("CompositeStrategy: Unknown LockmanResult case: \(result)")
+        LockmanLogger.shared.logLockState(
+          "CompositeStrategy: Unknown LockmanResult case: \(result)")
         break
       }
     }
@@ -944,7 +947,8 @@ where S1.I == I1, S2.I == I2, S3.I == I3, S4.I == I4, S5.I == I5 {
         break
       @unknown default:
         // Handle future enum cases defensively
-        LockmanLogger.shared.logLockState("CompositeStrategy: Unknown LockmanResult case: \(result)")
+        LockmanLogger.shared.logLockState(
+          "CompositeStrategy: Unknown LockmanResult case: \(result)")
         break
       }
     }
