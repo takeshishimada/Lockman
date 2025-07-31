@@ -4,26 +4,43 @@ import Foundation
 
 /// A reducer wrapper that applies Lockman locking to effects produced by actions conforming to `LockmanAction`.
 ///
-/// `LockmanReducer` intercepts effects from the base reducer and automatically applies
-/// locking behavior to actions that conform to a `LockmanAction` protocol. Actions that
-/// don't conform to `LockmanAction` pass through unchanged.
+/// ## Effect-Level Locking
+///
+/// **This reducer applies locking at the effect level**: Due to TCA's architectural constraints,
+/// state mutations in the base reducer occur synchronously before lock acquisition. However,
+/// effects are locked, ensuring exclusive control over async operations.
+///
+/// ## Lock Execution Flow
+/// 1. **State Mutation**: Base reducer executes synchronously (state changes occur)
+/// 2. **Lock Acquisition**: Attempt to acquire lock for the returned effect
+/// 3. **Effect Execution**: Run effects ONLY if lock acquisition succeeds
+/// 4. **Automatic Unlock**: Release lock when effects complete
+///
+/// ## When Lock Fails
+/// - State mutations have already occurred (TCA limitation)
+/// - Effects are cancelled (`.none` is returned)
+/// - Lock failure handler is invoked if provided
+///
+/// ## For True Lock-First Behavior
+/// Use `LockmanDynamicConditionReducer` with explicit `.lock()` calls for scenarios
+/// requiring lock acquisition before any state changes.
 ///
 /// ## Example
 /// ```swift
 /// @Reducer
 /// struct Feature {
-///   struct State: Equatable { }
+///   struct State: Equatable {
+///     var counter = 0  // ⚠️ This will be mutated before lock acquisition
+///   }
 ///
 ///   enum Action: LockmanSingleExecutionAction {
-///     case fetch
-///     case fetchResponse(Result<Data, Error>)
+///     case increment
+///     case decrement
 ///
 ///     var lockmanInfo: LockmanSingleExecutionInfo {
 ///       switch self {
-///       case .fetch:
-///         return LockmanSingleExecutionInfo(actionId: "fetch", mode: .boundary)
-///       default:
-///         return LockmanSingleExecutionInfo(actionId: "other", mode: .none)
+///       case .increment, .decrement:
+///         return LockmanSingleExecutionInfo(actionId: "counter", mode: .boundary)
 ///       }
 ///     }
 ///   }
@@ -31,13 +48,14 @@ import Foundation
 ///   var body: some ReducerOf<Self> {
 ///     Reduce { state, action in
 ///       switch action {
-///       case .fetch:
+///       case .increment:
+///         state.counter += 1  // ⚠️ Executes BEFORE lock acquisition
 ///         return .run { send in
-///           // This effect will be automatically locked
-///           let data = try await fetchData()
-///           await send(.fetchResponse(.success(data)))
+///           // This effect executes AFTER lock acquisition
+///           await performSideEffect()
 ///         }
-///       case .fetchResponse:
+///       case .decrement:
+///         state.counter -= 1  // ⚠️ Executes BEFORE lock acquisition
 ///         return .none
 ///       }
 ///     }
@@ -57,16 +75,17 @@ public struct LockmanReducer<Base: Reducer>: Reducer {
 
   public var body: some ReducerOf<Self> {
     Reduce { state, action in
-      // Get the base effect
-      let baseEffect = self.base.reduce(into: &state, action: action)
-
       // Extract LockmanAction using the provided extractor
       guard let lockmanAction = self.extractLockmanAction(action) else {
-        // Not a LockmanAction, return effect as-is
-        return baseEffect
+        // Not a LockmanAction, execute base reducer normally
+        return self.base.reduce(into: &state, action: action)
       }
 
-      // Apply lock to the effect using Effect.lock()
+      // Execute base reducer to get the effect (state mutations happen here)
+      let baseEffect = self.base.reduce(into: &state, action: action)
+      
+      // Apply lock to the effect - lock acquisition will happen before effect executes
+      // If lock cannot be acquired, the effect will not execute (returns .none)
       return baseEffect.lock(
         action: lockmanAction,
         boundaryId: boundaryId,
