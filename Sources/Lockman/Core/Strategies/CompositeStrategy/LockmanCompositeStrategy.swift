@@ -186,7 +186,6 @@ where S1.I == I1, S2.I == I2 {
   /// - Returns: The coordinated result following composite strategy rules
   private func coordinateResults(_ results: LockmanResult...) -> LockmanResult {
     var cancellationError: (any LockmanPrecedingCancellationError)?
-    var hasCancellation = false
 
     // Process all results and handle immediate failures
     for result in results {
@@ -198,7 +197,6 @@ where S1.I == I1, S2.I == I2 {
         if cancellationError == nil {
           cancellationError = error
         }
-        hasCancellation = true
       case .success:
         // Pure success, no action needed
         break
@@ -209,10 +207,9 @@ where S1.I == I1, S2.I == I2 {
       }
     }
 
-    // At this point, no .cancel results exist
-    if hasCancellation {
-      // Safe to force unwrap: hasCancellation == true guarantees cancellationError != nil
-      return .successWithPrecedingCancellation(error: cancellationError!)
+    // Return result based on whether we found any cancellation
+    if let cancellationError {
+      return .successWithPrecedingCancellation(error: cancellationError)
     }
 
     // All results are .success
@@ -415,7 +412,6 @@ where S1.I == I1, S2.I == I2, S3.I == I3 {
 
   private func coordinateResults(_ results: LockmanResult...) -> LockmanResult {
     var cancellationError: (any LockmanPrecedingCancellationError)?
-    var hasCancellation = false
 
     // Process all results and handle immediate failures
     for result in results {
@@ -427,7 +423,6 @@ where S1.I == I1, S2.I == I2, S3.I == I3 {
         if cancellationError == nil {
           cancellationError = error
         }
-        hasCancellation = true
       case .success:
         // Pure success, no action needed
         break
@@ -438,10 +433,9 @@ where S1.I == I1, S2.I == I2, S3.I == I3 {
       }
     }
 
-    // At this point, no .cancel results exist
-    if hasCancellation {
-      // Safe to force unwrap: hasCancellation == true guarantees cancellationError != nil
-      return .successWithPrecedingCancellation(error: cancellationError!)
+    // Return result based on whether we found any cancellation
+    if let cancellationError {
+      return .successWithPrecedingCancellation(error: cancellationError)
     }
 
     // All results are .success
@@ -660,7 +654,6 @@ where S1.I == I1, S2.I == I2, S3.I == I3, S4.I == I4 {
 
   private func coordinateResults(_ results: LockmanResult...) -> LockmanResult {
     var cancellationError: (any LockmanPrecedingCancellationError)?
-    var hasCancellation = false
 
     // Process all results and handle immediate failures
     for result in results {
@@ -672,7 +665,6 @@ where S1.I == I1, S2.I == I2, S3.I == I3, S4.I == I4 {
         if cancellationError == nil {
           cancellationError = error
         }
-        hasCancellation = true
       case .success:
         // Pure success, no action needed
         break
@@ -683,10 +675,9 @@ where S1.I == I1, S2.I == I2, S3.I == I3, S4.I == I4 {
       }
     }
 
-    // At this point, no .cancel results exist
-    if hasCancellation {
-      // Safe to force unwrap: hasCancellation == true guarantees cancellationError != nil
-      return .successWithPrecedingCancellation(error: cancellationError!)
+    // Return result based on whether we found any cancellation
+    if let cancellationError {
+      return .successWithPrecedingCancellation(error: cancellationError)
     }
 
     // All results are .success
@@ -937,7 +928,6 @@ where S1.I == I1, S2.I == I2, S3.I == I3, S4.I == I4, S5.I == I5 {
 
   private func coordinateResults(_ results: LockmanResult...) -> LockmanResult {
     var cancellationError: (any LockmanPrecedingCancellationError)?
-    var hasCancellation = false
 
     // Process all results and handle immediate failures
     for result in results {
@@ -949,7 +939,6 @@ where S1.I == I1, S2.I == I2, S3.I == I3, S4.I == I4, S5.I == I5 {
         if cancellationError == nil {
           cancellationError = error
         }
-        hasCancellation = true
       case .success:
         // Pure success, no action needed
         break
@@ -960,10 +949,9 @@ where S1.I == I1, S2.I == I2, S3.I == I3, S4.I == I4, S5.I == I5 {
       }
     }
 
-    // At this point, no .cancel results exist
-    if hasCancellation {
-      // Safe to force unwrap: hasCancellation == true guarantees cancellationError != nil
-      return .successWithPrecedingCancellation(error: cancellationError!)
+    // Return result based on whether we found any cancellation
+    if let cancellationError {
+      return .successWithPrecedingCancellation(error: cancellationError)
     }
 
     // All results are .success
