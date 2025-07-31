@@ -174,7 +174,7 @@ final class LockmanDynamicConditionReducerMethodChainTests: XCTestCase {
           },
           lockAction: PurchaseAction(),
           boundaryId: CancelID.payment,
-          lockCondition: { state, _ in
+          actionLockCondition: { state, _ in
             // Action-level condition
             guard state.balance >= amount else {
               return .cancel(

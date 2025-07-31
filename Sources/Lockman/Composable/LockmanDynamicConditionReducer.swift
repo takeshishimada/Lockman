@@ -158,7 +158,7 @@ extension LockmanDynamicConditionReducer {
   ///   - lockFailure: Optional handler for dynamic condition lock acquisition failures
   ///   - lockAction: LockmanAction providing action information (not used for lock strategy in Pure Dynamic Condition mode)
   ///   - boundaryId: Unique identifier for effect cancellation and lock boundary
-  ///   - lockCondition: Optional action-level condition that supplements the reducer-level condition
+  ///   - actionLockCondition: Optional action-level condition that supplements the reducer-level condition
   ///   - fileID: Source file identifier for debugging (auto-populated)
   ///   - filePath: Source file path for debugging (auto-populated)
   ///   - line: Source line number for debugging (auto-populated)
@@ -178,14 +178,14 @@ extension LockmanDynamicConditionReducer {
     )? = nil,
     lockAction: LA,
     boundaryId: B,
-    lockCondition: (@Sendable (_ state: State, _ action: Action) -> LockmanResult)? = nil,
+    actionLockCondition: (@Sendable (_ state: State, _ action: Action) -> LockmanResult)? = nil,
     fileID: StaticString = #fileID,
     filePath: StaticString = #filePath,
     line: UInt = #line,
     column: UInt = #column
   ) -> Effect<Action> {
     let actionId = lockAction.lockmanInfo.actionId
-    let dynamicLockCondition = self.lockCondition
+    let reducerLockCondition = self.lockCondition
 
     // Step 1: Resolve strategies
     let dynamicStrategy: AnyLockmanStrategy<LockmanDynamicConditionInfo>
@@ -213,8 +213,8 @@ extension LockmanDynamicConditionReducer {
 
     // Step 2: Evaluate conditions (dynamic lock condition and lock call)
     let conditionResult = evaluateConditions(
-      dynamicLockCondition: dynamicLockCondition,
-      lockCondition: lockCondition,
+      dynamicLockCondition: reducerLockCondition,
+      lockCondition: actionLockCondition,
       state: state,
       action: action,
       dynamicStrategy: dynamicStrategy,

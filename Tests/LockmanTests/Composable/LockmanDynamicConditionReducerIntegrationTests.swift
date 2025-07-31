@@ -129,7 +129,7 @@ final class LockmanDynamicConditionReducerIntegrationTests: XCTestCase {
           },
           lockAction: TestLockAction(),
           boundaryId: cancelID,
-          lockCondition: { _, _ in
+          actionLockCondition: { _, _ in
             // Action-level condition
             return .success
           }
@@ -249,7 +249,7 @@ final class LockmanDynamicConditionReducerIntegrationTests: XCTestCase {
             },
             lockAction: TestLockAction(),
             boundaryId: TestLockAction().lockmanInfo.actionId,
-            lockCondition: { _, _ in
+            actionLockCondition: { _, _ in
               // Failing condition
               return .cancel(
                 ComposableTestDynamicConditionError.conditionNotMet(
@@ -333,7 +333,7 @@ final class LockmanDynamicConditionReducerIntegrationTests: XCTestCase {
             },
             lockAction: TestLockAction(),
             boundaryId: TestLockAction().lockmanInfo.actionId,
-            lockCondition: { _, _ in
+            actionLockCondition: { _, _ in
               tracker.step2Evaluated = true
               return .success  // Step 2 also passes
             }
