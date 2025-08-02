@@ -165,7 +165,7 @@ public final class LockmanPriorityBasedStrategy: LockmanStrategy, @unchecked Sen
       result = .cancel(
         LockmanPriorityBasedError.higherPriorityExists(
           requestedInfo: info,
-          existingInfo: mostRecentPriorityInfo,
+          lockmanInfo: mostRecentPriorityInfo,
           boundaryId: boundaryId
         )
       )
@@ -190,7 +190,7 @@ public final class LockmanPriorityBasedStrategy: LockmanStrategy, @unchecked Sen
       // Requested action has higher priority - can preempt current
       result = .successWithPrecedingCancellation(
         error: LockmanPriorityBasedError.precedingActionCancelled(
-          cancelledInfo: mostRecentPriorityInfo,
+          lockmanInfo: mostRecentPriorityInfo,
           boundaryId: boundaryId
         )
       )
@@ -336,7 +336,7 @@ extension LockmanPriorityBasedStrategy {
       return .cancel(
         LockmanPriorityBasedError.samePriorityConflict(
           requestedInfo: requested,
-          existingInfo: current,
+          lockmanInfo: current,
           boundaryId: boundaryId
         )
       )
@@ -346,7 +346,7 @@ extension LockmanPriorityBasedStrategy {
       // → Existing action gets canceled, new action succeeds
       return .successWithPrecedingCancellation(
         error: LockmanPriorityBasedError.precedingActionCancelled(
-          cancelledInfo: current,
+          lockmanInfo: current,
           boundaryId: boundaryId
         )
       )

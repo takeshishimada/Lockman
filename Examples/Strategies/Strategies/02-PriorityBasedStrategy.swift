@@ -95,21 +95,21 @@ struct PriorityBasedStrategyFeature {
           // SingleExecutionStrategy error (first strategy)
           // For SingleExecutionError, we can get the existing action info but not the requested one
           switch singleExecutionError {
-          case .boundaryAlreadyLocked(_, let existingInfo):
-            let button = buttonType(for: existingInfo.actionId)
+          case .boundaryAlreadyLocked(_, let lockmanInfo):
+            let button = buttonType(for: lockmanInfo.actionId)
             await send(.internal(.updateResult(button: button, result: "Boundary already locked")))
-          case .actionAlreadyRunning(let existingInfo):
-            let button = buttonType(for: existingInfo.actionId)
+          case .actionAlreadyRunning(_, let lockmanInfo):
+            let button = buttonType(for: lockmanInfo.actionId)
             await send(.internal(.updateResult(button: button, result: "Already running")))
           }
         } else if let priorityError = error as? LockmanPriorityBasedError {
           // PriorityBasedStrategy error (second strategy)
           switch priorityError {
-          case .precedingActionCancelled(let cancelledInfo, _):
+          case .precedingActionCancelled(let lockmanInfo, _):
             // An existing action was cancelled
-            let button = buttonType(for: cancelledInfo.actionId)
+            let button = buttonType(for: lockmanInfo.actionId)
             let message: String
-            if case .low(.replaceable) = cancelledInfo.priority {
+            if case .low(.replaceable) = lockmanInfo.priority {
               message = "Replaced by exclusive"
             } else {
               message = "Cancelled by higher priority"

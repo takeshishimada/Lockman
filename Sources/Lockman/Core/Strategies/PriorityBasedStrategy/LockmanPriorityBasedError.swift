@@ -15,20 +15,20 @@ public enum LockmanPriorityBasedError: LockmanError {
   /// A higher priority action is already running, blocking the new action.
   case higherPriorityExists(
     requestedInfo: LockmanPriorityBasedInfo,
-    existingInfo: LockmanPriorityBasedInfo,
+    lockmanInfo: LockmanPriorityBasedInfo,
     boundaryId: any LockmanBoundaryId
   )
 
   /// Same priority conflict based on the existing action's concurrency behavior.
   case samePriorityConflict(
     requestedInfo: LockmanPriorityBasedInfo,
-    existingInfo: LockmanPriorityBasedInfo,
+    lockmanInfo: LockmanPriorityBasedInfo,
     boundaryId: any LockmanBoundaryId
   )
 
   /// The existing action was cancelled by a higher priority action.
   case precedingActionCancelled(
-    cancelledInfo: LockmanPriorityBasedInfo,
+    lockmanInfo: LockmanPriorityBasedInfo,
     boundaryId: any LockmanBoundaryId
   )
 }
@@ -38,14 +38,14 @@ public enum LockmanPriorityBasedError: LockmanError {
 extension LockmanPriorityBasedError: LocalizedError {
   public var errorDescription: String? {
     switch self {
-    case .higherPriorityExists(let requestedInfo, let existingInfo, _):
+    case .higherPriorityExists(let requestedInfo, let lockmanInfo, _):
       return
-        "Cannot acquire lock: Current priority \(existingInfo.priority) is higher than requested priority \(requestedInfo.priority)."
-    case .samePriorityConflict(_, let existingInfo, _):
+        "Cannot acquire lock: Current priority \(lockmanInfo.priority) is higher than requested priority \(requestedInfo.priority)."
+    case .samePriorityConflict(_, let lockmanInfo, _):
       return
-        "Cannot acquire lock: Another action with priority \(existingInfo.priority) is already running with exclusive behavior."
-    case .precedingActionCancelled(let cancelledInfo, _):
-      return "Lock acquired, preceding action '\(cancelledInfo.actionId)' will be cancelled."
+        "Cannot acquire lock: Another action with priority \(lockmanInfo.priority) is already running with exclusive behavior."
+    case .precedingActionCancelled(let lockmanInfo, _):
+      return "Lock acquired, preceding action '\(lockmanInfo.actionId)' will be cancelled."
     }
   }
 
@@ -70,8 +70,8 @@ extension LockmanPriorityBasedError: LockmanPrecedingCancellationError {
       return requestedInfo
     case .samePriorityConflict(let requestedInfo, _, _):
       return requestedInfo
-    case .precedingActionCancelled(let cancelledInfo, _):
-      return cancelledInfo
+    case .precedingActionCancelled(let lockmanInfo, _):
+      return lockmanInfo
     }
   }
 

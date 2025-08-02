@@ -135,13 +135,11 @@ final class LockmanConcurrencyLimitedStrategyTests: XCTestCase {
       let concurrencyError = error as? LockmanConcurrencyLimitedError
     {
       switch concurrencyError {
-      case .concurrencyLimitReached(let requestedInfo, let existingInfos, let currentCount):
-        XCTAssertEqual(requestedInfo.concurrencyId, "file_operations")
-        XCTAssertEqual(requestedInfo.actionId, "upload3")
-        XCTAssertEqual(existingInfos.count, 2)
-        XCTAssertTrue(existingInfos.contains { $0.actionId == "upload1" })
-        XCTAssertTrue(existingInfos.contains { $0.actionId == "upload2" })
+      case .concurrencyLimitReached(let lockmanInfo, let boundaryId, let currentCount):
+        XCTAssertEqual(lockmanInfo.concurrencyId, "file_operations")
+        XCTAssertEqual(lockmanInfo.actionId, "upload3")
         XCTAssertEqual(currentCount, 2)
+        XCTAssertNotNil(boundaryId)
       }
     } else {
       XCTFail("Expected LockmanConcurrencyLimitedError")

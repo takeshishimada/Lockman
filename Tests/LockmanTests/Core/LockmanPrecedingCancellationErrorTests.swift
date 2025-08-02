@@ -17,7 +17,7 @@ final class LockmanPrecedingCancellationErrorTests: XCTestCase {
     let boundaryId = TestBoundaryId("testBoundary")
 
     let error = LockmanPriorityBasedError.precedingActionCancelled(
-      cancelledInfo: cancelledInfo,
+      lockmanInfo: cancelledInfo,
       boundaryId: boundaryId
     )
 
@@ -34,12 +34,12 @@ final class LockmanPrecedingCancellationErrorTests: XCTestCase {
   func testLockmanPriorityBasedError_PrecedingActionCancelled_LockmanInfo() {
     let cancelledInfo = LockmanPriorityBasedInfo(
       actionId: "cancelledAction",
-      priority: .low(.replaceable)
+      priority: LockmanPriorityBasedInfo.Priority.low(.replaceable)
     )
     let boundaryId = TestBoundaryId("boundary123")
 
     let error = LockmanPriorityBasedError.precedingActionCancelled(
-      cancelledInfo: cancelledInfo,
+      lockmanInfo: cancelledInfo,
       boundaryId: boundaryId
     )
 
@@ -52,7 +52,7 @@ final class LockmanPrecedingCancellationErrorTests: XCTestCase {
       XCTFail("lockmanInfo should be castable to LockmanPriorityBasedInfo")
       return
     }
-    XCTAssertEqual(priorityInfo.priority, .low(.replaceable))
+    XCTAssertEqual(priorityInfo.priority, LockmanPriorityBasedInfo.Priority.low(.replaceable))
   }
 
   func testLockmanPriorityBasedError_PrecedingActionCancelled_BoundaryId() {
@@ -63,7 +63,7 @@ final class LockmanPrecedingCancellationErrorTests: XCTestCase {
     let boundaryId = TestBoundaryId("uniqueBoundary")
 
     let error = LockmanPriorityBasedError.precedingActionCancelled(
-      cancelledInfo: cancelledInfo,
+      lockmanInfo: cancelledInfo,
       boundaryId: boundaryId
     )
 
@@ -75,7 +75,7 @@ final class LockmanPrecedingCancellationErrorTests: XCTestCase {
   func testLockmanPriorityBasedError_HigherPriorityExists_LockmanInfo() {
     let requestedInfo = LockmanPriorityBasedInfo(
       actionId: "requestedAction",
-      priority: .low(.exclusive)
+      priority: LockmanPriorityBasedInfo.Priority.low(.exclusive)
     )
     let existingInfo = LockmanPriorityBasedInfo(
       actionId: "existingAction",
@@ -85,7 +85,7 @@ final class LockmanPrecedingCancellationErrorTests: XCTestCase {
 
     let error = LockmanPriorityBasedError.higherPriorityExists(
       requestedInfo: requestedInfo,
-      existingInfo: existingInfo,
+      lockmanInfo: existingInfo,
       boundaryId: boundaryId
     )
 
@@ -98,23 +98,23 @@ final class LockmanPrecedingCancellationErrorTests: XCTestCase {
       XCTFail("lockmanInfo should be castable to LockmanPriorityBasedInfo")
       return
     }
-    XCTAssertEqual(priorityInfo.priority, .low(.exclusive))
+    XCTAssertEqual(priorityInfo.priority, LockmanPriorityBasedInfo.Priority.low(.exclusive))
   }
 
   func testLockmanPriorityBasedError_SamePriorityConflict_LockmanInfo() {
     let requestedInfo = LockmanPriorityBasedInfo(
       actionId: "requestedAction",
-      priority: .low(.exclusive)
+      priority: LockmanPriorityBasedInfo.Priority.low(.exclusive)
     )
     let existingInfo = LockmanPriorityBasedInfo(
       actionId: "existingAction",
-      priority: .low(.exclusive)
+      priority: LockmanPriorityBasedInfo.Priority.low(.exclusive)
     )
     let boundaryId = TestBoundaryId("testBoundary")
 
     let error = LockmanPriorityBasedError.samePriorityConflict(
       requestedInfo: requestedInfo,
-      existingInfo: existingInfo,
+      lockmanInfo: existingInfo,
       boundaryId: boundaryId
     )
 
@@ -127,7 +127,7 @@ final class LockmanPrecedingCancellationErrorTests: XCTestCase {
       XCTFail("lockmanInfo should be castable to LockmanPriorityBasedInfo")
       return
     }
-    XCTAssertEqual(priorityInfo.priority, .low(.exclusive))
+    XCTAssertEqual(priorityInfo.priority, LockmanPriorityBasedInfo.Priority.low(.exclusive))
   }
 
   // MARK: - LockmanResult Integration Tests
@@ -135,12 +135,12 @@ final class LockmanPrecedingCancellationErrorTests: XCTestCase {
   func testLockmanResult_SuccessWithPrecedingCancellation_TypeSafety() {
     let cancelledInfo = LockmanPriorityBasedInfo(
       actionId: "cancelledAction",
-      priority: .low(.exclusive)
+      priority: LockmanPriorityBasedInfo.Priority.low(.exclusive)
     )
     let boundaryId = TestBoundaryId("testBoundary")
 
     let error = LockmanPriorityBasedError.precedingActionCancelled(
-      cancelledInfo: cancelledInfo,
+      lockmanInfo: cancelledInfo,
       boundaryId: boundaryId
     )
 
@@ -161,12 +161,12 @@ final class LockmanPrecedingCancellationErrorTests: XCTestCase {
   func testLockmanResult_SuccessWithPrecedingCancellation_DirectAccess() {
     let cancelledInfo = LockmanPriorityBasedInfo(
       actionId: "directAccessTest",
-      priority: .high(.replaceable)
+      priority: LockmanPriorityBasedInfo.Priority.high(.replaceable)
     )
     let boundaryId = TestBoundaryId("directBoundary")
 
     let error = LockmanPriorityBasedError.precedingActionCancelled(
-      cancelledInfo: cancelledInfo,
+      lockmanInfo: cancelledInfo,
       boundaryId: boundaryId
     )
 
@@ -185,7 +185,7 @@ final class LockmanPrecedingCancellationErrorTests: XCTestCase {
         XCTFail("Should be able to cast to LockmanPriorityBasedInfo")
         return
       }
-      XCTAssertEqual(priorityInfo.priority, .high(.replaceable))
+      XCTAssertEqual(priorityInfo.priority, LockmanPriorityBasedInfo.Priority.high(.replaceable))
     } else {
       XCTFail("Result should be successWithPrecedingCancellation")
     }

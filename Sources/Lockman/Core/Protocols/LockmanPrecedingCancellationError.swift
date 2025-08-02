@@ -31,7 +31,7 @@ import Foundation
 /// ## Design Principle
 /// This protocol uses simple property access rather than complex methods,
 /// making the interface clear and implementation straightforward.
-public protocol LockmanPrecedingCancellationError: LockmanError {
+public protocol LockmanPrecedingCancellationError: LockmanStrategyError {
   /// The LockmanInfo of the preceding action being cancelled.
   ///
   /// This property provides access to the lock information of the action

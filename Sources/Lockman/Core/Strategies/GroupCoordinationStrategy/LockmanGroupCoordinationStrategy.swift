@@ -144,7 +144,8 @@ public final class LockmanGroupCoordinationStrategy: LockmanStrategy, @unchecked
           failureReason = "Action '\(info.actionId)' is already active in group '\(groupId)'"
           return .cancel(
             LockmanGroupCoordinationError.actionAlreadyInGroup(
-              existingInfo: existingMember.info,
+              lockmanInfo: existingMember.info,
+              boundaryId: boundaryId,
               groupIds: Set([groupId])
             )
           )
@@ -192,6 +193,8 @@ public final class LockmanGroupCoordinationStrategy: LockmanStrategy, @unchecked
             if !canJoin {
               return .cancel(
                 LockmanGroupCoordinationError.leaderCannotJoinNonEmptyGroup(
+                  lockmanInfo: info,
+                  boundaryId: boundaryId,
                   groupIds: Set([groupId])
                 )
               )
@@ -204,6 +207,8 @@ public final class LockmanGroupCoordinationStrategy: LockmanStrategy, @unchecked
             failureReason = "Member cannot join: group '\(groupId)' has no active participants"
             return .cancel(
               LockmanGroupCoordinationError.memberCannotJoinEmptyGroup(
+                lockmanInfo: info,
+                boundaryId: boundaryId,
                 groupIds: Set([groupId])
               )
             )
