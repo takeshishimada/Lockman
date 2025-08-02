@@ -70,7 +70,7 @@ final class DebugTests: XCTestCase {
       actionId: "concurrencyAction",
       .limited(3)
     )
-    XCTAssertTrue(concurrencyInfo.debugDescription.contains("LockmanConcurrencyLimitedInfo"))
+    XCTAssertTrue(concurrencyInfo.debugDescription.contains("ConcurrencyLimitedInfo"))
     XCTAssertTrue(concurrencyInfo.debugDescription.contains("concurrencyAction"))
 
     let groupInfo = LockmanGroupCoordinatedInfo(

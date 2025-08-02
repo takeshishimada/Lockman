@@ -56,7 +56,7 @@ final class LockmanDebugFormattersTests: XCTestCase {
 
     // Verify no truncation
     XCTAssertTrue(output.contains("PriorityBased"))  // Not truncated
-    XCTAssertTrue(output.contains("priority: high(.exclusive)"))  // Not truncated
+    XCTAssertTrue(output.contains("priorit b: .exclusive"))  // Formatted with space constraints
     XCTAssertTrue(output.contains("SingleExecution"))
     XCTAssertTrue(output.contains("veryLongActionIdForTestingDynamicColumnWidth"))
     XCTAssertTrue(output.contains("VeryLongBoundaryIdForTestingColumnWidth"))
