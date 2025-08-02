@@ -216,16 +216,16 @@ struct ConcurrencyLimitedStrategyFeature {
     if let singleExecutionError = error as? LockmanSingleExecutionError {
       // SingleExecutionStrategy error (first strategy)
       switch singleExecutionError {
-      case .boundaryAlreadyLocked(_, let existingInfo):
-        actionId = existingInfo.actionId
-      case .actionAlreadyRunning(let existingInfo):
-        actionId = existingInfo.actionId
+      case .boundaryAlreadyLocked(_, let lockmanInfo):
+        actionId = lockmanInfo.actionId
+      case .actionAlreadyRunning(_, let lockmanInfo):
+        actionId = lockmanInfo.actionId
       }
     } else if let concurrencyError = error as? LockmanConcurrencyLimitedError {
       // ConcurrencyLimitedStrategy error (second strategy)
       switch concurrencyError {
-      case .concurrencyLimitReached(let requestedInfo, _, _):
-        actionId = requestedInfo.actionId
+      case .concurrencyLimitReached(let lockmanInfo, _, _):
+        actionId = lockmanInfo.actionId
       }
     } else {
       return nil

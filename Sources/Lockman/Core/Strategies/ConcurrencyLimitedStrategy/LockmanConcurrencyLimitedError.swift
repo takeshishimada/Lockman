@@ -6,11 +6,11 @@ import Foundation
 ///
 /// This error is returned when a new action cannot proceed because the concurrency
 /// limit has been reached for the specified concurrency group.
-public enum LockmanConcurrencyLimitedError: LockmanError {
+public enum LockmanConcurrencyLimitedError: LockmanStrategyError {
   /// The concurrency limit has been reached.
   case concurrencyLimitReached(
-    requestedInfo: LockmanConcurrencyLimitedInfo,
-    existingInfos: [LockmanConcurrencyLimitedInfo],
+    lockmanInfo: LockmanConcurrencyLimitedInfo,
+    boundaryId: any LockmanBoundaryId,
     currentCount: Int
   )
 }
@@ -20,16 +20,16 @@ public enum LockmanConcurrencyLimitedError: LockmanError {
 extension LockmanConcurrencyLimitedError: LocalizedError {
   public var errorDescription: String? {
     switch self {
-    case .concurrencyLimitReached(let requestedInfo, _, let currentCount):
+    case .concurrencyLimitReached(let lockmanInfo, _, let currentCount):
       let limitStr: String
-      switch requestedInfo.limit {
+      switch lockmanInfo.limit {
       case .unlimited:
         limitStr = "unlimited"
       case .limited(let limit):
         limitStr = String(limit)
       }
       return
-        "Concurrency limit reached for '\(requestedInfo.concurrencyId)': \(currentCount)/\(limitStr)"
+        "Concurrency limit reached for '\(lockmanInfo.concurrencyId)': \(currentCount)/\(limitStr)"
     }
   }
 
@@ -38,6 +38,24 @@ extension LockmanConcurrencyLimitedError: LocalizedError {
     case .concurrencyLimitReached:
       return
         "Cannot execute action because the maximum number of concurrent executions has been reached"
+    }
+  }
+}
+
+// MARK: - LockmanStrategyError Conformance
+
+extension LockmanConcurrencyLimitedError {
+  public var lockmanInfo: any LockmanInfo {
+    switch self {
+    case .concurrencyLimitReached(let lockmanInfo, _, _):
+      return lockmanInfo
+    }
+  }
+
+  public var boundaryId: any LockmanBoundaryId {
+    switch self {
+    case .concurrencyLimitReached(_, let boundaryId, _):
+      return boundaryId
     }
   }
 }

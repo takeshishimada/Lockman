@@ -45,13 +45,10 @@ public final class LockmanConcurrencyLimitedStrategy: LockmanStrategy, @unchecke
 
     if info.limit.isExceeded(currentCount: currentCount) {
       if case .limited(let limit) = info.limit {
-        // Get existing infos in the same concurrency group
-        let existingInfos = state.currentLocks(in: boundaryId, matching: info.concurrencyId)
-
         result = .cancel(
           LockmanConcurrencyLimitedError.concurrencyLimitReached(
-            requestedInfo: info,
-            existingInfos: existingInfos,
+            lockmanInfo: info,
+            boundaryId: boundaryId,
             currentCount: currentCount
           )
         )
