@@ -61,6 +61,7 @@ extension LockmanDynamicConditionReducer {
     action: Action,
     dynamicStrategy: AnyLockmanStrategy<LockmanDynamicConditionInfo>,
     actionStrategy: AnyLockmanStrategy<A.I>,
+    lockmanInfo: A.I,
     lockmanAction: A,
     actionId: LockmanActionId,
     boundaryId: B
@@ -96,6 +97,7 @@ extension LockmanDynamicConditionReducer {
       state: state,
       action: action,
       strategy: actionStrategy,
+      lockmanInfo: lockmanInfo,
       lockmanAction: lockmanAction,
       actionId: actionId,
       boundaryId: boundaryId
@@ -189,12 +191,13 @@ extension LockmanDynamicConditionReducer {
   ///   - boundaryId: Boundary identifier for lock management
   /// - Returns: Result indicating success, failure, or success with preceding cancellation
   @usableFromInline
-  func evaluateSingleCondition<B: LockmanBoundaryId, I: LockmanInfo>(
+  func evaluateSingleCondition<B: LockmanBoundaryId, A: LockmanAction>(
     condition: (@Sendable (_ state: State, _ action: Action) -> LockmanResult)?,
     state: State,
     action: Action,
-    strategy: AnyLockmanStrategy<I>,
-    lockmanAction: any LockmanAction,
+    strategy: AnyLockmanStrategy<A.I>,
+    lockmanInfo: A.I,
+    lockmanAction: A,
     actionId: LockmanActionId,
     boundaryId: B
   ) -> SingleConditionResult {
@@ -202,12 +205,6 @@ extension LockmanDynamicConditionReducer {
     // If no condition provided, consider it successful
     guard let condition = condition else {
       return .success
-    }
-
-    // Use the action's lock information for the strategy
-    guard lockmanAction.lockmanInfo is I else {
-      // Type mismatch - this shouldn't happen if called correctly
-      return .failure(LockmanRegistrationError.strategyNotRegistered("\(I.self)"))
     }
 
     // Evaluate condition first
@@ -230,8 +227,8 @@ extension LockmanDynamicConditionReducer {
     let effectForLock: Effect<Action> = .none
     do {
       let result = try effectForLock.acquireLock(
-        lockmanInfo: lockmanAction.lockmanInfo,
-        strategyId: lockmanAction.lockmanInfo.strategyId,
+        lockmanInfo: lockmanInfo,
+        strategyId: lockmanInfo.strategyId,
         boundaryId: boundaryId
       )
 
@@ -286,6 +283,7 @@ extension LockmanDynamicConditionReducer {
     actionStrategy: AnyLockmanStrategy<LA.I>,
     actionId: LockmanActionId,
     unlockOption: LockmanUnlockOption,
+    lockmanInfo: LA.I,
     lockAction: LA,
     boundaryId: B,
     priority: TaskPriority?,
@@ -308,13 +306,13 @@ extension LockmanDynamicConditionReducer {
 
     let actionUnlockToken = LockmanUnlock(
       id: boundaryId,
-      info: lockAction.lockmanInfo,
+      info: lockmanInfo,
       strategy: actionStrategy,
       unlockOption: unlockOption
     )
 
     // Create base effect with conditional cancellation ID based on action design intent
-    let shouldBeCancellable = lockAction.lockmanInfo.isCancellationTarget
+    let shouldBeCancellable = lockmanInfo.isCancellationTarget
     let baseEffect = Effect<Action>.run(
       priority: priority,
       operation: { send in

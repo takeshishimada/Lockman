@@ -10,11 +10,12 @@ import Foundation
 /// BEFORE the base reducer executes, preventing state mutations when locks cannot be acquired.
 /// This ensures complete exclusive control over both state changes and effects.
 ///
-/// ## Lock Execution Flow
-/// 1. **Lock Feasibility Check**: Determine if lock can be acquired using strategy's `canLock`
-/// 2. **Conditional State Mutation**: Base reducer executes ONLY if lock acquisition succeeded
-/// 3. **Effect Execution**: Run effects with the already-acquired lock
-/// 4. **Automatic Unlock**: Release lock when effects complete or fail
+/// ## Lock Execution Flow & UniqueId Consistency
+/// 1. **LockmanInfo Capture**: Capture action's lockmanInfo once to ensure consistent uniqueId
+/// 2. **Lock Feasibility Check**: Determine if lock can be acquired using strategy's `canLock`
+/// 3. **Conditional State Mutation**: Base reducer executes ONLY if lock acquisition succeeded
+/// 4. **Effect Execution**: Run effects with the already-acquired lock using same lockmanInfo
+/// 5. **Guaranteed Unlock**: Release lock when effects complete using matching uniqueId
 ///
 /// ## When Lock Fails
 /// - No state mutations occur (true lock-first behavior)
@@ -86,6 +87,8 @@ public struct LockmanReducer<Base: Reducer>: Reducer {
       let effectForLock: Effect<LockmanReducer<Base>.Action> = .none
 
       do {
+        // ✨ CRITICAL: Capture lockmanInfo once to ensure consistent uniqueId throughout lock lifecycle
+        // This prevents lock/unlock mismatches that occur when computed properties generate new UUIDs
         let lockmanInfo = lockmanAction.lockmanInfo
         let lockResult = try effectForLock.acquireLock(
           lockmanInfo: lockmanInfo,
@@ -98,7 +101,7 @@ public struct LockmanReducer<Base: Reducer>: Reducer {
           // ✅ Lock can be acquired - proceed with base reducer execution
           let baseEffect = self.base.reduce(into: &state, action: action)
 
-          // Build effect with the existing lock result (lock is already acquired)
+          // Build effect with the existing lock result using same lockmanInfo (guaranteed unlock)
           return baseEffect.buildLockEffect(
             lockResult: lockResult,
             action: lockmanAction,

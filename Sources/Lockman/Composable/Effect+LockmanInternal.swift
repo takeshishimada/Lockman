@@ -3,15 +3,15 @@ import ComposableArchitecture
 // MARK: - Internal Implementation for Lockman Effects
 
 extension Effect {
-  /// Attempts to acquire a lock using the provided strategy and executes the effect if successful.
+  /// Attempts to acquire a lock using pre-captured lockmanInfo for consistent uniqueId handling.
   ///
-  /// ## Lock Acquisition Protocol
-  /// This method implements the core lock acquisition and effect execution logic:
-  /// 1. **Feasibility Check**: Call `canLock` to determine if lock can be acquired
-  /// 2. **Early Exit**: Return `.none` if lock acquisition is not possible
-  /// 3. **Lock Acquisition**: Call `lock` to actually acquire the lock
-  /// 4. **Cancellation Handling**: If existing operation needs cancellation, handle appropriately
-  /// 5. **Effect Execution**: Execute the provided effect with lock held
+  /// ## Lock Acquisition Protocol with UniqueId Consistency
+  /// This method implements the core lock acquisition logic with guaranteed uniqueId consistency:
+  /// 1. **Pre-captured LockmanInfo**: Uses lockmanInfo captured once at entry points
+  /// 2. **Feasibility Check**: Call `canLock` to determine if lock can be acquired
+  /// 3. **Early Exit**: Return appropriate result if lock acquisition is not possible
+  /// 4. **Lock Acquisition**: Call `lock` to actually acquire the lock
+  /// 5. **Consistent UniqueId**: Same lockmanInfo instance ensures unlock will succeed
   ///
   /// ## Boundary Lock Protection
   /// The entire lock acquisition process is protected by a boundary-specific lock
@@ -32,7 +32,7 @@ extension Effect {
   /// - Effect concatenation has minimal overhead
   ///
   /// - Parameters:
-  ///   - lockmanInfo: Lock information for the strategy (action ID, unique ID, etc.)
+  ///   - lockmanInfo: Pre-captured lock information ensuring consistent uniqueId throughout lifecycle
   ///   - boundaryId: Boundary identifier for this lock and cancellation
   /// - Returns: LockmanResult indicating lock acquisition status
   func acquireLock<B: LockmanBoundaryId, I: LockmanInfo>(
@@ -59,7 +59,7 @@ extension Effect {
   /// - Strategy resolution and lock acquisition with known info types
   ///
   /// ## Parameters
-  /// - lockmanInfo: The lock information containing strategy ID and lock data
+  /// - lockmanInfo: Pre-captured lock information ensuring consistent uniqueId throughout lifecycle
   /// - strategyId: Strategy identifier for container resolution
   /// - boundaryId: Boundary identifier for this lock and cancellation
   /// - Returns: LockmanResult indicating lock acquisition status
@@ -90,7 +90,7 @@ extension Effect {
   /// - Actual lock acquisition via lock
   ///
   /// ## Parameters
-  /// - lockmanInfo: The lock information for strategy operations
+  /// - lockmanInfo: Pre-captured lock information ensuring consistent uniqueId for unlock operations
   /// - strategyId: Strategy identifier for container resolution
   /// - boundaryId: Boundary identifier for this lock operation
   /// - Returns: LockmanResult indicating the outcome of lock acquisition
@@ -138,14 +138,14 @@ extension Effect {
     }
   }
 
-  /// Builds an effect with lock acquisition and automatic unlock.
+  /// Builds an effect with lock acquisition and automatic unlock using pre-captured lockmanInfo.
   ///
-  /// ## Purpose
+  /// ## Purpose & UniqueId Consistency
   /// This internal method contains the common logic shared by all lock variants:
   /// 1. Strategy resolution from the container
-  /// 2. Lock information extraction from the action
-  /// 3. Lock acquisition and result handling
-  /// 4. Direct effect concatenation with unlock effect
+  /// 2. Use of pre-captured lockmanInfo to ensure consistent uniqueId
+  /// 3. Lock acquisition and result handling with guaranteed unlock capability
+  /// 4. Direct effect concatenation with unlock effect using same lockmanInfo instance
   ///
   /// ## Simplified Architecture
   /// This method directly creates the unlock effect and concatenates it with the operations,
@@ -171,6 +171,7 @@ extension Effect {
   /// - Parameters:
   ///   - lockResult: Result from prior lock acquisition attempt (must be provided)
   ///   - action: LockmanAction providing lock information and strategy type
+  ///   - lockmanInfo: Pre-captured lock information ensuring consistent uniqueId for unlock operations
   ///   - boundaryId: Unique identifier for cancellation and lock boundary
   ///   - unlockOption: Unlock option configuration for when to execute the unlock
   ///   - fileID: Source file ID for error reporting
@@ -197,9 +198,9 @@ extension Effect {
         id: lockmanInfo.strategyId,
         expecting: I.self
       )
-      let lockmanInfo = lockmanInfo
+      // Note: lockmanInfo parameter is the pre-captured instance ensuring consistent uniqueId
 
-      // Create unlock token for this specific lock acquisition with option
+      // Create unlock token using the same lockmanInfo instance (guaranteed successful unlock)
       let unlockToken = LockmanUnlock(
         id: boundaryId,
         info: lockmanInfo,

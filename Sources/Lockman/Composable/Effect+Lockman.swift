@@ -16,11 +16,12 @@ extension Effect {
   /// - **Resource Coordination**: Maintaining exclusive access during complex state changes
   /// - **Migration Scenarios**: Gradual transition from multiple effects to single concatenated operation
   ///
-  /// ## Lock Lifecycle
-  /// 1. Lock is acquired before the first effect starts
-  /// 2. Lock is held during execution of all concatenated effects
-  /// 3. Lock is automatically released after all effects complete (using configured option)
-  /// 4. If any effect fails, lock is still properly released
+  /// ## Lock Lifecycle & UniqueId Consistency
+  /// 1. **LockmanInfo Capture**: Action's lockmanInfo is captured once at the beginning to ensure consistent uniqueId
+  /// 2. **Lock Acquisition**: Lock is acquired before the first effect starts using the captured lockmanInfo
+  /// 3. **Effect Execution**: Lock is held during execution of all concatenated effects
+  /// 4. **Guaranteed Unlock**: Lock is automatically released after all effects complete using the same lockmanInfo instance
+  /// 5. **Error Handling**: If any effect fails, lock is still properly released with matching uniqueId
   ///
   /// Effects execute sequentially. If any effect fails, subsequent effects are cancelled,
   /// but the unlock still executes to ensure proper cleanup.
@@ -77,15 +78,17 @@ extension Effect {
       // Create concatenated effect from operations array
       let concatenatedEffect = Effect.concatenate(operations)
 
+      // ✨ CRITICAL: Capture lockmanInfo once to ensure consistent uniqueId throughout lock lifecycle
+      // This prevents lock/unlock mismatches that occur when computed properties generate new UUIDs
       let lockmanInfo = action.lockmanInfo
 
-      // Acquire lock using the concatenated effect instance
+      // Acquire lock using the captured lockmanInfo (consistent uniqueId)
       let lockResult = try concatenatedEffect.acquireLock(
         lockmanInfo: lockmanInfo,
         boundaryId: boundaryId
       )
 
-      // Build lock effect using the same concatenated effect instance
+      // Build lock effect using the same lockmanInfo instance (guaranteed unlock)
       return concatenatedEffect.buildLockEffect(
         lockResult: lockResult,
         action: action,
@@ -124,6 +127,10 @@ extension Effect {
   ///
   /// This method provides a method chain style API for applying lock management to effects.
   /// The lock strategy is automatically resolved from the container using the action's strategy ID.
+  ///
+  /// ## UniqueId Consistency
+  /// This method captures the action's lockmanInfo once at the beginning to ensure consistent
+  /// uniqueId values throughout the lock lifecycle, preventing lock/unlock mismatches.
   ///
   /// ## Automatic Cancellation Management
   /// This method automatically applies `.cancellable(id: boundaryId)` to the chained effect,
@@ -171,14 +178,17 @@ extension Effect {
     // This method provides a method chain style API by combining acquireLock and buildLockEffect
 
     do {
+      // ✨ CRITICAL: Capture lockmanInfo once to ensure consistent uniqueId throughout lock lifecycle
+      // This prevents lock/unlock mismatches that occur when computed properties generate new UUIDs
       let lockmanInfo = action.lockmanInfo
 
-      // Acquire lock using instance method
+      // Acquire lock using captured lockmanInfo (consistent uniqueId)
       let lockResult = try acquireLock(
         lockmanInfo: lockmanInfo,
         boundaryId: boundaryId
       )
 
+      // Build lock effect using the same lockmanInfo instance (guaranteed unlock)
       return buildLockEffect(
         lockResult: lockResult,
         action: action,
