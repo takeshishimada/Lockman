@@ -402,15 +402,15 @@ private func generateStrategyIdPropertyMulti(
     """
 }
 
-/// Generates the lockmanInfo property for 2-strategy compositions.
+/// Generates the createLockmanInfo method for 2-strategy compositions.
 ///
-/// This function creates a computed property that returns the composite
-/// lock information for 2-strategy combinations. The property integrates
+/// This function creates a method that returns the composite
+/// lock information for 2-strategy combinations. The method integrates
 /// with the protocol requirements to provide the necessary lock data.
 ///
-/// ## Generated Property Structure
+/// ## Generated Method Structure
 /// ```swift
-/// public var lockmanInfo: LockmanCompositeInfo2<S1.I, S2.I> {
+/// public func createLockmanInfo() -> LockmanCompositeInfo2<S1.I, S2.I> {
 ///   return LockmanCompositeInfo2(
 ///     actionId: actionName,
 ///     lockmanInfoForStrategy1: lockmanInfoForStrategy1,
@@ -420,7 +420,7 @@ private func generateStrategyIdPropertyMulti(
 /// ```
 ///
 /// ## Integration Points
-/// The generated property integrates with:
+/// The generated method integrates with:
 /// - `actionName` property for the action identifier
 /// - `lockmanInfoForStrategy1` and `lockmanInfoForStrategy2` protocol requirements
 /// - The composite info type system for type safety
@@ -428,15 +428,15 @@ private func generateStrategyIdPropertyMulti(
 /// - Parameters:
 ///   - strategy1: Name of the first strategy type
 ///   - strategy2: Name of the second strategy type
-///   - accessLevel: Access level for the property
-/// - Returns: Complete property declaration
+///   - accessLevel: Access level for the method
+/// - Returns: Complete method declaration
 private func generateLockmanInfoProperty2(
   strategy1: String,
   strategy2: String,
   accessLevel: String
 ) -> DeclSyntax {
   """
-  \(raw: accessLevel) var lockmanInfo: LockmanCompositeInfo2<\(raw: strategy1).I, \(raw: strategy2).I> {
+  \(raw: accessLevel) func createLockmanInfo() -> LockmanCompositeInfo2<\(raw: strategy1).I, \(raw: strategy2).I> {
     return LockmanCompositeInfo2(
       actionId: actionName,
       lockmanInfoForStrategy1: lockmanInfoForStrategy1,
@@ -446,15 +446,15 @@ private func generateLockmanInfoProperty2(
   """
 }
 
-/// Generates the lockmanInfo property for 3-strategy compositions.
+/// Generates the createLockmanInfo method for 3-strategy compositions.
 ///
-/// This function creates a computed property that returns the composite
+/// This function creates a method that returns the composite
 /// lock information for 3-strategy combinations.
 ///
 /// - Parameters:
 ///   - strategyNames: Array of strategy type names
-///   - accessLevel: Access level for the property
-/// - Returns: Complete property declaration
+///   - accessLevel: Access level for the method
+/// - Returns: Complete method declaration
 private func generateLockmanInfoProperty3(
   strategyNames: [String],
   accessLevel: String
@@ -464,7 +464,7 @@ private func generateLockmanInfoProperty3(
   let strategy3 = strategyNames[2]
 
   return """
-    \(raw: accessLevel) var lockmanInfo: LockmanCompositeInfo3<\(raw: strategy1).I, \(raw: strategy2).I, \(raw: strategy3).I> {
+    \(raw: accessLevel) func createLockmanInfo() -> LockmanCompositeInfo3<\(raw: strategy1).I, \(raw: strategy2).I, \(raw: strategy3).I> {
       return LockmanCompositeInfo3(
         actionId: actionName,
         lockmanInfoForStrategy1: lockmanInfoForStrategy1,
@@ -475,12 +475,12 @@ private func generateLockmanInfoProperty3(
     """
 }
 
-/// Generates the lockmanInfo property for 4-strategy compositions.
+/// Generates the createLockmanInfo method for 4-strategy compositions.
 ///
 /// - Parameters:
 ///   - strategyNames: Array of strategy type names
-///   - accessLevel: Access level for the property
-/// - Returns: Complete property declaration
+///   - accessLevel: Access level for the method
+/// - Returns: Complete method declaration
 private func generateLockmanInfoProperty4(
   strategyNames: [String],
   accessLevel: String
@@ -491,7 +491,7 @@ private func generateLockmanInfoProperty4(
   let strategy4 = strategyNames[3]
 
   return """
-    \(raw: accessLevel) var lockmanInfo: LockmanCompositeInfo4<\(raw: strategy1).I, \(raw: strategy2).I, \(raw: strategy3).I, \(raw: strategy4).I> {
+    \(raw: accessLevel) func createLockmanInfo() -> LockmanCompositeInfo4<\(raw: strategy1).I, \(raw: strategy2).I, \(raw: strategy3).I, \(raw: strategy4).I> {
       return LockmanCompositeInfo4(
         actionId: actionName,
         lockmanInfoForStrategy1: lockmanInfoForStrategy1,
@@ -503,12 +503,12 @@ private func generateLockmanInfoProperty4(
     """
 }
 
-/// Generates the lockmanInfo property for 5-strategy compositions.
+/// Generates the createLockmanInfo method for 5-strategy compositions.
 ///
 /// - Parameters:
 ///   - strategyNames: Array of strategy type names
-///   - accessLevel: Access level for the property
-/// - Returns: Complete property declaration
+///   - accessLevel: Access level for the method
+/// - Returns: Complete method declaration
 private func generateLockmanInfoProperty5(
   strategyNames: [String],
   accessLevel: String
@@ -520,7 +520,7 @@ private func generateLockmanInfoProperty5(
   let strategy5 = strategyNames[4]
 
   return """
-    \(raw: accessLevel) var lockmanInfo: LockmanCompositeInfo5<\(raw: strategy1).I, \(raw: strategy2).I, \(raw: strategy3).I, \(raw: strategy4).I, \(raw: strategy5).I> {
+    \(raw: accessLevel) func createLockmanInfo() -> LockmanCompositeInfo5<\(raw: strategy1).I, \(raw: strategy2).I, \(raw: strategy3).I, \(raw: strategy4).I, \(raw: strategy5).I> {
       return LockmanCompositeInfo5(
         actionId: actionName,
         lockmanInfoForStrategy1: lockmanInfoForStrategy1,
@@ -544,7 +544,7 @@ private func generateLockmanInfoProperty5(
 /// ## Generated Members
 /// - `actionName`: Maps enum cases to string identifiers
 /// - `strategyType`: Returns the composite strategy type
-/// - `lockmanInfo`: Provides composite lock information
+/// - `createLockmanInfo()`: Provides composite lock information
 ///
 /// ## Protocol Conformance
 /// The macro adds conformance to `LockmanCompositeAction2` which requires:
@@ -615,7 +615,7 @@ public struct LockmanCompositeStrategy2Macro: ExtensionMacro, MemberMacro {
   /// ## Generated Members
   /// 1. `actionName`: Switch-based property mapping cases to strings
   /// 2. `strategyType`: Property returning the composite strategy type
-  /// 3. `lockmanInfo`: Property providing composite lock information
+  /// 3. `createLockmanInfo()`: Method providing composite lock information
   ///
   /// ## Validation Process
   /// The method performs several validation steps:
@@ -667,7 +667,7 @@ public struct LockmanCompositeStrategy2Macro: ExtensionMacro, MemberMacro {
     )
     members.append(strategyIdProperty)
 
-    // Do not generate lockmanInfo property - user must implement it
+    // Do not generate createLockmanInfo method - user must implement it
     // This allows users to specify strategy-specific details like mode
 
     // Generate type aliases for protocol conformance
@@ -748,7 +748,7 @@ public struct LockmanCompositeStrategy3Macro: ExtensionMacro, MemberMacro {
     )
     members.append(strategyIdProperty)
 
-    // Do not generate lockmanInfo property - user must implement it
+    // Do not generate createLockmanInfo method - user must implement it
     // This allows users to specify strategy-specific details
 
     // Generate type aliases for protocol conformance
@@ -820,7 +820,7 @@ public struct LockmanCompositeStrategy4Macro: ExtensionMacro, MemberMacro {
     )
     members.append(strategyIdProperty)
 
-    // Do not generate lockmanInfo property - user must implement it
+    // Do not generate createLockmanInfo method - user must implement it
     // This allows users to specify strategy-specific details
 
     // Generate type aliases for protocol conformance
@@ -894,7 +894,7 @@ public struct LockmanCompositeStrategy5Macro: ExtensionMacro, MemberMacro {
     )
     members.append(strategyIdProperty)
 
-    // Do not generate lockmanInfo property - user must implement it
+    // Do not generate createLockmanInfo method - user must implement it
     // This allows users to specify strategy-specific details
 
     // Generate type aliases for protocol conformance

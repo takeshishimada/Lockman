@@ -2,35 +2,37 @@ import CasePaths
 import ComposableArchitecture
 import Foundation
 
-/// A reducer wrapper that applies Lockman locking to effects produced by actions conforming to `LockmanAction`.
+/// A reducer wrapper that applies Lockman locking with true lock-first behavior.
 ///
-/// ## Effect-Level Locking
+/// ## Lock-First Behavior
 ///
-/// **This reducer applies locking at the effect level**: Due to TCA's architectural constraints,
-/// state mutations in the base reducer occur synchronously before lock acquisition. However,
-/// effects are locked, ensuring exclusive control over async operations.
+/// **This reducer implements true lock-first behavior**: Lock acquisition feasibility is checked
+/// BEFORE the base reducer executes, preventing state mutations when locks cannot be acquired.
+/// This ensures complete exclusive control over both state changes and effects.
 ///
-/// ## Lock Execution Flow
-/// 1. **State Mutation**: Base reducer executes synchronously (state changes occur)
-/// 2. **Lock Acquisition**: Attempt to acquire lock for the returned effect
-/// 3. **Effect Execution**: Run effects ONLY if lock acquisition succeeds
-/// 4. **Automatic Unlock**: Release lock when effects complete
+/// ## Lock Execution Flow & UniqueId Consistency
+/// 1. **LockmanInfo Capture**: Capture action's lockmanInfo once to ensure consistent uniqueId
+/// 2. **Lock Feasibility Check**: Determine if lock can be acquired using strategy's `canLock`
+/// 3. **Conditional State Mutation**: Base reducer executes ONLY if lock acquisition succeeded
+/// 4. **Effect Execution**: Run effects with the already-acquired lock using same lockmanInfo
+/// 5. **Guaranteed Unlock**: Release lock when effects complete using matching uniqueId
 ///
 /// ## When Lock Fails
-/// - State mutations have already occurred (TCA limitation)
-/// - Effects are cancelled (`.none` is returned)
+/// - No state mutations occur (true lock-first behavior)
+/// - Base reducer is never called
 /// - Lock failure handler is invoked if provided
+/// - Effect returns `.none` (operation is completely cancelled)
 ///
-/// ## For True Lock-First Behavior
-/// Use `LockmanDynamicConditionReducer` with explicit `.lock()` calls for scenarios
-/// requiring lock acquisition before any state changes.
+/// ## Strategy Resolution
+/// The reducer uses Effect-based strategy resolution to work around Swift's existential type
+/// limitations, allowing type-safe strategy resolution before reducer execution.
 ///
 /// ## Example
 /// ```swift
 /// @Reducer
 /// struct Feature {
 ///   struct State: Equatable {
-///     var counter = 0  // ⚠️ This will be mutated before lock acquisition
+///     var counter = 0  // ✅ Only mutated when lock can be acquired
 ///   }
 ///
 ///   enum Action: LockmanSingleExecutionAction {
@@ -49,13 +51,13 @@ import Foundation
 ///     Reduce { state, action in
 ///       switch action {
 ///       case .increment:
-///         state.counter += 1  // ⚠️ Executes BEFORE lock acquisition
+///         state.counter += 1  // ✅ Executes ONLY after lock feasibility check
 ///         return .run { send in
-///           // This effect executes AFTER lock acquisition
+///           // This effect executes with the acquired lock
 ///           await performSideEffect()
 ///         }
 ///       case .decrement:
-///         state.counter -= 1  // ⚠️ Executes BEFORE lock acquisition
+///         state.counter -= 1  // ✅ Executes ONLY after lock feasibility check
 ///         return .none
 ///       }
 ///     }
@@ -81,17 +83,62 @@ public struct LockmanReducer<Base: Reducer>: Reducer {
         return self.base.reduce(into: &state, action: action)
       }
 
-      // Execute base reducer to get the effect (state mutations happen here)
-      let baseEffect = self.base.reduce(into: &state, action: action)
-      
-      // Apply lock to the effect - lock acquisition will happen before effect executes
-      // If lock cannot be acquired, the effect will not execute (returns .none)
-      return baseEffect.lock(
-        action: lockmanAction,
-        boundaryId: boundaryId,
-        unlockOption: unlockOption,
-        lockFailure: lockFailure
-      )
+      // ✨ LOCK-FIRST IMPLEMENTATION: Check lock feasibility BEFORE base.reduce()
+      let effectForLock: Effect<LockmanReducer<Base>.Action> = .none
+
+      do {
+        // ✨ CRITICAL: Create lockmanInfo once to ensure consistent uniqueId throughout lock lifecycle
+        // This prevents lock/unlock mismatches that occur when methods are called multiple times
+        let lockmanInfo = lockmanAction.createLockmanInfo()
+        let lockResult = try effectForLock.acquireLock(
+          lockmanInfo: lockmanInfo,
+          boundaryId: boundaryId
+        )
+
+        // Make decision based on lock result BEFORE executing base reducer
+        switch lockResult {
+        case .success, .successWithPrecedingCancellation:
+          // ✅ Lock can be acquired - proceed with base reducer execution
+          let baseEffect = self.base.reduce(into: &state, action: action)
+
+          // Build effect with the existing lock result using same lockmanInfo (guaranteed unlock)
+          return baseEffect.buildLockEffect(
+            lockResult: lockResult,
+            action: lockmanAction,
+            lockmanInfo: lockmanInfo,
+            boundaryId: boundaryId,
+            unlockOption: unlockOption,
+            fileID: #fileID,
+            filePath: #filePath,
+            line: #line,
+            column: #column,
+            handler: lockFailure
+          )
+
+        case .cancel(let error):
+          // ❌ Lock cannot be acquired - do NOT execute base reducer
+          // State mutations are prevented, achieving true lock-first behavior
+          if let lockFailure = self.lockFailure {
+            return .run { send in
+              await lockFailure(error, send)
+            }
+          } else {
+            // No lock failure handler - return .none (effect is cancelled)
+            return .none
+          }
+        }
+
+      } catch {
+        // Strategy resolution failed - handle as lock failure
+        if let lockFailure = self.lockFailure {
+          return .run { send in
+            await lockFailure(error, send)
+          }
+        } else {
+          // No lock failure handler - return .none
+          return .none
+        }
+      }
     }
   }
 }

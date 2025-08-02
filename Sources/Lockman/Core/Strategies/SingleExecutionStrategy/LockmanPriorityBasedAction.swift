@@ -1,7 +1,7 @@
 /// A `LockmanAction` subtype that enforces priority-based locking semantics.
 ///
 /// Conforming types must provide:
-/// - `lockmanInfo`: An instance of `LockmanPriorityBasedInfo` containing priority and lock information.
+/// - `createLockmanInfo()`: A method that creates `LockmanPriorityBasedInfo` instances containing priority and lock information.
 /// - `actionName`: A unique identifier used for naming locks.
 ///
 /// The priority-based locking system ensures that higher priority actions can preempt or override
@@ -12,19 +12,19 @@
 /// struct LoginAction: LockmanPriorityBasedAction {
 ///   let actionName = "login"
 ///
-///   var lockmanInfo: LockmanPriorityBasedInfo {
+///   func createLockmanInfo() -> LockmanPriorityBasedInfo {
 ///     priority(.high(.preferLater))
 ///   }
 /// }
 /// ```
 public protocol LockmanPriorityBasedAction: LockmanAction
 where I == LockmanPriorityBasedInfo {
-  /// Provides lock information, including the priority level, for this action.
+  /// Creates lock information, including the priority level, for this action.
   ///
   /// The priority level determines the action's precedence in lock conflict resolution.
   /// Higher priority actions can cancel lower priority ones, and equal priority actions
   /// follow the configured `SamePriorityPolicy`.
-  var lockmanInfo: LockmanPriorityBasedInfo { get }
+  func createLockmanInfo() -> LockmanPriorityBasedInfo
 
   /// A unique name identifying this action, used as part of the lock's identifier.
   ///
@@ -53,7 +53,7 @@ extension LockmanPriorityBasedAction {
   ///
   /// Example usage:
   /// ```swift
-  /// var lockmanInfo: LockmanPriorityBasedInfo {
+  /// func createLockmanInfo() -> LockmanPriorityBasedInfo {
   ///   priority(.high(.preferLater))
   /// }
   /// ```
@@ -74,7 +74,7 @@ extension LockmanPriorityBasedAction {
   ///
   /// Example usage:
   /// ```swift
-  /// var lockmanInfo: LockmanPriorityBasedInfo {
+  /// func createLockmanInfo() -> LockmanPriorityBasedInfo {
   ///   priority("_user123", .high(.preferLater))
   /// }
   /// ```

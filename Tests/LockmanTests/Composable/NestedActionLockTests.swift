@@ -15,7 +15,7 @@ private enum TestAction: Equatable {
   enum ViewAction: LockmanAction {
     case tap
 
-    var lockmanInfo: some LockmanInfo {
+    func createLockmanInfo() -> some LockmanInfo {
       LockmanSingleExecutionInfo(actionId: "tap", mode: .boundary)
     }
   }

@@ -46,14 +46,14 @@ final class LockmanDynamicConditionReducerMethodChainTests: XCTestCase {
 
   struct IncrementAction: LockmanSingleExecutionAction {
     var actionName: String { "increment" }
-    var lockmanInfo: LockmanSingleExecutionInfo {
+    func createLockmanInfo() -> LockmanSingleExecutionInfo {
       LockmanSingleExecutionInfo(actionId: actionName, mode: .boundary)
     }
   }
 
   struct PurchaseAction: LockmanSingleExecutionAction {
     var actionName: String { "purchase" }
-    var lockmanInfo: LockmanSingleExecutionInfo {
+    func createLockmanInfo() -> LockmanSingleExecutionInfo {
       LockmanSingleExecutionInfo(actionId: actionName, mode: .boundary)
     }
   }

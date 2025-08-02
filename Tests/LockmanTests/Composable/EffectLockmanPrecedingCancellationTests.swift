@@ -97,7 +97,7 @@ final class EffectWithLockPrecedingCancellationTests: XCTestCase {
       }
     }
 
-    var lockmanInfo: LockmanPriorityBasedInfo {
+    func createLockmanInfo() -> LockmanPriorityBasedInfo {
       switch self {
       case .lowPriority:
         return LockmanPriorityBasedInfo(actionId: actionName, priority: .low(.exclusive))

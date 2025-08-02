@@ -58,8 +58,7 @@ struct DynamicConditionStrategyFeature {
     case view(ViewAction)
     case `internal`(InternalAction)
 
-    @LockmanDynamicCondition
-    enum ViewAction {
+    enum ViewAction: LockmanDynamicConditionAction {
       // Pattern 1: Login-based
       case syncDataTapped
       case toggleLoginTapped
@@ -72,7 +71,20 @@ struct DynamicConditionStrategyFeature {
       case generateReportTapped
       case selectDay(State.Weekday)
 
-      // マクロが自動生成するlockmanInfoを使用
+      var actionName: String {
+        switch self {
+        case .syncDataTapped: return "syncDataTapped"
+        case .toggleLoginTapped: return "toggleLoginTapped"
+        case .performMaintenanceTapped: return "performMaintenanceTapped"
+        case .setHour: return "setHour"
+        case .generateReportTapped: return "generateReportTapped"
+        case .selectDay: return "selectDay"
+        }
+      }
+
+      func createLockmanInfo() -> LockmanDynamicConditionInfo {
+        LockmanDynamicConditionInfo(actionId: actionName)
+      }
     }
 
     enum InternalAction {

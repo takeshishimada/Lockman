@@ -15,7 +15,7 @@ final class LockmanCompositeActionTests: XCTestCase {
 
     let actionName = "mockComposite2"
 
-    var lockmanInfo: LockmanCompositeInfo2<I1, I2> {
+    func createLockmanInfo() -> LockmanCompositeInfo2<I1, I2> {
       LockmanCompositeInfo2(
         strategyId: LockmanStrategyId(name: "MockComposite2"),
         actionId: actionName,
@@ -36,7 +36,7 @@ final class LockmanCompositeActionTests: XCTestCase {
 
     let actionName = "mockComposite3"
 
-    var lockmanInfo: LockmanCompositeInfo3<I1, I2, I3> {
+    func createLockmanInfo() -> LockmanCompositeInfo3<I1, I2, I3> {
       LockmanCompositeInfo3(
         strategyId: LockmanStrategyId(name: "MockComposite3"),
         actionId: actionName,
@@ -62,7 +62,7 @@ final class LockmanCompositeActionTests: XCTestCase {
 
     let actionName = "mockComposite4"
 
-    var lockmanInfo: LockmanCompositeInfo4<I1, I2, I3, I4> {
+    func createLockmanInfo() -> LockmanCompositeInfo4<I1, I2, I3, I4> {
       LockmanCompositeInfo4(
         strategyId: LockmanStrategyId(name: "MockComposite4"),
         actionId: actionName,
@@ -92,7 +92,7 @@ final class LockmanCompositeActionTests: XCTestCase {
 
     let actionName = "mockComposite5"
 
-    var lockmanInfo: LockmanCompositeInfo5<I1, I2, I3, I4, I5> {
+    func createLockmanInfo() -> LockmanCompositeInfo5<I1, I2, I3, I4, I5> {
       LockmanCompositeInfo5(
         strategyId: LockmanStrategyId(name: "MockComposite5"),
         actionId: actionName,
@@ -119,10 +119,10 @@ final class LockmanCompositeActionTests: XCTestCase {
     XCTAssertEqual(action.actionName, "mockComposite2")
 
     // Test strategy ID
-    XCTAssertEqual(action.lockmanInfo.strategyId.value, "MockComposite2")
+    XCTAssertEqual(action.createLockmanInfo().strategyId.value, "MockComposite2")
 
     // Test lockmanInfo
-    let lockmanInfo = action.lockmanInfo
+    let lockmanInfo = action.createLockmanInfo()
     XCTAssertEqual(lockmanInfo.actionId, "mockComposite2")
     XCTAssertEqual(lockmanInfo.lockmanInfoForStrategy1.actionId, "mockComposite2")
     XCTAssertEqual(lockmanInfo.lockmanInfoForStrategy2.actionId, "mockComposite2")
@@ -154,7 +154,7 @@ final class LockmanCompositeActionTests: XCTestCase {
 
     // Test that the composite strategy works
     let boundaryId = "test-boundary"
-    let info = action.lockmanInfo
+    let info = action.createLockmanInfo()
 
     XCTAssertEqual(compositeStrategy.canLock(boundaryId: boundaryId, info: info), .success)
     compositeStrategy.lock(boundaryId: boundaryId, info: info)
@@ -172,7 +172,7 @@ final class LockmanCompositeActionTests: XCTestCase {
     XCTAssertEqual(action.actionName, "mockComposite3")
 
     // Test lockmanInfo
-    let lockmanInfo = action.lockmanInfo
+    let lockmanInfo = action.createLockmanInfo()
     XCTAssertEqual(lockmanInfo.actionId, "mockComposite3")
     XCTAssertEqual(lockmanInfo.lockmanInfoForStrategy1.actionId, "mockComposite3-1")
     XCTAssertEqual(lockmanInfo.lockmanInfoForStrategy2.actionId, "mockComposite3-2")
@@ -200,7 +200,7 @@ final class LockmanCompositeActionTests: XCTestCase {
 
     // Test that the composite strategy works
     let boundaryId = "test-boundary"
-    let info = action.lockmanInfo
+    let info = action.createLockmanInfo()
 
     XCTAssertEqual(compositeStrategy.canLock(boundaryId: boundaryId, info: info), .success)
     compositeStrategy.lock(boundaryId: boundaryId, info: info)
@@ -216,7 +216,7 @@ final class LockmanCompositeActionTests: XCTestCase {
     XCTAssertEqual(action.actionName, "mockComposite4")
 
     // Test lockmanInfo
-    let lockmanInfo = action.lockmanInfo
+    let lockmanInfo = action.createLockmanInfo()
     XCTAssertEqual(lockmanInfo.actionId, "mockComposite4")
     XCTAssertEqual(lockmanInfo.lockmanInfoForStrategy1.actionId, "mockComposite4-1")
     XCTAssertEqual(lockmanInfo.lockmanInfoForStrategy2.actionId, "mockComposite4-2")
@@ -243,7 +243,7 @@ final class LockmanCompositeActionTests: XCTestCase {
 
     // Test that the composite strategy works
     let boundaryId = "test-boundary"
-    let info = action.lockmanInfo
+    let info = action.createLockmanInfo()
 
     XCTAssertEqual(compositeStrategy.canLock(boundaryId: boundaryId, info: info), .success)
   }
@@ -257,7 +257,7 @@ final class LockmanCompositeActionTests: XCTestCase {
     XCTAssertEqual(action.actionName, "mockComposite5")
 
     // Test lockmanInfo
-    let lockmanInfo = action.lockmanInfo
+    let lockmanInfo = action.createLockmanInfo()
     XCTAssertEqual(lockmanInfo.actionId, "mockComposite5")
     XCTAssertEqual(lockmanInfo.lockmanInfoForStrategy1.actionId, "mockComposite5-1")
     XCTAssertEqual(lockmanInfo.lockmanInfoForStrategy2.actionId, "mockComposite5-2")
@@ -287,7 +287,7 @@ final class LockmanCompositeActionTests: XCTestCase {
 
     // Test that the composite strategy works
     let boundaryId = "test-boundary"
-    let info = action.lockmanInfo
+    let info = action.createLockmanInfo()
 
     let result = compositeStrategy.canLock(boundaryId: boundaryId, info: info)
     XCTAssertEqual(result, .success)
@@ -311,21 +311,21 @@ final class LockmanCompositeActionTests: XCTestCase {
 
     // Verify we can access protocol requirements
     XCTAssertNotNil(
-      action2.lockmanInfo
+      action2.createLockmanInfo()
         as? LockmanCompositeInfo2<LockmanSingleExecutionInfo, LockmanPriorityBasedInfo>)
     XCTAssertNotNil(
-      action3.lockmanInfo
+      action3.createLockmanInfo()
         as? LockmanCompositeInfo3<
           LockmanSingleExecutionInfo, LockmanPriorityBasedInfo, LockmanSingleExecutionInfo
         >)
     XCTAssertNotNil(
-      action4.lockmanInfo
+      action4.createLockmanInfo()
         as? LockmanCompositeInfo4<
           LockmanSingleExecutionInfo, LockmanPriorityBasedInfo, LockmanSingleExecutionInfo,
           LockmanPriorityBasedInfo
         >)
     XCTAssertNotNil(
-      action5.lockmanInfo
+      action5.createLockmanInfo()
         as? LockmanCompositeInfo5<
           LockmanSingleExecutionInfo, LockmanPriorityBasedInfo, LockmanSingleExecutionInfo,
           LockmanPriorityBasedInfo, LockmanSingleExecutionInfo

@@ -43,7 +43,7 @@ final class LockmanDynamicConditionReducerIntegrationTests: XCTestCase {
 
   struct TestLockAction: LockmanSingleExecutionAction {
     var actionName: String { "test" }
-    var lockmanInfo: LockmanSingleExecutionInfo {
+    func createLockmanInfo() -> LockmanSingleExecutionInfo {
       LockmanSingleExecutionInfo(actionId: actionName, mode: .boundary)
     }
   }
@@ -72,7 +72,7 @@ final class LockmanDynamicConditionReducerIntegrationTests: XCTestCase {
     // Get strategy reference
     let dynamicStrategy = LockmanDynamicConditionStrategy.shared
     let singleExecutionStrategy = LockmanSingleExecutionStrategy.shared
-    let cancelID = TestLockAction().lockmanInfo.actionId
+    let cancelID = TestLockAction().createLockmanInfo().actionId
 
     // Create a class to track lock states
     final class LockTracker: @unchecked Sendable {
@@ -181,7 +181,7 @@ final class LockmanDynamicConditionReducerIntegrationTests: XCTestCase {
   func testMultipleDynamicConditionLocksWithSameActionId() async {
     let dynamicStrategy = LockmanDynamicConditionStrategy.shared
     let actionId = "testAction"
-    let boundary = TestLockAction().lockmanInfo.actionId
+    let boundary = TestLockAction().createLockmanInfo().actionId
 
     // Create multiple dynamic condition infos with same actionId
     let info1 = LockmanDynamicConditionInfo(
@@ -218,7 +218,7 @@ final class LockmanDynamicConditionReducerIntegrationTests: XCTestCase {
   @MainActor
   func testDynamicConditionFailureDoesNotAcquireLock() async {
     let dynamicStrategy = LockmanDynamicConditionStrategy.shared
-    let cancelID = TestLockAction().lockmanInfo.actionId
+    let cancelID = TestLockAction().createLockmanInfo().actionId
 
     // Create a class to track operation execution
     final class ExecutionTracker: @unchecked Sendable {
@@ -248,7 +248,7 @@ final class LockmanDynamicConditionReducerIntegrationTests: XCTestCase {
               tracker.errorHandlerCalled = true
             },
             lockAction: TestLockAction(),
-            boundaryId: TestLockAction().lockmanInfo.actionId,
+            boundaryId: TestLockAction().createLockmanInfo().actionId,
             lockCondition: { _, _ in
               // Failing condition
               return .cancel(
@@ -298,7 +298,7 @@ final class LockmanDynamicConditionReducerIntegrationTests: XCTestCase {
   func disabled_testDynamicConditionLocksAreCleanedUpOnFailure() async {
     let dynamicStrategy = LockmanDynamicConditionStrategy.shared
     let singleExecutionStrategy = LockmanSingleExecutionStrategy.shared
-    let cancelID = TestLockAction().lockmanInfo.actionId
+    let cancelID = TestLockAction().createLockmanInfo().actionId
 
     final class EvaluationTracker: @unchecked Sendable {
       var step1Evaluated = false
@@ -332,7 +332,7 @@ final class LockmanDynamicConditionReducerIntegrationTests: XCTestCase {
               XCTFail("Operation should not execute when step 3 fails")
             },
             lockAction: TestLockAction(),
-            boundaryId: TestLockAction().lockmanInfo.actionId,
+            boundaryId: TestLockAction().createLockmanInfo().actionId,
             lockCondition: { _, _ in
               tracker.step2Evaluated = true
               return .success  // Step 2 also passes

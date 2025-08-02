@@ -81,12 +81,12 @@ where I == LockmanGroupCoordinatedInfo {
   /// Actions with the same name within the same group cannot execute concurrently.
   var actionName: String { get }
 
-  /// Lock information that provides group coordination details.
+  /// Creates lock information that provides group coordination details.
   ///
-  /// This property must be implemented to specify:
+  /// This method must be implemented to specify:
   /// - The group ID(s) this action belongs to
   /// - The coordination role (leader or member)
-  var lockmanInfo: LockmanGroupCoordinatedInfo { get }
+  func createLockmanInfo() -> LockmanGroupCoordinatedInfo
 }
 
 // MARK: - Default Implementations

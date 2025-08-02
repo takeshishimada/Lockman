@@ -61,6 +61,7 @@ extension LockmanDynamicConditionReducer {
     action: Action,
     dynamicStrategy: AnyLockmanStrategy<LockmanDynamicConditionInfo>,
     actionStrategy: AnyLockmanStrategy<A.I>,
+    lockmanInfo: A.I,
     lockmanAction: A,
     actionId: LockmanActionId,
     boundaryId: B
@@ -96,6 +97,7 @@ extension LockmanDynamicConditionReducer {
       state: state,
       action: action,
       strategy: actionStrategy,
+      lockmanInfo: lockmanInfo,
       lockmanAction: lockmanAction,
       actionId: actionId,
       boundaryId: boundaryId
@@ -147,24 +149,30 @@ extension LockmanDynamicConditionReducer {
       condition: { condition(state, action) }
     )
 
-    // Check condition and acquire lock if successful
-    let result = Effect<Action>.acquireLock(
-      lockmanInfo: dynamicInfo,
-      strategy: strategy,
-      boundaryId: boundaryId
-    )
+    // Check condition and acquire lock if successful using direct info overload
+    let effectForLock: Effect<Action> = .none
 
-    // Handle result
-    switch result {
-    case .cancel(let error):
+    do {
+      let result = try effectForLock.acquireLock(
+        lockmanInfo: dynamicInfo,
+        strategyId: .dynamicCondition,
+        boundaryId: boundaryId
+      )
+
+      // Handle result
+      switch result {
+      case .cancel(let error):
+        return .failure(error)
+      case .successWithPrecedingCancellation(let error):
+        // Lock acquired but with preceding cancellation
+        return .successWithPrecedingCancellation(error)
+      case .success:
+        return .success
+      @unknown default:
+        return .success
+      }
+    } catch {
       return .failure(error)
-    case .successWithPrecedingCancellation(let error):
-      // Lock acquired but with preceding cancellation
-      return .successWithPrecedingCancellation(error)
-    case .success:
-      return .success
-    @unknown default:
-      return .success
     }
   }
 
@@ -183,12 +191,13 @@ extension LockmanDynamicConditionReducer {
   ///   - boundaryId: Boundary identifier for lock management
   /// - Returns: Result indicating success, failure, or success with preceding cancellation
   @usableFromInline
-  func evaluateSingleCondition<B: LockmanBoundaryId, I: LockmanInfo>(
+  func evaluateSingleCondition<B: LockmanBoundaryId, A: LockmanAction>(
     condition: (@Sendable (_ state: State, _ action: Action) -> LockmanResult)?,
     state: State,
     action: Action,
-    strategy: AnyLockmanStrategy<I>,
-    lockmanAction: any LockmanAction,
+    strategy: AnyLockmanStrategy<A.I>,
+    lockmanInfo: A.I,
+    lockmanAction: A,
     actionId: LockmanActionId,
     boundaryId: B
   ) -> SingleConditionResult {
@@ -196,12 +205,6 @@ extension LockmanDynamicConditionReducer {
     // If no condition provided, consider it successful
     guard let condition = condition else {
       return .success
-    }
-
-    // Use the action's lock information for the strategy
-    guard let lockmanInfo = lockmanAction.lockmanInfo as? I else {
-      // Type mismatch - this shouldn't happen if called correctly
-      return .failure(LockmanRegistrationError.strategyNotRegistered("\(I.self)"))
     }
 
     // Evaluate condition first
@@ -220,24 +223,29 @@ extension LockmanDynamicConditionReducer {
       break
     }
 
-    // Check condition and acquire lock if successful
-    let result = Effect<Action>.acquireLock(
-      lockmanInfo: lockmanInfo,
-      strategy: strategy,
-      boundaryId: boundaryId
-    )
+    // Check condition and acquire lock if successful using the provided action
+    let effectForLock: Effect<Action> = .none
+    do {
+      let result = try effectForLock.acquireLock(
+        lockmanInfo: lockmanInfo,
+        strategyId: lockmanInfo.strategyId,
+        boundaryId: boundaryId
+      )
 
-    // Handle result
-    switch result {
-    case .cancel(let error):
+      // Handle result
+      switch result {
+      case .cancel(let error):
+        return .failure(error)
+      case .successWithPrecedingCancellation(let error):
+        // Lock acquired but with preceding cancellation
+        return .successWithPrecedingCancellation(error)
+      case .success:
+        return .success
+      @unknown default:
+        return .success
+      }
+    } catch {
       return .failure(error)
-    case .successWithPrecedingCancellation(let error):
-      // Lock acquired but with preceding cancellation
-      return .successWithPrecedingCancellation(error)
-    case .success:
-      return .success
-    @unknown default:
-      return .success
     }
   }
 
@@ -275,6 +283,7 @@ extension LockmanDynamicConditionReducer {
     actionStrategy: AnyLockmanStrategy<LA.I>,
     actionId: LockmanActionId,
     unlockOption: LockmanUnlockOption,
+    lockmanInfo: LA.I,
     lockAction: LA,
     boundaryId: B,
     priority: TaskPriority?,
@@ -297,13 +306,13 @@ extension LockmanDynamicConditionReducer {
 
     let actionUnlockToken = LockmanUnlock(
       id: boundaryId,
-      info: lockAction.lockmanInfo,
+      info: lockmanInfo,
       strategy: actionStrategy,
       unlockOption: unlockOption
     )
 
     // Create base effect with conditional cancellation ID based on action design intent
-    let shouldBeCancellable = lockAction.lockmanInfo.isCancellationTarget
+    let shouldBeCancellable = lockmanInfo.isCancellationTarget
     let baseEffect = Effect<Action>.run(
       priority: priority,
       operation: { send in
@@ -349,7 +358,8 @@ extension LockmanDynamicConditionReducer {
       let cancellationError = LockmanCancellationError(
         action: lockAction,
         boundaryId: boundaryId,
-        reason: precedingError as! any LockmanError
+        reason: precedingError as? any LockmanError
+          ?? LockmanRegistrationError.strategyNotRegistered("Unknown error type")
       )
 
       // Build effects array conditionally
@@ -383,7 +393,8 @@ extension LockmanDynamicConditionReducer {
         let cancellationError = LockmanCancellationError(
           action: lockAction,
           boundaryId: boundaryId,
-          reason: error as! any LockmanError
+          reason: error as? any LockmanError
+            ?? LockmanRegistrationError.strategyNotRegistered("Unknown error type")
         )
         return .run { send in
           await lockFailure(cancellationError, send)

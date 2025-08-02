@@ -64,8 +64,8 @@ extension LockmanDynamicConditionAction {
 
   // Strategy ID is now provided by lockmanInfo
 
-  /// Provides default lock info with always-success condition.
-  public var lockmanInfo: LockmanDynamicConditionInfo {
+  /// Creates default lock info with always-success condition.
+  public func createLockmanInfo() -> LockmanDynamicConditionInfo {
     LockmanDynamicConditionInfo(actionId: actionName)
   }
 }

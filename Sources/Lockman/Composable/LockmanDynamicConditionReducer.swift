@@ -184,7 +184,8 @@ extension LockmanDynamicConditionReducer {
     line: UInt = #line,
     column: UInt = #column
   ) -> Effect<Action> {
-    let actionId = lockAction.lockmanInfo.actionId
+    let lockmanInfo = lockAction.createLockmanInfo()
+    let actionId = lockmanInfo.actionId
     let dynamicLockCondition = self.lockCondition
 
     // Step 1: Resolve strategies
@@ -196,7 +197,7 @@ extension LockmanDynamicConditionReducer {
         expecting: LockmanDynamicConditionInfo.self
       )
       actionStrategy = try LockmanManager.container.resolve(
-        id: lockAction.lockmanInfo.strategyId,
+        id: lockmanInfo.strategyId,
         expecting: LA.I.self
       )
     } catch {
@@ -219,6 +220,7 @@ extension LockmanDynamicConditionReducer {
       action: action,
       dynamicStrategy: dynamicStrategy,
       actionStrategy: actionStrategy,
+      lockmanInfo: lockmanInfo,
       lockmanAction: lockAction,
       actionId: actionId,
       boundaryId: boundaryId
@@ -231,6 +233,7 @@ extension LockmanDynamicConditionReducer {
       actionStrategy: actionStrategy,
       actionId: actionId,
       unlockOption: unlockOption ?? .immediate,
+      lockmanInfo: lockmanInfo,
       lockAction: lockAction,
       boundaryId: boundaryId,
       priority: priority,

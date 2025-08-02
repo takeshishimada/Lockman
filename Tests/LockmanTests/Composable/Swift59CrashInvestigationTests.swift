@@ -18,7 +18,7 @@ private enum FiveNestedAction: Equatable {
   enum NestedAction: LockmanAction, Equatable {
     case test
 
-    var lockmanInfo: some LockmanInfo {
+    func createLockmanInfo() -> some LockmanInfo {
       LockmanSingleExecutionInfo(actionId: "nested", mode: .boundary)
     }
   }
@@ -50,14 +50,14 @@ private enum RootLockmanAction: LockmanAction, Equatable {
   case another(AnotherAction)
   case last(LastAction)
 
-  var lockmanInfo: some LockmanInfo {
+  func createLockmanInfo() -> some LockmanInfo {
     LockmanSingleExecutionInfo(actionId: "root", mode: .boundary)
   }
 
   enum NestedAction: LockmanAction, Equatable {
     case test
 
-    var lockmanInfo: some LockmanInfo {
+    func createLockmanInfo() -> some LockmanInfo {
       LockmanSingleExecutionInfo(actionId: "nested", mode: .boundary)
     }
   }

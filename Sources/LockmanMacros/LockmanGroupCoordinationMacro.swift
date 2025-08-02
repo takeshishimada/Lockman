@@ -45,7 +45,7 @@ struct SimpleDiagnosticMessage: DiagnosticMessage, Error {
 /// enum NavigationAction {
 ///   case navigate(to: String)
 ///
-///   var lockmanInfo: LockmanGroupCoordinatedInfo {
+///   func createLockmanInfo() -> LockmanGroupCoordinatedInfo {
 ///     switch self {
 ///     case .navigate:
 ///       return LockmanGroupCoordinatedInfo(

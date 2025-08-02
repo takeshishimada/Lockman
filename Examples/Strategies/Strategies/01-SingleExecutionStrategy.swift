@@ -19,7 +19,7 @@ struct SingleExecutionStrategyFeature {
     enum ViewAction {
       case startProcessButtonTapped
 
-      var lockmanInfo: LockmanSingleExecutionInfo {
+      func createLockmanInfo() -> LockmanSingleExecutionInfo {
         return .init(actionId: actionName, mode: .boundary)
       }
     }

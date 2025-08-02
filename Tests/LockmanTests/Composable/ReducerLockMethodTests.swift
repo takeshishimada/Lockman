@@ -13,7 +13,7 @@ private enum TestReducerAction: Equatable, LockmanAction {
   case nonLockableResponse(String)
   case lockFailureAction
 
-  var lockmanInfo: LockmanSingleExecutionInfo {
+  func createLockmanInfo() -> LockmanSingleExecutionInfo {
     switch self {
     case .lockableAction:
       return LockmanSingleExecutionInfo(

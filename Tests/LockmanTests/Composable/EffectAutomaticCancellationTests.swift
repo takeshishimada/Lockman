@@ -13,7 +13,7 @@ private enum AutoCancellationTestAction: Equatable, LockmanAction {
   case operationCancelled
   case lockFailed
 
-  var lockmanInfo: LockmanSingleExecutionInfo {
+  func createLockmanInfo() -> LockmanSingleExecutionInfo {
     switch self {
     case .startOperation:
       return LockmanSingleExecutionInfo(

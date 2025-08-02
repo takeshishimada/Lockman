@@ -46,7 +46,7 @@ struct PriorityBasedStrategyFeature {
         }
       }
 
-      var lockmanInfo: LockmanCompositeInfo2<LockmanSingleExecutionInfo, LockmanPriorityBasedInfo> {
+      func createLockmanInfo() -> LockmanCompositeInfo2<LockmanSingleExecutionInfo, LockmanPriorityBasedInfo> {
         LockmanCompositeInfo2(
           strategyId: strategyId,
           actionId: actionId,
