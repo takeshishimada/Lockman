@@ -31,34 +31,6 @@ extension Effect {
   /// - Boundary lock acquisition is brief (microseconds)
   /// - Effect concatenation has minimal overhead
   ///
-  /// Attempts to acquire a lock using pre-captured lockmanInfo for consistent uniqueId handling.
-  ///
-  /// ## Lock Acquisition Protocol with UniqueId Consistency
-  /// This method implements the core lock acquisition logic with guaranteed uniqueId consistency:
-  /// 1. **Pre-captured LockmanInfo**: Uses lockmanInfo captured once at entry points
-  /// 2. **Feasibility Check**: Call `canLock` to determine if lock can be acquired
-  /// 3. **Early Exit**: Return appropriate result if lock acquisition is not possible
-  /// 4. **Lock Acquisition**: Call `lock` to actually acquire the lock
-  /// 5. **Consistent UniqueId**: Same lockmanInfo instance ensures unlock will succeed
-  ///
-  /// ## Boundary Lock Protection
-  /// The entire lock acquisition process is protected by a boundary-specific lock
-  /// to ensure atomicity and prevent race conditions between:
-  /// - Multiple lock acquisition attempts
-  /// - Lock acquisition and release operations
-  /// - Cleanup and acquisition operations
-  ///
-  /// ## Cancellation Strategy
-  /// When `canLock` returns `.successWithPrecedingCancellation`:
-  /// 1. A cancellation effect is created for the specified boundaryId
-  /// 2. The cancellation effect is concatenated BEFORE the main effect
-  /// 3. This ensures proper ordering: cancel existing → execute new
-  ///
-  /// ## Performance Notes
-  /// - Lock feasibility check is typically O(1) hash lookup
-  /// - Boundary lock acquisition is brief (microseconds)
-  /// - Effect concatenation has minimal overhead
-  ///
   /// - Parameters:
   ///   - lockmanInfo: Pre-captured lock information ensuring consistent uniqueId throughout lifecycle
   ///   - boundaryId: Boundary identifier for this lock and cancellation
