@@ -2,9 +2,39 @@
 
 Learn how to integrate Lockman into your TCA application.
 
+## Prerequisites
+
+Before using Lockman, you should be familiar with:
+- **The Composable Architecture (TCA)** fundamentals
+- Basic Swift concurrency (`async/await`)
+- TCA's Effect system
+
+If you're new to TCA, start with the [official TCA tutorial](https://pointfreeco.github.io/swift-composable-architecture/main/tutorials/composablearchitecture/) first.
+
+## 30-Second Solution
+
+**Problem**: Your save button can be tapped multiple times, causing duplicate network requests.
+
+**Solution**: Add one line to prevent duplicate executions:
+
+```swift
+@LockmanSingleExecution
+enum ViewAction {
+    case saveButtonTapped
+    var lockmanInfo: LockmanSingleExecutionInfo { 
+        .init(actionId: actionName, mode: .boundary) 
+    }
+}
+
+// Add this one line to your reducer:
+.lock(boundaryId: CancelID.userAction, for: \.view)
+```
+
+**Result**: The save button becomes "smart" - it won't execute again until the current save completes.
+
 ## Overview
 
-This guide will teach you how to integrate Lockman into your The Composable Architecture (TCA) project and implement your first feature.
+This guide will teach you how to integrate Lockman into your The Composable Architecture (TCA) project step by step, starting with the simplest case and building up to more complex scenarios.
 
 ## Adding Lockman as a dependency
 
@@ -28,182 +58,233 @@ And add `Lockman` as a dependency of your package's target:
 )
 ```
 
-## Writing your first feature
+## Step-by-Step Tutorial
 
-Let's implement a feature that prevents duplicate execution of processes using the [`@LockmanSingleExecution`](<doc:SingleExecutionStrategy>) macro.
+Let's build a simple save feature that prevents duplicate executions. We'll start minimal and add complexity gradually.
 
-### Step 1: Define the Reducer
+### Step 1: Basic Setup
 
-First, define the basic Reducer structure:
+Create a minimal TCA feature with a save action:
 
 ```swift
 import ComposableArchitecture
 import Lockman
 
 @Reducer
-struct ProcessFeature {
-}
-```
-
-### Step 2: Define State and Action
-
-Define the State to manage the processing status and the available actions:
-
-```swift
-@Reducer
-struct ProcessFeature {
+struct SaveFeature {
     @ObservableState
     struct State: Equatable {
-        var isProcessing = false
+        var isSaving = false
         var message = ""
     }
     
-    enum Action: ViewAction {
-        case view(View)
-        case internal(Internal)
-        
-        @LockmanSingleExecution
-        enum View {
-            case startProcessButtonTapped
-            
-            var lockmanInfo: LockmanSingleExecutionInfo {
-                return .init(actionId: actionName, mode: .boundary)
-            }
-        }
-        
-        enum Internal {
-            case processStart
-            case processCompleted
-        }
+    enum Action {
+        case saveButtonTapped
+        case saveStarted
+        case saveCompleted
     }
 }
 ```
 
-Key points:
+**What we have**: A basic save feature with three simple actions.
 
-- This example uses TCA's ViewAction pattern, where view-related actions are nested under the `view` case
-- Applying the [`@LockmanSingleExecution`](<doc:SingleExecutionStrategy>) macro to the nested View enum makes it conform to the `LockmanSingleExecutionAction` protocol
-- The `lockmanInfo` property defines how each action is controlled for locking:
-  - Control parameter configuration: Specifies strategy-specific behavior settings (priority, concurrency limits, group coordination rules, etc.)
-  - Action identification: Provides the action identifier within the lock management system
-  - Inter-strategy coordination: Defines parameters to pass to each strategy when using composite strategies
+### Step 2: Add Basic Logic
 
-### Step 3: Define CancelID
-
-Define a `CancelID` to use as the cancellation identifier for Effects:
+Implement the basic save functionality:
 
 ```swift
-extension ProcessFeature {
-    enum CancelID {
-        case userAction
+@Reducer
+struct SaveFeature {
+    // ... State from Step 1 ...
+    
+    var body: some ReducerOf<Self> {
+        Reduce { state, action in
+            switch action {
+            case .saveButtonTapped:
+                state.isSaving = true
+                state.message = "Saving..."
+                return .run { send in
+                    // Simulate save operation
+                    try await Task.sleep(for: .seconds(2))
+                    await send(.saveCompleted)
+                }
+                
+            case .saveStarted:
+                state.isSaving = true
+                state.message = "Starting save..."
+                return .none
+                
+            case .saveCompleted:
+                state.isSaving = false
+                state.message = "Saved successfully!"
+                return .none
+            }
+        }
     }
 }
 ```
 
-`CancelID` is used for Effect cancellation and lock boundary identification.
+**Problem**: If users tap the save button multiple times, multiple save operations will run simultaneously.
 
-### Step 4: Implement the Reducer body
+### Step 3: Add Lockman Protection
 
-Implement processing with exclusive control using the [`Reducer.lock`](<doc:Lock>) modifier:
+Now let's prevent duplicate saves by adding Lockman protection:
+
+```swift
+@LockmanSingleExecution
+enum Action {
+    case saveButtonTapped
+    case saveStarted  
+    case saveCompleted
+    
+    var lockmanInfo: LockmanSingleExecutionInfo {
+        switch self {
+        case .saveButtonTapped:
+            return .init(actionId: actionName, mode: .boundary)
+        case .saveStarted, .saveCompleted:
+            return .init(actionId: actionName, mode: .none) // No protection needed
+        }
+    }
+}
+```
+
+**What changed**: 
+- Added `@LockmanSingleExecution` macro to the Action enum
+- Implemented `lockmanInfo` property to configure protection per action
+
+### Step 4: Enable Lock Management
+
+Finally, add lock management to your reducer:
 
 ```swift
 var body: some ReducerOf<Self> {
     Reduce { state, action in
-        switch action {
-        case .view(.startProcessButtonTapped):
-            return .run { send in
-                await send(.internal(.processStart))
-                // Simulate heavy processing
-                try await Task.sleep(nanoseconds: 3_000_000_000)
-                await send(.internal(.processCompleted))
-            }
-            
-        case .internal(.processStart):
-            state.isProcessing = true
-            state.message = "Processing started..."
-            return .none
-            
-        case .internal(.processCompleted):
-            state.isProcessing = false
-            state.message = "Processing completed"
-            return .none
-        }
+        // ... same switch statement from Step 2 ...
     }
     .lock(
-        boundaryId: CancelID.userAction,
+        boundaryId: CancelID.save,
         lockFailure: { error, send in
-            // When processing is already in progress
-            if let singleError = error as? LockmanSingleExecutionError {
-                // Handle the lock failure appropriately
-                print("Lock failed: \(singleError.localizedDescription)")
+            if error is LockmanSingleExecutionError {
+                print("Save already in progress")
             }
-        },
-        for: \.view
+        }
     )
+}
+
+enum CancelID {
+    case save
 }
 ```
 
-Key points about the [`Reducer.lock`](<doc:Lock>) modifier:
+**What changed**:
+- Added `.lock()` modifier to the reducer
+- Provided a `boundaryId` to identify this lock boundary
+- Added error handling for when lock acquisition fails
 
-- Automatically applies lock management to all actions that implement `LockmanAction`
-- `boundaryId`: Specifies the identifier for Effect cancellation and lock boundary
-- `lockFailure`: Common handler for lock acquisition failures across all actions
-- `for`: Case paths to check for nested LockmanAction conformance (in this example, `\.view` checks actions nested in the view case)
-- Effects from non-LockmanAction actions pass through unchanged
+**Result**: Now when users tap save multiple times, only the first tap executes. Additional taps are safely ignored until the save completes.
 
-With this implementation, the `startProcessButtonTapped` action will not be executed again while processing, making it safe even if the user accidentally taps the button multiple times.
+## Complete Example
 
-## Alternative APIs
-
-### Using Effect.lock() Method Chain
-
-For individual effects that need locking, you can use the method chain API:
+Here's the complete, working example:
 
 ```swift
-case .view(.startProcessButtonTapped):
+import ComposableArchitecture
+import Lockman
+
+@Reducer
+struct SaveFeature {
+    @ObservableState
+    struct State: Equatable {
+        var isSaving = false
+        var message = ""
+    }
+    
+    @LockmanSingleExecution
+    enum Action {
+        case saveButtonTapped
+        case saveCompleted
+        
+        var lockmanInfo: LockmanSingleExecutionInfo {
+            switch self {
+            case .saveButtonTapped:
+                return .init(actionId: actionName, mode: .boundary)
+            case .saveCompleted:
+                return .init(actionId: actionName, mode: .none)
+            }
+        }
+    }
+    
+    var body: some ReducerOf<Self> {
+        Reduce { state, action in
+            switch action {
+            case .saveButtonTapped:
+                state.isSaving = true
+                state.message = "Saving..."
+                return .run { send in
+                    try await Task.sleep(for: .seconds(2))
+                    await send(.saveCompleted)
+                }
+                
+            case .saveCompleted:
+                state.isSaving = false
+                state.message = "Saved successfully!"
+                return .none
+            }
+        }
+        .lock(
+            boundaryId: CancelID.save,
+            lockFailure: { error, send in
+                if error is LockmanSingleExecutionError {
+                    print("Save already in progress")
+                }
+            }
+        )
+    }
+    
+    enum CancelID {
+        case save
+    }
+}
+```
+
+## Next Steps
+
+Congratulations! You've successfully implemented your first Lockman feature. Here's what to explore next:
+
+### Learn Other Strategies
+- **Priority-based control**: [`PriorityBasedStrategy`](<doc:PriorityBasedStrategy>) - Cancel existing operations for higher priority ones
+- **Concurrency limits**: [`ConcurrencyLimitedStrategy`](<doc:ConcurrencyLimitedStrategy>) - Limit how many operations run simultaneously  
+- **Group coordination**: [`GroupCoordinationStrategy`](<doc:GroupCoordinationStrategy>) - Coordinate related operations
+- **Custom logic**: [`DynamicConditionStrategy`](<doc:DynamicConditionStrategy>) - Create your own rules
+
+### Strategy Selection Guide
+Not sure which strategy to use? Check out [Choosing Strategy](<doc:ChoosingStrategy>) for guidance on picking the right approach.
+
+### Advanced Topics
+- [Boundary Overview](<doc:BoundaryOverview>) - Understanding lock boundaries
+- [Error Handling](<doc:ErrorHandling>) - Comprehensive error management
+- [Configuration](<doc:Configuration>) - Global settings and customization
+
+## Alternative API: Effect.lock()
+
+If you prefer method chaining on individual effects, you can use `Effect.lock()`:
+
+```swift
+case .saveButtonTapped:
     return .run { send in
-        await send(.internal(.processStart))
-        try await Task.sleep(nanoseconds: 3_000_000_000)
-        await send(.internal(.processCompleted))
+        try await Task.sleep(for: .seconds(2))
+        await send(.saveCompleted)
     }
     .lock(
         action: action,
-        boundaryId: CancelID.userAction,
+        boundaryId: CancelID.save,
         lockFailure: { error, send in
-            // Handler for lock acquisition failure
-            if let singleError = error as? LockmanSingleExecutionError {
-                print("Lock failed: \(singleError.localizedDescription)")
+            if error is LockmanSingleExecutionError {
+                print("Save already in progress")
             }
         }
     )
 ```
 
-### Using Effect.run with Lock
-
-When you need traditional Effect.run behavior with lock management:
-
-```swift
-case .view(.startProcessButtonTapped):
-    return .run { send in
-        await send(.internal(.processStart))
-        // Simulate heavy processing
-        try await Task.sleep(nanoseconds: 3_000_000_000)
-        await send(.internal(.processCompleted))
-    }
-    .lock(
-        action: action,
-        boundaryId: CancelID.userAction,
-        lockFailure: { error, send in
-            // When processing is already in progress
-            if let singleError = error as? LockmanSingleExecutionError {
-                print("Lock failed: \(singleError.localizedDescription)")
-            }
-        }
-    )
-```
-
-This approach provides:
-- Simple async operation handling
-- Lock failure handling
-- Clean method chain syntax
+This approach gives you the same protection but applies to individual effects rather than the entire reducer.
 
