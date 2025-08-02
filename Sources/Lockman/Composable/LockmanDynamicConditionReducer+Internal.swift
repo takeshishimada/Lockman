@@ -155,7 +155,6 @@ extension LockmanDynamicConditionReducer {
     do {
       let result = try effectForLock.acquireLock(
         lockmanInfo: dynamicInfo,
-        strategyId: .dynamicCondition,
         boundaryId: boundaryId
       )
 
@@ -228,7 +227,6 @@ extension LockmanDynamicConditionReducer {
     do {
       let result = try effectForLock.acquireLock(
         lockmanInfo: lockmanInfo,
-        strategyId: lockmanInfo.strategyId,
         boundaryId: boundaryId
       )
 
