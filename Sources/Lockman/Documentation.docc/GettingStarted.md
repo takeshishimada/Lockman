@@ -110,20 +110,20 @@ Implement processing with exclusive control using the [`Reducer.lock`](<doc:Lock
 var body: some ReducerOf<Self> {
     Reduce { state, action in
         switch action {
-        case .startProcessButtonTapped:
+        case .view(.startProcessButtonTapped):
             return .run { send in
-                await send(.processStart)
+                await send(.internal(.processStart))
                 // Simulate heavy processing
                 try await Task.sleep(nanoseconds: 3_000_000_000)
-                await send(.processCompleted)
+                await send(.internal(.processCompleted))
             }
             
-        case .processStart:
+        case .internal(.processStart):
             state.isProcessing = true
             state.message = "Processing started..."
             return .none
             
-        case .processCompleted:
+        case .internal(.processCompleted):
             state.isProcessing = false
             state.message = "Processing completed"
             return .none
@@ -133,8 +133,9 @@ var body: some ReducerOf<Self> {
         boundaryId: CancelID.userAction,
         lockFailure: { error, send in
             // When processing is already in progress
-            if error is LockmanSingleExecutionCancellationError {
-                await send(.internal(.updateMessage("Processing is already in progress")))
+            if let singleError = error as? LockmanSingleExecutionError {
+                // Handle the lock failure appropriately
+                print("Lock failed: \(singleError.localizedDescription)")
             }
         },
         for: \.view
@@ -159,18 +160,20 @@ With this implementation, the `startProcessButtonTapped` action will not be exec
 For individual effects that need locking, you can use the method chain API:
 
 ```swift
-case .startProcessButtonTapped:
+case .view(.startProcessButtonTapped):
     return .run { send in
-        await send(.processStart)
+        await send(.internal(.processStart))
         try await Task.sleep(nanoseconds: 3_000_000_000)
-        await send(.processCompleted)
+        await send(.internal(.processCompleted))
     }
     .lock(
         action: action,
         boundaryId: CancelID.userAction,
         lockFailure: { error, send in
             // Handler for lock acquisition failure
-            await send(.lockFailed)
+            if let singleError = error as? LockmanSingleExecutionError {
+                print("Lock failed: \(singleError.localizedDescription)")
+            }
         }
     )
 ```
@@ -180,28 +183,27 @@ case .startProcessButtonTapped:
 When you need traditional Effect.run behavior with lock management:
 
 ```swift
-case .startProcessButtonTapped:
+case .view(.startProcessButtonTapped):
     return .run { send in
-        await send(.processStart)
+        await send(.internal(.processStart))
         // Simulate heavy processing
         try await Task.sleep(nanoseconds: 3_000_000_000)
-        await send(.processCompleted)
-    } catch: { error, send in
-        // Handle errors during operation
-        await send(.processError(error.localizedDescription))
+        await send(.internal(.processCompleted))
     }
     .lock(
         action: action,
         boundaryId: CancelID.userAction,
         lockFailure: { error, send in
             // When processing is already in progress
-            await send(.internal(.updateMessage("Processing is already in progress")))
+            if let singleError = error as? LockmanSingleExecutionError {
+                print("Lock failed: \(singleError.localizedDescription)")
+            }
         }
     )
 ```
 
 This approach provides:
-- Standard TCA error handling with catch
-- Separate lock failure handler
+- Simple async operation handling
+- Lock failure handling
 - Clean method chain syntax
 

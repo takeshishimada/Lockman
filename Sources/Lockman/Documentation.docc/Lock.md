@@ -75,13 +75,13 @@ When using the ViewAction pattern in TCA, actions may be nested within enum case
 // Check root and view actions
 .lock(boundaryId: CancelID.feature, for: \.view)
 
-// Check root, view, and delegate actions
+// Check view and delegate actions
 .lock(boundaryId: CancelID.feature, for: \.view, \.delegate)
 
-// Up to 5 paths supported
+// Multiple overloads support up to 5 paths
 .lock(
   boundaryId: CancelID.feature,
-  for: \.view, \.delegate, \.alert, \.sheet, \.popover
+  for: \.view, \.delegate, \.alert
 )
 ```
 
