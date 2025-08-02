@@ -91,7 +91,7 @@ struct DynamicConditionStrategyFeature {
   }
 
   // Custom error for dynamic conditions
-  struct DynamicConditionError: Error, LocalizedError {
+  struct DynamicConditionError: LockmanError, LocalizedError {
     let message: String
     var errorDescription: String? { message }
   }
@@ -110,16 +110,20 @@ struct DynamicConditionStrategyFeature {
       condition: { state, action in
         // Reducer-level condition: Only apply locks for certain view actions
         switch action {
-        case .view(.syncDataTapped), .view(.performMaintenanceTapped), .view(.generateReportTapped):
-          return .success  // Apply exclusive processing for these actions
+        case .view(.syncDataTapped):
+          return state.isLoggedIn ? .success : .cancel(DynamicConditionError(message: "Please login to sync data"))
+        case .view(.performMaintenanceTapped):
+          return state.currentHour >= 2 && state.currentHour <= 4 ? .success : .cancel(DynamicConditionError(message: "Maintenance only allowed 2-4 AM"))
+        case .view(.generateReportTapped):
+          return state.selectedDay.isWeekday ? .success : .cancel(DynamicConditionError(message: "Reports can only be generated on weekdays"))
         default:
           return .cancel(DynamicConditionError(message: "No lock required for this action"))
         }
       },
       boundaryId: CancelID.auth,
       lockFailure: { error, send in
-        // This handles when reducer-level condition evaluation fails
-        // For actions that don't need locking, we don't show errors
+        // Handle condition evaluation failures
+        await send(.internal(.operationFailed(operation: "Operation", error: error.localizedDescription)))
       }
     )
   }
@@ -130,124 +134,58 @@ struct DynamicConditionStrategyFeature {
     state: inout State
   ) -> Effect<Action> {
     switch action {
-    // Pattern 1: Login-based with dynamic condition
+    // Pattern 1: Login-based - condition handled by reducer-level
     case .syncDataTapped:
-      return self.lock(
-        state: state,
-        action: .view(action),
-        operation: { send in
-          await send(.internal(.syncStarted))
-          try await Task.sleep(nanoseconds: 2_000_000_000)  // 2 seconds
-          await send(.internal(.syncCompleted))
-        },
-        catch: { error, send in
-          await send(
-            .internal(
-              .operationFailed(
-                operation: "Sync",
-                error: error.localizedDescription
-              )))
-        },
-        lockFailure: { error, send in
-          await send(
-            .internal(
-              .operationFailed(
-                operation: "Sync",
-                error: error.localizedDescription
-              )))
-        },
-        boundaryId: CancelID.sync,
-        lockCondition: { state, _ in
-          // Action-level condition: Check login state
-          guard state.isLoggedIn else {
-            return .cancel(DynamicConditionError(message: "Please login to sync data"))
-          }
-          return .success
-        }
-      )
+      return .run { send in
+        await send(.internal(.syncStarted))
+        try await Task.sleep(nanoseconds: 2_000_000_000)  // 2 seconds
+        await send(.internal(.syncCompleted))
+      } catch: { error, send in
+        await send(
+          .internal(
+            .operationFailed(
+              operation: "Sync",
+              error: error.localizedDescription
+            )))
+      }
 
     case .toggleLoginTapped:
       state.$isLoggedIn.withLock { $0.toggle() }
       return .none
 
-    // Pattern 2: Time-based with dynamic condition
+    // Pattern 2: Time-based - condition handled by reducer-level
     case .performMaintenanceTapped:
-      return self.lock(
-        state: state,
-        action: .view(action),
-        operation: { send in
-          await send(.internal(.maintenanceStarted))
-          try await Task.sleep(nanoseconds: 2_000_000_000)  // 2 seconds
-          await send(.internal(.maintenanceCompleted))
-        },
-        catch: { error, send in
-          await send(
-            .internal(
-              .operationFailed(
-                operation: "Maintenance",
-                error: error.localizedDescription
-              )))
-        },
-        lockFailure: { error, send in
-          await send(
-            .internal(
-              .operationFailed(
-                operation: "Maintenance",
-                error: error.localizedDescription
-              )))
-        },
-        boundaryId: CancelID.maintenance,
-        lockCondition: { state, _ in
-          // Action-level condition: Check time
-          guard !(state.currentHour < 9 || state.currentHour >= 18) else {
-            return .cancel(
-              DynamicConditionError(
-                message: "Maintenance can only be performed during business hours (9:00-18:00)"))
-          }
-          return .success
-        }
-      )
+      return .run { send in
+        await send(.internal(.maintenanceStarted))
+        try await Task.sleep(nanoseconds: 2_000_000_000)  // 2 seconds
+        await send(.internal(.maintenanceCompleted))
+      } catch: { error, send in
+        await send(
+          .internal(
+            .operationFailed(
+              operation: "Maintenance",
+              error: error.localizedDescription
+            )))
+      }
 
     case .setHour(let hour):
       state.currentHour = hour
       return .none
 
-    // Pattern 3: Day-based with dynamic condition
+    // Pattern 3: Day-based - condition handled by reducer-level
     case .generateReportTapped:
-      return self.lock(
-        state: state,
-        action: .view(action),
-        operation: { send in
-          await send(.internal(.reportStarted))
-          try await Task.sleep(nanoseconds: 3_000_000_000)  // 3 seconds
-          await send(.internal(.reportCompleted))
-        },
-        catch: { error, send in
-          await send(
-            .internal(
-              .operationFailed(
-                operation: "Report",
-                error: error.localizedDescription
-              )))
-        },
-        lockFailure: { error, send in
-          await send(
-            .internal(
-              .operationFailed(
-                operation: "Report",
-                error: error.localizedDescription
-              )))
-        },
-        boundaryId: CancelID.report,
-        lockCondition: { state, _ in
-          // Action-level condition: Check weekday
-          guard state.selectedDay.isWeekday else {
-            return .cancel(
-              DynamicConditionError(message: "Reports can only be generated on weekdays"))
-          }
-          return .success
-        }
-      )
+      return .run { send in
+        await send(.internal(.reportStarted))
+        try await Task.sleep(nanoseconds: 3_000_000_000)  // 3 seconds
+        await send(.internal(.reportCompleted))
+      } catch: { error, send in
+        await send(
+          .internal(
+            .operationFailed(
+              operation: "Report",
+              error: error.localizedDescription
+            )))
+      }
 
     case .selectDay(let day):
       state.selectedDay = day
