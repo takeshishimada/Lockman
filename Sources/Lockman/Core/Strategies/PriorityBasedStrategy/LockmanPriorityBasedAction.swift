@@ -37,7 +37,6 @@ where I == LockmanPriorityBasedInfo {
 // MARK: - Default Implementation
 
 extension LockmanPriorityBasedAction {
-  // Strategy ID is now provided by lockmanInfo
 }
 
 // MARK: - Priority Helper Methods

@@ -92,5 +92,4 @@ where I == LockmanGroupCoordinatedInfo {
 // MARK: - Default Implementations
 
 extension LockmanGroupCoordinatedAction {
-  // Strategy ID is now provided by lockmanInfo
 }

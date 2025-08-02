@@ -6,5 +6,4 @@ where I == LockmanConcurrencyLimitedInfo {
 }
 
 extension LockmanConcurrencyLimitedAction {
-  // Strategy ID is now provided by lockmanInfo
 }
