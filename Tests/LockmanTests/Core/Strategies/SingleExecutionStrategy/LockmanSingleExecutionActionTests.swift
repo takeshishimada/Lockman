@@ -114,7 +114,8 @@ final class LockmanSingleExecutionActionTests: XCTestCase {
 
     // They should conflict with each other
     XCTAssertEqual(saveAction.createLockmanInfo().actionId, loadAction.createLockmanInfo().actionId)
-    XCTAssertNotEqual(saveAction.createLockmanInfo().actionId, resetAction.createLockmanInfo().actionId)
+    XCTAssertNotEqual(
+      saveAction.createLockmanInfo().actionId, resetAction.createLockmanInfo().actionId)
   }
 
   // MARK: - LockmanAction Protocol Tests
@@ -173,15 +174,18 @@ final class LockmanSingleExecutionActionTests: XCTestCase {
     let action2 = ParameterizedAction.fetchUser(id: "123")
 
     // First lock should succeed
-    XCTAssertEqual(strategy.canLock(boundaryId: boundaryId, info: action1.createLockmanInfo()), .success)
+    XCTAssertEqual(
+      strategy.canLock(boundaryId: boundaryId, info: action1.createLockmanInfo()), .success)
     strategy.lock(boundaryId: boundaryId, info: action1.createLockmanInfo())
 
     // Second lock should fail (boundary is locked)
-    XCTAssertLockFailure(strategy.canLock(boundaryId: boundaryId, info: action2.createLockmanInfo()))
+    XCTAssertLockFailure(
+      strategy.canLock(boundaryId: boundaryId, info: action2.createLockmanInfo()))
 
     // Different action should also fail (boundary is locked)
     let action3 = ParameterizedAction.fetchUser(id: "456")
-    XCTAssertLockFailure(strategy.canLock(boundaryId: boundaryId, info: action3.createLockmanInfo()))
+    XCTAssertLockFailure(
+      strategy.canLock(boundaryId: boundaryId, info: action3.createLockmanInfo()))
 
     // Cleanup
     strategy.cleanUp()
