@@ -30,7 +30,6 @@ class AppDelegate: NSObject, UIApplicationDelegate {
     // Register strategies used in examples
     registerConcurrencyLimitedStrategies()
     registerGroupCoordinationStrategy()
-    registerDynamicConditionStrategy()
     registerPriorityBasedStrategy()
 
     return true
@@ -75,15 +74,6 @@ class AppDelegate: NSObject, UIApplicationDelegate {
       print("✅ Registered LockmanGroupCoordinationStrategy")
     } catch {
       print("⚠️ LockmanGroupCoordinationStrategy already registered or error: \(error)")
-    }
-  }
-
-  private func registerDynamicConditionStrategy() {
-    do {
-      try LockmanManager.container.register(LockmanDynamicConditionStrategy.shared)
-      print("✅ Registered LockmanDynamicConditionStrategy")
-    } catch {
-      print("⚠️ LockmanDynamicConditionStrategy already registered or error: \(error)")
     }
   }
 

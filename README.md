@@ -38,7 +38,7 @@ Lockman provides the following control strategies to address common problems in 
 * **Single Execution**: Prevents duplicate execution of the same action
 * **Priority Based**: Action control and cancellation based on priority
 * **Group Coordination**: Group control through leader/member roles
-* **Dynamic Condition**: Dynamic control based on runtime conditions
+* **Dynamic Condition**: Runtime condition evaluation with unified reducer API
 * **Concurrency Limited**: Limits the number of concurrent executions per group
 * **Composite Strategy**: Combination of multiple strategies
 
@@ -204,7 +204,7 @@ There are a number of articles in the documentation that you may find helpful as
 * [Priority Based Strategy](https://takeshishimada.github.io/Lockman/main/documentation/lockman/prioritybasedstrategy) - Control based on priority
 * [Concurrency Limited Strategy](https://takeshishimada.github.io/Lockman/main/documentation/lockman/concurrencylimitedstrategy) - Limit concurrent executions
 * [Group Coordination Strategy](https://takeshishimada.github.io/Lockman/main/documentation/lockman/groupcoordinationstrategy) - Coordinate related actions
-* [Dynamic Condition Strategy](https://takeshishimada.github.io/Lockman/main/documentation/lockman/dynamicconditionstrategy) - Dynamic runtime control
+* [Dynamic Condition Evaluation](https://takeshishimada.github.io/Lockman/main/documentation/lockman/dynamicconditionstrategy) - Unified condition evaluation API
 * [Composite Strategy](https://takeshishimada.github.io/Lockman/main/documentation/lockman/compositestrategy) - Combine multiple strategies
 
 ## Installation

@@ -49,17 +49,24 @@ extension Reducer {
   /// }
   /// ```
   ///
-  /// - Parameter condition: A function that evaluates the current state and action
-  ///                       to determine if a lock should be acquired.
-  /// - Returns: A `LockmanDynamicConditionReducer` reducer that evaluates conditions before acquiring locks
+  /// - Parameters:
+  ///   - condition: A function that evaluates the current state and action
+  ///                to determine if exclusive processing should be applied.
+  ///   - boundaryId: Boundary identifier for exclusive processing.
+  ///   - lockFailure: Optional handler for condition evaluation failures.
+  /// - Returns: A `LockmanDynamicConditionReducer` reducer that evaluates conditions for exclusive processing
   public func lock(
-    condition: @escaping @Sendable (_ state: State, _ action: Action) -> LockmanResult
+    condition: @escaping @Sendable (_ state: State, _ action: Action) -> LockmanResult,
+    boundaryId: any LockmanBoundaryId,
+    lockFailure: (@Sendable (_ error: any Error, _ send: Send<Action>) async -> Void)? = nil
   ) -> LockmanDynamicConditionReducer<State, Action> where State: Sendable, Action: Sendable {
     LockmanDynamicConditionReducer(
       base: Reduce { state, action in
         self.reduce(into: &state, action: action)
       },
-      lockCondition: condition
+      condition: condition,
+      boundaryId: boundaryId,
+      lockFailure: lockFailure
     )
   }
 

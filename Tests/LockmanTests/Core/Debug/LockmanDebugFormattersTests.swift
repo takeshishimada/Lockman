@@ -9,14 +9,8 @@ final class LockmanDebugFormattersTests: XCTestCase {
     LockmanManager.cleanup.all()
 
     // Try to register strategies (ignore if already registered)
-    _ = try? LockmanManager.container.register(LockmanDynamicConditionStrategy.shared)
     _ = try? LockmanManager.container.register(LockmanSingleExecutionStrategy.shared)
-
-    // Test with DynamicConditionStrategy (long strategy name)
-    let dynamicInfo = LockmanDynamicConditionInfo(
-      actionId: "incrementButtonTapped",
-      condition: { .success }
-    )
+    _ = try? LockmanManager.container.register(LockmanPriorityBasedStrategy.shared)
 
     // Test with SingleExecution (short name) but long action ID
     let singleInfo = LockmanSingleExecutionInfo(
@@ -24,16 +18,21 @@ final class LockmanDebugFormattersTests: XCTestCase {
       mode: .boundary
     )
 
+    // Test with PriorityBased (longer strategy name)
+    let priorityInfo = LockmanPriorityBasedInfo(
+      actionId: "incrementButtonTapped",
+      priority: .high(.exclusive)
+    )
+
     let shortBoundaryId = "CancelID.userAction"
     let longBoundaryId = "VeryLongBoundaryIdForTestingColumnWidth"
 
     // Lock with both strategies
-    _ = LockmanDynamicConditionStrategy.shared.canLock(
-      boundaryId: shortBoundaryId, info: dynamicInfo)
-    LockmanDynamicConditionStrategy.shared.lock(boundaryId: shortBoundaryId, info: dynamicInfo)
-
     _ = LockmanSingleExecutionStrategy.shared.canLock(boundaryId: longBoundaryId, info: singleInfo)
     LockmanSingleExecutionStrategy.shared.lock(boundaryId: longBoundaryId, info: singleInfo)
+
+    _ = LockmanPriorityBasedStrategy.shared.canLock(boundaryId: shortBoundaryId, info: priorityInfo)
+    LockmanPriorityBasedStrategy.shared.lock(boundaryId: shortBoundaryId, info: priorityInfo)
 
     // Capture output
     let originalStdout = dup(STDOUT_FILENO)
@@ -56,8 +55,8 @@ final class LockmanDebugFormattersTests: XCTestCase {
     print(output)
 
     // Verify no truncation
-    XCTAssertTrue(output.contains("DynamicCondition"))  // Not truncated to "DynamicConditio"
-    XCTAssertTrue(output.contains("condition: <closure"))  // Not truncated to "condition: <clo"
+    XCTAssertTrue(output.contains("PriorityBased"))  // Not truncated
+    XCTAssertTrue(output.contains("priority: high(.exclusive)"))  // Not truncated
     XCTAssertTrue(output.contains("SingleExecution"))
     XCTAssertTrue(output.contains("veryLongActionIdForTestingDynamicColumnWidth"))
     XCTAssertTrue(output.contains("VeryLongBoundaryIdForTestingColumnWidth"))

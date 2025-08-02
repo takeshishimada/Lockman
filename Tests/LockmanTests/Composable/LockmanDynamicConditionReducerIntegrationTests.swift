@@ -5,7 +5,7 @@ import XCTest
 @testable import Lockman
 
 // Test-specific error for dynamic condition tests
-private struct ComposableTestDynamicConditionError: LockmanError {
+private struct ComposableTestDynamicConditionError: LockmanError, LocalizedError {
   let actionId: String
   let hint: String?
 
@@ -24,39 +24,32 @@ private struct ComposableTestDynamicConditionError: LockmanError {
   }
 }
 
-/// Integration tests for LockmanDynamicConditionReducer to ensure proper lock management
+/// Integration tests for LockmanDynamicConditionReducer with unified condition evaluation
 final class LockmanDynamicConditionReducerIntegrationTests: XCTestCase {
 
   // MARK: - Test Types
 
   struct TestState: Equatable, Sendable {
     var count: Int = 0
-    var lockAcquired: Bool = false
-    var conditionChecked: Bool = false
+    var isLoggedIn: Bool = false
+    var operationResult: String = ""
+    var reducerConditionChecked: Bool = false
+    var actionConditionChecked: Bool = false
   }
 
   enum TestAction: Equatable, Sendable {
     case increment
-    case setLockAcquired(Bool)
-    case setConditionChecked(Bool)
+    case login
+    case performOperation
+    case setOperationResult(String)
+    case setReducerConditionChecked(Bool)
+    case setActionConditionChecked(Bool)
   }
 
-  struct TestLockAction: LockmanSingleExecutionAction {
-    var actionName: String { "test" }
-    func createLockmanInfo() -> LockmanSingleExecutionInfo {
-      LockmanSingleExecutionInfo(actionId: actionName, mode: .boundary)
-    }
-  }
-
-  override func setUp() {
-    super.setUp()
-    // Register strategies
-    _ = LockmanManager.container
-    do {
-      try LockmanManager.container.register(LockmanDynamicConditionStrategy.shared)
-    } catch {
-      // Already registered
-    }
+  enum TestBoundaryId: String, LockmanBoundaryId {
+    case auth
+    case operation
+    case increment
   }
 
   override func tearDown() {
@@ -65,311 +58,491 @@ final class LockmanDynamicConditionReducerIntegrationTests: XCTestCase {
     LockmanManager.cleanup.all()
   }
 
-  // MARK: - Lock Lifecycle Tests
+  // MARK: - Reducer-Level Condition Tests
 
   @MainActor
-  func disabled_testDynamicConditionLocksAreProperlyAcquiredAndReleased() async {
-    // Get strategy reference
-    let dynamicStrategy = LockmanDynamicConditionStrategy.shared
-    let singleExecutionStrategy = LockmanSingleExecutionStrategy.shared
-    let cancelID = TestLockAction().createLockmanInfo().actionId
-
-    // Create a class to track lock states
-    final class LockTracker: @unchecked Sendable {
-      var step1LockAcquired = false
-      var step2LockAcquired = false
-      var step3LockAcquired = false
-    }
-    let lockTracker = LockTracker()
-
-    // Create reducer with both conditions
-    // Note: We need to create the reducer in a way that allows us to call lock on it
-    let baseReducer = LockmanDynamicConditionReducer<TestState, TestAction>(
-      { state, action in
-        switch action {
-        case .increment:
-          state.count += 1
-          return .none
-        case .setLockAcquired(let value):
-          state.lockAcquired = value
-          return .none
-        case .setConditionChecked(let value):
-          state.conditionChecked = value
-          return .none
-        }
-      },
-      lockCondition: { state, _ in
-        // Reducer-level condition
-        return .success
-      }
-    )
-
-    // Wrap in another reducer that uses lock from the base reducer
+  func testReducerLevelConditionEvaluation() async {
     let reducer = Reduce<TestState, TestAction> { state, action in
       switch action {
       case .increment:
-        state.count += 1  // Execute the increment logic
-        return baseReducer.lock(
+        state.count += 1
+        return .none
+      case .login:
+        state.isLoggedIn = true
+        return .none
+      case .performOperation:
+        return .run { send in
+          await send(.setOperationResult("Operation completed"))
+        }
+      case .setOperationResult(let result):
+        state.operationResult = result
+        return .none
+      case .setReducerConditionChecked(let value):
+        state.reducerConditionChecked = value
+        return .none
+      case .setActionConditionChecked(let value):
+        state.actionConditionChecked = value
+        return .none
+      }
+    }
+    .lock(
+      condition: { state, action in
+        // Reducer-level condition: Only allow operations when logged in
+        switch action {
+        case .performOperation:
+          if state.isLoggedIn {
+            return .success
+          } else {
+            return .cancel(
+              ComposableTestDynamicConditionError.conditionNotMet(
+                actionId: "performOperation",
+                hint: "User must be logged in"
+              ))
+          }
+        default:
+          return .success  // Allow other actions
+        }
+      },
+      boundaryId: TestBoundaryId.auth,
+      lockFailure: { error, send in
+        await send(.setOperationResult("❌ \(error.localizedDescription)"))
+      }
+    )
+
+    let store = TestStore(initialState: TestState()) {
+      reducer
+    }
+
+    // Test without login - should trigger reducer-level condition failure
+    await store.send(.performOperation)
+
+    await store.receive(
+      .setOperationResult(
+        "❌ Dynamic condition not met for action 'performOperation'. Hint: User must be logged in")
+    ) {
+      $0.operationResult =
+        "❌ Dynamic condition not met for action 'performOperation'. Hint: User must be logged in"
+    }
+
+    // Login first
+    await store.send(.login) {
+      $0.isLoggedIn = true
+    }
+
+    // Now operation should succeed
+    await store.send(.performOperation)
+
+    await store.receive(.setOperationResult("Operation completed")) {
+      $0.operationResult = "Operation completed"
+    }
+  }
+
+  @MainActor
+  func testReducerLevelConditionSkipsNonTargetActions() async {
+    let reducer = Reduce<TestState, TestAction> { state, action in
+      switch action {
+      case .increment:
+        state.count += 1
+        return .none
+      case .login:
+        state.isLoggedIn = true
+        return .none
+      default:
+        return .none
+      }
+    }
+    .lock(
+      condition: { state, action in
+        // Reducer-level condition: Only check performOperation
+        switch action {
+        case .performOperation:
+          return state.isLoggedIn
+            ? .success
+            : .cancel(
+              ComposableTestDynamicConditionError.conditionNotMet(
+                actionId: "performOperation",
+                hint: "Login required"
+              ))
+        default:
+          return .success  // Skip lock for other actions
+        }
+      },
+      boundaryId: TestBoundaryId.auth
+    )
+
+    let store = TestStore(initialState: TestState()) {
+      reducer
+    }
+
+    // These actions should work normally (no lock applied)
+    await store.send(.increment) {
+      $0.count = 1
+    }
+
+    await store.send(.login) {
+      $0.isLoggedIn = true
+    }
+  }
+
+  // MARK: - Action-Level Condition Tests
+
+  @MainActor
+  func testActionLevelConditionEvaluation() async {
+    let reducer = LockmanDynamicConditionReducer<TestState, TestAction>(
+      { state, action in
+        switch action {
+        case .increment:
+          state.count += 1
+          return .none
+        case .performOperation:
+          return .run { send in
+            await send(.setOperationResult("Operation started"))
+            try await Task.sleep(nanoseconds: 100_000_000)  // 100ms
+            await send(.setOperationResult("Operation completed"))
+          }
+        case .setOperationResult(let result):
+          state.operationResult = result
+          return .none
+        default:
+          return .none
+        }
+      },
+      condition: { _, _ in .success },  // Reducer-level always allows
+      boundaryId: TestBoundaryId.auth
+    )
+
+    let testReducer = Reduce<TestState, TestAction> { state, action in
+      switch action {
+      case .performOperation:
+        return reducer.lock(
           state: state,
           action: action,
-          unlockOption: .immediate,
           operation: { send in
-            // Check lock states during operation
-            lockTracker.step1LockAcquired =
-              dynamicStrategy.getCurrentLocks()[AnyLockmanBoundaryId(cancelID)]?.contains {
-                $0.actionId == cancelID
-              } ?? false
-            lockTracker.step2LockAcquired = lockTracker.step1LockAcquired  // Both use same strategy
-            lockTracker.step3LockAcquired =
-              singleExecutionStrategy.getCurrentLocks()[AnyLockmanBoundaryId(cancelID)]?.contains {
-                $0.actionId == cancelID
-              } ?? false
-
-            await send(.setLockAcquired(true))
+            await send(.setOperationResult("Action-level operation completed"))
           },
-          lockAction: TestLockAction(),
-          boundaryId: cancelID,
-          lockCondition: { _, _ in
+          lockFailure: { error, send in
+            await send(.setOperationResult("❌ \(error.localizedDescription)"))
+          },
+          boundaryId: TestBoundaryId.operation,
+          lockCondition: { state, _ in
             // Action-level condition
-            return .success
+            if state.isLoggedIn {
+              return .success
+            } else {
+              return .cancel(
+                ComposableTestDynamicConditionError.conditionNotMet(
+                  actionId: "performOperation",
+                  hint: "Action-level login check failed"
+                ))
+            }
           }
         )
       default:
-        return baseReducer.reduce(into: &state, action: action)
+        return reducer.reduce(into: &state, action: action)
       }
     }
 
     let store = TestStore(initialState: TestState()) {
-      reducer
+      testReducer
     }
 
-    // Execute the action - this will trigger the lock effect
-    await store.send(.increment) {
-      $0.count = 1
+    // Test without login - action-level condition should fail
+    await store.send(.performOperation)
+
+    await store.receive(
+      .setOperationResult(
+        "❌ Dynamic condition not met for action 'performOperation'. Hint: Action-level login check failed"
+      )
+    ) {
+      $0.operationResult =
+        "❌ Dynamic condition not met for action 'performOperation'. Hint: Action-level login check failed"
     }
 
-    // Receive the action from the lock operation
-    await store.receive(.setLockAcquired(true)) {
-      $0.lockAcquired = true
+    // Update state to logged in
+    await store.send(.login) {
+      $0.isLoggedIn = true
     }
 
-    // Wait a bit to ensure cleanup
-    try? await Task.sleep(nanoseconds: 100_000_000)  // 100ms
+    // Now action-level operation should succeed
+    await store.send(.performOperation)
 
-    // Check locks were released after operation
-    let step1LockReleased =
-      !(dynamicStrategy.getCurrentLocks()[AnyLockmanBoundaryId(cancelID)]?.contains {
-        $0.actionId == cancelID
-      } ?? false)
-    let step2LockReleased = step1LockReleased
-    let step3LockReleased =
-      !(singleExecutionStrategy.getCurrentLocks()[AnyLockmanBoundaryId(cancelID)]?.contains {
-        $0.actionId == cancelID
-      } ?? false)
-
-    // Verify lock lifecycle
-    XCTAssertTrue(lockTracker.step1LockAcquired, "Step 1 dynamic condition lock should be acquired")
-    XCTAssertTrue(lockTracker.step2LockAcquired, "Step 2 dynamic condition lock should be acquired")
-    XCTAssertTrue(lockTracker.step3LockAcquired, "Step 3 single execution lock should be acquired")
-
-    XCTAssertTrue(step1LockReleased, "Step 1 lock should be released after operation")
-    XCTAssertTrue(step2LockReleased, "Step 2 lock should be released after operation")
-    XCTAssertTrue(step3LockReleased, "Step 3 lock should be released after operation")
+    await store.receive(.setOperationResult("Action-level operation completed")) {
+      $0.operationResult = "Action-level operation completed"
+    }
   }
 
-  @MainActor
-  func testMultipleDynamicConditionLocksWithSameActionId() async {
-    let dynamicStrategy = LockmanDynamicConditionStrategy.shared
-    let actionId = "testAction"
-    let boundary = TestLockAction().createLockmanInfo().actionId
-
-    // Create multiple dynamic condition infos with same actionId
-    let info1 = LockmanDynamicConditionInfo(
-      actionId: actionId,
-      condition: { .success }
-    )
-    let info2 = LockmanDynamicConditionInfo(
-      actionId: actionId,
-      condition: { .success }
-    )
-
-    // Acquire both locks
-    dynamicStrategy.lock(boundaryId: boundary, info: info1)
-    dynamicStrategy.lock(boundaryId: boundary, info: info2)
-
-    // Verify both locks exist (different uniqueIds)
-    let locks = dynamicStrategy.getCurrentLocks()[AnyLockmanBoundaryId(boundary)] ?? []
-    let locksWithActionId = locks.filter { $0.actionId == actionId }
-    XCTAssertEqual(locksWithActionId.count, 2, "Should have 2 locks with same actionId")
-
-    // Unlock removes ALL locks with same actionId
-    dynamicStrategy.unlock(boundaryId: boundary, info: info1)
-
-    // Verify all locks with the actionId are removed
-    let remainingLocks = dynamicStrategy.getCurrentLocks()[AnyLockmanBoundaryId(boundary)] ?? []
-    let remainingWithActionId = remainingLocks.filter { $0.actionId == actionId }
-    XCTAssertEqual(remainingWithActionId.count, 0, "All locks with same actionId should be removed")
-
-    // Verify all locks are released
-    let finalLocks = dynamicStrategy.getCurrentLocks()[AnyLockmanBoundaryId(boundary)] ?? []
-    XCTAssertTrue(finalLocks.isEmpty, "All locks should be released")
-  }
+  // MARK: - Independent Level Processing Tests
 
   @MainActor
-  func testDynamicConditionFailureDoesNotAcquireLock() async {
-    let dynamicStrategy = LockmanDynamicConditionStrategy.shared
-    let cancelID = TestLockAction().createLockmanInfo().actionId
-
-    // Create a class to track operation execution
-    final class ExecutionTracker: @unchecked Sendable {
-      var operationExecuted = false
-      var errorHandlerCalled = false
-    }
-    let tracker = ExecutionTracker()
-
-    // Create reducer
+  func testReducerAndActionLevelIndependentProcessing() async {
     let reducer = LockmanDynamicConditionReducer<TestState, TestAction>(
       { state, action in
         switch action {
         case .increment:
           state.count += 1
-          let tempReducer = LockmanDynamicConditionReducer<TestState, TestAction>(
-            { _, _ in .none }
-          )
-          return tempReducer.lock(
-            state: state,
-            action: action,
-            operation: { send in
-              // This should not be called
-              tracker.operationExecuted = true
-              await send(.setLockAcquired(true))
-            },
-            catch: { error, send in
-              tracker.errorHandlerCalled = true
-            },
-            lockAction: TestLockAction(),
-            boundaryId: TestLockAction().createLockmanInfo().actionId,
-            lockCondition: { _, _ in
-              // Failing condition
-              return .cancel(
+          return .none
+        case .performOperation:
+          return .run { send in
+            await send(.setOperationResult("Reducer-level operation"))
+          }
+        case .setOperationResult(let result):
+          state.operationResult = result
+          return .none
+        default:
+          return .none
+        }
+      },
+      condition: { state, action in
+        // Reducer-level condition
+        switch action {
+        case .performOperation:
+          return state.isLoggedIn
+            ? .success
+            : .cancel(
+              ComposableTestDynamicConditionError.conditionNotMet(
+                actionId: "performOperation",
+                hint: "Reducer-level auth failed"
+              ))
+        default:
+          return .success
+        }
+      },
+      boundaryId: TestBoundaryId.auth,
+      lockFailure: { error, send in
+        await send(.setOperationResult("Reducer error: \(error.localizedDescription)"))
+      }
+    )
+
+    let testReducer = Reduce<TestState, TestAction> { state, action in
+      switch action {
+      case .increment:
+        // Action-level condition independent of reducer-level
+        return reducer.lock(
+          state: state,
+          action: action,
+          operation: { send in
+            await send(.setOperationResult("Action-level increment"))
+          },
+          lockFailure: { error, send in
+            await send(.setOperationResult("Action error: \(error.localizedDescription)"))
+          },
+          boundaryId: TestBoundaryId.increment,
+          lockCondition: { state, _ in
+            // Different condition than reducer-level
+            return state.count < 5
+              ? .success
+              : .cancel(
                 ComposableTestDynamicConditionError.conditionNotMet(
-                  actionId: "test",
-                  hint: "Test failure"
+                  actionId: "increment",
+                  hint: "Count limit reached"
                 ))
-            }
-          )
-        case .setLockAcquired(let value):
-          state.lockAcquired = value
-          return .none
-        default:
-          return .none
-        }
+          }
+        )
+      default:
+        return reducer.reduce(into: &state, action: action)
       }
-    )
-
-    let store = TestStore(initialState: TestState()) {
-      reducer
     }
 
-    store.exhaustivity = .off
+    let store = TestStore(initialState: TestState()) {
+      testReducer
+    }
 
-    // Execute the action
+    // Test reducer-level failure (not logged in)
+    await store.send(.performOperation)
+
+    await store.receive(
+      .setOperationResult(
+        "Reducer error: Dynamic condition not met for action 'performOperation'. Hint: Reducer-level auth failed"
+      )
+    ) {
+      $0.operationResult =
+        "Reducer error: Dynamic condition not met for action 'performOperation'. Hint: Reducer-level auth failed"
+    }
+
+    // Test action-level success (count < 5)
     await store.send(.increment) {
       $0.count = 1
     }
 
-    // Wait a bit to ensure no async operations are pending
-    try? await Task.sleep(nanoseconds: 50_000_000)  // 50ms
+    await store.receive(.setOperationResult("Action-level increment")) {
+      $0.operationResult = "Action-level increment"
+    }
 
-    // Verify operation was not executed
-    XCTAssertFalse(tracker.operationExecuted, "Operation should not execute when condition fails")
-    XCTAssertFalse(
-      tracker.errorHandlerCalled,
-      "Error handler should not be called for dynamic condition failures")
+    // Update count to trigger action-level failure
+    await store.send(.increment) { $0.count = 2 }
+    await store.receive(.setOperationResult("Action-level increment")) {
+      $0.operationResult = "Action-level increment"
+    }
+    await store.send(.increment) { $0.count = 3 }
+    await store.receive(.setOperationResult("Action-level increment")) {
+      $0.operationResult = "Action-level increment"
+    }
+    await store.send(.increment) { $0.count = 4 }
+    await store.receive(.setOperationResult("Action-level increment")) {
+      $0.operationResult = "Action-level increment"
+    }
+    await store.send(.increment) { $0.count = 5 }
+    await store.receive(.setOperationResult("Action-level increment")) {
+      $0.operationResult = "Action-level increment"
+    }
 
-    // Verify no locks were acquired
-    let locks = dynamicStrategy.getCurrentLocks()[AnyLockmanBoundaryId(cancelID)] ?? []
-    XCTAssertTrue(locks.isEmpty, "No locks should be acquired when condition fails")
+    // Now action-level should fail (count >= 5)
+    await store.send(.increment) {
+      $0.count = 6  // Reducer level still executes
+    }
+
+    await store.receive(
+      .setOperationResult(
+        "Action error: Dynamic condition not met for action 'increment'. Hint: Count limit reached")
+    ) {
+      $0.operationResult =
+        "Action error: Dynamic condition not met for action 'increment'. Hint: Count limit reached"
+    }
   }
 
-  // MARK: - Lock Cleanup Tests
+  // MARK: - Cancellable Effect Tests
 
   @MainActor
-  func disabled_testDynamicConditionLocksAreCleanedUpOnFailure() async {
-    let dynamicStrategy = LockmanDynamicConditionStrategy.shared
-    let singleExecutionStrategy = LockmanSingleExecutionStrategy.shared
-    let cancelID = TestLockAction().createLockmanInfo().actionId
-
-    final class EvaluationTracker: @unchecked Sendable {
-      var step1Evaluated = false
-      var step2Evaluated = false
-    }
-    let tracker = EvaluationTracker()
-
-    // Create another lock to simulate step 3 failing
-    singleExecutionStrategy.lock(
-      boundaryId: cancelID,
-      info: LockmanSingleExecutionInfo(actionId: cancelID, mode: .boundary)
-    )
-
+  func testReducerLevelCancellableEffects() async {
     let reducer = LockmanDynamicConditionReducer<TestState, TestAction>(
       { state, action in
         switch action {
-        case .increment:
-          state.count += 1
-          let tempReducer = LockmanDynamicConditionReducer<TestState, TestAction>(
-            { _, _ in .none },
-            lockCondition: { _, _ in
-              tracker.step1Evaluated = true
-              return .success  // Step 1 passes
-            }
-          )
-          return tempReducer.lock(
-            state: state,
-            action: action,
-            operation: { send in
-              // This should not be called
-              XCTFail("Operation should not execute when step 3 fails")
-            },
-            lockAction: TestLockAction(),
-            boundaryId: TestLockAction().createLockmanInfo().actionId,
-            lockCondition: { _, _ in
-              tracker.step2Evaluated = true
-              return .success  // Step 2 also passes
-            }
-          )
+        case .performOperation:
+          return .run { send in
+            await send(.setOperationResult("Long operation started"))
+            try await Task.sleep(nanoseconds: 200_000_000)  // 200ms
+            await send(.setOperationResult("Long operation completed"))
+          }
+        case .setOperationResult(let result):
+          state.operationResult = result
+          return .none
         default:
           return .none
         }
-      }
+      },
+      condition: { _, _ in .success },
+      boundaryId: TestBoundaryId.operation
     )
 
     let store = TestStore(initialState: TestState()) {
       reducer
     }
 
-    // Execute the action
-    await store.send(.increment) {
-      $0.count = 1
+    // Start long operation
+    await store.send(.performOperation)
+
+    await store.receive(.setOperationResult("Long operation started")) {
+      $0.operationResult = "Long operation started"
     }
 
-    // Wait a bit to ensure cleanup
-    try? await Task.sleep(nanoseconds: 50_000_000)  // 50ms
+    // Start another operation that should cancel the first
+    await store.send(.performOperation)
 
-    // Verify steps were evaluated
-    XCTAssertTrue(tracker.step1Evaluated, "Step 1 should be evaluated")
-    XCTAssertTrue(tracker.step2Evaluated, "Step 2 should be evaluated")
+    // Should receive the second operation's start message (first is cancelled)
+    await store.receive(.setOperationResult("Long operation started")) {
+      $0.operationResult = "Long operation started"
+    }
 
-    // Verify all dynamic condition locks were cleaned up
-    let dynamicLocks = dynamicStrategy.getCurrentLocks()[AnyLockmanBoundaryId(cancelID)] ?? []
-    XCTAssertTrue(
-      dynamicLocks.isEmpty, "All dynamic condition locks should be cleaned up when step 3 fails")
-
-    // Clean up the test lock
-    singleExecutionStrategy.unlock(
-      boundaryId: cancelID,
-      info: LockmanSingleExecutionInfo(actionId: cancelID, mode: .boundary)
-    )
+    // Wait for completion
+    await store.receive(.setOperationResult("Long operation completed")) {
+      $0.operationResult = "Long operation completed"
+    }
   }
 
+  @MainActor
+  func testActionLevelCancellableEffects() async {
+    let reducer = LockmanDynamicConditionReducer<TestState, TestAction>(
+      { _, _ in .none },
+      condition: { _, _ in .success },
+      boundaryId: TestBoundaryId.auth
+    )
+
+    let testReducer = Reduce<TestState, TestAction> { state, action in
+      switch action {
+      case .performOperation:
+        return reducer.lock(
+          state: state,
+          action: action,
+          operation: { send in
+            await send(.setOperationResult("Action operation started"))
+            try await Task.sleep(nanoseconds: 200_000_000)  // 200ms
+            await send(.setOperationResult("Action operation completed"))
+          },
+          boundaryId: TestBoundaryId.operation,
+          lockCondition: { _, _ in .success }
+        )
+      case .setOperationResult(let result):
+        state.operationResult = result
+        return .none
+      default:
+        return .none
+      }
+    }
+
+    let store = TestStore(initialState: TestState()) {
+      testReducer
+    }
+
+    // Start long operation
+    await store.send(.performOperation)
+
+    await store.receive(.setOperationResult("Action operation started")) {
+      $0.operationResult = "Action operation started"
+    }
+
+    // Start another operation that should cancel the first
+    await store.send(.performOperation)
+
+    // Should receive the second operation's start message
+    await store.receive(.setOperationResult("Action operation started")) {
+      $0.operationResult = "Action operation started"
+    }
+
+    // Wait for completion
+    await store.receive(.setOperationResult("Action operation completed")) {
+      $0.operationResult = "Action operation completed"
+    }
+  }
+
+  // MARK: - No Condition Tests
+
+  @MainActor
+  func testActionLevelWithoutCondition() async {
+    let reducer = LockmanDynamicConditionReducer<TestState, TestAction>(
+      { _, _ in .none },
+      condition: { _, _ in .success },
+      boundaryId: TestBoundaryId.auth
+    )
+
+    let testReducer = Reduce<TestState, TestAction> { state, action in
+      switch action {
+      case .performOperation:
+        // No lockCondition specified - should always apply cancellable control
+        return reducer.lock(
+          state: state,
+          action: action,
+          operation: { send in
+            await send(.setOperationResult("No condition operation"))
+          },
+          boundaryId: TestBoundaryId.operation
+        )
+      case .setOperationResult(let result):
+        state.operationResult = result
+        return .none
+      default:
+        return .none
+      }
+    }
+
+    let store = TestStore(initialState: TestState()) {
+      testReducer
+    }
+
+    // Should always execute when no condition is provided
+    await store.send(.performOperation)
+
+    await store.receive(.setOperationResult("No condition operation")) {
+      $0.operationResult = "No condition operation"
+    }
+  }
 }
