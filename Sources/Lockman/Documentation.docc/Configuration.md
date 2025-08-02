@@ -52,7 +52,7 @@ LockmanManager.config.handleCancellationErrors = true
 - **`true`**: Pass cancellation errors to error handler
 
 **Use cases**:
-- Logging cancellation processing
+- Logging cancellation operations
 - Tracking cancellation situations during debugging
 - Collecting statistical information
 
@@ -94,7 +94,7 @@ func applicationDidFinishLaunching() {
 
 // Override with manual unlock timing control
 .run { send in
-    // Processing that requires transition timing
+    // Operations that require transition timing
 }
 .lock(
     action: action,

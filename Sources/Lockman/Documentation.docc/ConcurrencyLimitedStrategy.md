@@ -6,7 +6,7 @@ Limit the number of concurrent executions.
 
 ConcurrencyLimitedStrategy is a strategy that limits the number of concurrent executions. It allows concurrent execution up to a specified number and rejects execution when the limit is exceeded, enabling resource usage control and performance optimization.
 
-This strategy is used for controlling the concurrency of resource-intensive operations such as network requests and file processing.
+This strategy is used for controlling the concurrency of resource-intensive operations such as network requests and file operations.
 
 ## Concurrency Limitation System
 
@@ -105,7 +105,7 @@ LockmanConcurrencyLimitedInfo(
     limit: .limited(3)
 )
 
-// Image processing: Maximum 2  
+// Image operations: Maximum 2  
 LockmanConcurrencyLimitedInfo(
     actionId: "imageResize",
     concurrencyId: "imageProcessing", 

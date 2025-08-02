@@ -4,9 +4,9 @@ Prevent duplicate execution of the same action.
 
 ## Overview
 
-SingleExecutionStrategy is a strategy for preventing duplicate execution. It prevents the same processing from being executed redundantly, maintaining data consistency and application stability.
+SingleExecutionStrategy is a strategy for preventing duplicate execution. It prevents the same operation from being executed redundantly, maintaining data consistency and application stability.
 
-This is the most frequently used basic strategy for preventing continuous user operations and duplicate execution of automatic processing.
+This is the most frequently used basic strategy for preventing continuous user actions and duplicate execution of automatic operations.
 
 ## Execution Modes
 
@@ -21,7 +21,7 @@ LockmanSingleExecutionInfo(
 )
 ```
 
-- Executes all processing without exclusive control
+- Executes all operations without exclusive control
 - Used when temporarily disabling lock functionality
 - Applied for behavior verification during debugging or testing
 
@@ -49,7 +49,7 @@ LockmanSingleExecutionInfo(
 
 - Prevents only duplicate execution of the same action
 - Different actions can execute concurrently
-- Applied when wanting to control only specific processing
+- Applied when wanting to control only specific operations
 
 ## Usage
 
@@ -180,7 +180,7 @@ lockFailure: { error, send in
             await send(.showBusyMessage("\(lockmanInfo.actionId) is running"))
         }
     } else {
-        await send(.showBusyMessage("Cannot start processing"))
+        await send(.showBusyMessage("Cannot start operation"))
     }
 }
 ```
