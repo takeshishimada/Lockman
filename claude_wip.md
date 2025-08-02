@@ -206,8 +206,9 @@ test{Component}_{Scenario}_{ExpectedResult}()
 ### 1. 開発ルール（重要）
 - **既存テストファイル変更禁止**: 既存のテストコードは一切変更しない
 - **新旧両方テスト可能**: 開発中は新旧両方の実装がテストできる状態を維持
-- **既存テストディレクトリにファイル作成禁止**: Tests/LockmanTests/配下の既存ディレクトリ（Composable/, Core/, StateManagement/, TestHelpers/）にはファイル作成しない
-- **新規テストディレクトリ使用**: Tests/LockmanTests/配下に新しいディレクトリを作成して実装（例：Concurrency/, Integration/, Performance/）
+- **完全分離戦略**: Tests/LockmanTestsNew/ で新しいテスト体系を構築し、既存Tests/LockmanTests/には一切影響しない
+- **Unitテスト構造**: Tests/LockmanTestsNew/Unit/ 配下でSourcesと同じディレクトリ構成、1ファイル=1テストファイルの対応関係を維持
+- **新規テストカテゴリ**: Tests/LockmanTestsNew/配下にConcurrency/, Integration/, Performance/等の新カテゴリを配置
 - **最終移行時のみクリーンアップ**: 既存テストコードの削除は新実装完了・検証後のみ
 
 ### 2. 並行性テストの難しさ
