@@ -12,6 +12,11 @@ Develop a library to implement exclusive control of user actions in application 
 ## Current Work Items
 All v1.0 roadmap features have been completed
 
+## Test Strategy and Design
+For comprehensive test strategy and design documentation, see:
+- **[claude_wip.md](claude_wip.md)** - Detailed test strategy design, decision rationale, and implementation planning
+- **[Tests/README.md](Tests/README.md)** - Practical test execution guide and developer reference
+
 ## Development Guidelines
 - Swift versions: 6.0, 5.10, 5.9
 - Type-safe implementation
