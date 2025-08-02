@@ -125,7 +125,8 @@ final class LockmanConcurrencyLimitedActionTests: XCTestCase {
     let action2 = TestAction.fetchUser(id: "456")
 
     XCTAssertEqual(action1.actionName, action2.actionName)
-    XCTAssertEqual(action1.createLockmanInfo().concurrencyId, action2.createLockmanInfo().concurrencyId)
+    XCTAssertEqual(
+      action1.createLockmanInfo().concurrencyId, action2.createLockmanInfo().concurrencyId)
     XCTAssertEqual(action1.createLockmanInfo().limit, action2.createLockmanInfo().limit)
   }
 

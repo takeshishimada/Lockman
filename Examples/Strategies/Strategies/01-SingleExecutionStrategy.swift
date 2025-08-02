@@ -96,14 +96,7 @@ struct SingleExecutionStrategyFeature {
       return .none
 
     case .handleLockFailure(let error):
-      if let cancellationError = error as? LockmanCancellationError {
-        // Handle cancellation errors that contain the actual strategy errors
-        if cancellationError.reason is LockmanSingleExecutionError {
-          state.taskStatus = .blocked
-        } else {
-          state.taskStatus = .failed("Lock acquisition failed")
-        }
-      } else if error is LockmanSingleExecutionError {
+      if error is LockmanSingleExecutionError {
         state.taskStatus = .blocked
       } else {
         state.taskStatus = .failed("Lock acquisition failed")

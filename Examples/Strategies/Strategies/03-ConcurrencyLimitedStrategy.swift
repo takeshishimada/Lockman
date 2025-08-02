@@ -70,7 +70,9 @@ struct ConcurrencyLimitedStrategyFeature {
         }
       }
 
-      func createLockmanInfo() -> LockmanCompositeInfo2<LockmanSingleExecutionInfo, LockmanConcurrencyLimitedInfo> {
+      func createLockmanInfo() -> LockmanCompositeInfo2<
+        LockmanSingleExecutionInfo, LockmanConcurrencyLimitedInfo
+      > {
         LockmanCompositeInfo2(
           strategyId: strategyId,  // Use macro-generated strategyId
           actionId: actionId,
@@ -109,13 +111,7 @@ struct ConcurrencyLimitedStrategyFeature {
       boundaryId: CancelID.downloads,
       lockFailure: { error, send in
         // Handle errors from both strategies at reducer level
-        if let cancellationError = error as? LockmanCancellationError {
-          // Handle cancellation errors that contain the actual strategy errors
-          if let id = extractDownloadId(from: cancellationError.reason) {
-            let reason = getSimpleErrorMessage(for: cancellationError.reason)
-            await send(.internal(.downloadRejected(id: id, reason: reason)))
-          }
-        } else if let singleExecutionError = error as? LockmanSingleExecutionError {
+        if let singleExecutionError = error as? LockmanSingleExecutionError {
           // SingleExecutionStrategy error (first strategy)
           if let id = extractDownloadId(from: error) {
             await send(.internal(.downloadRejected(id: id, reason: "Already running")))
