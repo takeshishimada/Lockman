@@ -58,7 +58,7 @@ struct DynamicConditionStrategyFeature {
     case view(ViewAction)
     case `internal`(InternalAction)
 
-    enum ViewAction: LockmanDynamicConditionAction {
+    enum ViewAction {
       // Pattern 1: Login-based
       case syncDataTapped
       case toggleLoginTapped
@@ -70,21 +70,6 @@ struct DynamicConditionStrategyFeature {
       // Pattern 3: Day-based
       case generateReportTapped
       case selectDay(State.Weekday)
-
-      var actionName: String {
-        switch self {
-        case .syncDataTapped: return "syncDataTapped"
-        case .toggleLoginTapped: return "toggleLoginTapped"
-        case .performMaintenanceTapped: return "performMaintenanceTapped"
-        case .setHour: return "setHour"
-        case .generateReportTapped: return "generateReportTapped"
-        case .selectDay: return "selectDay"
-        }
-      }
-
-      func createLockmanInfo() -> LockmanDynamicConditionInfo {
-        LockmanDynamicConditionInfo(actionId: actionName)
-      }
     }
 
     enum InternalAction {
@@ -102,10 +87,11 @@ struct DynamicConditionStrategyFeature {
     case sync
     case maintenance
     case report
+    case auth
   }
 
   // Custom error for dynamic conditions
-  struct DynamicConditionError: Error, LocalizedError {
+  struct DynamicConditionError: LockmanError, LocalizedError {
     let message: String
     var errorDescription: String? { message }
   }
@@ -121,13 +107,24 @@ struct DynamicConditionStrategyFeature {
       }
     }
     .lock(
-      boundaryId: CancelID.sync,
-      lockFailure: { error, send in
-        // Handle lock errors from DynamicConditionStrategy
-        await send(
-          .internal(.operationFailed(operation: "Operation", error: error.localizedDescription)))
+      condition: { state, action in
+        // Reducer-level condition: Only apply locks for certain view actions
+        switch action {
+        case .view(.syncDataTapped):
+          return state.isLoggedIn ? .success : .cancel(DynamicConditionError(message: "Please login to sync data"))
+        case .view(.performMaintenanceTapped):
+          return state.currentHour >= 2 && state.currentHour <= 4 ? .success : .cancel(DynamicConditionError(message: "Maintenance only allowed 2-4 AM"))
+        case .view(.generateReportTapped):
+          return state.selectedDay.isWeekday ? .success : .cancel(DynamicConditionError(message: "Reports can only be generated on weekdays"))
+        default:
+          return .cancel(DynamicConditionError(message: "No lock required for this action"))
+        }
       },
-      for: \.view
+      boundaryId: CancelID.auth,
+      lockFailure: { error, send in
+        // Handle condition evaluation failures
+        await send(.internal(.operationFailed(operation: "Operation", error: error.localizedDescription)))
+      }
     )
   }
 
@@ -137,18 +134,8 @@ struct DynamicConditionStrategyFeature {
     state: inout State
   ) -> Effect<Action> {
     switch action {
-    // Pattern 1: Login-based
+    // Pattern 1: Login-based - condition handled by reducer-level
     case .syncDataTapped:
-      // Check login state manually
-      if !state.isLoggedIn {
-        return .send(
-          .internal(
-            .operationFailed(
-              operation: "Sync",
-              error: "Please login to sync data"
-            )))
-      }
-
       return .run { send in
         await send(.internal(.syncStarted))
         try await Task.sleep(nanoseconds: 2_000_000_000)  // 2 seconds
@@ -161,24 +148,13 @@ struct DynamicConditionStrategyFeature {
               error: error.localizedDescription
             )))
       }
-      .cancellable(id: CancelID.sync)
 
     case .toggleLoginTapped:
       state.$isLoggedIn.withLock { $0.toggle() }
       return .none
 
-    // Pattern 2: Time-based with dynamic condition
+    // Pattern 2: Time-based - condition handled by reducer-level
     case .performMaintenanceTapped:
-      // Check time condition manually
-      if state.currentHour < 9 || state.currentHour >= 18 {
-        return .send(
-          .internal(
-            .operationFailed(
-              operation: "Maintenance",
-              error: "Maintenance can only be performed during business hours (9:00-18:00)"
-            )))
-      }
-
       return .run { send in
         await send(.internal(.maintenanceStarted))
         try await Task.sleep(nanoseconds: 2_000_000_000)  // 2 seconds
@@ -191,24 +167,13 @@ struct DynamicConditionStrategyFeature {
               error: error.localizedDescription
             )))
       }
-      .cancellable(id: CancelID.maintenance)
 
     case .setHour(let hour):
       state.currentHour = hour
       return .none
 
-    // Pattern 3: Day-based
+    // Pattern 3: Day-based - condition handled by reducer-level
     case .generateReportTapped:
-      // Check day condition manually
-      if !state.selectedDay.isWeekday {
-        return .send(
-          .internal(
-            .operationFailed(
-              operation: "Report",
-              error: "Reports can only be generated on weekdays"
-            )))
-      }
-
       return .run { send in
         await send(.internal(.reportStarted))
         try await Task.sleep(nanoseconds: 3_000_000_000)  // 3 seconds
@@ -221,7 +186,6 @@ struct DynamicConditionStrategyFeature {
               error: error.localizedDescription
             )))
       }
-      .cancellable(id: CancelID.report)
 
     case .selectDay(let day):
       state.selectedDay = day
@@ -397,7 +361,7 @@ struct DynamicConditionStrategyView: View {
 
         // Pattern 3: Day-based
         VStack(alignment: .leading, spacing: 15) {
-          Label("Pattern 3: Day Control (Manual Check)", systemImage: "calendar")
+          Label("Pattern 3: Day Control (Dynamic Condition)", systemImage: "calendar")
             .font(.headline)
 
           HStack {

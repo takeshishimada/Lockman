@@ -38,7 +38,7 @@ Lockmanは以下の制御戦略を提供し、実際のアプリ開発で頻繁�
 * **Single Execution**: 同じアクションの重複実行を防止
 * **Priority Based**: 優先度に基づくアクションの制御とキャンセル
 * **Group Coordination**: リーダー/メンバーの役割によるグループ制御
-* **Dynamic Condition**: 実行時条件による動的制御
+* **Dynamic Condition**: 統合Reducer APIによる実行時条件評価
 * **Concurrency Limited**: グループごとの同時実行数を制限
 * **Composite Strategy**: 複数戦略の組み合わせ
 
@@ -204,7 +204,7 @@ struct ProcessFeature {
 * [Priority Based Strategy](https://takeshishimada.github.io/Lockman/main/documentation/lockman/prioritybasedstrategy) - 優先度に基づく制御
 * [Concurrency Limited Strategy](https://takeshishimada.github.io/Lockman/main/documentation/lockman/concurrencylimitedstrategy) - 同時実行数を制限
 * [Group Coordination Strategy](https://takeshishimada.github.io/Lockman/main/documentation/lockman/groupcoordinationstrategy) - 関連するアクションを協調
-* [Dynamic Condition Strategy](https://takeshishimada.github.io/Lockman/main/documentation/lockman/dynamicconditionstrategy) - 動的なランタイム制御
+* [Dynamic Condition Evaluation](https://takeshishimada.github.io/Lockman/main/documentation/lockman/dynamicconditionstrategy) - 統合条件評価API
 * [Composite Strategy](https://takeshishimada.github.io/Lockman/main/documentation/lockman/compositestrategy) - 複数の戦略を組み合わせる
 
 ## インストール

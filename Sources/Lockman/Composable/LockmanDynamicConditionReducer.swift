@@ -4,48 +4,21 @@ import Foundation
 
 // MARK: - LockmanDynamicConditionReducer
 
-/// A reducer that wraps another reducer with dynamic lock evaluation capabilities.
+/// A reducer that wraps another reducer with dynamic condition evaluation capabilities.
 ///
-/// `LockmanDynamicConditionReducer` enables dynamic lock condition evaluation based on the current state and action,
-/// allowing for fine-grained control over when locks should be acquired.
+/// `LockmanDynamicConditionReducer` provides unified condition evaluation for both
+/// reducer-level and action-level exclusive processing with simplified API.
 ///
 /// ## Overview
-/// This reducer provides two levels of lock condition control:
-/// - **Reducer-level**: Optional condition specified at initialization that applies to all actions
-/// - **Action-level**: Optional condition specified per `lock` call for specific actions
+/// This reducer provides two independent levels of exclusive processing:
+/// - **Reducer-level**: Automatic condition evaluation for all actions in the reducer
+/// - **Action-level**: Individual lock method calls with their own conditions
+///
+/// Both levels use the same simple pattern: condition evaluation + cancellable effect control.
 ///
 /// ## Usage Examples
 ///
-/// ### With method chain API
-/// ```swift
-/// var body: some ReducerOf<Self> {
-///   Reduce { state, action in
-///     switch action {
-///     case .fetchData:
-///       return self.lock(
-///         state: state,
-///         action: action,
-///         operation: { send in
-///           // Async operation
-///         },
-///         lockAction: FetchAction(),
-///         boundaryId: CancelID.fetch
-///       )
-///     default:
-///       return .none
-///     }
-///   }
-///   .lock { state, action in
-///     // Evaluate state to determine if lock should be acquired
-///     guard state.isEnabled else {
-///       return .cancel(MyError.featureDisabled)
-///     }
-///     return .success
-///   }
-/// }
-/// ```
-///
-/// ### Combined conditions with method chain
+/// ### Basic Usage
 /// ```swift
 /// var body: some ReducerOf<Self> {
 ///   Reduce { state, action in
@@ -56,13 +29,13 @@ import Foundation
 ///         action: action,
 ///         operation: { send in
 ///           // Purchase operation
+///           await send(.purchaseCompleted)
 ///         },
-///         lockAction: PurchaseAction(),
 ///         boundaryId: CancelID.payment,
-///         lockCondition: { state, _ in
+///         lockCondition: { state, action in
 ///           // Action-level condition
 ///           guard state.balance >= amount else {
-///             return .cancel(MyError.insufficientBalance(required: amount, available: state.balance))
+///             return .cancel(MyError.insufficientBalance)
 ///           }
 ///           return .success
 ///         }
@@ -71,104 +44,134 @@ import Foundation
 ///       return .none
 ///     }
 ///   }
-///   .lock { state, _ in
-///     // Reducer-level condition
-///     guard state.isLoggedIn else {
-///       return .cancel(MyError.notAuthenticated)
-///     }
-///     return .success
-///   }
+///   .lock(
+///     condition: { state, action in
+///       // Reducer-level condition
+///       switch action {
+///       case .purchase, .withdraw:
+///         guard state.isLoggedIn else {
+///           return .cancel(MyError.notAuthenticated)
+///         }
+///         return .success
+///       default:
+///         return .cancel(MyError.noLockRequired)  // Skip exclusive processing
+///       }
+///     },
+///     boundaryId: CancelID.auth
+///   )
 /// }
 /// ```
 public struct LockmanDynamicConditionReducer<State: Sendable, Action: Sendable>: Reducer {
   @usableFromInline
   internal let _base: Reduce<State, Action>
 
-  /// The lock condition that will be evaluated for all actions in this reducer.
-  /// This is made internal to allow the extension methods to access it.
+  /// Reducer-level condition for automatic exclusive processing (required)
   @usableFromInline
-  internal let _lockCondition: (@Sendable (_ state: State, _ action: Action) -> LockmanResult)?
+  internal let _condition: @Sendable (_ state: State, _ action: Action) -> LockmanResult
+
+  /// Boundary ID for reducer-level exclusive processing (required)
+  @usableFromInline
+  internal let _boundaryId: any LockmanBoundaryId
+
+  /// Lock failure handler for reducer-level processing (optional)
+  @usableFromInline
+  internal let _lockFailure: (@Sendable (_ error: any Error, _ send: Send<Action>) async -> Void)?
 
   @usableFromInline
   var base: Reduce<State, Action> { _base }
 
-  @usableFromInline
-  var lockCondition: (@Sendable (_ state: State, _ action: Action) -> LockmanResult)? {
-    _lockCondition
-  }
-
-  /// Initializes a reducer with optional lock condition evaluation.
+  /// Initializes a reducer with required condition evaluation and boundary ID.
   ///
   /// - Parameters:
   ///   - reduce: The base reducer function to be executed.
-  ///   - lockCondition: Optional function that evaluates the current state and action
-  ///                    to determine if a lock should be acquired. If nil, no reducer-level
-  ///                    condition is applied.
+  ///   - condition: Function that evaluates the current state and action
+  ///                to determine if exclusive processing should be applied.
+  ///   - boundaryId: Boundary identifier for exclusive processing.
+  ///   - lockFailure: Optional handler for condition evaluation failures.
   public init(
     _ reduce: @escaping (_ state: inout State, _ action: Action) -> Effect<Action>,
-    lockCondition: (@Sendable (_ state: State, _ action: Action) -> LockmanResult)? = nil
+    condition: @escaping @Sendable (_ state: State, _ action: Action) -> LockmanResult,
+    boundaryId: any LockmanBoundaryId,
+    lockFailure: (@Sendable (_ error: any Error, _ send: Send<Action>) async -> Void)? = nil
   ) {
     self._base = Reduce { state, action in
       reduce(&state, action)
     }
-    self._lockCondition = lockCondition
+    self._condition = condition
+    self._boundaryId = boundaryId
+    self._lockFailure = lockFailure
   }
 
   /// Initializes the reducer with an existing Reduce instance.
   ///
   /// - Parameters:
   ///   - base: An existing Reduce instance.
-  ///   - lockCondition: Optional function that evaluates the current state and action
-  ///                    to determine if a lock should be acquired.
+  ///   - condition: Function that evaluates the current state and action
+  ///                to determine if exclusive processing should be applied.
+  ///   - boundaryId: Boundary identifier for exclusive processing.
+  ///   - lockFailure: Optional handler for condition evaluation failures.
   public init(
     base: Reduce<State, Action>,
-    lockCondition: (@Sendable (_ state: State, _ action: Action) -> LockmanResult)? = nil
+    condition: @escaping @Sendable (_ state: State, _ action: Action) -> LockmanResult,
+    boundaryId: any LockmanBoundaryId,
+    lockFailure: (@Sendable (_ error: any Error, _ send: Send<Action>) async -> Void)? = nil
   ) {
     self._base = base
-    self._lockCondition = lockCondition
+    self._condition = condition
+    self._boundaryId = boundaryId
+    self._lockFailure = lockFailure
   }
 
   @inlinable
   public func reduce(into state: inout State, action: Action) -> Effect<Action> {
-    // Simply execute the base reducer
-    // Lock evaluation happens in lock methods
-    self.base.reduce(into: &state, action: action)
+    // Reducer-level condition evaluation
+    let conditionResult = self._condition(state, action)
+
+    switch conditionResult {
+    case .cancel(let error):
+      // Exclusive processing not required - do not execute base reducer
+      if let lockFailure = self._lockFailure {
+        return .run { send in
+          await lockFailure(error, send)
+        }
+      } else {
+        return .none
+      }
+
+    case .success, .successWithPrecedingCancellation:
+      // Exclusive processing required - execute base reducer with cancellable control
+      let baseEffect = self.base.reduce(into: &state, action: action)
+      return baseEffect.cancellable(id: self._boundaryId)
+    }
   }
 }
 
-// MARK: - Main Lock Method
+// MARK: - Action-Level Lock Method
 
 extension LockmanDynamicConditionReducer {
-  /// Creates an effect with automatic lock management and dynamic condition evaluation.
+  /// Creates an effect with action-level condition evaluation and simplified exclusive processing.
   ///
-  /// This method implements a Pure Dynamic Condition architecture with two-stage evaluation:
-  /// 1. Reducer-level condition (if specified at initialization)
-  /// 2. Action-level condition (if specified in this call)
-  ///
-  /// Both conditions must pass for the operation to execute. Dynamic condition locks are automatically
-  /// released when the operation completes.
+  /// This method provides independent action-level exclusive processing using condition evaluation
+  /// and cancellable effect control. It operates independently from reducer-level processing.
   ///
   /// - Parameters:
   ///   - state: Current state for condition evaluation
   ///   - action: Current action for condition evaluation
   ///   - priority: Task priority for the underlying `.run` effect (optional)
-  ///   - unlockOption: Controls when the dynamic condition unlock operation is executed (defaults to .immediate)
   ///   - operation: Async closure receiving `send` function for dispatching actions
   ///   - handler: Optional error handler receiving error and send function
-  ///   - lockFailure: Optional handler for dynamic condition lock acquisition failures
-  ///   - lockAction: LockmanAction providing action information (not used for lock strategy in Pure Dynamic Condition mode)
-  ///   - boundaryId: Unique identifier for effect cancellation and lock boundary
-  ///   - lockCondition: Optional action-level condition that supplements the reducer-level condition
+  ///   - lockFailure: Optional handler for condition evaluation failures
+  ///   - boundaryId: Unique identifier for effect cancellation boundary
+  ///   - lockCondition: Optional action-level condition for exclusive processing control
   ///   - fileID: Source file identifier for debugging (auto-populated)
   ///   - filePath: Source file path for debugging (auto-populated)
   ///   - line: Source line number for debugging (auto-populated)
   ///   - column: Source column number for debugging (auto-populated)
-  /// - Returns: Effect that executes with appropriate locking based on all conditions
-  public func lock<B: LockmanBoundaryId, LA: LockmanAction>(
+  /// - Returns: Effect that executes with appropriate exclusive processing based on condition
+  public func lock<B: LockmanBoundaryId>(
     state: State,
     action: Action,
     priority: TaskPriority? = nil,
-    unlockOption: LockmanUnlockOption? = nil,
     operation: @escaping @Sendable (_ send: Send<Action>) async throws -> Void,
     catch handler: (
       @Sendable (_ error: any Error, _ send: Send<Action>) async -> Void
@@ -176,7 +179,6 @@ extension LockmanDynamicConditionReducer {
     lockFailure: (
       @Sendable (_ error: any Error, _ send: Send<Action>) async -> Void
     )? = nil,
-    lockAction: LA,
     boundaryId: B,
     lockCondition: (@Sendable (_ state: State, _ action: Action) -> LockmanResult)? = nil,
     fileID: StaticString = #fileID,
@@ -184,66 +186,41 @@ extension LockmanDynamicConditionReducer {
     line: UInt = #line,
     column: UInt = #column
   ) -> Effect<Action> {
-    let lockmanInfo = lockAction.createLockmanInfo()
-    let actionId = lockmanInfo.actionId
-    let dynamicLockCondition = self.lockCondition
 
-    // Step 1: Resolve strategies
-    let dynamicStrategy: AnyLockmanStrategy<LockmanDynamicConditionInfo>
-    let actionStrategy: AnyLockmanStrategy<LA.I>
-    do {
-      dynamicStrategy = try LockmanManager.container.resolve(
-        id: .dynamicCondition,
-        expecting: LockmanDynamicConditionInfo.self
-      )
-      actionStrategy = try LockmanManager.container.resolve(
-        id: lockmanInfo.strategyId,
-        expecting: LA.I.self
-      )
-    } catch {
-      // Failed to resolve strategies (configuration error)
-      Effect<Action>.handleError(
-        error: error,
-        fileID: fileID,
-        filePath: filePath,
-        line: line,
-        column: column
-      )
-      return .none
+    // Action-level condition evaluation
+    if let lockCondition = lockCondition {
+      let conditionResult = lockCondition(state, action)
+
+      switch conditionResult {
+      case .cancel(let error):
+        // Condition not met - call lockFailure handler
+        if let lockFailure = lockFailure {
+          return .run { send in
+            await lockFailure(error, send)
+          }
+        } else {
+          return .none
+        }
+
+      case .success, .successWithPrecedingCancellation:
+        // Condition met - execute operation with cancellable control
+        let baseEffect = Effect<Action>.run(priority: priority) { send in
+          try await operation(send)
+        } catch: { error, send in
+          await handler?(error, send)
+        }
+
+        return baseEffect.cancellable(id: boundaryId)
+      }
+    } else {
+      // No condition - always execute operation with cancellable control
+      let baseEffect = Effect<Action>.run(priority: priority) { send in
+        try await operation(send)
+      } catch: { error, send in
+        await handler?(error, send)
+      }
+
+      return baseEffect.cancellable(id: boundaryId)
     }
-
-    // Step 2: Evaluate conditions (dynamic lock condition and lock call)
-    let conditionResult = evaluateConditions(
-      dynamicLockCondition: dynamicLockCondition,
-      lockCondition: lockCondition,
-      state: state,
-      action: action,
-      dynamicStrategy: dynamicStrategy,
-      actionStrategy: actionStrategy,
-      lockmanInfo: lockmanInfo,
-      lockmanAction: lockAction,
-      actionId: actionId,
-      boundaryId: boundaryId
-    )
-
-    // Step 3: Build effect and handle condition evaluation result
-    return buildLockEffect(
-      conditionResult: conditionResult,
-      dynamicStrategy: dynamicStrategy,
-      actionStrategy: actionStrategy,
-      actionId: actionId,
-      unlockOption: unlockOption ?? .immediate,
-      lockmanInfo: lockmanInfo,
-      lockAction: lockAction,
-      boundaryId: boundaryId,
-      priority: priority,
-      operation: operation,
-      handler: handler,
-      lockFailure: lockFailure,
-      fileID: fileID,
-      filePath: filePath,
-      line: line,
-      column: column
-    )
   }
 }

@@ -63,8 +63,6 @@ extension LockmanManager.debug {
       return "SingleExecution"
     case "LockmanPriorityBasedStrategy":
       return "PriorityBased"
-    case "LockmanDynamicConditionStrategy":
-      return "DynamicCondition"
     case "LockmanGroupCoordinatedStrategy":
       return "GroupCoordinated"
     case "LockmanConcurrencyLimitedStrategy":

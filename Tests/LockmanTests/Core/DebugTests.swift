@@ -66,12 +66,12 @@ final class DebugTests: XCTestCase {
     XCTAssertTrue(priorityInfo.debugDescription.contains("priorityAction"))
     XCTAssertTrue(priorityInfo.debugDescription.contains("high"))
 
-    let dynamicInfo = LockmanDynamicConditionInfo(
-      actionId: "dynamicAction",
-      condition: { .success }
+    let concurrencyInfo = LockmanConcurrencyLimitedInfo(
+      actionId: "concurrencyAction",
+      .limited(3)
     )
-    XCTAssertTrue(dynamicInfo.debugDescription.contains("LockmanDynamicConditionInfo"))
-    XCTAssertTrue(dynamicInfo.debugDescription.contains("dynamicAction"))
+    XCTAssertTrue(concurrencyInfo.debugDescription.contains("ConcurrencyLimitedInfo"))
+    XCTAssertTrue(concurrencyInfo.debugDescription.contains("concurrencyAction"))
 
     let groupInfo = LockmanGroupCoordinatedInfo(
       actionId: "groupAction",
@@ -89,7 +89,7 @@ final class DebugTests: XCTestCase {
     let strategies: [any LockmanStrategy] = [
       LockmanSingleExecutionStrategy.shared,
       LockmanPriorityBasedStrategy.shared,
-      LockmanDynamicConditionStrategy.shared,
+      LockmanConcurrencyLimitedStrategy.shared,
       LockmanGroupCoordinationStrategy.shared,
     ]
 

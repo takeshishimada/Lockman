@@ -1,232 +1,318 @@
-# DynamicConditionStrategy
+# Dynamic Condition Evaluation
 
-Control actions based on runtime conditions.
+Control actions based on runtime conditions with unified condition evaluation.
 
 ## Overview
 
-DynamicConditionStrategy is a strategy that dynamically controls locks based on runtime state and conditions. Through condition evaluation with custom logic, it enables flexible exclusive control according to business rules.
+The LockmanDynamicConditionReducer provides unified condition evaluation for both reducer-level and action-level exclusive processing. This enables flexible control over when actions should be executed based on dynamic runtime conditions.
 
-This strategy is used in situations where complex business conditions that cannot be expressed with standard strategies or dynamic control based on application state is required.
+Unlike traditional strategies that use fixed rules, dynamic condition evaluation allows you to implement complex business logic that evaluates state and actions at runtime to determine whether exclusive processing should be applied.
 
-## Condition Evaluation System
+## Two-Level Processing Architecture
 
-### Basic Condition Specification
+### Reducer-Level Processing
+Automatic condition evaluation that applies to all actions processed by the reducer. This level is ideal for global constraints like authentication checks or system status validation.
+
+### Action-Level Processing  
+Independent condition evaluation for specific actions using the `lock` method. This level is perfect for operation-specific constraints like balance checks or business hour validation.
+
+## Basic Usage
+
+### Simple Reducer-Level Condition
 
 ```swift
-LockmanDynamicConditionInfo(
-    actionId: "payment",
-    condition: {
-        // Custom condition logic
-        guard userIsAuthenticated else {
-            return .cancel(AuthenticationError.notLoggedIn)
-        }
-        guard accountBalance >= requiredAmount else {
-            return .cancel(PaymentError.insufficientFunds)
-        }
-        return .success
+var body: some ReducerOf<Self> {
+  Reduce { state, action in
+    switch action {
+    case .transfer(let amount):
+      state.balance -= amount
+      return .run { send in
+        await send(.transferCompleted)
+      }
+    case .withdraw(let amount):
+      state.balance -= amount
+      return .run { send in
+        await send(.withdrawCompleted)
+      }
+    default:
+      return .none
     }
+  }
+  .lock(
+    condition: { state, action in
+      // Reducer-level condition: Check authentication for financial operations
+      switch action {
+      case .transfer, .withdraw:
+        return state.isAuthenticated ? .success : .cancel(AuthError.notAuthenticated)
+      default:
+        return .success  // Allow other actions
+      }
+    },
+    boundaryId: CancelID.authentication,
+    lockFailure: { error, send in
+      await send(.showError(error.localizedDescription))
+    }
+  )
+}
+```
+
+### Action-Level Condition Evaluation
+
+```swift
+let reducer = LockmanDynamicConditionReducer<State, Action>(
+  { state, action in
+    // Base reducer implementation
+    switch action {
+    case .transfer(let amount):
+      return .run { send in
+        await processTransfer(amount)
+        await send(.transferCompleted)
+      }
+    default:
+      return .none
+    }
+  },
+  condition: { _, _ in .success },  // Allow all actions at reducer level
+  boundaryId: CancelID.operations
+)
+
+// Use action-level conditions for specific operations
+func handleTransfer(amount: Double, state: State) -> Effect<Action> {
+  return reducer.lock(
+    state: state,
+    action: .transfer(amount),
+    operation: { send in
+      await processTransfer(amount)
+      await send(.transferCompleted)
+    },
+    lockFailure: { error, send in
+      await send(.showError(error.localizedDescription))
+    },
+    boundaryId: CancelID.transfer,
+    lockCondition: { state, _ in
+      // Action-level condition: Check balance
+      guard state.balance >= amount else {
+        return .cancel(TransferError.insufficientFunds(
+          required: amount,
+          available: state.balance
+        ))
+      }
+      return .success
+    }
+  )
+}
+```
+
+## Independent Level Processing
+
+Both levels operate independently, allowing you to combine global and specific constraints:
+
+```swift
+let reducer = LockmanDynamicConditionReducer<State, Action>(
+  { state, action in
+    switch action {
+    case .performOperation:
+      return .run { send in
+        await send(.operationCompleted)
+      }
+    default:
+      return .none
+    }
+  },
+  condition: { state, action in
+    // Reducer-level: Global authentication check
+    switch action {
+    case .performOperation:
+      return state.isAuthenticated ? .success : .cancel(AuthError.notAuthenticated)
+    default:
+      return .success
+    }
+  },
+  boundaryId: CancelID.auth,
+  lockFailure: { error, send in
+    await send(.showError("Auth failed: \(error.localizedDescription)"))
+  }
+)
+
+// Action-level processing with different conditions
+func handleSecureOperation(state: State) -> Effect<Action> {
+  return reducer.lock(
+    state: state,
+    action: .performOperation,
+    operation: { send in
+      await performSecureOperation()
+      await send(.operationCompleted)
+    },
+    lockFailure: { error, send in
+      await send(.showError("Operation failed: \(error.localizedDescription)"))
+    },
+    boundaryId: CancelID.secureOp,
+    lockCondition: { state, _ in
+      // Action-level: Additional security checks
+      guard state.securityLevel >= .high else {
+        return .cancel(SecurityError.insufficientPermissions)
+      }
+      return .success
+    }
+  )
+}
+```
+
+## Cancellable Effect Control
+
+Both levels use cancellable effects to ensure proper resource management:
+
+```swift
+// Reducer-level cancellation
+.lock(
+  condition: { _, _ in .success },
+  boundaryId: CancelID.operations  // Effects cancelled by this boundary
+)
+
+// Action-level cancellation  
+reducer.lock(
+  // ...
+  boundaryId: CancelID.specificOperation  // Independent cancellation boundary
 )
 ```
 
-### Advanced Control with Reducer.lock
+When multiple operations use the same boundary ID, newer operations will cancel previous ones automatically.
 
-Using the method chain API enables more advanced condition evaluation based on current state and action:
+## Condition Evaluation Results
+
+All conditions must return a `LockmanResult`:
 
 ```swift
-var body: some ReducerOf<Self> {
-    Reduce { state, action in
-        switch action {
-        case .makePayment(let amount):
-            // Create a temporary reducer with dynamic conditions
-            let tempReducer = Reduce<State, Action> { _, _ in .none }
-                .lock { state, _ in
-                    // Reducer-level condition
-                    guard state.isAuthenticated else {
-                        return .cancel(AuthenticationError.notLoggedIn)
-                    }
-                    return .success
-                }
-            
-            return tempReducer.lock(
-                state: state,
-                action: action,
-                operation: { send in
-                    try await processPayment(amount)
-                    await send(.paymentCompleted)
-                },
-                lockAction: PaymentAction(),
-                boundaryId: CancelID.payment,
-                lockCondition: { state, _ in
-                    // Action-level condition
-                    guard state.balance >= amount else {
-                        return .cancel(PaymentError.insufficientFunds(
-                            required: amount,
-                            available: state.balance
-                        ))
-                    }
-                    return .success
-                }
-            )
-        }
-    }
-}
+// Allow exclusive processing
+return .success
+
+// Skip exclusive processing with error
+return .cancel(MyError.conditionNotMet)
+
+// Allow with preceding cancellation (advanced usage)
+return .successWithPrecedingCancellation(cancellationError)
 ```
 
-## Usage
+## Practical Examples
 
-### Basic Usage Example
+### Business Hours Control
 
 ```swift
-@LockmanDynamicCondition
-enum ViewAction {
-    case transfer(amount: Double)
-    case withdraw(amount: Double)
+.lock(
+  condition: { state, action in
+    switch action {
+    case .makeTransaction:
+      let currentHour = Calendar.current.component(.hour, from: Date())
+      guard (9...17).contains(currentHour) else {
+        return .cancel(BusinessError.outsideBusinessHours)
+      }
+      return .success
+    default:
+      return .success
+    }
+  },
+  boundaryId: CancelID.businessHours
+)
+```
+
+### Multi-Condition Validation
+
+```swift
+reducer.lock(
+  state: state,
+  action: action,
+  operation: { send in
+    await performComplexOperation()
+    await send(.completed)
+  },
+  boundaryId: CancelID.complexOp,
+  lockCondition: { state, action in
+    // Multiple validation checks
+    guard state.systemStatus == .ready else {
+      return .cancel(SystemError.notReady)
+    }
     
-    var lockmanInfo: LockmanDynamicConditionInfo {
-        switch self {
-        case .transfer(let amount):
-            return LockmanDynamicConditionInfo(
-                actionId: actionName,
-                condition: {
-                    // Business hours check
-                    guard BusinessHours.isOpen else {
-                        return .cancel(BankError.outsideBusinessHours)
-                    }
-                    // Amount limit check
-                    guard amount <= transferLimit else {
-                        return .cancel(BankError.transferLimitExceeded)
-                    }
-                    return .success
-                }
-            )
-        case .withdraw(let amount):
-            return LockmanDynamicConditionInfo(
-                actionId: actionName,
-                condition: {
-                    // ATM availability check
-                    guard ATMService.isAvailable else {
-                        return .cancel(BankError.atmUnavailable)
-                    }
-                    return .success
-                }
-            )
-        }
+    guard state.userPermissions.contains(.execute) else {
+      return .cancel(PermissionError.insufficientRights)
     }
-}
-```
-
-### Multi-Stage Condition Evaluation
-
-The method chain API provides three stages of condition evaluation:
-
-1. **Action-level conditions**: Conditions for specific operations
-2. **Reducer-level conditions**: Overall prerequisite conditions
-3. **Traditional lock strategies**: Standard exclusive control
-
-```swift
-var body: some ReducerOf<Self> {
-    Reduce { state, action in
-        switch action {
-        case .criticalOperation:
-            let tempReducer = Reduce<State, Action> { _, _ in .none }
-                .lock { state, _ in
-                    // 2. Reducer-level condition
-                    guard state.maintenanceMode == false else {
-                        return .cancel(SystemError.maintenanceMode)
-                    }
-                    return .success
-                }
-            
-            return tempReducer.lock(
-                state: state,
-                action: action,
-                operation: { send in
-                    try await performCriticalOperation()
-                    await send(.operationCompleted)
-                },
-                lockAction: CriticalAction(), // 3. Traditional strategy (SingleExecution, etc.)
-                boundaryId: CancelID.critical,
-                lockCondition: { state, _ in
-                    // 1. Action-level condition
-                    guard state.systemStatus == .ready else {
-                        return .cancel(SystemError.notReady)
-                    }
-                    return .success
-                }
-            )
-        }
+    
+    if case .processLargeData(let size) = action {
+      guard size <= state.maxAllowedSize else {
+        return .cancel(DataError.sizeExceeded)
+      }
     }
-}
-```
-
-## Operation Examples
-
-### Basic Condition Evaluation
-
-```
-Time: 9:00  - transfer($1000) request
-  Condition 1: Business hours check → ✅ Open
-  Condition 2: Amount limit check → ✅ Within limit
-  Result: ✅ Execute
-
-Time: 18:00 - transfer($1000) request  
-  Condition 1: Business hours check → ❌ Outside hours
-  Result: ❌ Reject (BankError.outsideBusinessHours)
-
-Time: 10:00 - transfer($50000) request
-  Condition 1: Business hours check → ✅ Open
-  Condition 2: Amount limit check → ❌ Exceeds limit
-  Result: ❌ Reject (BankError.transferLimitExceeded)
-```
-
-### Multi-Stage Evaluation Operation
-
-```
-criticalOperation request:
-
-Step 1: Reducer-level condition
-  maintenanceMode == false → ✅ Pass
-
-Step 2: Action-level condition  
-  systemStatus == .ready → ✅ Pass
-
-Step 3: Traditional strategy (e.g., SingleExecution)
-  Duplicate execution check → ✅ Pass
-
-Result: ✅ All stages passed, start execution
+    
+    return .success
+  }
+)
 ```
 
 ## Error Handling
 
-For errors that may occur with DynamicConditionStrategy and their solutions, please also refer to the common patterns on the [Error Handling](<doc:ErrorHandling>) page.
-
-### Utilizing Custom Errors
+### Custom Error Types
 
 ```swift
-enum BusinessError: Error {
-    case insufficientFunds(required: Double, available: Double)
-    case dailyLimitExceeded(limit: Double)
-    case accountSuspended(reason: String)
-    case outsideBusinessHours
-}
-
-lockFailure: { error, send in
-    switch error as? BusinessError {
-    case .insufficientFunds(let required, let available):
-        await send(.showError("Insufficient funds: Required ¥\(required), Available ¥\(available)"))
-        
-    case .dailyLimitExceeded(let limit):
-        await send(.showError("Daily limit of ¥\(limit) exceeded"))
-        
-    case .accountSuspended(let reason):
-        await send(.showError("Account suspended: \(reason)"))
-        
+enum BusinessError: Error, LocalizedError {
+  case outsideBusinessHours
+  case insufficientFunds(required: Double, available: Double)
+  case dailyLimitExceeded(limit: Double)
+  
+  var errorDescription: String? {
+    switch self {
     case .outsideBusinessHours:
-        await send(.showError("Outside business hours (Weekdays 9:00-17:00)"))
-        
-    default:
-        await send(.showError("Cannot perform operation"))
+      return "Operations only allowed during business hours (9:00-17:00)"
+    case .insufficientFunds(let required, let available):
+      return "Insufficient funds: Required $\(required), Available $\(available)"
+    case .dailyLimitExceeded(let limit):
+      return "Daily transaction limit of $\(limit) exceeded"
     }
+  }
 }
 ```
 
+### Structured Error Handling
+
+```swift
+lockFailure: { error, send in
+  switch error {
+  case let businessError as BusinessError:
+    switch businessError {
+    case .outsideBusinessHours:
+      await send(.showBusinessHoursMessage)
+    case .insufficientFunds(let required, let available):
+      await send(.showInsufficientFundsDialog(required: required, available: available))
+    case .dailyLimitExceeded(let limit):
+      await send(.showDailyLimitWarning(limit: limit))
+    }
+  default:
+    await send(.showGenericError(error.localizedDescription))
+  }
+}
+```
+
+## Migration from Strategy-Based Approach
+
+If you were previously using the strategy-based DynamicConditionStrategy:
+
+### Before (Strategy-Based)
+```swift
+// Old approach - no longer available
+@LockmanDynamicCondition
+enum Action {
+  // ...
+}
+```
+
+### After (Unified Condition Evaluation)
+```swift
+// New approach - unified API
+.lock(
+  condition: { state, action in
+    // Your condition logic here
+    return .success
+  },
+  boundaryId: YourBoundaryId.dynamicConditions
+)
+```
+
+The new approach provides the same flexibility with a cleaner, more predictable API that separates reducer-level and action-level concerns.

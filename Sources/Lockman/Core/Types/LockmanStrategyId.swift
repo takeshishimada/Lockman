@@ -167,6 +167,7 @@ extension LockmanStrategyId {
   public static let groupCoordination = LockmanStrategyId(
     type: LockmanGroupCoordinationStrategy.self)
 
-  /// The strategy ID for dynamic condition strategy.
-  public static let dynamicCondition = LockmanStrategyId(type: LockmanDynamicConditionStrategy.self)
+  /// The strategy ID for concurrency limited strategy.
+  public static let concurrencyLimited = LockmanStrategyId(
+    type: LockmanConcurrencyLimitedStrategy.self)
 }
