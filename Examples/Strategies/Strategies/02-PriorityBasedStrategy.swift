@@ -91,36 +91,41 @@ struct PriorityBasedStrategyFeature {
       boundaryId: CancelID.priorityOperation,
       lockFailure: { error, send in
         // Handle different strategy errors directly
-        if error is LockmanSingleExecutionError {
+        if let singleExecutionError = error as? LockmanSingleExecutionError {
           // SingleExecutionStrategy error (first strategy)
-          await send(.internal(.updateResult(button: .high, result: "Already running")))
+          // For SingleExecutionError, we can get the existing action info but not the requested one
+          switch singleExecutionError {
+          case .boundaryAlreadyLocked(_, let existingInfo):
+            let button = buttonType(for: existingInfo.actionId)
+            await send(.internal(.updateResult(button: button, result: "Boundary already locked")))
+          case .actionAlreadyRunning(let existingInfo):
+            let button = buttonType(for: existingInfo.actionId)
+            await send(.internal(.updateResult(button: button, result: "Already running")))
+          }
         } else if let priorityError = error as? LockmanPriorityBasedError {
           // PriorityBasedStrategy error (second strategy)
           switch priorityError {
           case .precedingActionCancelled(let cancelledInfo, _):
             // An existing action was cancelled
-            let button: Action.ButtonType
-            switch cancelledInfo.actionId {
-            case "high-priority": button = .high
-            case "low-exclusive": button = .lowExclusive
-            case "low-replaceable": button = .lowReplaceable
-            case "none-priority": button = .none
-            default: button = .lowExclusive
-            }
-
+            let button = buttonType(for: cancelledInfo.actionId)
             let message: String
             if case .low(.replaceable) = cancelledInfo.priority {
               message = "Replaced by exclusive"
             } else {
               message = "Cancelled by higher priority"
             }
-
             await send(.internal(.updateResult(button: button, result: message)))
 
-          case .higherPriorityExists, .samePriorityConflict:
-            // New action blocked by priority conflict - we can't determine specific button without action info
+          case .higherPriorityExists(let requestedInfo, _, _):
+            // New action blocked by higher priority
+            let button = buttonType(for: requestedInfo.actionId)
             await send(
-              .internal(.updateResult(button: .high, result: "Higher priority task is running")))
+              .internal(.updateResult(button: button, result: "Higher priority task is running")))
+
+          case .samePriorityConflict(let requestedInfo, _, _):
+            // New action blocked by same priority conflict
+            let button = buttonType(for: requestedInfo.actionId)
+            await send(.internal(.updateResult(button: button, result: "Same priority conflict")))
           }
         }
       },
