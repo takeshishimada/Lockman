@@ -46,7 +46,9 @@ struct PriorityBasedStrategyFeature {
         }
       }
 
-      func createLockmanInfo() -> LockmanCompositeInfo2<LockmanSingleExecutionInfo, LockmanPriorityBasedInfo> {
+      func createLockmanInfo() -> LockmanCompositeInfo2<
+        LockmanSingleExecutionInfo, LockmanPriorityBasedInfo
+      > {
         LockmanCompositeInfo2(
           strategyId: strategyId,
           actionId: actionId,
@@ -64,7 +66,6 @@ struct PriorityBasedStrategyFeature {
 
     enum InternalAction {
       case updateResult(button: ButtonType, result: String)
-      case handleLockFailure(error: Error)
     }
 
     enum ButtonType {
@@ -89,7 +90,39 @@ struct PriorityBasedStrategyFeature {
     .lock(
       boundaryId: CancelID.priorityOperation,
       lockFailure: { error, send in
-        await send(.internal(.handleLockFailure(error: error)))
+        // Handle different strategy errors directly
+        if error is LockmanSingleExecutionError {
+          // SingleExecutionStrategy error (first strategy)
+          await send(.internal(.updateResult(button: .high, result: "Already running")))
+        } else if let priorityError = error as? LockmanPriorityBasedError {
+          // PriorityBasedStrategy error (second strategy)
+          switch priorityError {
+          case .precedingActionCancelled(let cancelledInfo, _):
+            // An existing action was cancelled
+            let button: Action.ButtonType
+            switch cancelledInfo.actionId {
+            case "high-priority": button = .high
+            case "low-exclusive": button = .lowExclusive
+            case "low-replaceable": button = .lowReplaceable
+            case "none-priority": button = .none
+            default: button = .lowExclusive
+            }
+
+            let message: String
+            if case .low(.replaceable) = cancelledInfo.priority {
+              message = "Replaced by exclusive"
+            } else {
+              message = "Cancelled by higher priority"
+            }
+
+            await send(.internal(.updateResult(button: button, result: message)))
+
+          case .higherPriorityExists, .samePriorityConflict:
+            // New action blocked by priority conflict - we can't determine specific button without action info
+            await send(
+              .internal(.updateResult(button: .high, result: "Higher priority task is running")))
+          }
+        }
       },
       for: \.view
     )
@@ -141,49 +174,7 @@ struct PriorityBasedStrategyFeature {
     case .updateResult(let button, let result):
       updateButtonResult(button: button, result: result, state: &state)
       return .none
-
-    case .handleLockFailure(let error):
-      return handleLockFailure(error: error, state: &state)
     }
-  }
-
-  // MARK: - Lock Failure Handler
-  private func handleLockFailure(
-    error: Error,
-    state: inout State
-  ) -> Effect<Action> {
-    // Extract cancellation error and view action
-    guard let cancellationError = error as? LockmanCancellationError,
-      let viewAction = cancellationError.action as? Action.ViewAction
-    else {
-      return .none
-    }
-
-    // Handle different strategy errors
-    if let singleExecutionError = cancellationError.reason as? LockmanSingleExecutionError {
-      // SingleExecutionStrategy error (first strategy)
-      let button = buttonType(for: viewAction)
-      updateButtonResult(button: button, result: "Already running", state: &state)
-      return .none
-    } else if let priorityError = cancellationError.reason as? LockmanPriorityBasedError {
-      // PriorityBasedStrategy error (second strategy)
-      switch priorityError {
-      case .precedingActionCancelled(let cancelledInfo, _):
-        // An existing action was cancelled
-        let button = buttonType(for: cancelledInfo.actionId)
-        let message = cancellationMessage(for: cancelledInfo.priority)
-        updateButtonResult(button: button, result: message, state: &state)
-        return .none
-
-      case .higherPriorityExists, .samePriorityConflict:
-        // New action blocked by priority conflict
-        let button = buttonType(for: viewAction)
-        updateButtonResult(button: button, result: "Higher priority task is running", state: &state)
-        return .none
-      }
-    }
-
-    return .none
   }
 
   // MARK: - Helper Methods

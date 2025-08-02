@@ -104,14 +104,8 @@ struct GroupCoordinationStrategyFeature {
       boundaryId: CancelID.sync,
       lockFailure: { error, send in
         // Handle group coordination errors using simplified error messages
-        if let cancellationError = error as? LockmanCancellationError {
-          // Handle cancellation errors that contain the actual strategy errors
-          let simpleMessage = getSimpleErrorMessage(for: cancellationError.reason)
-          await send(.internal(.syncFailed(simpleMessage)))
-        } else if let groupError = error as? LockmanGroupCoordinationError {
-          let simpleMessage = getSimpleErrorMessage(for: groupError)
-          await send(.internal(.syncFailed(simpleMessage)))
-        }
+        let simpleMessage = getSimpleErrorMessage(for: error)
+        await send(.internal(.syncFailed(simpleMessage)))
       },
       for: \.view
     )
