@@ -73,17 +73,47 @@ extension Effect {
     line: UInt = #line,
     column: UInt = #column
   ) -> Effect<Action> {
-    return buildLockEffect(
-      operations: operations,
-      action: action,
-      boundaryId: boundaryId,
-      unlockOption: unlockOption ?? action.unlockOption,
-      fileID: fileID,
-      filePath: filePath,
-      line: line,
-      column: column,
-      handler: lockFailure
-    )
+    do {
+      // Create concatenated effect from operations array
+      let concatenatedEffect = Effect.concatenate(operations)
+
+      let lockmanInfo = action.lockmanInfo
+
+      // Acquire lock using the concatenated effect instance
+      let lockResult = try concatenatedEffect.acquireLock(
+        lockmanInfo: lockmanInfo,
+        boundaryId: boundaryId
+      )
+
+      // Build lock effect using the same concatenated effect instance
+      return concatenatedEffect.buildLockEffect(
+        lockResult: lockResult,
+        action: action,
+        lockmanInfo: lockmanInfo,
+        boundaryId: boundaryId,
+        unlockOption: unlockOption ?? action.unlockOption,
+        fileID: fileID,
+        filePath: filePath,
+        line: line,
+        column: column,
+        handler: lockFailure
+      )
+    } catch {
+      // Handle and report strategy resolution errors
+      Effect.handleError(
+        error: error,
+        fileID: fileID,
+        filePath: filePath,
+        line: line,
+        column: column
+      )
+      if let lockFailure = lockFailure {
+        return .run { send in
+          await lockFailure(error, send)
+        }
+      }
+      return .none
+    }
   }
 }
 
@@ -93,7 +123,7 @@ extension Effect {
   /// Applies lock management to this effect using a method chain style.
   ///
   /// This method provides a method chain style API for applying lock management to effects.
-  /// The lock strategy is automatically obtained from the provided action.
+  /// The lock strategy is automatically resolved from the container using the action's strategy ID.
   ///
   /// ## Automatic Cancellation Management
   /// This method automatically applies `.cancellable(id: boundaryId)` to the chained effect,
@@ -138,19 +168,45 @@ extension Effect {
     handleCancellationErrors: Bool? = nil,
     lockFailure: (@Sendable (_ error: any Error, _ send: Send<Action>) async -> Void)? = nil
   ) -> Effect<Action> {
-    // This is essentially a wrapper around buildLockEffect
-    // that provides a method chain style API
+    // This method provides a method chain style API by combining acquireLock and buildLockEffect
 
-    return Effect.buildLockEffect(
-      operations: [self],
-      action: action,
-      boundaryId: boundaryId,
-      unlockOption: unlockOption ?? action.unlockOption,
-      fileID: #fileID,
-      filePath: #filePath,
-      line: #line,
-      column: #column,
-      handler: lockFailure
-    )
+    do {
+      let lockmanInfo = action.lockmanInfo
+
+      // Acquire lock using instance method
+      let lockResult = try acquireLock(
+        lockmanInfo: lockmanInfo,
+        boundaryId: boundaryId
+      )
+
+      return buildLockEffect(
+        lockResult: lockResult,
+        action: action,
+        lockmanInfo: lockmanInfo,
+        boundaryId: boundaryId,
+        unlockOption: unlockOption ?? action.unlockOption,
+        fileID: #fileID,
+        filePath: #filePath,
+        line: #line,
+        column: #column,
+        handler: lockFailure
+      )
+    } catch {
+      // Handle and report strategy resolution errors
+      Effect.handleError(
+        error: error,
+        fileID: #fileID,
+        filePath: #filePath,
+        line: #line,
+        column: #column
+      )
+      if let lockFailure = lockFailure {
+        return .run { send in
+          await lockFailure(error, send)
+        }
+      }
+      return .none
+    }
   }
+
 }

@@ -147,24 +147,30 @@ extension LockmanDynamicConditionReducer {
       condition: { condition(state, action) }
     )
 
-    // Check condition and acquire lock if successful
-    let result = Effect<Action>.acquireLock(
-      lockmanInfo: dynamicInfo,
-      strategy: strategy,
-      boundaryId: boundaryId
-    )
+    // Check condition and acquire lock if successful using direct info overload
+    let effectForLock: Effect<Action> = .none
 
-    // Handle result
-    switch result {
-    case .cancel(let error):
+    do {
+      let result = try effectForLock.acquireLock(
+        lockmanInfo: dynamicInfo,
+        strategyId: .dynamicCondition,
+        boundaryId: boundaryId
+      )
+
+      // Handle result
+      switch result {
+      case .cancel(let error):
+        return .failure(error)
+      case .successWithPrecedingCancellation(let error):
+        // Lock acquired but with preceding cancellation
+        return .successWithPrecedingCancellation(error)
+      case .success:
+        return .success
+      @unknown default:
+        return .success
+      }
+    } catch {
       return .failure(error)
-    case .successWithPrecedingCancellation(let error):
-      // Lock acquired but with preceding cancellation
-      return .successWithPrecedingCancellation(error)
-    case .success:
-      return .success
-    @unknown default:
-      return .success
     }
   }
 
@@ -199,7 +205,7 @@ extension LockmanDynamicConditionReducer {
     }
 
     // Use the action's lock information for the strategy
-    guard let lockmanInfo = lockmanAction.lockmanInfo as? I else {
+    guard lockmanAction.lockmanInfo is I else {
       // Type mismatch - this shouldn't happen if called correctly
       return .failure(LockmanRegistrationError.strategyNotRegistered("\(I.self)"))
     }
@@ -220,24 +226,29 @@ extension LockmanDynamicConditionReducer {
       break
     }
 
-    // Check condition and acquire lock if successful
-    let result = Effect<Action>.acquireLock(
-      lockmanInfo: lockmanInfo,
-      strategy: strategy,
-      boundaryId: boundaryId
-    )
+    // Check condition and acquire lock if successful using the provided action
+    let effectForLock: Effect<Action> = .none
+    do {
+      let result = try effectForLock.acquireLock(
+        lockmanInfo: lockmanAction.lockmanInfo,
+        strategyId: lockmanAction.lockmanInfo.strategyId,
+        boundaryId: boundaryId
+      )
 
-    // Handle result
-    switch result {
-    case .cancel(let error):
+      // Handle result
+      switch result {
+      case .cancel(let error):
+        return .failure(error)
+      case .successWithPrecedingCancellation(let error):
+        // Lock acquired but with preceding cancellation
+        return .successWithPrecedingCancellation(error)
+      case .success:
+        return .success
+      @unknown default:
+        return .success
+      }
+    } catch {
       return .failure(error)
-    case .successWithPrecedingCancellation(let error):
-      // Lock acquired but with preceding cancellation
-      return .successWithPrecedingCancellation(error)
-    case .success:
-      return .success
-    @unknown default:
-      return .success
     }
   }
 
@@ -349,7 +360,8 @@ extension LockmanDynamicConditionReducer {
       let cancellationError = LockmanCancellationError(
         action: lockAction,
         boundaryId: boundaryId,
-        reason: precedingError as! any LockmanError
+        reason: precedingError as? any LockmanError
+          ?? LockmanRegistrationError.strategyNotRegistered("Unknown error type")
       )
 
       // Build effects array conditionally
@@ -383,7 +395,8 @@ extension LockmanDynamicConditionReducer {
         let cancellationError = LockmanCancellationError(
           action: lockAction,
           boundaryId: boundaryId,
-          reason: error as! any LockmanError
+          reason: error as? any LockmanError
+            ?? LockmanRegistrationError.strategyNotRegistered("Unknown error type")
         )
         return .run { send in
           await lockFailure(cancellationError, send)
