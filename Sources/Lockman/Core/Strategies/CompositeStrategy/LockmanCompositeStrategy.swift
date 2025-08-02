@@ -465,6 +465,13 @@ where S1.I == I1, S2.I == I2, S3.I == I3, S4.I == I4 {
   /// The identifier for this composite strategy.
   public let strategyId: LockmanStrategyId
 
+  /// Creates a new composite strategy with four component strategies.
+  ///
+  /// - Parameters:
+  ///   - strategy1: The first strategy to coordinate with
+  ///   - strategy2: The second strategy to coordinate with
+  ///   - strategy3: The third strategy to coordinate with
+  ///   - strategy4: The fourth strategy to coordinate with
   public init(strategy1: S1, strategy2: S2, strategy3: S3, strategy4: S4) {
     self.strategy1 = strategy1
     self.strategy2 = strategy2

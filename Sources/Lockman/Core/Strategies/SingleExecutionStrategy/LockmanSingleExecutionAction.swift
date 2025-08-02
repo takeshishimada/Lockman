@@ -54,5 +54,4 @@ where I == LockmanSingleExecutionInfo {
 extension LockmanSingleExecutionAction {
   // Note: lockmanInfo must be implemented by the conforming type
   // to specify the execution mode (.none, .boundary, or .action)
-  // The strategyId is now provided by the lockmanInfo itself
 }
