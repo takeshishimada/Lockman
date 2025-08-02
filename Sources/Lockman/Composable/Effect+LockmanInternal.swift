@@ -31,6 +31,34 @@ extension Effect {
   /// - Boundary lock acquisition is brief (microseconds)
   /// - Effect concatenation has minimal overhead
   ///
+  /// Attempts to acquire a lock using pre-captured lockmanInfo for consistent uniqueId handling.
+  ///
+  /// ## Lock Acquisition Protocol with UniqueId Consistency
+  /// This method implements the core lock acquisition logic with guaranteed uniqueId consistency:
+  /// 1. **Pre-captured LockmanInfo**: Uses lockmanInfo captured once at entry points
+  /// 2. **Feasibility Check**: Call `canLock` to determine if lock can be acquired
+  /// 3. **Early Exit**: Return appropriate result if lock acquisition is not possible
+  /// 4. **Lock Acquisition**: Call `lock` to actually acquire the lock
+  /// 5. **Consistent UniqueId**: Same lockmanInfo instance ensures unlock will succeed
+  ///
+  /// ## Boundary Lock Protection
+  /// The entire lock acquisition process is protected by a boundary-specific lock
+  /// to ensure atomicity and prevent race conditions between:
+  /// - Multiple lock acquisition attempts
+  /// - Lock acquisition and release operations
+  /// - Cleanup and acquisition operations
+  ///
+  /// ## Cancellation Strategy
+  /// When `canLock` returns `.successWithPrecedingCancellation`:
+  /// 1. A cancellation effect is created for the specified boundaryId
+  /// 2. The cancellation effect is concatenated BEFORE the main effect
+  /// 3. This ensures proper ordering: cancel existing → execute new
+  ///
+  /// ## Performance Notes
+  /// - Lock feasibility check is typically O(1) hash lookup
+  /// - Boundary lock acquisition is brief (microseconds)
+  /// - Effect concatenation has minimal overhead
+  ///
   /// - Parameters:
   ///   - lockmanInfo: Pre-captured lock information ensuring consistent uniqueId throughout lifecycle
   ///   - boundaryId: Boundary identifier for this lock and cancellation
@@ -39,69 +67,9 @@ extension Effect {
     lockmanInfo: I,
     boundaryId: B
   ) throws -> LockmanResult {
-    return try acquireLockCore(
-      lockmanInfo: lockmanInfo,
-      strategyId: lockmanInfo.strategyId,
-      boundaryId: boundaryId
-    )
-  }
-
-  /// Attempts to acquire a lock using LockmanInfo directly (overload for internal use).
-  ///
-  /// This overload is designed for internal components that work directly with LockmanInfo
-  /// without needing to create temporary LockmanAction wrappers. It's particularly useful
-  /// for LockmanDynamicConditionReducer where we have LockmanDynamicConditionInfo but
-  /// need to perform lock acquisition without creating wrapper types.
-  ///
-  /// ## Use Cases
-  /// - Dynamic condition evaluation in LockmanDynamicConditionReducer
-  /// - Internal lock operations where LockmanAction wrapper is unnecessary
-  /// - Strategy resolution and lock acquisition with known info types
-  ///
-  /// ## Parameters
-  /// - lockmanInfo: Pre-captured lock information ensuring consistent uniqueId throughout lifecycle
-  /// - strategyId: Strategy identifier for container resolution
-  /// - boundaryId: Boundary identifier for this lock and cancellation
-  /// - Returns: LockmanResult indicating lock acquisition status
-  func acquireLock<B: LockmanBoundaryId, I: LockmanInfo>(
-    lockmanInfo: I,
-    strategyId: LockmanStrategyId,
-    boundaryId: B
-  ) throws -> LockmanResult {
-    return try acquireLockCore(
-      lockmanInfo: lockmanInfo,
-      strategyId: strategyId,
-      boundaryId: boundaryId
-    )
-  }
-
-  /// Core lock acquisition logic shared by all acquireLock overloads.
-  ///
-  /// This internal method contains the common implementation for lock acquisition,
-  /// including strategy resolution, boundary protection, and the complete lock lifecycle.
-  /// By centralizing this logic, we ensure consistency across all lock acquisition paths
-  /// while reducing code duplication.
-  ///
-  /// ## Implementation Details
-  /// - Strategy resolution from container
-  /// - Boundary lock protection for atomicity
-  /// - Lock feasibility check via canLock
-  /// - Preceding cancellation handling with cleanup
-  /// - Actual lock acquisition via lock
-  ///
-  /// ## Parameters
-  /// - lockmanInfo: Pre-captured lock information ensuring consistent uniqueId for unlock operations
-  /// - strategyId: Strategy identifier for container resolution
-  /// - boundaryId: Boundary identifier for this lock operation
-  /// - Returns: LockmanResult indicating the outcome of lock acquisition
-  private func acquireLockCore<B: LockmanBoundaryId, I: LockmanInfo>(
-    lockmanInfo: I,
-    strategyId: LockmanStrategyId,
-    boundaryId: B
-  ) throws -> LockmanResult {
-    // Resolve the strategy from the container using the provided strategyId
+    // Resolve the strategy from the container using lockmanInfo.strategyId
     let strategy: AnyLockmanStrategy<I> = try LockmanManager.container.resolve(
-      id: strategyId,
+      id: lockmanInfo.strategyId,
       expecting: I.self
     )
 
