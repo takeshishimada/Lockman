@@ -4,9 +4,9 @@ Prevent duplicate execution of the same action.
 
 ## Overview
 
-SingleExecutionStrategy is a strategy for preventing duplicate execution. It prevents the same processing from being executed redundantly, maintaining data consistency and application stability.
+SingleExecutionStrategy is a strategy for preventing duplicate execution. It prevents the same operation from being executed redundantly, maintaining data consistency and application stability.
 
-This is the most frequently used basic strategy for preventing continuous user operations and duplicate execution of automatic processing.
+This is the most frequently used basic strategy for preventing continuous user actions and duplicate execution of automatic operations.
 
 ## Execution Modes
 
@@ -21,7 +21,7 @@ LockmanSingleExecutionInfo(
 )
 ```
 
-- Executes all processing without exclusive control
+- Executes all operations without exclusive control
 - Used when temporarily disabling lock functionality
 - Applied for behavior verification during debugging or testing
 
@@ -49,7 +49,7 @@ LockmanSingleExecutionInfo(
 
 - Prevents only duplicate execution of the same action
 - Different actions can execute concurrently
-- Applied when wanting to control only specific processing
+- Applied when wanting to control only specific operations
 
 ## Usage
 
@@ -88,8 +88,7 @@ var body: some ReducerOf<Self> {
             return .run { send in
                 try await saveUserData()
                 await send(.saveCompleted)
-            }
-            .catch { error, send in
+            } catch: { error, send in
                 await send(.saveError(error.localizedDescription))
             }
             
@@ -104,9 +103,8 @@ var body: some ReducerOf<Self> {
     .lock(
         boundaryId: CancelID.userAction,
         lockFailure: { error, send in
-            if let singleError = error as? LockmanSingleExecutionCancellationError,
-               case .actionAlreadyRunning(let info) = singleError.reason {
-                await send(.showBusyMessage("\(info.actionId) is currently running"))
+            if let singleError = error as? LockmanSingleExecutionError {
+                await send(.showBusyMessage("\(singleError.lockmanInfo.actionId) is currently running"))
             }
         }
     )
@@ -160,30 +158,29 @@ Time: 4s  - load action request → ✅ Execute (boundary process completed)
 
 For errors that may occur with SingleExecutionStrategy and their solutions, please also refer to the common patterns on the [Error Handling](<doc:ErrorHandling>) page.
 
-### LockmanSingleExecutionCancellationError
+### LockmanSingleExecutionError
 
-This error conforms to `LockmanCancellationError` protocol and provides:
-- `cancelledInfo`: Information about the cancelled action
-- `boundaryId`: Where the cancellation occurred
-- `reason`: Specific reason for cancellation
+This error conforms to `LockmanStrategyError` protocol and provides:
+- `lockmanInfo`: Information about the action that couldn't acquire the lock
+- `boundaryId`: Where the lock failure occurred
+- `errorDescription`: Human-readable error description
+- `failureReason`: Specific reason for the failure
 
-**CancellationReason cases:**
-- **boundaryAlreadyLocked** - Boundary is already locked
-  - `existingInfo`: Existing lock information
-- **actionAlreadyRunning** - Same action is already running
-  - `existingInfo`: Running action information
+**Error cases:**
+- **boundaryAlreadyLocked** - Boundary is already locked by another action
+- **actionAlreadyRunning** - Same action ID is already running
 
 ```swift
 lockFailure: { error, send in
-    if let singleError = error as? LockmanSingleExecutionCancellationError {
-        switch singleError.reason {
-        case .boundaryAlreadyLocked(let existingInfo):
-            send(.showBusyMessage("Another process is running: \(existingInfo.actionId)"))
-        case .actionAlreadyRunning(let existingInfo):
-            send(.showBusyMessage("\(existingInfo.actionId) is running"))
+    if let singleError = error as? LockmanSingleExecutionError {
+        switch singleError {
+        case .boundaryAlreadyLocked(_, let lockmanInfo):
+            await send(.showBusyMessage("Another process is running: \(lockmanInfo.actionId)"))
+        case .actionAlreadyRunning(_, let lockmanInfo):
+            await send(.showBusyMessage("\(lockmanInfo.actionId) is running"))
         }
     } else {
-        send(.showBusyMessage("Cannot start processing"))
+        await send(.showBusyMessage("Cannot start operation"))
     }
 }
 ```

@@ -67,13 +67,13 @@ This handler catches errors thrown within the operation and appropriately notifi
 
 ### 1. Lock Acquisition Failure (Already Locked)
 
-**Concept**: Occurs when the same processing or boundary is already running
+**Concept**: Occurs when the same operation or boundary is already running
 
 **Common solutions**:
 ```swift
 lockFailure: { error, send in
-    // Notify user that processing is in progress
-    await send(.showMessage("Processing is in progress"))
+    // Notify user that operation is in progress
+    await send(.showMessage("Operation is in progress"))
     
     // Or provide visual feedback in UI
     await send(.setButtonState(.loading))
@@ -82,7 +82,7 @@ lockFailure: { error, send in
 
 ### 2. Permission/Priority Conflicts
 
-**Concept**: Occurs due to higher priority processing or group rule constraints
+**Concept**: Occurs due to higher priority operations or group rule constraints
 
 **Common solutions**:
 ```swift
@@ -96,7 +96,7 @@ lockFailure: { error, send in
 
 ### 3. Cancellation Notification
 
-**Concept**: When existing processing is cancelled by higher priority processing
+**Concept**: When existing operations are cancelled by higher priority operations
 
 **Common solutions**:
 ```swift
@@ -148,7 +148,7 @@ Many errors contain additional information:
             let current = concurrencyError.currentCount
             await send(.showMessage("Concurrent execution limit reached: \(current)/\(limit)"))
         } else {
-            await send(.showMessage("Cannot start processing"))
+            await send(.showMessage("Cannot start operation"))
         }
     }
 )

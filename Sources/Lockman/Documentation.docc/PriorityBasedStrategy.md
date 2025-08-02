@@ -4,31 +4,31 @@ Control action execution based on priority levels.
 
 ## Overview
 
-PriorityBasedStrategy is a strategy that performs execution control based on priority. High-priority processing can interrupt low-priority processing to execute, allowing important processing to be handled preferentially.
+PriorityBasedStrategy is a strategy that performs execution control based on priority. High-priority operations can interrupt low-priority operations to execute, allowing important operations to be handled preferentially.
 
-This strategy is used in situations where high-urgency processing or control based on importance is required.
+This strategy is used in situations where high-urgency operations or control based on importance is required.
 
 ## Priority System
 
 ### Priority Levels
 
 **high** - High Priority
-- Can interrupt all other priority processing
-- System-level emergency processing or important user operations
+- Can interrupt all other priority operations
+- System-level emergency operations or important user operations
 
 **low** - Low Priority
-- Can interrupt none priority processing
+- Can interrupt none priority operations
 - Interrupted by high priority
-- Regular background processing
+- Regular background operations
 
 **none** - No Priority
 - Bypasses priority system
-- Not interrupted by other processing
-- Basic processing or temporary disabling
+- Not interrupted by other operations
+- Basic operations or temporary disabling
 
 ### Exclusive Execution Control
 
-Within the same priority level, control is based on the exclusive execution behavior setting of existing processing:
+Within the same priority level, control is based on the exclusive execution behavior setting of existing operations:
 
 **exclusive** - Exclusive Execution
 
@@ -39,8 +39,8 @@ LockmanPriorityBasedInfo(
 )
 ```
 
-- Rejects new processing of the same priority
-- Protects important processing from interruption
+- Rejects new operations of the same priority
+- Protects important operations from interruption
 
 **replaceable** - Replaceable Execution
 
@@ -51,8 +51,8 @@ LockmanPriorityBasedInfo(
 )
 ```
 
-- Can be interrupted by new processing of the same priority
-- Applied to search or update processing
+- Can be interrupted by new operations of the same priority
+- Applied to search or update operations
 
 ## Usage
 

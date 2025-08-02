@@ -4,15 +4,15 @@ Limit the number of concurrent executions.
 
 ## Overview
 
-ConcurrencyLimitedStrategyは、同時実行数を制限する戦略です。指定した数まで同時実行を許可し、制限を超える場合は実行を拒否することで、リソース使用量の制御とパフォーマンスの最適化を実現します。
+ConcurrencyLimitedStrategy is a strategy that limits the number of concurrent executions. It allows concurrent execution up to a specified number and rejects execution when the limit is exceeded, enabling resource usage control and performance optimization.
 
-この戦略は、ネットワークリクエストやファイル処理など、リソース消費の大きい処理の並行度制御に使用されます。
+This strategy is used for controlling the concurrency of resource-intensive operations such as network requests and file operations.
 
-## 同時実行制限システム
+## Concurrency Limitation System
 
-### 制限タイプ
+### Limit Types
 
-**unlimited** - 制限なし
+**unlimited** - No limit
 
 ```swift
 LockmanConcurrencyLimitedInfo(
@@ -22,11 +22,11 @@ LockmanConcurrencyLimitedInfo(
 )
 ```
 
-- 同時実行数に制限を設けない
-- 一時的に制限を無効化したい場合に使用
-- デバッグやテスト時の動作確認に適用
+- No limit on the number of concurrent executions
+- Used when you want to temporarily disable limits
+- Applied for behavior verification during debugging and testing
 
-**limited** - 数値制限
+**limited** - Numeric limit
 
 ```swift
 LockmanConcurrencyLimitedInfo(
@@ -36,16 +36,16 @@ LockmanConcurrencyLimitedInfo(
 )
 ```
 
-- 指定した数まで同時実行を許可
-- 制限を超える処理は拒否される
-- リソース保護とパフォーマンス最適化
+- Allows concurrent execution up to the specified number
+- Operations exceeding the limit are rejected
+- Resource protection and performance optimization
 
-### 同時実行グループ
+### Concurrency Groups
 
-同じ`concurrencyId`を持つ処理が同一グループとして管理され、グループ単位で同時実行数が制限されます。
+Operations with the same `concurrencyId` are managed as a single group, and the number of concurrent executions is limited on a per-group basis.
 
 ```swift
-// 同じグループ「downloads」として管理
+// Managed as the same group "downloads"
 LockmanConcurrencyLimitedInfo(
     actionId: "downloadImage",
     concurrencyId: "downloads",
@@ -59,9 +59,9 @@ LockmanConcurrencyLimitedInfo(
 )
 ```
 
-## 使用方法
+## Usage
 
-### 基本的な使用例
+### Basic Usage Example
 
 ```swift
 @LockmanConcurrencyLimited
@@ -95,24 +95,24 @@ enum ViewAction {
 }
 ```
 
-### グループ別制限設定
+### Group-specific Limit Configuration
 
 ```swift
-// ネットワーク関連: 最大3つまで
+// Network-related: Maximum 3
 LockmanConcurrencyLimitedInfo(
     actionId: "apiCall",
     concurrencyId: "network",
     limit: .limited(3)
 )
 
-// 画像処理: 最大2つまで  
+// Image operations: Maximum 2  
 LockmanConcurrencyLimitedInfo(
     actionId: "imageResize",
     concurrencyId: "imageProcessing", 
     limit: .limited(2)
 )
 
-// バックグラウンドタスク: 制限なし
+// Background tasks: No limit
 LockmanConcurrencyLimitedInfo(
     actionId: "logging",
     concurrencyId: "background",
@@ -120,39 +120,39 @@ LockmanConcurrencyLimitedInfo(
 )
 ```
 
-## 動作例
+## Behavior Examples
 
-### 制限による実行制御
-
-```
-制限数: 3
-同時実行グループ: "downloads"
-
-時刻: 0秒  - download1要求 → ✅ 実行 (1/3)
-時刻: 1秒  - download2要求 → ✅ 実行 (2/3)  
-時刻: 2秒  - download3要求 → ✅ 実行 (3/3)
-時刻: 3秒  - download4要求 → ❌ 拒否 (制限到達)
-時刻: 4秒  - download1完了 → ✅ 完了 (2/3)
-時刻: 5秒  - download5要求 → ✅ 実行 (3/3)
-```
-
-### 異なるグループでの独立制御
+### Execution Control by Limits
 
 ```
-ネットワークグループ (制限: 3)
-時刻: 0秒  - api1実行, api2実行, api3実行 → ✅ (3/3)
-時刻: 1秒  - api4要求 → ❌ 拒否
+Limit: 3
+Concurrency Group: "downloads"
 
-画像処理グループ (制限: 2)  
-時刻: 0秒  - resize1実行, resize2実行 → ✅ (2/2)
-時刻: 1秒  - resize3要求 → ❌ 拒否
-
-※ 異なるグループは独立して制御される
+Time: 0s  - download1 request → ✅ Execute (1/3)
+Time: 1s  - download2 request → ✅ Execute (2/3)  
+Time: 2s  - download3 request → ✅ Execute (3/3)
+Time: 3s  - download4 request → ❌ Reject (limit reached)
+Time: 4s  - download1 complete → ✅ Complete (2/3)
+Time: 5s  - download5 request → ✅ Execute (3/3)
 ```
 
-## エラーハンドリング
+### Independent Control in Different Groups
 
-ConcurrencyLimitedStrategyで発生する可能性のあるエラーと、その対処法については[Error Handling](<doc:ErrorHandling>)ページの共通パターンも参照してください。
+```
+Network Group (Limit: 3)
+Time: 0s  - api1 execute, api2 execute, api3 execute → ✅ (3/3)
+Time: 1s  - api4 request → ❌ Reject
+
+Image Processing Group (Limit: 2)  
+Time: 0s  - resize1 execute, resize2 execute → ✅ (2/2)
+Time: 1s  - resize3 request → ❌ Reject
+
+※ Different groups are controlled independently
+```
+
+## Error Handling
+
+For errors that may occur in ConcurrencyLimitedStrategy and how to handle them, also refer to the common patterns on the [Error Handling](<doc:ErrorHandling>) page.
 
 ### LockmanConcurrencyLimitedCancellationError
 
@@ -168,7 +168,7 @@ lockFailure: { error, send in
         let limit = concurrencyError.cancelledInfo.limit
         let current = concurrencyError.currentCount
         await send(.concurrencyLimitReached(
-            "同時実行制限に到達しました (\(current)/\(limit))"
+            "Concurrency limit reached (\(current)/\(limit))"
         ))
     }
 }

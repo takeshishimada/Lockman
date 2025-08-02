@@ -4,7 +4,7 @@ Understanding the unlocking mechanism in Lockman.
 
 ## Overview
 
-Unlocking in Lockman is a mechanism for properly releasing acquired locks. It ensures resource release and maintains system consistency in all situations, including after processing completion, error occurrence, or cancellation.
+Unlocking in Lockman is a mechanism for properly releasing acquired locks. It ensures resource release and maintains system consistency in all situations, including after operation completion, error occurrence, or cancellation.
 
 ## Specifications
 
@@ -12,10 +12,10 @@ Unlocking in Lockman is a mechanism for properly releasing acquired locks. It en
 
 When using [Reducer.lock](<doc:Lock>) or [Effect.lock](<doc:Lock>), locks are automatically released at the following timings:
 
-- **On normal completion**: When processing completes normally
+- **On normal completion**: When operation completes normally
 - **On exception**: When an error occurs
-- **On cancellation**: When processing is cancelled
-- **On early return**: When processing ends prematurely
+- **On cancellation**: When operation is cancelled
+- **On early return**: When operation ends prematurely
 
 Automatic release is implemented using defer blocks, ensuring that locks are reliably released regardless of the termination pattern.
 
@@ -29,7 +29,7 @@ For cases where you need fine-grained control over lock timing, use the `unlockO
 
 Unlock execution timing can be controlled with LockmanUnlockOption:
 
-- **immediate**: Release immediately upon processing completion
+- **immediate**: Release immediately upon operation completion
 - **mainRunLoop**: Release in the next main run loop cycle
 - **transition**: Release after platform-specific screen transition animation completion
   - iOS: 0.35 seconds (push/pop animation)

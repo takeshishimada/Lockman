@@ -7,14 +7,14 @@ Understanding the locking mechanism in Lockman.
 Locking in Lockman is a strategy-based exclusive control system. Unlike traditional simple ON/OFF control, the selected strategy enables various types of control:
 
 - **Execution Prevention**: Blocking duplicate execution ([SingleExecutionStrategy](<doc:SingleExecutionStrategy>))
-- **Execution Priority**: Prioritizing new processing by interrupting existing processing ([PriorityBasedStrategy](<doc:PriorityBasedStrategy>))
-- **Execution Coordination**: Coordinating related processing groups ([GroupCoordinationStrategy](<doc:GroupCoordinationStrategy>))
+- **Execution Priority**: Prioritizing new operations by interrupting existing operations ([PriorityBasedStrategy](<doc:PriorityBasedStrategy>))
+- **Execution Coordination**: Coordinating related operation groups ([GroupCoordinationStrategy](<doc:GroupCoordinationStrategy>))
 - **Execution Limitation**: Limiting concurrent execution count ([ConcurrencyLimitedStrategy](<doc:ConcurrencyLimitedStrategy>))
 - **Conditional Execution Control**: Dynamic conditional control through custom logic ([DynamicConditionStrategy](<doc:DynamicConditionStrategy>))
 
 ## Specifications
 
-Lockman determines the success or failure of lock acquisition based on the strategy and executes processing according to the result. The lock acquisition judgment process follows the rules of the specified strategy, and when multiple strategies are specified with [CompositeStrategy](<doc:CompositeStrategy>), lock acquisition succeeds only when all strategies allow it.
+Lockman determines the success or failure of lock acquisition based on the strategy and executes operations according to the result. The lock acquisition judgment process follows the rules of the specified strategy, and when multiple strategies are specified with [CompositeStrategy](<doc:CompositeStrategy>), lock acquisition succeeds only when all strategies allow it.
 
 ## Methods
 
@@ -52,7 +52,7 @@ struct Feature {
 ```
 
 **Parameters:**
-- `boundaryId`: Boundary identifier for all locked actions
+- `boundaryId`: Boundary identifier (exclusive control scope) for all locked actions
 - `unlockOption`: Default lock release timing (optional)
 - `lockFailure`: Handler for lock acquisition failures (optional)
 - `for`: Case paths to check for nested LockmanAction conformance (optional, up to 5 paths)
@@ -75,13 +75,13 @@ When using the ViewAction pattern in TCA, actions may be nested within enum case
 // Check root and view actions
 .lock(boundaryId: CancelID.feature, for: \.view)
 
-// Check root, view, and delegate actions
+// Check view and delegate actions
 .lock(boundaryId: CancelID.feature, for: \.view, \.delegate)
 
-// Up to 5 paths supported
+// Multiple overloads support up to 5 paths
 .lock(
   boundaryId: CancelID.feature,
-  for: \.view, \.delegate, \.alert, \.sheet, \.popover
+  for: \.view, \.delegate, \.alert
 )
 ```
 
@@ -142,7 +142,7 @@ Maintains the same lock while executing multiple Effects sequentially.
 
 **Features:**
 - Maintains the same lock across multiple Effects
-- Suitable for transactional processing
+- Suitable for transactional operations
 - If any one fails, the entire process is interrupted
 
 

@@ -8,7 +8,7 @@ Lockman's strategy system has three main features: declarative strategy selectio
 
 ## Strategy Selection
 
-Developers can select appropriate strategies based on the nature of processing using annotations.
+Developers can select appropriate strategies based on the nature of operations using annotations.
 
 ```swift
 @LockmanSingleExecution
@@ -39,18 +39,18 @@ Lockman provides the following 5 standard strategies:
 
 ### [SingleExecutionStrategy](<doc:SingleExecutionStrategy>) - Preventing Duplicate Execution
 
-- Prevents the same processing from being executed multiple times
+- Prevents the same operation from being executed multiple times
 - Applied to prevent users from tapping buttons repeatedly
 
 ### [PriorityBasedStrategy](<doc:PriorityBasedStrategy>) - Priority-Based Control
 
-- High-priority processing can interrupt and execute over low-priority processing
-- Applied to emergency processing or importance-based processing control
+- High-priority operations can interrupt and execute over low-priority operations
+- Applied to emergency operations or importance-based operation control
 
 ### [GroupCoordinationStrategy](<doc:GroupCoordinationStrategy>) - Group Coordination Control
 
 - Coordinates control of multiple related processes as a group
-- Applied to processing management in leader-member relationships
+- Applied to operation management in leader-member relationships
 
 ### [ConcurrencyLimitedStrategy](<doc:ConcurrencyLimitedStrategy>) - Limiting Concurrent Execution
 

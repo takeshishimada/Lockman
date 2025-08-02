@@ -4,13 +4,15 @@ Coordinate actions through leader/member group roles.
 
 ## Overview
 
-GroupCoordinationStrategy is a strategy that coordinates related processing as a group. Through leader-member role assignment, it ensures that multiple processes execute in appropriate order and conditions.
+GroupCoordinationStrategy is a strategy that coordinates related operations as a group. Through leader-member role assignment, it ensures that multiple processes execute in appropriate order and conditions.
 
 This strategy is used in situations where multiple related processes need to work cooperatively.
 
 ## Group System
 
 ### Coordination Roles
+
+Group coordination uses roles to define how actions participate in group operations:
 
 **none** - Non-exclusive Participant
 
@@ -24,7 +26,7 @@ LockmanGroupCoordinatedInfo(
 
 - Can participate regardless of group state
 - Does not hinder execution of other participants
-- Auxiliary processing such as UI updates or logging
+- Auxiliary operations such as UI updates or logging
 
 **leader** - Group Leader
 
@@ -52,7 +54,7 @@ LockmanGroupCoordinatedInfo(
 
 - Can only participate in active groups
 - Executes when leader or other participants are present
-- Responsible for coordinated processing
+- Responsible for coordinated operations
 
 ### Leader Entry Policy
 
@@ -191,7 +193,7 @@ lockFailure: { error, send in
 lockFailure: { error, send in
     if let groupError = error as? LockmanGroupCoordinationCancellationError,
        case .leaderCannotJoinNonEmptyGroup(let groupIds) = groupError.reason {
-        await send(.groupBusy("Cannot start because other processing is running"))
+        await send(.groupBusy("Cannot start because other operations are running"))
     }
 }
 ```
@@ -213,7 +215,7 @@ lockFailure: { error, send in
 lockFailure: { error, send in
     if let groupError = error as? LockmanGroupCoordinationCancellationError,
        case .blockedByExclusiveLeader(let leaderInfo, let groupId, let entryPolicy) = groupError.reason {
-        await send(.blockedByLeader("Blocked by exclusive leader: \(leaderInfo.actionId)"))
+        await send(.blockedByLeader("Blocked by exclusive leader operation: \(leaderInfo.actionId)"))
     }
 }
 ```
