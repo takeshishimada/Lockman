@@ -36,7 +36,7 @@ struct GroupCoordinationStrategyFeature {
       case processDataTapped  // Member - can only run during sync
       case cancelSyncTapped  // None - can always run
 
-      var lockmanInfo: LockmanGroupCoordinatedInfo {
+      func createLockmanInfo() -> LockmanGroupCoordinatedInfo {
         switch self {
         case .startSyncTapped:
           return LockmanGroupCoordinatedInfo(

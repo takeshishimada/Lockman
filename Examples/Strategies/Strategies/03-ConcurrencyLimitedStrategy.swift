@@ -70,9 +70,7 @@ struct ConcurrencyLimitedStrategyFeature {
         }
       }
 
-      var lockmanInfo:
-        LockmanCompositeInfo2<LockmanSingleExecutionInfo, LockmanConcurrencyLimitedInfo>
-      {
+      func createLockmanInfo() -> LockmanCompositeInfo2<LockmanSingleExecutionInfo, LockmanConcurrencyLimitedInfo> {
         LockmanCompositeInfo2(
           strategyId: strategyId,  // Use macro-generated strategyId
           actionId: actionId,
