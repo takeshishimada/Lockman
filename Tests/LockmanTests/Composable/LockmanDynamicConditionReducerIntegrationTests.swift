@@ -207,7 +207,17 @@ final class LockmanDynamicConditionReducerIntegrationTests: XCTestCase {
           return .none
         }
       },
-      condition: { _, _ in .success },  // Reducer-level always allows
+      condition: { _, action in
+        // Skip reducer-level processing for login action
+        switch action {
+        case .login:
+          return .cancel(
+            ComposableTestDynamicConditionError.conditionNotMet(
+              actionId: "login", hint: "No reducer processing needed"))
+        default:
+          return .success
+        }
+      },
       boundaryId: TestBoundaryId.auth
     )
 
@@ -237,6 +247,10 @@ final class LockmanDynamicConditionReducerIntegrationTests: XCTestCase {
             }
           }
         )
+      case .login:
+        // Handle login manually since reducer-level skips it
+        state.isLoggedIn = true
+        return .none
       default:
         return reducer.reduce(into: &state, action: action)
       }
@@ -303,6 +317,13 @@ final class LockmanDynamicConditionReducerIntegrationTests: XCTestCase {
                 actionId: "performOperation",
                 hint: "Reducer-level auth failed"
               ))
+        case .increment:
+          // Skip reducer-level processing for increment - let action-level handle it
+          return .cancel(
+            ComposableTestDynamicConditionError.conditionNotMet(
+              actionId: "increment",
+              hint: "Skip reducer processing"
+            ))
         default:
           return .success
         }
@@ -320,7 +341,8 @@ final class LockmanDynamicConditionReducerIntegrationTests: XCTestCase {
         return reducer.lock(
           state: state,
           action: action,
-          operation: { send in
+          operation: { [state] send in
+            // Increment count as part of action-level operation
             await send(.setOperationResult("Action-level increment"))
           },
           lockFailure: { error, send in
@@ -338,6 +360,14 @@ final class LockmanDynamicConditionReducerIntegrationTests: XCTestCase {
                 ))
           }
         )
+      case .setOperationResult(let result):
+        // Handle state updates manually since reducer-level may be skipped
+        state.operationResult = result
+        // If it's an increment operation, also increment count
+        if result == "Action-level increment" {
+          state.count += 1
+        }
+        return .none
       default:
         return reducer.reduce(into: &state, action: action)
       }

@@ -193,15 +193,17 @@ extension LockmanDynamicConditionReducer {
 
       switch conditionResult {
       case .cancel(let error):
-        // Exclusive processing not required - execute operation normally
-        return .run(priority: priority) { send in
-          try await operation(send)
-        } catch: { error, send in
-          await handler?(error, send)
+        // Condition not met - call lockFailure handler
+        if let lockFailure = lockFailure {
+          return .run { send in
+            await lockFailure(error, send)
+          }
+        } else {
+          return .none
         }
 
       case .success, .successWithPrecedingCancellation:
-        // Exclusive processing required - apply cancellable control
+        // Condition met - execute operation with cancellable control
         let baseEffect = Effect<Action>.run(priority: priority) { send in
           try await operation(send)
         } catch: { error, send in
@@ -211,7 +213,7 @@ extension LockmanDynamicConditionReducer {
         return baseEffect.cancellable(id: boundaryId)
       }
     } else {
-      // No condition - always apply exclusive processing
+      // No condition - always execute operation with cancellable control
       let baseEffect = Effect<Action>.run(priority: priority) { send in
         try await operation(send)
       } catch: { error, send in
