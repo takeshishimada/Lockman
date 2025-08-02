@@ -13,7 +13,7 @@ import SwiftSyntaxMacros
 /// This macro:
 /// 1. Adds protocol conformance to `LockmanDynamicConditionAction`
 /// 2. Generates `actionName` property
-/// 3. Generates `lockmanInfo` property with default condition
+/// 3. Generates `createLockmanInfo()` method with default condition
 public struct LockmanDynamicConditionMacro: ExtensionMacro {
   /// Generates an extension that conforms to `LockmanDynamicConditionAction`.
   public static func expansion(
@@ -72,7 +72,7 @@ private func generateDynamicConditionMembers(for enumDecl: EnumDeclSyntax) -> [D
   // Generate actionName property
   members.append(contentsOf: generateActionNameMembers(for: enumDecl))
 
-  // Generate lockmanInfo property with default condition
+  // Generate createLockmanInfo method with default condition
   if let lockmanInfo = generateDefaultLockmanInfo(for: enumDecl) {
     members.append(lockmanInfo)
   }
@@ -80,18 +80,18 @@ private func generateDynamicConditionMembers(for enumDecl: EnumDeclSyntax) -> [D
   return members
 }
 
-/// Generates the default lockmanInfo property.
+/// Generates the default createLockmanInfo method.
 private func generateDefaultLockmanInfo(for enumDecl: EnumDeclSyntax) -> DeclSyntax? {
   let accessLevel = extractAccessLevel(from: enumDecl.modifiers)
 
-  let propertyDecl = """
+  let methodDecl = """
 
-    \(accessLevel) var lockmanInfo: LockmanDynamicConditionInfo {
+    \(accessLevel) func createLockmanInfo() -> LockmanDynamicConditionInfo {
       LockmanDynamicConditionInfo(
         actionId: actionName
       )
     }
     """
 
-  return DeclSyntax(stringLiteral: propertyDecl)
+  return DeclSyntax(stringLiteral: methodDecl)
 }

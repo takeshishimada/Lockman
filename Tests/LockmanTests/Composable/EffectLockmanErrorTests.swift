@@ -25,7 +25,7 @@ final class EffectLockmanErrorTests: XCTestCase {
       LockmanStrategyId("MockUnregisteredStrategy")
     }
 
-    var lockmanInfo: LockmanSingleExecutionInfo {
+    func createLockmanInfo() -> LockmanSingleExecutionInfo {
       LockmanSingleExecutionInfo(actionId: actionName, mode: .boundary)
     }
   }
@@ -36,7 +36,7 @@ final class EffectLockmanErrorTests: XCTestCase {
 
     var actionName: String { "testAction" }
     var strategyId: LockmanStrategyId { .singleExecution }
-    var lockmanInfo: LockmanSingleExecutionInfo {
+    func createLockmanInfo() -> LockmanSingleExecutionInfo {
       LockmanSingleExecutionInfo(actionId: actionName, mode: .boundary)
     }
   }
@@ -379,7 +379,7 @@ final class EffectLockmanErrorTests: XCTestCase {
       case empty
       var actionName: String { "" }
       var strategyId: LockmanStrategyId { LockmanStrategyId("MockUnregisteredStrategy") }
-      var lockmanInfo: LockmanSingleExecutionInfo {
+      func createLockmanInfo() -> LockmanSingleExecutionInfo {
         LockmanSingleExecutionInfo(actionId: actionName, mode: .boundary)
       }
     }
@@ -404,7 +404,7 @@ final class EffectLockmanErrorTests: XCTestCase {
       case unicode
       var actionName: String { "🔒アクション测试🚀" }
       var strategyId: LockmanStrategyId { LockmanStrategyId("MockUnregisteredStrategy") }
-      var lockmanInfo: LockmanSingleExecutionInfo {
+      func createLockmanInfo() -> LockmanSingleExecutionInfo {
         LockmanSingleExecutionInfo(actionId: actionName, mode: .boundary)
       }
     }

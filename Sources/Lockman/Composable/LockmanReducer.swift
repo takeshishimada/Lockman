@@ -87,9 +87,9 @@ public struct LockmanReducer<Base: Reducer>: Reducer {
       let effectForLock: Effect<LockmanReducer<Base>.Action> = .none
 
       do {
-        // ✨ CRITICAL: Capture lockmanInfo once to ensure consistent uniqueId throughout lock lifecycle
-        // This prevents lock/unlock mismatches that occur when computed properties generate new UUIDs
-        let lockmanInfo = lockmanAction.lockmanInfo
+        // ✨ CRITICAL: Create lockmanInfo once to ensure consistent uniqueId throughout lock lifecycle
+        // This prevents lock/unlock mismatches that occur when methods are called multiple times
+        let lockmanInfo = lockmanAction.createLockmanInfo()
         let lockResult = try effectForLock.acquireLock(
           lockmanInfo: lockmanInfo,
           boundaryId: boundaryId

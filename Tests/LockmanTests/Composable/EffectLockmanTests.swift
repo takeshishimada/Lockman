@@ -438,7 +438,7 @@ private struct TestConcatenateWithLockFeature {
       }
     }
 
-    var lockmanInfo: LockmanSingleExecutionInfo {
+    func createLockmanInfo() -> LockmanSingleExecutionInfo {
       .init(actionId: actionName, mode: .boundary)
     }
 
@@ -536,7 +536,7 @@ private struct TestSingleExecutionFeature {
       }
     }
 
-    var lockmanInfo: LockmanSingleExecutionInfo {
+    func createLockmanInfo() -> LockmanSingleExecutionInfo {
       .init(actionId: actionName, mode: .boundary)
     }
 
@@ -605,7 +605,7 @@ private struct TestMultiIdFeature {
       }
     }
 
-    var lockmanInfo: LockmanSingleExecutionInfo {
+    func createLockmanInfo() -> LockmanSingleExecutionInfo {
       .init(actionId: actionName, mode: .boundary)
     }
 

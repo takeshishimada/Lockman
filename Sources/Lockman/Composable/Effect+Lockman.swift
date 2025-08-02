@@ -78,9 +78,9 @@ extension Effect {
       // Create concatenated effect from operations array
       let concatenatedEffect = Effect.concatenate(operations)
 
-      // ✨ CRITICAL: Capture lockmanInfo once to ensure consistent uniqueId throughout lock lifecycle
-      // This prevents lock/unlock mismatches that occur when computed properties generate new UUIDs
-      let lockmanInfo = action.lockmanInfo
+      // ✨ CRITICAL: Create lockmanInfo once to ensure consistent uniqueId throughout lock lifecycle
+      // This prevents lock/unlock mismatches that occur when methods are called multiple times
+      let lockmanInfo = action.createLockmanInfo()
 
       // Acquire lock using the captured lockmanInfo (consistent uniqueId)
       let lockResult = try concatenatedEffect.acquireLock(
@@ -178,9 +178,9 @@ extension Effect {
     // This method provides a method chain style API by combining acquireLock and buildLockEffect
 
     do {
-      // ✨ CRITICAL: Capture lockmanInfo once to ensure consistent uniqueId throughout lock lifecycle
-      // This prevents lock/unlock mismatches that occur when computed properties generate new UUIDs
-      let lockmanInfo = action.lockmanInfo
+      // ✨ CRITICAL: Create lockmanInfo once to ensure consistent uniqueId throughout lock lifecycle
+      // This prevents lock/unlock mismatches that occur when methods are called multiple times
+      let lockmanInfo = action.createLockmanInfo()
 
       // Acquire lock using captured lockmanInfo (consistent uniqueId)
       let lockResult = try acquireLock(

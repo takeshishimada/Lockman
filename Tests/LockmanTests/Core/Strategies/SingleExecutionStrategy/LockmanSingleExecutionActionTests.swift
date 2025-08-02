@@ -11,7 +11,7 @@ final class LockmanSingleExecutionActionTests: XCTestCase {
   struct SimpleAction: LockmanSingleExecutionAction {
     let actionName = "simpleAction"
 
-    var lockmanInfo: LockmanSingleExecutionInfo {
+    func createLockmanInfo() -> LockmanSingleExecutionInfo {
       .init(actionId: actionName, mode: .boundary)
     }
   }
@@ -33,7 +33,7 @@ final class LockmanSingleExecutionActionTests: XCTestCase {
       }
     }
 
-    var lockmanInfo: LockmanSingleExecutionInfo {
+    func createLockmanInfo() -> LockmanSingleExecutionInfo {
       .init(actionId: actionName, mode: .boundary)
     }
   }
@@ -55,7 +55,7 @@ final class LockmanSingleExecutionActionTests: XCTestCase {
       }
     }
 
-    var lockmanInfo: LockmanSingleExecutionInfo {
+    func createLockmanInfo() -> LockmanSingleExecutionInfo {
       .init(actionId: actionName, mode: .boundary)
     }
   }
@@ -69,10 +69,10 @@ final class LockmanSingleExecutionActionTests: XCTestCase {
     XCTAssertEqual(action.actionName, "simpleAction")
 
     // Test automatic strategyId (accessed through lockmanInfo)
-    XCTAssertEqual(action.lockmanInfo.strategyId, .singleExecution)
+    XCTAssertEqual(action.createLockmanInfo().strategyId, .singleExecution)
 
     // Test automatic lockmanInfo
-    let info = action.lockmanInfo
+    let info = action.createLockmanInfo()
     XCTAssertEqual(info.actionId, "simpleAction")
     XCTAssertNotEqual(info.uniqueId, UUID())
   }
@@ -90,16 +90,16 @@ final class LockmanSingleExecutionActionTests: XCTestCase {
     XCTAssertEqual(action4.actionName, "deletePost_789")
 
     // All should use the same strategy ID (accessed through lockmanInfo)
-    XCTAssertEqual(action1.lockmanInfo.strategyId, .singleExecution)
-    XCTAssertEqual(action2.lockmanInfo.strategyId, .singleExecution)
-    XCTAssertEqual(action3.lockmanInfo.strategyId, .singleExecution)
-    XCTAssertEqual(action4.lockmanInfo.strategyId, .singleExecution)
+    XCTAssertEqual(action1.createLockmanInfo().strategyId, .singleExecution)
+    XCTAssertEqual(action2.createLockmanInfo().strategyId, .singleExecution)
+    XCTAssertEqual(action3.createLockmanInfo().strategyId, .singleExecution)
+    XCTAssertEqual(action4.createLockmanInfo().strategyId, .singleExecution)
 
     // LockmanInfo should reflect the actionName
-    XCTAssertEqual(action1.lockmanInfo.actionId, "fetchUser_123")
-    XCTAssertEqual(action2.lockmanInfo.actionId, "fetchUser_456")
-    XCTAssertEqual(action3.lockmanInfo.actionId, "updateProfile_123")
-    XCTAssertEqual(action4.lockmanInfo.actionId, "deletePost_789")
+    XCTAssertEqual(action1.createLockmanInfo().actionId, "fetchUser_123")
+    XCTAssertEqual(action2.createLockmanInfo().actionId, "fetchUser_456")
+    XCTAssertEqual(action3.createLockmanInfo().actionId, "updateProfile_123")
+    XCTAssertEqual(action4.createLockmanInfo().actionId, "deletePost_789")
   }
 
   func testsharedLockActionBehavior() {
@@ -113,8 +113,8 @@ final class LockmanSingleExecutionActionTests: XCTestCase {
     XCTAssertEqual(resetAction.actionName, "reset")
 
     // They should conflict with each other
-    XCTAssertEqual(saveAction.lockmanInfo.actionId, loadAction.lockmanInfo.actionId)
-    XCTAssertNotEqual(saveAction.lockmanInfo.actionId, resetAction.lockmanInfo.actionId)
+    XCTAssertEqual(saveAction.createLockmanInfo().actionId, loadAction.createLockmanInfo().actionId)
+    XCTAssertNotEqual(saveAction.createLockmanInfo().actionId, resetAction.createLockmanInfo().actionId)
   }
 
   // MARK: - LockmanAction Protocol Tests
@@ -128,7 +128,7 @@ final class LockmanSingleExecutionActionTests: XCTestCase {
     XCTAssertEqual(actions.count, 1)
 
     // Test type constraints are satisfied
-    let info = action.lockmanInfo as? LockmanSingleExecutionInfo
+    let info = action.createLockmanInfo() as? LockmanSingleExecutionInfo
     XCTAssertNotNil(info)
     XCTAssertEqual(info?.actionId, "simpleAction")
   }
@@ -145,13 +145,13 @@ final class LockmanSingleExecutionActionTests: XCTestCase {
       // Resolve strategy for the action
       do {
         let strategy: AnyLockmanStrategy<LockmanSingleExecutionInfo> = try container.resolve(
-          id: action.lockmanInfo.strategyId,
+          id: action.createLockmanInfo().strategyId,
           expecting: LockmanSingleExecutionInfo.self
         )
 
         // Test locking behavior
         let boundaryId = "test-boundary"
-        let info = action.lockmanInfo
+        let info = action.createLockmanInfo()
 
         XCTAssertEqual(strategy.canLock(boundaryId: boundaryId, info: info), .success)
         strategy.lock(boundaryId: boundaryId, info: info)
@@ -173,15 +173,15 @@ final class LockmanSingleExecutionActionTests: XCTestCase {
     let action2 = ParameterizedAction.fetchUser(id: "123")
 
     // First lock should succeed
-    XCTAssertEqual(strategy.canLock(boundaryId: boundaryId, info: action1.lockmanInfo), .success)
-    strategy.lock(boundaryId: boundaryId, info: action1.lockmanInfo)
+    XCTAssertEqual(strategy.canLock(boundaryId: boundaryId, info: action1.createLockmanInfo()), .success)
+    strategy.lock(boundaryId: boundaryId, info: action1.createLockmanInfo())
 
     // Second lock should fail (boundary is locked)
-    XCTAssertLockFailure(strategy.canLock(boundaryId: boundaryId, info: action2.lockmanInfo))
+    XCTAssertLockFailure(strategy.canLock(boundaryId: boundaryId, info: action2.createLockmanInfo()))
 
     // Different action should also fail (boundary is locked)
     let action3 = ParameterizedAction.fetchUser(id: "456")
-    XCTAssertLockFailure(strategy.canLock(boundaryId: boundaryId, info: action3.lockmanInfo))
+    XCTAssertLockFailure(strategy.canLock(boundaryId: boundaryId, info: action3.createLockmanInfo()))
 
     // Cleanup
     strategy.cleanUp()
@@ -193,43 +193,43 @@ final class LockmanSingleExecutionActionTests: XCTestCase {
     struct EmptyNameAction: LockmanSingleExecutionAction {
       let actionName = ""
 
-      var lockmanInfo: LockmanSingleExecutionInfo {
+      func createLockmanInfo() -> LockmanSingleExecutionInfo {
         .init(actionId: actionName, mode: .boundary)
       }
     }
 
     let action = EmptyNameAction()
     XCTAssertEqual(action.actionName, "")
-    XCTAssertEqual(action.lockmanInfo.actionId, "")
-    XCTAssertEqual(action.lockmanInfo.strategyId, .singleExecution)
+    XCTAssertEqual(action.createLockmanInfo().actionId, "")
+    XCTAssertEqual(action.createLockmanInfo().strategyId, .singleExecution)
   }
 
   func testunicodeActionNameHandling() {
     struct UnicodeAction: LockmanSingleExecutionAction {
       let actionName = "🔒アクション🚀"
 
-      var lockmanInfo: LockmanSingleExecutionInfo {
+      func createLockmanInfo() -> LockmanSingleExecutionInfo {
         .init(actionId: actionName, mode: .boundary)
       }
     }
 
     let action = UnicodeAction()
     XCTAssertEqual(action.actionName, "🔒アクション🚀")
-    XCTAssertEqual(action.lockmanInfo.actionId, "🔒アクション🚀")
+    XCTAssertEqual(action.createLockmanInfo().actionId, "🔒アクション🚀")
   }
 
   func testveryLongActionNameHandling() {
     struct LongNameAction: LockmanSingleExecutionAction {
       let actionName = String(repeating: "VeryLongActionName", count: 100)
 
-      var lockmanInfo: LockmanSingleExecutionInfo {
+      func createLockmanInfo() -> LockmanSingleExecutionInfo {
         .init(actionId: actionName, mode: .boundary)
       }
     }
 
     let action = LongNameAction()
     XCTAssertEqual(action.actionName.count, 1800)
-    XCTAssertEqual(action.lockmanInfo.actionId, action.actionName)
+    XCTAssertEqual(action.createLockmanInfo().actionId, action.actionName)
   }
 
   func testactionNameConsistencyAcrossInstances() {
@@ -237,8 +237,8 @@ final class LockmanSingleExecutionActionTests: XCTestCase {
     let action2 = SimpleAction()
 
     XCTAssertEqual(action1.actionName, action2.actionName)
-    XCTAssertEqual(action1.lockmanInfo.actionId, action2.lockmanInfo.actionId)
+    XCTAssertEqual(action1.createLockmanInfo().actionId, action2.createLockmanInfo().actionId)
     // But unique IDs should be different
-    XCTAssertNotEqual(action1.lockmanInfo.uniqueId, action2.lockmanInfo.uniqueId)
+    XCTAssertNotEqual(action1.createLockmanInfo().uniqueId, action2.createLockmanInfo().uniqueId)
   }
 }

@@ -31,7 +31,7 @@
               }
             }
 
-            internal var lockmanInfo: LockmanDynamicConditionInfo {
+            internal func createLockmanInfo() -> LockmanDynamicConditionInfo {
               LockmanDynamicConditionInfo(
                 actionId: actionName
               )
@@ -74,7 +74,7 @@
               }
             }
 
-            internal var lockmanInfo: LockmanDynamicConditionInfo {
+            internal func createLockmanInfo() -> LockmanDynamicConditionInfo {
               LockmanDynamicConditionInfo(
                 actionId: actionName
               )
@@ -113,7 +113,7 @@
               }
             }
 
-            internal var lockmanInfo: LockmanDynamicConditionInfo {
+            internal func createLockmanInfo() -> LockmanDynamicConditionInfo {
               LockmanDynamicConditionInfo(
                 actionId: actionName
               )
@@ -148,7 +148,7 @@
               }
             }
 
-            public var lockmanInfo: LockmanDynamicConditionInfo {
+            public func createLockmanInfo() -> LockmanDynamicConditionInfo {
               LockmanDynamicConditionInfo(
                 actionId: actionName
               )
@@ -187,7 +187,7 @@
               }
             }
 
-            internal var lockmanInfo: LockmanDynamicConditionInfo {
+            internal func createLockmanInfo() -> LockmanDynamicConditionInfo {
               LockmanDynamicConditionInfo(
                 actionId: actionName
               )
@@ -294,7 +294,7 @@
               }
             }
 
-            internal var lockmanInfo: LockmanDynamicConditionInfo {
+            internal func createLockmanInfo() -> LockmanDynamicConditionInfo {
               LockmanDynamicConditionInfo(
                 actionId: actionName
               )

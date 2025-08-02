@@ -11,7 +11,7 @@ final class LockmanGroupCoordinatedActionTests: XCTestCase {
   private struct StartLoadingAction: LockmanGroupCoordinatedAction {
     let actionName = "startLoading"
 
-    var lockmanInfo: LockmanGroupCoordinatedInfo {
+    func createLockmanInfo() -> LockmanGroupCoordinatedInfo {
       LockmanGroupCoordinatedInfo(
         actionId: actionName,
         groupId: "dataLoading",
@@ -24,7 +24,7 @@ final class LockmanGroupCoordinatedActionTests: XCTestCase {
   private struct UpdateProgressAction: LockmanGroupCoordinatedAction {
     let actionName = "updateProgress"
 
-    var lockmanInfo: LockmanGroupCoordinatedInfo {
+    func createLockmanInfo() -> LockmanGroupCoordinatedInfo {
       LockmanGroupCoordinatedInfo(
         actionId: actionName,
         groupId: "dataLoading",
@@ -37,7 +37,7 @@ final class LockmanGroupCoordinatedActionTests: XCTestCase {
   private struct MultiGroupAction: LockmanGroupCoordinatedAction {
     let actionName = "multiGroupOperation"
 
-    var lockmanInfo: LockmanGroupCoordinatedInfo {
+    func createLockmanInfo() -> LockmanGroupCoordinatedInfo {
       LockmanGroupCoordinatedInfo(
         actionId: actionName,
         groupIds: ["navigation", "dataLoading", "ui"],
@@ -63,7 +63,7 @@ final class LockmanGroupCoordinatedActionTests: XCTestCase {
       }
     }
 
-    var lockmanInfo: LockmanGroupCoordinatedInfo {
+    func createLockmanInfo() -> LockmanGroupCoordinatedInfo {
       let screenId: String
       switch self {
       case .startNavigation(let id),
@@ -100,7 +100,7 @@ final class LockmanGroupCoordinatedActionTests: XCTestCase {
       self.coordinationRole = role
     }
 
-    var lockmanInfo: LockmanGroupCoordinatedInfo {
+    func createLockmanInfo() -> LockmanGroupCoordinatedInfo {
       LockmanGroupCoordinatedInfo(
         actionId: actionName,
         groupId: groupId,
@@ -118,10 +118,10 @@ final class LockmanGroupCoordinatedActionTests: XCTestCase {
     XCTAssertEqual(action.actionName, "startLoading")
 
     // Test automatic strategyId
-    XCTAssertEqual(action.lockmanInfo.strategyId, .groupCoordination)
+    XCTAssertEqual(action.createLockmanInfo().strategyId, .groupCoordination)
 
     // Test lockmanInfo
-    let info = action.lockmanInfo
+    let info = action.createLockmanInfo()
     XCTAssertEqual(info.actionId, "startLoading")
     XCTAssertEqual(info.groupIds, [AnyLockmanGroupId("dataLoading")])
     XCTAssertEqual(info.coordinationRole, .none)
@@ -132,9 +132,9 @@ final class LockmanGroupCoordinatedActionTests: XCTestCase {
     let action = UpdateProgressAction()
 
     XCTAssertEqual(action.actionName, "updateProgress")
-    XCTAssertEqual(action.lockmanInfo.strategyId, .groupCoordination)
+    XCTAssertEqual(action.createLockmanInfo().strategyId, .groupCoordination)
 
-    let info = action.lockmanInfo
+    let info = action.createLockmanInfo()
     XCTAssertEqual(info.actionId, "updateProgress")
     XCTAssertEqual(info.groupIds, [AnyLockmanGroupId("dataLoading")])
     XCTAssertEqual(info.coordinationRole, .member)
@@ -145,7 +145,7 @@ final class LockmanGroupCoordinatedActionTests: XCTestCase {
     let startNav = NavigationAction.startNavigation(screenId: "detail")
     XCTAssertEqual(startNav.actionName, "startNavigation")
 
-    let startInfo = startNav.lockmanInfo
+    let startInfo = startNav.createLockmanInfo()
     XCTAssertEqual(startInfo.groupIds, [AnyLockmanGroupId("navigation-detail")])
     XCTAssertEqual(startInfo.coordinationRole, .none)
 
@@ -153,20 +153,20 @@ final class LockmanGroupCoordinatedActionTests: XCTestCase {
     let animate = NavigationAction.animateTransition(screenId: "detail")
     XCTAssertEqual(animate.actionName, "animateTransition")
 
-    let animateInfo = animate.lockmanInfo
+    let animateInfo = animate.createLockmanInfo()
     XCTAssertEqual(animateInfo.groupIds, [AnyLockmanGroupId("navigation-detail")])
     XCTAssertEqual(animateInfo.coordinationRole, .member)
 
     let complete = NavigationAction.completeNavigation(screenId: "detail")
     XCTAssertEqual(complete.actionName, "completeNavigation")
 
-    let completeInfo = complete.lockmanInfo
+    let completeInfo = complete.createLockmanInfo()
     XCTAssertEqual(completeInfo.groupIds, [AnyLockmanGroupId("navigation-detail")])
     XCTAssertEqual(completeInfo.coordinationRole, .member)
 
     // Different screen IDs create different groups
     let otherNav = NavigationAction.startNavigation(screenId: "settings")
-    let otherInfo = otherNav.lockmanInfo
+    let otherInfo = otherNav.createLockmanInfo()
     XCTAssertEqual(otherInfo.groupIds, [AnyLockmanGroupId("navigation-settings")])
   }
 
@@ -185,25 +185,25 @@ final class LockmanGroupCoordinatedActionTests: XCTestCase {
     )
 
     XCTAssertEqual(leader.actionName, "fetchData")
-    let leaderInfo = leader.lockmanInfo
+    let leaderInfo = leader.createLockmanInfo()
     XCTAssertEqual(leaderInfo.groupIds, [AnyLockmanGroupId("api-users")])
     XCTAssertEqual(leaderInfo.coordinationRole, .none)
 
     XCTAssertEqual(member.actionName, "cacheData")
-    let memberInfo = member.lockmanInfo
+    let memberInfo = member.createLockmanInfo()
     XCTAssertEqual(memberInfo.groupIds, [AnyLockmanGroupId("api-users")])
     XCTAssertEqual(memberInfo.coordinationRole, .member)
 
     // Both use the same strategy
-    XCTAssertEqual(leader.lockmanInfo.strategyId, .groupCoordination)
-    XCTAssertEqual(member.lockmanInfo.strategyId, .groupCoordination)
+    XCTAssertEqual(leader.createLockmanInfo().strategyId, .groupCoordination)
+    XCTAssertEqual(member.createLockmanInfo().strategyId, .groupCoordination)
   }
 
   // MARK: - LockmanInfo Generation Tests
 
   func testGeneratedLockmanInfoHasCorrectProperties() {
     let action = StartLoadingAction()
-    let info = action.lockmanInfo
+    let info = action.createLockmanInfo()
 
     // Verify type
     XCTAssertTrue(type(of: info) == LockmanGroupCoordinatedInfo.self)
@@ -214,7 +214,7 @@ final class LockmanGroupCoordinatedActionTests: XCTestCase {
     XCTAssertEqual(info.coordinationRole, .none)
 
     // Each call generates new unique ID
-    let info2 = action.lockmanInfo
+    let info2 = action.createLockmanInfo()
     XCTAssertNotEqual(info.uniqueId, info2.uniqueId)
   }
 
@@ -222,8 +222,8 @@ final class LockmanGroupCoordinatedActionTests: XCTestCase {
     let action1 = StartLoadingAction()
     let action2 = UpdateProgressAction()
 
-    let info1 = action1.lockmanInfo
-    let info2 = action2.lockmanInfo
+    let info1 = action1.createLockmanInfo()
+    let info2 = action2.createLockmanInfo()
 
     // Different action IDs
     XCTAssertNotEqual(info1.actionId, info2.actionId)
@@ -249,12 +249,12 @@ final class LockmanGroupCoordinatedActionTests: XCTestCase {
     let progressAction = UpdateProgressAction()
 
     // Leader can start
-    let startInfo = startAction.lockmanInfo
+    let startInfo = startAction.createLockmanInfo()
     XCTAssertEqual(strategy.canLock(boundaryId: boundaryId, info: startInfo), .success)
     strategy.lock(boundaryId: boundaryId, info: startInfo)
 
     // Member can join
-    let progressInfo = progressAction.lockmanInfo
+    let progressInfo = progressAction.createLockmanInfo()
     XCTAssertEqual(strategy.canLock(boundaryId: boundaryId, info: progressInfo), .success)
     strategy.lock(boundaryId: boundaryId, info: progressInfo)
 
@@ -272,8 +272,8 @@ final class LockmanGroupCoordinatedActionTests: XCTestCase {
     let navSettings = NavigationAction.startNavigation(screenId: "settings")
 
     // Both can start (different groups)
-    let detailInfo = navDetail.lockmanInfo
-    let settingsInfo = navSettings.lockmanInfo
+    let detailInfo = navDetail.createLockmanInfo()
+    let settingsInfo = navSettings.createLockmanInfo()
 
     // Debug: check what groupIds are being generated
     XCTAssertEqual(detailInfo.groupIds, [AnyLockmanGroupId("navigation-detail")])
@@ -290,9 +290,9 @@ final class LockmanGroupCoordinatedActionTests: XCTestCase {
     let animateSettings = NavigationAction.animateTransition(screenId: "settings")
 
     XCTAssertEqual(
-      strategy.canLock(boundaryId: boundaryId, info: animateDetail.lockmanInfo), .success)
+      strategy.canLock(boundaryId: boundaryId, info: animateDetail.createLockmanInfo()), .success)
     XCTAssertEqual(
-      strategy.canLock(boundaryId: boundaryId, info: animateSettings.lockmanInfo), .success)
+      strategy.canLock(boundaryId: boundaryId, info: animateSettings.createLockmanInfo()), .success)
   }
 
   // MARK: - Multiple Groups Tests
@@ -301,9 +301,9 @@ final class LockmanGroupCoordinatedActionTests: XCTestCase {
     let action = MultiGroupAction()
 
     XCTAssertEqual(action.actionName, "multiGroupOperation")
-    XCTAssertEqual(action.lockmanInfo.strategyId, .groupCoordination)
+    XCTAssertEqual(action.createLockmanInfo().strategyId, .groupCoordination)
 
-    let info = action.lockmanInfo
+    let info = action.createLockmanInfo()
     XCTAssertEqual(info.actionId, "multiGroupOperation")
     XCTAssertEqual(
       info.groupIds,
@@ -316,7 +316,7 @@ final class LockmanGroupCoordinatedActionTests: XCTestCase {
     struct SingleGroupDynamicAction: LockmanGroupCoordinatedAction {
       let actionName = "dynamic"
 
-      var lockmanInfo: LockmanGroupCoordinatedInfo {
+      func createLockmanInfo() -> LockmanGroupCoordinatedInfo {
         LockmanGroupCoordinatedInfo(
           actionId: actionName,
           groupId: "singleGroup",
@@ -328,7 +328,7 @@ final class LockmanGroupCoordinatedActionTests: XCTestCase {
     struct MultiGroupDynamicAction: LockmanGroupCoordinatedAction {
       let actionName = "dynamic"
 
-      var lockmanInfo: LockmanGroupCoordinatedInfo {
+      func createLockmanInfo() -> LockmanGroupCoordinatedInfo {
         LockmanGroupCoordinatedInfo(
           actionId: actionName,
           groupIds: ["group1", "group2"],
@@ -339,12 +339,12 @@ final class LockmanGroupCoordinatedActionTests: XCTestCase {
 
     // Single group mode
     let singleMode = SingleGroupDynamicAction()
-    let singleInfo = singleMode.lockmanInfo
+    let singleInfo = singleMode.createLockmanInfo()
     XCTAssertEqual(singleInfo.groupIds, [AnyLockmanGroupId("singleGroup")])
 
     // Multiple group mode
     let multiMode = MultiGroupDynamicAction()
-    let multiInfo = multiMode.lockmanInfo
+    let multiInfo = multiMode.createLockmanInfo()
     XCTAssertEqual(multiInfo.groupIds, [AnyLockmanGroupId("group1"), AnyLockmanGroupId("group2")])
   }
 
@@ -359,7 +359,7 @@ final class LockmanGroupCoordinatedActionTests: XCTestCase {
 
     XCTAssertEqual(action.actionName, "")
 
-    let info = action.lockmanInfo
+    let info = action.createLockmanInfo()
     XCTAssertEqual(info.actionId, "")
     XCTAssertEqual(info.groupIds, [AnyLockmanGroupId("")])
   }
@@ -373,7 +373,7 @@ final class LockmanGroupCoordinatedActionTests: XCTestCase {
 
     XCTAssertEqual(action.actionName, "action@#$%")
 
-    let info = action.lockmanInfo
+    let info = action.createLockmanInfo()
     XCTAssertEqual(info.actionId, "action@#$%")
     XCTAssertEqual(info.groupIds, [AnyLockmanGroupId("group-with-特殊文字-🔒")])
   }

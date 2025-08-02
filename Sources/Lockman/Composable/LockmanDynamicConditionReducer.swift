@@ -184,7 +184,7 @@ extension LockmanDynamicConditionReducer {
     line: UInt = #line,
     column: UInt = #column
   ) -> Effect<Action> {
-    let lockmanInfo = lockAction.lockmanInfo
+    let lockmanInfo = lockAction.createLockmanInfo()
     let actionId = lockmanInfo.actionId
     let dynamicLockCondition = self.lockCondition
 

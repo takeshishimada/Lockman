@@ -11,7 +11,7 @@ private enum TestFeatureAction: Equatable, LockmanAction {
   case fetchCompleted(Int)
   case lockFailed
 
-  var lockmanInfo: LockmanSingleExecutionInfo {
+  func createLockmanInfo() -> LockmanSingleExecutionInfo {
     switch self {
     case .fetch:
       return LockmanSingleExecutionInfo(

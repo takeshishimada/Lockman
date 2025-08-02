@@ -245,39 +245,39 @@ func generateActionNameMembers(for enumDecl: EnumDeclSyntax) -> [DeclSyntax] {
 // Deprecated: generateStrategyTypeMembers is no longer used.
 // Strategy identification is now handled through strategyId instead of strategyType.
 
-/// Generates the `lockmanInfo` computed property for single execution actions.
+/// Generates the `createLockmanInfo()` method for single execution actions.
 ///
-/// This function creates a computed property that returns lock information
-/// specific to single execution strategies. The generated property creates
+/// This function creates a method that returns lock information
+/// specific to single execution strategies. The generated method creates
 /// a `LockmanSingleExecutionInfo` instance using the action name.
 ///
-/// ## Generated Property Structure
+/// ## Generated Method Structure
 /// ```swift
-/// var lockmanInfo: LockmanSingleExecutionInfo {
+/// func createLockmanInfo() -> LockmanSingleExecutionInfo {
 ///   .init(actionId: actionName)
 /// }
 /// ```
 ///
 /// ## Integration
-/// The generated property integrates with other generated members:
+/// The generated method integrates with other generated members:
 /// - Uses the `actionName` property for the action identifier
 /// - Returns the appropriate info type for the strategy
 /// - Maintains consistent access level with other members
 ///
 /// - Parameter enumDecl: The enum declaration to process
-/// - Returns: Array containing the generated property declaration
+/// - Returns: Array containing the generated method declaration
 func generateLockmanInfoMembers(for enumDecl: EnumDeclSyntax) -> [DeclSyntax] {
   let accessLevel = extractAccessLevel(from: enumDecl)
 
-  let propertyDeclaration = DeclSyntax(
+  let methodDeclaration = DeclSyntax(
     """
-    \(raw: accessLevel) var lockmanInfo: LockmanSingleExecutionInfo {
+    \(raw: accessLevel) func createLockmanInfo() -> LockmanSingleExecutionInfo {
       .init(actionId: actionName)
     }
     """
   )
 
-  return [propertyDeclaration]
+  return [methodDeclaration]
 }
 
 // MARK: - Switch Case Generation

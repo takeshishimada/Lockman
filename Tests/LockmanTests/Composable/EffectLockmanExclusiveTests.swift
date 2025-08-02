@@ -392,7 +392,7 @@ private struct TestFeature {
       }
     }
 
-    var lockmanInfo: LockmanSingleExecutionInfo {
+    func createLockmanInfo() -> LockmanSingleExecutionInfo {
       .init(actionId: actionName, mode: .boundary)
     }
 

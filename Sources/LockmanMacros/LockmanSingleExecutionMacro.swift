@@ -81,7 +81,7 @@ extension LockmanSingleExecutionMacro: MemberMacro {
 
 /// Generates member declarations specific to LockmanSingleExecution actions.
 /// Currently generates only the `actionName` property. Users must implement
-/// `lockmanInfo` themselves to specify the execution mode.
+/// `createLockmanInfo()` themselves to specify the execution mode.
 ///
 /// - Parameter enumDecl: The `EnumDeclSyntax` representing the enum to process.
 /// - Returns: An array of `DeclSyntax` nodes containing the generated member declarations.
@@ -91,7 +91,7 @@ private func generateSingleExecutionMembers(for enumDecl: EnumDeclSyntax) -> [De
   // Generate standard actionName property
   members.append(contentsOf: generateActionNameMembers(for: enumDecl))
 
-  // Do NOT generate lockmanInfo - users must implement it themselves
+  // Do NOT generate createLockmanInfo method - users must implement it themselves
   // to specify the execution mode (.none, .boundary, or .action)
 
   return members

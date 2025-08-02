@@ -2,21 +2,28 @@
 ///
 /// Conforming types must provide:
 /// - `I`: The concrete `LockmanInfo` type associated with this action.
-/// - `lockmanInfo`: An instance of that lock information.
+/// - `createLockmanInfo()`: A method that creates lock information instances.
 ///
 /// The strategy to use is determined by the `strategyId` property in the
 /// `lockmanInfo` instance, providing better flexibility for user-defined
 /// and configured strategies.
+///
+/// ## Important: Use createLockmanInfo() Once Per Lock Operation
+/// The `createLockmanInfo()` method should be called once at the beginning of
+/// each lock operation and the result should be reused throughout the operation.
+/// This ensures consistent `uniqueId` values for proper lock/unlock matching.
 ///
 /// Example implementation:
 /// ```swift
 /// struct MyAction: LockmanAction {
 ///   typealias I = LockmanSingleExecutionInfo
 ///
-///   let lockmanInfo = LockmanSingleExecutionInfo(
-///     actionId: "myAction",
-///     mode: .boundary
-///   )
+///   func createLockmanInfo() -> LockmanSingleExecutionInfo {
+///     LockmanSingleExecutionInfo(
+///       actionId: "myAction",
+///       mode: .boundary
+///     )
+///   }
 /// }
 /// ```
 ///
@@ -25,10 +32,12 @@
 /// struct TransitionAction: LockmanAction {
 ///   typealias I = LockmanSingleExecutionInfo
 ///
-///   let lockmanInfo = LockmanSingleExecutionInfo(
-///     actionId: "transition",
-///     mode: .boundary
-///   )
+///   func createLockmanInfo() -> LockmanSingleExecutionInfo {
+///     LockmanSingleExecutionInfo(
+///       actionId: "transition",
+///       mode: .boundary
+///     )
+///   }
 ///
 ///   // Release lock after screen transition completes
 ///   var unlockOption: LockmanUnlockOption { .transition }
@@ -40,13 +49,15 @@
 /// struct ConfiguredAction: LockmanAction {
 ///   typealias I = CustomLockInfo
 ///
-///   let lockmanInfo = CustomLockInfo(
-///     strategyId: LockmanStrategyId(
-///       name: "RateLimitStrategy",
-///       configuration: "limit-100"
-///     ),
-///     actionId: "apiCall"
-///   )
+///   func createLockmanInfo() -> CustomLockInfo {
+///     CustomLockInfo(
+///       strategyId: LockmanStrategyId(
+///         name: "RateLimitStrategy",
+///         configuration: "limit-100"
+///       ),
+///       actionId: "apiCall"
+///     )
+///   }
 /// }
 /// ```
 public protocol LockmanAction: Sendable {
@@ -54,10 +65,16 @@ public protocol LockmanAction: Sendable {
   /// This defines what kind of lock information this action carries.
   associatedtype I: LockmanInfo
 
-  /// The lock information that defines how this action should be locked or unlocked.
-  /// This instance contains all the necessary data for the strategy to make
+  /// Creates lock information that defines how this action should be locked or unlocked.
+  /// This method should be called once at the beginning of each lock operation.
+  /// The returned instance contains all the necessary data for the strategy to make
   /// locking decisions (e.g., action ID, priority, strategy ID, etc.).
-  var lockmanInfo: I { get }
+  ///
+  /// ## Important: Call Once Per Lock Operation
+  /// To ensure consistent `uniqueId` values throughout the lock lifecycle,
+  /// call this method once and reuse the returned instance for both lock
+  /// acquisition and release operations.
+  func createLockmanInfo() -> I
 
   /// The unlock timing option for this action.
   /// This specifies when the lock should be released after the action completes.

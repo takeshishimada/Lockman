@@ -57,7 +57,7 @@ private enum TestAction: LockmanConcurrencyLimitedAction {
     }
   }
 
-  var lockmanInfo: LockmanConcurrencyLimitedInfo {
+  func createLockmanInfo() -> LockmanConcurrencyLimitedInfo {
     switch self {
     case .fetchUser:
       return .init(actionId: actionName, group: TestConcurrencyGroup.apiRequests)
@@ -81,19 +81,19 @@ final class LockmanConcurrencyLimitedActionTests: XCTestCase {
   }
 
   func testLockmanInfoPropertyWithGroup() {
-    let fetchUserInfo = TestAction.fetchUser(id: "123").lockmanInfo
+    let fetchUserInfo = TestAction.fetchUser(id: "123").createLockmanInfo()
     XCTAssertEqual(fetchUserInfo.actionId, "fetchUser")
     XCTAssertEqual(fetchUserInfo.concurrencyId, "api_requests")
     XCTAssertEqual(fetchUserInfo.limit, .limited(3))
 
-    let uploadFileInfo = TestAction.uploadFile(name: "test.txt").lockmanInfo
+    let uploadFileInfo = TestAction.uploadFile(name: "test.txt").createLockmanInfo()
     XCTAssertEqual(uploadFileInfo.actionId, "uploadFile")
     XCTAssertEqual(uploadFileInfo.concurrencyId, "file_operations")
     XCTAssertEqual(uploadFileInfo.limit, .limited(2))
   }
 
   func testLockmanInfoPropertyWithDirectLimit() {
-    let processDataInfo = TestAction.processData.lockmanInfo
+    let processDataInfo = TestAction.processData.createLockmanInfo()
     XCTAssertEqual(processDataInfo.actionId, "processData")
     XCTAssertEqual(processDataInfo.concurrencyId, "processData")
     XCTAssertEqual(processDataInfo.limit, .limited(1))
@@ -102,7 +102,7 @@ final class LockmanConcurrencyLimitedActionTests: XCTestCase {
   func testStrategyIdProperty() {
     let action = TestAction.fetchUser(id: "123")
     let expectedId = LockmanConcurrencyLimitedStrategy.makeStrategyId()
-    XCTAssertEqual(action.lockmanInfo.strategyId, expectedId)
+    XCTAssertEqual(action.createLockmanInfo().strategyId, expectedId)
   }
 
   // MARK: - Different Action Cases Tests
@@ -125,8 +125,8 @@ final class LockmanConcurrencyLimitedActionTests: XCTestCase {
     let action2 = TestAction.fetchUser(id: "456")
 
     XCTAssertEqual(action1.actionName, action2.actionName)
-    XCTAssertEqual(action1.lockmanInfo.concurrencyId, action2.lockmanInfo.concurrencyId)
-    XCTAssertEqual(action1.lockmanInfo.limit, action2.lockmanInfo.limit)
+    XCTAssertEqual(action1.createLockmanInfo().concurrencyId, action2.createLockmanInfo().concurrencyId)
+    XCTAssertEqual(action1.createLockmanInfo().limit, action2.createLockmanInfo().limit)
   }
 
   // MARK: - Integration Tests
@@ -135,7 +135,7 @@ final class LockmanConcurrencyLimitedActionTests: XCTestCase {
     let strategy = LockmanConcurrencyLimitedStrategy.shared
     let boundary = TestBoundaryId("test")
     let action = TestAction.fetchUser(id: "123")
-    let info = action.lockmanInfo
+    let info = action.createLockmanInfo()
 
     // First lock should succeed
     let result = strategy.canLock(boundaryId: boundary, info: info)
@@ -153,10 +153,10 @@ final class LockmanConcurrencyLimitedActionTests: XCTestCase {
     let action1 = TestAction.processData
     let action2 = TestAction.processData
 
-    strategy.lock(boundaryId: boundary, info: action1.lockmanInfo)
+    strategy.lock(boundaryId: boundary, info: action1.createLockmanInfo())
 
     // Second should fail
-    let result = strategy.canLock(boundaryId: boundary, info: action2.lockmanInfo)
+    let result = strategy.canLock(boundaryId: boundary, info: action2.createLockmanInfo())
     XCTAssertLockFailure(result)
 
     // Clean up
@@ -173,12 +173,12 @@ final class LockmanConcurrencyLimitedActionTests: XCTestCase {
     } else {
       XCTFail("Action should be TestAction")
     }
-    XCTAssertNotNil(action.lockmanInfo)
+    XCTAssertNotNil(action.createLockmanInfo())
   }
 
   func testActionInfoType() {
     let action = TestAction.fetchUser(id: "123")
-    let info = action.lockmanInfo
+    let info = action.createLockmanInfo()
 
     // Verify the info type is correct
     XCTAssertTrue(type(of: info) == LockmanConcurrencyLimitedInfo.self)
@@ -198,7 +198,7 @@ private enum UnlimitedTestAction: LockmanConcurrencyLimitedAction {
     }
   }
 
-  var lockmanInfo: LockmanConcurrencyLimitedInfo {
+  func createLockmanInfo() -> LockmanConcurrencyLimitedInfo {
     .init(actionId: actionName, .unlimited)
   }
 }
@@ -211,9 +211,9 @@ extension LockmanConcurrencyLimitedActionTests {
     // Lock many unlimited actions
     for i in 0..<100 {
       let action = i % 2 == 0 ? UnlimitedTestAction.refreshUI : UnlimitedTestAction.updateCache
-      let result = strategy.canLock(boundaryId: boundary, info: action.lockmanInfo)
+      let result = strategy.canLock(boundaryId: boundary, info: action.createLockmanInfo())
       XCTAssertEqual(result, .success)
-      strategy.lock(boundaryId: boundary, info: action.lockmanInfo)
+      strategy.lock(boundaryId: boundary, info: action.createLockmanInfo())
     }
 
     // Clean up

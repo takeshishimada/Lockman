@@ -81,7 +81,7 @@ extension LockmanConcurrencyLimitedMacro: MemberMacro {
 
 /// Generates member declarations specific to LockmanConcurrencyLimited actions.
 /// Currently generates only the `actionName` property. Users must implement
-/// `lockmanInfo` themselves to specify the concurrency group or limit.
+/// `createLockmanInfo()` themselves to specify the concurrency group or limit.
 ///
 /// - Parameter enumDecl: The `EnumDeclSyntax` representing the enum to process.
 /// - Returns: An array of `DeclSyntax` nodes containing the generated member declarations.
@@ -91,7 +91,7 @@ private func generateConcurrencyLimitedMembers(for enumDecl: EnumDeclSyntax) -> 
   // Generate standard actionName property
   members.append(contentsOf: generateActionNameMembers(for: enumDecl))
 
-  // Do NOT generate lockmanInfo - users must implement it themselves
+  // Do NOT generate createLockmanInfo method - users must implement it themselves
   // to specify the concurrency group or limit using the overloaded initializers
 
   return members

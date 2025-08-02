@@ -14,7 +14,7 @@
 ///
 ///   let actionName = "myCompositeAction"
 ///
-///   var lockmanInfo: LockmanCompositeInfo2<I1, I2> {
+///   func createLockmanInfo() -> LockmanCompositeInfo2<I1, I2> {
 ///     LockmanCompositeInfo2(
 ///       actionId: actionName,
 ///       lockmanInfoForStrategy1: LockmanSingleExecutionInfo(actionId: actionName),
@@ -36,9 +36,9 @@ public protocol LockmanCompositeAction2: LockmanAction {
   /// The second strategy type used in the composite strategy.
   associatedtype S2: LockmanStrategy where S2.I == I2
 
-  /// Composite lock information containing details for both strategies.
+  /// Creates composite lock information containing details for both strategies.
   /// This includes action identifiers and strategy-specific information.
-  var lockmanInfo: LockmanCompositeInfo2<I1, I2> { get }
+  func createLockmanInfo() -> LockmanCompositeInfo2<I1, I2>
 }
 
 /// Protocol for actions that use composite locking behavior with 3 strategies.
@@ -64,9 +64,9 @@ public protocol LockmanCompositeAction3: LockmanAction {
   /// The third strategy type used in the composite strategy.
   associatedtype S3: LockmanStrategy where S3.I == I3
 
-  /// Composite lock information containing details for all three strategies.
+  /// Creates composite lock information containing details for all three strategies.
   /// This includes action identifiers and strategy-specific information.
-  var lockmanInfo: LockmanCompositeInfo3<I1, I2, I3> { get }
+  func createLockmanInfo() -> LockmanCompositeInfo3<I1, I2, I3>
 }
 
 /// Protocol for actions that use composite locking behavior with 4 strategies.
@@ -98,9 +98,9 @@ public protocol LockmanCompositeAction4: LockmanAction {
   /// The fourth strategy type used in the composite strategy.
   associatedtype S4: LockmanStrategy where S4.I == I4
 
-  /// Composite lock information containing details for all four strategies.
+  /// Creates composite lock information containing details for all four strategies.
   /// This includes action identifiers and strategy-specific information.
-  var lockmanInfo: LockmanCompositeInfo4<I1, I2, I3, I4> { get }
+  func createLockmanInfo() -> LockmanCompositeInfo4<I1, I2, I3, I4>
 }
 
 /// Protocol for actions that use composite locking behavior with 5 strategies.
@@ -138,9 +138,9 @@ public protocol LockmanCompositeAction5: LockmanAction {
   /// The fifth strategy type used in the composite strategy.
   associatedtype S5: LockmanStrategy where S5.I == I5
 
-  /// Composite lock information containing details for all five strategies.
+  /// Creates composite lock information containing details for all five strategies.
   /// This includes action identifiers and strategy-specific information.
-  var lockmanInfo: LockmanCompositeInfo5<I1, I2, I3, I4, I5> { get }
+  func createLockmanInfo() -> LockmanCompositeInfo5<I1, I2, I3, I4, I5>
 }
 
 // MARK: - Default Implementations
