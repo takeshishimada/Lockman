@@ -52,7 +52,8 @@ let package = Package(
     .testTarget(
       name: "LockmanTestsNew",
       dependencies: [
-        "Lockman"
+        "Lockman",
+        "LockmanMacros"
       ]
     ),
     .testTarget(
