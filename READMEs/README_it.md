@@ -255,13 +255,11 @@ Aggiungi la dipendenza al tuo target:
 ### Compatibilità delle Versioni
 
 | Lockman | The Composable Architecture |
+|---------|----------------------------|
+| 1.5.0   | 1.20.2                     |
 | 1.4.0   | 1.20.2                     |
 | 1.3.2   | 1.20.2                     |
 | 1.3.1   | 1.20.2                     |
-|---------|----------------------------|
-| 1.5.0   | 1.20.2                     |
-
-<details>
 
 <details>
 <summary>Altre versioni</summary>
