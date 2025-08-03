@@ -228,7 +228,7 @@ Package.swift 파일에 종속성을 추가하세요:
 
 ```swift
 dependencies: [
-  .package(url: "https://github.com/takeshishimada/Lockman", from: "1.3.2")
+  .package(url: "https://github.com/takeshishimada/Lockman", from: "1.5.0")
 ]
 ```
 
@@ -255,14 +255,21 @@ dependencies: [
 ### 버전 호환성
 
 | Lockman | The Composable Architecture |
-|---------|----------------------------|
+| 1.4.0   | 1.20.2                     |
 | 1.3.2   | 1.20.2                     |
 | 1.3.1   | 1.20.2                     |
+|---------|----------------------------|
+| 1.5.0   | 1.20.2                     |
+
+<details>
 
 <details>
 <summary>다른 버전</summary>
 
 | Lockman | The Composable Architecture |
+| 1.4.0   | 1.20.2                     |
+| 1.3.2   | 1.20.2                     |
+| 1.3.1   | 1.20.2                     |
 |---------|----------------------------|
 | 1.3.0   | 1.20.2                     |
 | 1.2.0   | 1.20.2                     |

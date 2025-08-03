@@ -225,7 +225,7 @@ Add the dependency to your Package.swift file:
 
 ```swift
 dependencies: [
-  .package(url: "https://github.com/takeshishimada/Lockman", from: "1.4.0")
+  .package(url: "https://github.com/takeshishimada/Lockman", from: "1.5.0")
 ]
 ```
 
@@ -253,13 +253,14 @@ Add the dependency to your target:
 
 | Lockman | The Composable Architecture |
 |---------|----------------------------|
-| 1.4.0   | 1.20.2                     |
+| 1.5.0   | 1.20.2                     |
 
 <details>
 <summary>Other versions</summary>
 
 | Lockman | The Composable Architecture |
 |---------|----------------------------|
+| 1.4.0   | 1.20.2                     |
 | 1.3.2   | 1.20.2                     |
 | 1.3.1   | 1.20.2                     |
 | 1.3.0   | 1.20.2                     |

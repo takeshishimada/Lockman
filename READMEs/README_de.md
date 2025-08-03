@@ -228,7 +228,7 @@ Fügen Sie die Abhängigkeit zu Ihrer Package.swift-Datei hinzu:
 
 ```swift
 dependencies: [
-  .package(url: "https://github.com/takeshishimada/Lockman", from: "1.3.2")
+  .package(url: "https://github.com/takeshishimada/Lockman", from: "1.5.0")
 ]
 ```
 
@@ -256,14 +256,16 @@ Fügen Sie die Abhängigkeit zu Ihrem Target hinzu:
 
 | Lockman | The Composable Architecture |
 |---------|----------------------------|
-| 1.3.2   | 1.20.2                     |
-| 1.3.1   | 1.20.2                     |
+| 1.5.0   | 1.20.2                     |
 
 <details>
 <summary>Weitere Versionen</summary>
 
 | Lockman | The Composable Architecture |
 |---------|----------------------------|
+| 1.4.0   | 1.20.2                     |
+| 1.3.2   | 1.20.2                     |
+| 1.3.1   | 1.20.2                     |
 | 1.3.0   | 1.20.2                     |
 | 1.2.0   | 1.20.2                     |
 | 1.1.0   | 1.20.2                     |
