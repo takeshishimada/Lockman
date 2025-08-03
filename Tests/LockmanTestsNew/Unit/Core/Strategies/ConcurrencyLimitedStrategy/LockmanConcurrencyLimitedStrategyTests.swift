@@ -74,12 +74,12 @@ import XCTest
 /// - [ ] State emptiness after global cleanup
 /// - [ ] Concurrency group isolation during cleanup
 ///
-/// ### Performance and Scalability
-/// - [ ] O(1) activeLockCount lookup performance verification
-/// - [ ] Efficient concurrency ID-based indexing
-/// - [ ] Memory usage with many concurrent locks
-/// - [ ] Performance with large numbers of concurrency groups
-/// - [ ] Lock acquisition/release timing under load
+/// ### Performance Characteristics (Unit Test Level)
+/// - [ ] activeLockCount returns correct count value
+/// - [ ] Concurrency ID-based key extraction functionality
+/// - [ ] Lock storage behavior with multiple concurrent locks
+/// - [ ] State container behavior with multiple concurrency groups
+/// - [ ] Lock acquisition/release order verification
 ///
 /// ### Thread Safety Verification
 /// - [ ] Concurrent canLock calls on same concurrency group
@@ -131,12 +131,12 @@ import XCTest
 /// - [ ] State container memory management
 /// - [ ] Lock info instance lifecycle management
 ///
-/// ### Real-world Usage Patterns
-/// - [ ] API rate limiting simulation
-/// - [ ] Database connection pool simulation
-/// - [ ] File download concurrency limits
-/// - [ ] Background task throttling
-/// - [ ] Resource-constrained operation management
+/// ### Functional Usage Verification
+/// - [ ] Limit enforcement with various limit values
+/// - [ ] Concurrency group separation behavior
+/// - [ ] Action execution control within limits
+/// - [ ] Lock release behavior and slot availability
+/// - [ ] Strategy behavior with different configuration types
 ///
 final class LockmanConcurrencyLimitedStrategyTests: XCTestCase {
     

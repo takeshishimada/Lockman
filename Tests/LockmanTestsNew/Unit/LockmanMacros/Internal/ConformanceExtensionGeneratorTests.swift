@@ -103,13 +103,13 @@ import XCTest
 /// - [ ] Large type name handling efficiency
 /// - [ ] Concurrent extension generation safety
 ///
-/// ### Real-world Usage Scenarios
-/// - [ ] Simple enum extension generation (enum UserAction)
-/// - [ ] Complex generic enum extension (enum Action<T: Sendable>)
-/// - [ ] Module-qualified type extension (MyModule.UserAction)
-/// - [ ] Protocol conformance with constraints
-/// - [ ] Multiple protocol conformance scenarios
-/// - [ ] Nested type extension generation
+/// ### Extension Generation Scenarios
+/// - [ ] Simple enum extension generation functionality
+/// - [ ] Generic type extension generation behavior
+/// - [ ] Module-qualified type handling
+/// - [ ] Protocol conformance declaration structure
+/// - [ ] Extension syntax correctness verification
+/// - [ ] Type constraint preservation
 ///
 /// ### Integration with Macro System
 /// - [ ] Usage within ExtensionMacro expansion methods

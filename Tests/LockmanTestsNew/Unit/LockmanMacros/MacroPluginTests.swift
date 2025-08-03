@@ -45,12 +45,12 @@ import XCTest
 /// - [ ] Resource initialization during plugin setup
 /// - [ ] Memory management for plugin lifetime
 ///
-/// ### Compiler Integration
-/// - [ ] Swift compiler plugin discovery mechanism
-/// - [ ] Macro name resolution through plugin
-/// - [ ] Plugin communication with compiler infrastructure
-/// - [ ] Error reporting from plugin to compiler
-/// - [ ] Plugin performance impact on compilation
+/// ### Compiler Plugin Interface
+/// - [ ] Macro type array structure validation
+/// - [ ] Plugin property access and values
+/// - [ ] Macro type registration correctness
+/// - [ ] Plugin initialization state verification
+/// - [ ] Basic plugin protocol conformance
 ///
 /// ### Macro Resolution and Delegation
 /// - [ ] Macro name-to-implementation mapping
@@ -95,12 +95,12 @@ import XCTest
 /// - [ ] Resource cleanup and deallocation
 /// - [ ] Concurrent plugin operation safety
 ///
-/// ### Integration Testing
-/// - [ ] End-to-end macro resolution through plugin
-/// - [ ] Multi-macro usage scenario testing
-/// - [ ] Plugin behavior with different Swift versions
-/// - [ ] Xcode integration and compatibility
-/// - [ ] Package Manager integration verification
+/// ### Plugin Functionality Verification
+/// - [ ] Macro type array contents verification
+/// - [ ] Plugin provides expected macro types
+/// - [ ] Macro registration completeness
+/// - [ ] Plugin structure consistency
+/// - [ ] Basic macro type availability
 ///
 /// ### Macro Variant Handling
 /// - [ ] Composite strategy macro variant selection
