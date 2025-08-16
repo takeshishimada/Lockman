@@ -33,8 +33,13 @@ jobs:
           sudo xcodebuild -runFirstLaunch
           # Install iOS platform to ensure SDK availability
           sudo xcodebuild -downloadPlatform iOS || true
+          # Try specific iOS version downloads
+          sudo xcodebuild -downloadPlatform iOS -buildVersion 18.2 || true
+          sudo xcodebuild -downloadPlatform iOS -buildVersion 18.1 || true
           # List available platforms for debugging
           xcodebuild -showsdks
+          # List available simulators
+          xcrun simctl list devices available
       - name: List available devices
         run: xcrun simctl list devices available
       - name: Cache derived data
@@ -75,8 +80,13 @@ jobs:
           sudo xcodebuild -runFirstLaunch
           # Install iOS platform to ensure SDK availability
           sudo xcodebuild -downloadPlatform iOS || true
+          # Try specific iOS version downloads
+          sudo xcodebuild -downloadPlatform iOS -buildVersion 18.2 || true
+          sudo xcodebuild -downloadPlatform iOS -buildVersion 18.1 || true
           # List available platforms for debugging
           xcodebuild -showsdks
+          # List available simulators
+          xcrun simctl list devices available
       - name: Set IgnoreFileSystemDeviceInodeChanges flag
         run: defaults write com.apple.dt.XCBuild IgnoreFileSystemDeviceInodeChanges -bool YES
       - name: Update mtime for incremental builds
