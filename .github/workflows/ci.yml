@@ -29,7 +29,9 @@ jobs:
       - name: Update xcbeautify
         run: brew update && brew upgrade xcbeautify
       - name: Install iOS platform
-        run: xcodebuild -downloadPlatform iOS
+        run: |
+          sudo xcodebuild -runFirstLaunch
+          sudo xcodebuild -downloadPlatform iOS
       - name: List available devices
         run: xcrun simctl list devices available
       - name: Cache derived data
