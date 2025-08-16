@@ -165,6 +165,8 @@ The `Reducer.lock` modifier automatically applies lock management to actions tha
 The documentation for releases and `main` are available here:
 
 * [`main`](https://takeshishimada.github.io/Lockman/main/documentation/lockman/)
+* [1.5.0](https://takeshishimada.github.io/Lockman/1.5.0/documentation/lockman/) ([migration guide](https://takeshishimada.github.io/Lockman/1.5.0/documentation/lockman/migratingto1.5))
+* [1.4.0](https://takeshishimada.github.io/Lockman/1.4.0/documentation/lockman/) ([migration guide](https://takeshishimada.github.io/Lockman/1.4.0/documentation/lockman/migratingto1.4))
 * [1.3.0](https://takeshishimada.github.io/Lockman/1.3.0/documentation/lockman/) ([migration guide](https://takeshishimada.github.io/Lockman/1.3.0/documentation/lockman/migratingto1.3))
 * [1.2.0](https://takeshishimada.github.io/Lockman/1.2.0/documentation/lockman/) ([migration guide](https://takeshishimada.github.io/Lockman/1.2.0/documentation/lockman/migratingto1.2))
 * [1.1.0](https://takeshishimada.github.io/Lockman/1.1.0/documentation/lockman/) ([migration guide](https://takeshishimada.github.io/Lockman/1.1.0/documentation/lockman/migratingto1.1))
@@ -225,7 +227,7 @@ Add the dependency to your Package.swift file:
 
 ```swift
 dependencies: [
-  .package(url: "https://github.com/takeshishimada/Lockman", from: "1.5.0")
+  .package(url: "https://github.com/takeshishimada/Lockman", from: "1.6.0")
 ]
 ```
 
@@ -242,17 +244,21 @@ Add the dependency to your target:
 
 ### Requirements
 
-| Platform | Minimum Version |
-|----------|----------------|
-| iOS      | 13.0           |
-| macOS    | 10.15          |
-| tvOS     | 13.0           |
-| watchOS  | 6.0            |
+| Platform | Minimum Version | CI Testing |
+|----------|----------------|------------|
+| iOS      | 13.0           | ✅         |
+| macOS    | 10.15          | ✅         |
+| tvOS     | 13.0           | Local only |
+| watchOS  | 6.0            | Local only |
+| Mac Catalyst | 13.0       | Local only |
+
+**Note**: While Lockman supports all Apple platforms, CI testing is focused on iOS and macOS for faster feedback. Other platforms can be tested locally using the provided Makefile.
 
 ### Version Compatibility
 
 | Lockman | The Composable Architecture |
 |---------|----------------------------|
+| 1.6.0   | 1.21.0                     |
 | 1.5.0   | 1.20.2                     |
 
 <details>
