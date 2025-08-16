@@ -111,11 +111,15 @@ struct DynamicConditionStrategyFeature {
         // Reducer-level condition: Only apply locks for certain view actions
         switch action {
         case .view(.syncDataTapped):
-          return state.isLoggedIn ? .success : .cancel(DynamicConditionError(message: "Please login to sync data"))
+          return state.isLoggedIn
+            ? .success : .cancel(DynamicConditionError(message: "Please login to sync data"))
         case .view(.performMaintenanceTapped):
-          return state.currentHour >= 2 && state.currentHour <= 4 ? .success : .cancel(DynamicConditionError(message: "Maintenance only allowed 2-4 AM"))
+          return state.currentHour >= 2 && state.currentHour <= 4
+            ? .success : .cancel(DynamicConditionError(message: "Maintenance only allowed 2-4 AM"))
         case .view(.generateReportTapped):
-          return state.selectedDay.isWeekday ? .success : .cancel(DynamicConditionError(message: "Reports can only be generated on weekdays"))
+          return state.selectedDay.isWeekday
+            ? .success
+            : .cancel(DynamicConditionError(message: "Reports can only be generated on weekdays"))
         default:
           return .cancel(DynamicConditionError(message: "No lock required for this action"))
         }
@@ -123,7 +127,8 @@ struct DynamicConditionStrategyFeature {
       boundaryId: CancelID.auth,
       lockFailure: { error, send in
         // Handle condition evaluation failures
-        await send(.internal(.operationFailed(operation: "Operation", error: error.localizedDescription)))
+        await send(
+          .internal(.operationFailed(operation: "Operation", error: error.localizedDescription)))
       }
     )
   }
