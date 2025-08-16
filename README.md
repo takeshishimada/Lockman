@@ -288,20 +288,6 @@ Add the dependency to your target:
 
 </details>
 
-### Translations
-
-The following translations of this README have been contributed by members of the community:
-
-- [English](README.md)
-- [Japanese](READMEs/README_ja.md)
-- [Simplified Chinese](READMEs/README_zh-CN.md)
-- [Traditional Chinese](READMEs/README_zh-TW.md)
-- [Spanish](READMEs/README_es.md)
-- [French](READMEs/README_fr.md)
-- [German](READMEs/README_de.md)
-- [Korean](READMEs/README_ko.md)
-- [Portuguese](READMEs/README_pt-BR.md)
-- [Italian](READMEs/README_it.md)
 
 ## Community
 
