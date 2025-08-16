@@ -31,7 +31,10 @@ jobs:
       - name: Install iOS platform
         run: |
           sudo xcodebuild -runFirstLaunch
-          sudo xcodebuild -downloadPlatform iOS
+          # Install iOS platform to ensure SDK availability
+          sudo xcodebuild -downloadPlatform iOS || true
+          # List available platforms for debugging
+          xcodebuild -showsdks
       - name: List available devices
         run: xcrun simctl list devices available
       - name: Cache derived data
