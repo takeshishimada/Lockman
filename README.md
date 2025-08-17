@@ -1,8 +1,8 @@
 <img src="Lockman.png" alt="Lockman Logo" width="400">
 
 [![CI](https://github.com/takeshishimada/Lockman/workflows/CI/badge.svg)](https://github.com/takeshishimada/Lockman/actions?query=workflow%3ACI)
-[![Swift](https://img.shields.io/badge/Swift-5.9%20%7C%205.10%20%7C%206.0-ED523F.svg?style=flat)](https://swift.org/download/)
-[![Platforms](https://img.shields.io/badge/Platforms-iOS%20%7C%20macOS%20%7C%20tvOS%20%7C%20watchOS%20%7C%20Mac%20Catalyst-333333.svg?style=flat)](https://developer.apple.com/)
+[![](https://img.shields.io/endpoint?url=https%3A%2F%2Fswiftpackageindex.com%2Fapi%2Fpackages%2Ftakeshishimada%2FLockman%2Fbadge%3Ftype%3Dswift-versions)](https://swiftpackageindex.com/takeshishimada/Lockman)
+[![](https://img.shields.io/endpoint?url=https%3A%2F%2Fswiftpackageindex.com%2Fapi%2Fpackages%2Ftakeshishimada%2FLockman%2Fbadge%3Ftype%3Dplatforms)](https://swiftpackageindex.com/takeshishimada/Lockman)
 
 Lockman is a Swift library that solves exclusive action control issues in The Composable Architecture (TCA) applications, with responsiveness, transparency, and declarative design in mind.
 
