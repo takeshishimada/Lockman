@@ -7,13 +7,13 @@ final class LockmanStrategyIdTests: XCTestCase {
 
   func testInitializeWithString() {
     let id = LockmanStrategyId("MyStrategy")
-    XCTAssertEqual(id.value, "MyStrategy")
+    XCTAssertEqual(id, LockmanStrategyId("MyStrategy"))
     XCTAssertEqual(id.description, "MyStrategy")
   }
 
   func testInitializeWithType() {
     let id = LockmanStrategyId(type: LockmanSingleExecutionStrategy.self)
-    XCTAssertTrue(id.value.contains("LockmanSingleExecutionStrategy"))
+    XCTAssertTrue(String(describing: id).contains("LockmanSingleExecutionStrategy"))
   }
 
   func testInitializeWithTypeAndIdentifier() {
@@ -21,14 +21,14 @@ final class LockmanStrategyIdTests: XCTestCase {
       type: LockmanSingleExecutionStrategy.self,
       identifier: "custom-id"
     )
-    XCTAssertEqual(id.value, "custom-id")
+    XCTAssertEqual(id, LockmanStrategyId("custom-id"))
   }
 
   func testInitializeWithName() {
     let id = LockmanStrategyId(
       name: "RateLimitStrategy"
     )
-    XCTAssertEqual(id.value, "RateLimitStrategy")
+    XCTAssertEqual(id, LockmanStrategyId("RateLimitStrategy"))
   }
 
   func testInitializeWithNameAndConfiguration() {
@@ -36,21 +36,21 @@ final class LockmanStrategyIdTests: XCTestCase {
       name: "RateLimitStrategy",
       configuration: "limit-100"
     )
-    XCTAssertEqual(id.value, "RateLimitStrategy:limit-100")
+    XCTAssertEqual(id, LockmanStrategyId(name: "RateLimitStrategy", configuration: "limit-100"))
   }
 
   // MARK: - ExpressibleByStringLiteral Tests
 
   func testStringLiteralInitialization() {
     let id: LockmanStrategyId = "MyApp.CustomStrategy"
-    XCTAssertEqual(id.value, "MyApp.CustomStrategy")
+    XCTAssertEqual(id, LockmanStrategyId("MyApp.CustomStrategy"))
   }
 
   // MARK: - Factory Method Tests
 
   func testFactoryMethodFromType() {
     let id = LockmanStrategyId.from(LockmanPriorityBasedStrategy.self)
-    XCTAssertTrue(id.value.contains("LockmanPriorityBasedStrategy"))
+    XCTAssertTrue(String(describing: id).contains("LockmanPriorityBasedStrategy"))
   }
 
   func testFactoryMethodFromTypeWithIdentifier() {
@@ -58,19 +58,19 @@ final class LockmanStrategyIdTests: XCTestCase {
       LockmanPriorityBasedStrategy.self,
       identifier: "priority-custom"
     )
-    XCTAssertEqual(id.value, "priority-custom")
+    XCTAssertEqual(id, LockmanStrategyId("priority-custom"))
   }
 
   // MARK: - Static Property Tests
 
   func testStaticSingleExecutionProperty() {
     let id = LockmanStrategyId.singleExecution
-    XCTAssertTrue(id.value.contains("LockmanSingleExecutionStrategy"))
+    XCTAssertTrue(String(describing: id).contains("LockmanSingleExecutionStrategy"))
   }
 
   func testStaticPriorityBasedProperty() {
     let id = LockmanStrategyId.priorityBased
-    XCTAssertTrue(id.value.contains("LockmanPriorityBasedStrategy"))
+    XCTAssertTrue(String(describing: id).contains("LockmanPriorityBasedStrategy"))
   }
 
   // MARK: - Equality and Hashing Tests
@@ -104,19 +104,19 @@ final class LockmanStrategyIdTests: XCTestCase {
 
   func testEmptyStringId() {
     let id = LockmanStrategyId("")
-    XCTAssertEqual(id.value, "")
+    XCTAssertEqual(id, LockmanStrategyId(""))
   }
 
   func testUnicodeStringId() {
     let id = LockmanStrategyId("策略🎯")
-    XCTAssertEqual(id.value, "策略🎯")
+    XCTAssertEqual(id, LockmanStrategyId("策略🎯"))
   }
 
   func testVeryLongStringId() {
     let longString = String(repeating: "a", count: 1000)
     let id = LockmanStrategyId(longString)
-    XCTAssertEqual(id.value, longString)
-    XCTAssertEqual(id.value.count, 1000)
+    XCTAssertEqual(id, LockmanStrategyId(longString))
+    XCTAssertEqual(String(describing: id).count, 1000)
   }
 
   func testSpecialCharactersInNameAndConfiguration() {
@@ -124,7 +124,7 @@ final class LockmanStrategyIdTests: XCTestCase {
       name: "Rate_Limit_Strategy",
       configuration: "limit:100/timeout:30"
     )
-    XCTAssertEqual(id.value, "Rate_Limit_Strategy:limit:100/timeout:30")
+    XCTAssertEqual(id, LockmanStrategyId(name: "Rate_Limit_Strategy", configuration: "limit:100/timeout:30"))
   }
 
   // MARK: - Sendable Conformance Tests
@@ -136,7 +136,7 @@ final class LockmanStrategyIdTests: XCTestCase {
       for _ in 0..<10 {
         group.addTask {
           // Access the id from concurrent context
-          id.value
+          String(describing: id)
         }
       }
 
@@ -159,8 +159,8 @@ final class LockmanStrategyIdTests: XCTestCase {
     )
 
     XCTAssertNotEqual(timeout30, timeout60)
-    XCTAssertEqual(timeout30.value, "CacheStrategy:timeout-30")
-    XCTAssertEqual(timeout60.value, "CacheStrategy:timeout-60")
+    XCTAssertEqual(timeout30, LockmanStrategyId(name: "CacheStrategy", configuration: "timeout-30"))
+    XCTAssertEqual(timeout60, LockmanStrategyId(name: "CacheStrategy", configuration: "timeout-60"))
   }
 
   func testDifferentStrategyNames() {
@@ -172,8 +172,8 @@ final class LockmanStrategyIdTests: XCTestCase {
     )
 
     XCTAssertNotEqual(appStrategy, libraryStrategy)
-    XCTAssertEqual(appStrategy.value, "AppUserStrategy")
-    XCTAssertEqual(libraryStrategy.value, "LibUserStrategy")
+    XCTAssertEqual(appStrategy, LockmanStrategyId("AppUserStrategy"))
+    XCTAssertEqual(libraryStrategy, LockmanStrategyId("LibUserStrategy"))
   }
 }
 

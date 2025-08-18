@@ -53,11 +53,17 @@ let package = Package(
       name: "LockmanTestsNew",
       dependencies: [
         "Lockman",
-        "LockmanMacros"
       ]
     ),
     .testTarget(
       name: "LockmanMacrosTests",
+      dependencies: [
+        "LockmanMacros",
+        .product(name: "MacroTesting", package: "swift-macro-testing"),
+      ]
+    ),
+    .testTarget(
+      name: "LockmanMacrosTestsNew",
       dependencies: [
         "LockmanMacros",
         .product(name: "MacroTesting", package: "swift-macro-testing"),

@@ -1,4 +1,5 @@
 import XCTest
+
 @testable import Lockman
 
 /// Unit tests for LockmanGroupCoordinatedInfo
@@ -120,22 +121,22 @@ import XCTest
 /// - [ ] Usage pattern validation from documentation
 ///
 final class LockmanGroupCoordinatedInfoTests: XCTestCase {
-    
-    override func setUp() {
-        super.setUp()
-        // Setup test environment
-    }
-    
-    override func tearDown() {
-        super.tearDown()
-        // Cleanup after each test
-        LockmanManager.cleanup.all()
-    }
-    
-    // MARK: - Tests
-    
-    func testPlaceholder() {
-        // TODO: Implement unit tests for LockmanGroupCoordinatedInfo
-        XCTAssertTrue(true, "Placeholder test")
-    }
+
+  override func setUp() {
+    super.setUp()
+    // Setup test environment
+  }
+
+  override func tearDown() {
+    super.tearDown()
+    // Cleanup after each test
+    LockmanManager.cleanup.all()
+  }
+
+  // MARK: - Tests
+
+  func testPlaceholder() {
+    // TODO: Implement unit tests for LockmanGroupCoordinatedInfo
+    XCTAssertTrue(true, "Placeholder test")
+  }
 }

@@ -1,4 +1,6 @@
 import XCTest
+
+#if canImport(LockmanMacros)
 @testable import LockmanMacros
 
 /// Unit tests for LockmanCompositeStrategyMacro
@@ -168,21 +170,23 @@ import XCTest
 /// - [ ] Interaction with other macros and attributes
 ///
 final class LockmanCompositeStrategyMacroTests: XCTestCase {
-    
-    override func setUp() {
-        super.setUp()
-        // Setup test environment
-    }
-    
-    override func tearDown() {
-        super.tearDown()
-        // Cleanup after each test
-    }
-    
-    // MARK: - Tests
-    
-    func testPlaceholder() {
-        // TODO: Implement unit tests for LockmanCompositeStrategyMacro
-        XCTAssertTrue(true, "Placeholder test")
-    }
+
+  override func setUp() {
+    super.setUp()
+    // Setup test environment
+  }
+
+  override func tearDown() {
+    super.tearDown()
+    // Cleanup after each test
+  }
+
+  // MARK: - Tests
+
+  func testPlaceholder() {
+    // TODO: Implement unit tests for LockmanCompositeStrategyMacro
+    XCTAssertTrue(true, "Placeholder test")
+  }
 }
+
+#endif

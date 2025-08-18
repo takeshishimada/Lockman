@@ -1,4 +1,5 @@
 import XCTest
+
 @testable import Lockman
 
 /// Unit tests for LockmanCompositeInfo
@@ -121,22 +122,466 @@ import XCTest
 /// - [ ] Usage pattern validation from documentation
 ///
 final class LockmanCompositeInfoTests: XCTestCase {
-    
-    override func setUp() {
-        super.setUp()
-        // Setup test environment
+
+  override func setUp() {
+    super.setUp()
+    // Setup test environment
+  }
+
+  override func tearDown() {
+    super.tearDown()
+    // Cleanup after each test
+    LockmanManager.cleanup.all()
+  }
+
+  // MARK: - LockmanCompositeInfo2 Tests
+
+  func testLockmanCompositeInfo2Initialization() {
+    // Given
+    let actionId = LockmanActionId("userLogin")
+    let info1 = LockmanSingleExecutionInfo(
+      actionId: actionId,
+      mode: .action
+    )
+    let info2 = LockmanSingleExecutionInfo(
+      actionId: actionId,
+      mode: .boundary
+    )
+
+    // When
+    let compositeInfo = LockmanCompositeInfo2(
+      actionId: actionId,
+      lockmanInfoForStrategy1: info1,
+      lockmanInfoForStrategy2: info2
+    )
+
+    // Then
+    XCTAssertEqual(compositeInfo.actionId, actionId)
+    XCTAssertEqual(compositeInfo.strategyId.value, "Lockman.CompositeStrategy2")
+    XCTAssertNotNil(compositeInfo.uniqueId)
+    XCTAssertEqual(compositeInfo.lockmanInfoForStrategy1.actionId, actionId)
+    XCTAssertEqual(compositeInfo.lockmanInfoForStrategy2.actionId, actionId)
+    XCTAssertEqual(compositeInfo.lockmanInfoForStrategy1.mode, .action)
+    XCTAssertEqual(compositeInfo.lockmanInfoForStrategy2.mode, .boundary)
+  }
+
+  func testLockmanCompositeInfo2CustomStrategyId() {
+    // Given
+    let customStrategyId = LockmanStrategyId("MyApp.CompositeStrategy")
+    let actionId = LockmanActionId("testAction")
+    let info1 = LockmanSingleExecutionInfo(actionId: actionId, mode: .action)
+    let info2 = LockmanSingleExecutionInfo(actionId: actionId, mode: .boundary)
+
+    // When
+    let compositeInfo = LockmanCompositeInfo2(
+      strategyId: customStrategyId,
+      actionId: actionId,
+      lockmanInfoForStrategy1: info1,
+      lockmanInfoForStrategy2: info2
+    )
+
+    // Then
+    XCTAssertEqual(compositeInfo.strategyId, customStrategyId)
+    XCTAssertEqual(compositeInfo.actionId, actionId)
+    XCTAssertEqual(compositeInfo.lockmanInfoForStrategy1, info1)
+    XCTAssertEqual(compositeInfo.lockmanInfoForStrategy2, info2)
+  }
+
+  func testLockmanCompositeInfo2UniqueIdGeneration() {
+    // Given
+    let actionId = LockmanActionId("testAction")
+    let info1 = LockmanSingleExecutionInfo(actionId: actionId, mode: .action)
+    let info2 = LockmanSingleExecutionInfo(actionId: actionId, mode: .boundary)
+
+    // When
+    let compositeInfo1 = LockmanCompositeInfo2(
+      actionId: actionId,
+      lockmanInfoForStrategy1: info1,
+      lockmanInfoForStrategy2: info2
+    )
+    let compositeInfo2 = LockmanCompositeInfo2(
+      actionId: actionId,
+      lockmanInfoForStrategy1: info1,
+      lockmanInfoForStrategy2: info2
+    )
+
+    // Then
+    XCTAssertNotEqual(compositeInfo1.uniqueId, compositeInfo2.uniqueId)
+  }
+
+  func testLockmanCompositeInfo2DebugDescription() {
+    // Given
+    let actionId = LockmanActionId("testAction")
+    let info1 = LockmanSingleExecutionInfo(actionId: actionId, mode: .action)
+    let info2 = LockmanSingleExecutionInfo(actionId: actionId, mode: .boundary)
+    let compositeInfo = LockmanCompositeInfo2(
+      actionId: actionId,
+      lockmanInfoForStrategy1: info1,
+      lockmanInfoForStrategy2: info2
+    )
+
+    // When
+    let debugDescription = compositeInfo.debugDescription
+
+    // Then
+    XCTAssertTrue(debugDescription.contains("LockmanCompositeInfo2"))
+    XCTAssertTrue(debugDescription.contains("strategyId: 'Lockman.CompositeStrategy2'"))
+    XCTAssertTrue(debugDescription.contains("actionId: 'testAction'"))
+    XCTAssertTrue(debugDescription.contains("uniqueId: \(compositeInfo.uniqueId)"))
+    XCTAssertTrue(debugDescription.contains("info1:"))
+    XCTAssertTrue(debugDescription.contains("info2:"))
+  }
+
+  func testLockmanCompositeInfo2DebugAdditionalInfo() {
+    // Given
+    let actionId = LockmanActionId("testAction")
+    let info1 = LockmanSingleExecutionInfo(actionId: actionId, mode: .action)
+    let info2 = LockmanSingleExecutionInfo(actionId: actionId, mode: .boundary)
+    let compositeInfo = LockmanCompositeInfo2(
+      actionId: actionId,
+      lockmanInfoForStrategy1: info1,
+      lockmanInfoForStrategy2: info2
+    )
+
+    // When
+    let debugAdditionalInfo = compositeInfo.debugAdditionalInfo
+
+    // Then
+    XCTAssertEqual(debugAdditionalInfo, "Composite")
+  }
+
+  func testLockmanCompositeInfo2ProtocolConformance() {
+    // Given
+    let actionId = LockmanActionId("testAction")
+    let info1 = LockmanSingleExecutionInfo(actionId: actionId, mode: .action)
+    let info2 = LockmanSingleExecutionInfo(actionId: actionId, mode: .boundary)
+
+    // When
+    let compositeInfo = LockmanCompositeInfo2(
+      actionId: actionId,
+      lockmanInfoForStrategy1: info1,
+      lockmanInfoForStrategy2: info2
+    )
+
+    // Then - Verify protocol conformance
+    XCTAssertTrue(compositeInfo is any LockmanInfo)
+    // Sendable conformance is compile-time checked, no runtime test needed
+    XCTAssertTrue(compositeInfo is any CustomDebugStringConvertible)
+  }
+
+  // MARK: - LockmanCompositeInfo3 Tests
+
+  func testLockmanCompositeInfo3Initialization() {
+    // Given
+    let actionId = LockmanActionId("complexOperation")
+    let info1 = LockmanSingleExecutionInfo(actionId: actionId, mode: .action)
+    let info2 = LockmanSingleExecutionInfo(actionId: actionId, mode: .boundary)
+    let info3 = LockmanSingleExecutionInfo(actionId: actionId, mode: .none)
+
+    // When
+    let compositeInfo = LockmanCompositeInfo3(
+      actionId: actionId,
+      lockmanInfoForStrategy1: info1,
+      lockmanInfoForStrategy2: info2,
+      lockmanInfoForStrategy3: info3
+    )
+
+    // Then
+    XCTAssertEqual(compositeInfo.actionId, actionId)
+    XCTAssertEqual(compositeInfo.strategyId.value, "Lockman.CompositeStrategy3")
+    XCTAssertNotNil(compositeInfo.uniqueId)
+    XCTAssertEqual(compositeInfo.lockmanInfoForStrategy1, info1)
+    XCTAssertEqual(compositeInfo.lockmanInfoForStrategy2, info2)
+    XCTAssertEqual(compositeInfo.lockmanInfoForStrategy3, info3)
+  }
+
+  func testLockmanCompositeInfo3DebugDescription() {
+    // Given
+    let actionId = LockmanActionId("testAction")
+    let info1 = LockmanSingleExecutionInfo(actionId: actionId, mode: .action)
+    let info2 = LockmanSingleExecutionInfo(actionId: actionId, mode: .boundary)
+    let info3 = LockmanSingleExecutionInfo(actionId: actionId, mode: .none)
+    let compositeInfo = LockmanCompositeInfo3(
+      actionId: actionId,
+      lockmanInfoForStrategy1: info1,
+      lockmanInfoForStrategy2: info2,
+      lockmanInfoForStrategy3: info3
+    )
+
+    // When
+    let debugDescription = compositeInfo.debugDescription
+
+    // Then
+    XCTAssertTrue(debugDescription.contains("LockmanCompositeInfo3"))
+    XCTAssertTrue(debugDescription.contains("strategyId: 'Lockman.CompositeStrategy3'"))
+    XCTAssertTrue(debugDescription.contains("info1:"))
+    XCTAssertTrue(debugDescription.contains("info2:"))
+    XCTAssertTrue(debugDescription.contains("info3:"))
+  }
+
+  // MARK: - LockmanCompositeInfo4 Tests
+
+  func testLockmanCompositeInfo4Initialization() {
+    // Given
+    let actionId = LockmanActionId("veryComplexOperation")
+    let info1 = LockmanSingleExecutionInfo(actionId: actionId, mode: .action)
+    let info2 = LockmanSingleExecutionInfo(actionId: actionId, mode: .boundary)
+    let info3 = LockmanSingleExecutionInfo(actionId: actionId, mode: .none)
+    let info4 = LockmanSingleExecutionInfo(actionId: actionId, mode: .action)
+
+    // When
+    let compositeInfo = LockmanCompositeInfo4(
+      actionId: actionId,
+      lockmanInfoForStrategy1: info1,
+      lockmanInfoForStrategy2: info2,
+      lockmanInfoForStrategy3: info3,
+      lockmanInfoForStrategy4: info4
+    )
+
+    // Then
+    XCTAssertEqual(compositeInfo.actionId, actionId)
+    XCTAssertEqual(compositeInfo.strategyId.value, "Lockman.CompositeStrategy4")
+    XCTAssertNotNil(compositeInfo.uniqueId)
+    XCTAssertEqual(compositeInfo.lockmanInfoForStrategy1, info1)
+    XCTAssertEqual(compositeInfo.lockmanInfoForStrategy2, info2)
+    XCTAssertEqual(compositeInfo.lockmanInfoForStrategy3, info3)
+    XCTAssertEqual(compositeInfo.lockmanInfoForStrategy4, info4)
+  }
+
+  func testLockmanCompositeInfo4DebugDescription() {
+    // Given
+    let actionId = LockmanActionId("testAction")
+    let info1 = LockmanSingleExecutionInfo(actionId: actionId, mode: .action)
+    let info2 = LockmanSingleExecutionInfo(actionId: actionId, mode: .boundary)
+    let info3 = LockmanSingleExecutionInfo(actionId: actionId, mode: .none)
+    let info4 = LockmanSingleExecutionInfo(actionId: actionId, mode: .action)
+    let compositeInfo = LockmanCompositeInfo4(
+      actionId: actionId,
+      lockmanInfoForStrategy1: info1,
+      lockmanInfoForStrategy2: info2,
+      lockmanInfoForStrategy3: info3,
+      lockmanInfoForStrategy4: info4
+    )
+
+    // When
+    let debugDescription = compositeInfo.debugDescription
+
+    // Then
+    XCTAssertTrue(debugDescription.contains("LockmanCompositeInfo4"))
+    XCTAssertTrue(debugDescription.contains("strategyId: 'Lockman.CompositeStrategy4'"))
+    XCTAssertTrue(debugDescription.contains("info1:"))
+    XCTAssertTrue(debugDescription.contains("info2:"))
+    XCTAssertTrue(debugDescription.contains("info3:"))
+    XCTAssertTrue(debugDescription.contains("info4:"))
+  }
+
+  // MARK: - LockmanCompositeInfo5 Tests
+
+  func testLockmanCompositeInfo5Initialization() {
+    // Given
+    let actionId = LockmanActionId("maximumComplexOperation")
+    let info1 = LockmanSingleExecutionInfo(actionId: actionId, mode: .action)
+    let info2 = LockmanSingleExecutionInfo(actionId: actionId, mode: .boundary)
+    let info3 = LockmanSingleExecutionInfo(actionId: actionId, mode: .none)
+    let info4 = LockmanSingleExecutionInfo(actionId: actionId, mode: .action)
+    let info5 = LockmanSingleExecutionInfo(actionId: actionId, mode: .boundary)
+
+    // When
+    let compositeInfo = LockmanCompositeInfo5(
+      actionId: actionId,
+      lockmanInfoForStrategy1: info1,
+      lockmanInfoForStrategy2: info2,
+      lockmanInfoForStrategy3: info3,
+      lockmanInfoForStrategy4: info4,
+      lockmanInfoForStrategy5: info5
+    )
+
+    // Then
+    XCTAssertEqual(compositeInfo.actionId, actionId)
+    XCTAssertEqual(compositeInfo.strategyId.value, "Lockman.CompositeStrategy5")
+    XCTAssertNotNil(compositeInfo.uniqueId)
+    XCTAssertEqual(compositeInfo.lockmanInfoForStrategy1, info1)
+    XCTAssertEqual(compositeInfo.lockmanInfoForStrategy2, info2)
+    XCTAssertEqual(compositeInfo.lockmanInfoForStrategy3, info3)
+    XCTAssertEqual(compositeInfo.lockmanInfoForStrategy4, info4)
+    XCTAssertEqual(compositeInfo.lockmanInfoForStrategy5, info5)
+  }
+
+  func testLockmanCompositeInfo5DebugDescription() {
+    // Given
+    let actionId = LockmanActionId("testAction")
+    let info1 = LockmanSingleExecutionInfo(actionId: actionId, mode: .action)
+    let info2 = LockmanSingleExecutionInfo(actionId: actionId, mode: .boundary)
+    let info3 = LockmanSingleExecutionInfo(actionId: actionId, mode: .none)
+    let info4 = LockmanSingleExecutionInfo(actionId: actionId, mode: .action)
+    let info5 = LockmanSingleExecutionInfo(actionId: actionId, mode: .boundary)
+    let compositeInfo = LockmanCompositeInfo5(
+      actionId: actionId,
+      lockmanInfoForStrategy1: info1,
+      lockmanInfoForStrategy2: info2,
+      lockmanInfoForStrategy3: info3,
+      lockmanInfoForStrategy4: info4,
+      lockmanInfoForStrategy5: info5
+    )
+
+    // When
+    let debugDescription = compositeInfo.debugDescription
+
+    // Then
+    XCTAssertTrue(debugDescription.contains("LockmanCompositeInfo5"))
+    XCTAssertTrue(debugDescription.contains("strategyId: 'Lockman.CompositeStrategy5'"))
+    XCTAssertTrue(debugDescription.contains("info1:"))
+    XCTAssertTrue(debugDescription.contains("info2:"))
+    XCTAssertTrue(debugDescription.contains("info3:"))
+    XCTAssertTrue(debugDescription.contains("info4:"))
+    XCTAssertTrue(debugDescription.contains("info5:"))
+  }
+
+  // MARK: - Thread Safety Tests
+
+  func testCompositeInfoThreadSafety() {
+    // Given
+    let actionId = LockmanActionId("threadSafeTest")
+    let info1 = LockmanSingleExecutionInfo(actionId: actionId, mode: .action)
+    let info2 = LockmanSingleExecutionInfo(actionId: actionId, mode: .boundary)
+
+    let expectation = XCTestExpectation(description: "Thread safety test")
+    expectation.expectedFulfillmentCount = 10
+    var createdInfos:
+      [LockmanCompositeInfo2<LockmanSingleExecutionInfo, LockmanSingleExecutionInfo>] = []
+    let lock = NSLock()
+
+    // When - Create composite infos concurrently
+    DispatchQueue.concurrentPerform(iterations: 10) { _ in
+      let compositeInfo = LockmanCompositeInfo2(
+        actionId: actionId,
+        lockmanInfoForStrategy1: info1,
+        lockmanInfoForStrategy2: info2
+      )
+
+      lock.lock()
+      createdInfos.append(compositeInfo)
+      lock.unlock()
+
+      expectation.fulfill()
     }
-    
-    override func tearDown() {
-        super.tearDown()
-        // Cleanup after each test
-        LockmanManager.cleanup.all()
-    }
-    
-    // MARK: - Tests
-    
-    func testPlaceholder() {
-        // TODO: Implement unit tests for LockmanCompositeInfo
-        XCTAssertTrue(true, "Placeholder test")
-    }
+
+    wait(for: [expectation], timeout: 5.0)
+
+    // Then - All infos should have unique IDs
+    let uniqueIds = Set(createdInfos.map { $0.uniqueId })
+    XCTAssertEqual(uniqueIds.count, 10)
+  }
+
+  // MARK: - Generic Type System Tests
+
+  func testMixedStrategyTypes() {
+    // Given
+    let actionId = LockmanActionId("mixedTypes")
+    let singleInfo = LockmanSingleExecutionInfo(actionId: actionId, mode: .action)
+    let concurrencyInfo = LockmanConcurrencyLimitedInfo(
+      actionId: actionId,
+      .limited(3)
+    )
+
+    // When
+    let compositeInfo = LockmanCompositeInfo2(
+      actionId: actionId,
+      lockmanInfoForStrategy1: singleInfo,
+      lockmanInfoForStrategy2: concurrencyInfo
+    )
+
+    // Then
+    XCTAssertEqual(compositeInfo.lockmanInfoForStrategy1.actionId, actionId)
+    XCTAssertEqual(compositeInfo.lockmanInfoForStrategy2.actionId, actionId)
+    XCTAssertEqual(compositeInfo.lockmanInfoForStrategy2.limit, .limited(3))
+  }
+
+  // MARK: - Edge Cases Tests
+
+  func testEmptyActionId() {
+    // Given
+    let emptyActionId = LockmanActionId("")
+    let info1 = LockmanSingleExecutionInfo(actionId: emptyActionId, mode: .action)
+    let info2 = LockmanSingleExecutionInfo(actionId: emptyActionId, mode: .boundary)
+
+    // When
+    let compositeInfo = LockmanCompositeInfo2(
+      actionId: emptyActionId,
+      lockmanInfoForStrategy1: info1,
+      lockmanInfoForStrategy2: info2
+    )
+
+    // Then
+    XCTAssertEqual(compositeInfo.actionId, "")
+    XCTAssertNotNil(compositeInfo.uniqueId)
+  }
+
+  func testVeryLongActionId() {
+    // Given
+    let longActionId = LockmanActionId(String(repeating: "a", count: 1000))
+    let info1 = LockmanSingleExecutionInfo(actionId: longActionId, mode: .action)
+    let info2 = LockmanSingleExecutionInfo(actionId: longActionId, mode: .boundary)
+
+    // When
+    let compositeInfo = LockmanCompositeInfo2(
+      actionId: longActionId,
+      lockmanInfoForStrategy1: info1,
+      lockmanInfoForStrategy2: info2
+    )
+
+    // Then
+    XCTAssertEqual(compositeInfo.actionId, longActionId)
+    XCTAssertEqual(compositeInfo.actionId.count, 1000)
+  }
+
+  func testSpecialCharactersInActionId() {
+    // Given
+    let specialActionId = LockmanActionId("action_with_!@#$%^&*()_+_special_chars_åäö_🚀")
+    let info1 = LockmanSingleExecutionInfo(actionId: specialActionId, mode: .action)
+    let info2 = LockmanSingleExecutionInfo(actionId: specialActionId, mode: .boundary)
+
+    // When
+    let compositeInfo = LockmanCompositeInfo2(
+      actionId: specialActionId,
+      lockmanInfoForStrategy1: info1,
+      lockmanInfoForStrategy2: info2
+    )
+
+    // Then
+    XCTAssertEqual(compositeInfo.actionId, specialActionId)
+    XCTAssertTrue(compositeInfo.debugDescription.contains("🚀"))
+  }
+
+  // MARK: - Integration Tests
+
+  func testRealWorldCompositeScenario() {
+    // Given - User login with single execution + priority based
+    let actionId = LockmanActionId("userLogin")
+    let singleExecutionInfo = LockmanSingleExecutionInfo(
+      actionId: actionId,
+      mode: .action
+    )
+
+    // Create a mock priority-based info using SingleExecutionInfo as placeholder
+    let priorityInfo = LockmanSingleExecutionInfo(
+      strategyId: LockmanStrategyId("Lockman.PriorityBasedStrategy"),
+      actionId: actionId,
+      mode: .boundary
+    )
+
+    // When
+    let compositeInfo = LockmanCompositeInfo2(
+      actionId: actionId,
+      lockmanInfoForStrategy1: singleExecutionInfo,
+      lockmanInfoForStrategy2: priorityInfo
+    )
+
+    // Then
+    XCTAssertEqual(compositeInfo.actionId, "userLogin")
+    XCTAssertEqual(compositeInfo.lockmanInfoForStrategy1.mode, .action)
+    XCTAssertEqual(compositeInfo.lockmanInfoForStrategy2.mode, .boundary)
+    XCTAssertEqual(
+      compositeInfo.lockmanInfoForStrategy2.strategyId.value, "Lockman.PriorityBasedStrategy")
+  }
 }

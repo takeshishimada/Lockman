@@ -1,4 +1,5 @@
 import XCTest
+
 @testable import Lockman
 
 /// Unit tests for LockmanPriorityBasedAction
@@ -117,22 +118,22 @@ import XCTest
 /// - [ ] Method overriding behavior in conforming types
 ///
 final class LockmanPriorityBasedActionTests: XCTestCase {
-    
-    override func setUp() {
-        super.setUp()
-        // Setup test environment
-    }
-    
-    override func tearDown() {
-        super.tearDown()
-        // Cleanup after each test
-        LockmanManager.cleanup.all()
-    }
-    
-    // MARK: - Tests
-    
-    func testPlaceholder() {
-        // TODO: Implement unit tests for LockmanPriorityBasedAction
-        XCTAssertTrue(true, "Placeholder test")
-    }
+
+  override func setUp() {
+    super.setUp()
+    // Setup test environment
+  }
+
+  override func tearDown() {
+    super.tearDown()
+    // Cleanup after each test
+    LockmanManager.cleanup.all()
+  }
+
+  // MARK: - Tests
+
+  func testPlaceholder() {
+    // TODO: Implement unit tests for LockmanPriorityBasedAction
+    XCTAssertTrue(true, "Placeholder test")
+  }
 }

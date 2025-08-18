@@ -1,15 +1,17 @@
 import XCTest
+
+#if canImport(LockmanMacros)
 @testable import LockmanMacros
 
-/// Unit tests for LockmanSingleExecutionMacro
+/// Unit tests for LockmanPriorityBasedMacro
 ///
-/// Tests the macro that generates conformance to LockmanSingleExecutionAction protocol
-/// and provides actionName property generation for enum types.
+/// Tests the macro that generates conformance to LockmanPriorityBasedAction protocol
+/// and provides priority-based action management with actionName property generation.
 ///
 /// ## Test Cases Identified from Source Analysis:
 ///
 /// ### ExtensionMacro Protocol Implementation
-/// - [ ] Extension generation for conformance to LockmanSingleExecutionAction
+/// - [ ] Extension generation for conformance to LockmanPriorityBasedAction
 /// - [ ] ExtensionDeclSyntax creation with correct type and protocol
 /// - [ ] makeConformanceExtensionDecl helper function usage
 /// - [ ] Extension declaration format validation
@@ -21,6 +23,13 @@ import XCTest
 /// - [ ] Enum extraction and validation with extractEnumDecl
 /// - [ ] Non-enum declaration handling (graceful failure)
 /// - [ ] Empty member array return for invalid declarations
+///
+/// ### Priority-Based Strategy Integration
+/// - [ ] LockmanPriorityBasedAction protocol conformance generation
+/// - [ ] Integration with priority-based strategy system
+/// - [ ] Priority hierarchy support (high, low, none)
+/// - [ ] Concurrency behavior integration (exclusive, replaceable)
+/// - [ ] Priority conflict resolution support
 ///
 /// ### Macro Expansion Context and Error Handling
 /// - [ ] MacroExpansionContext integration and usage
@@ -36,15 +45,15 @@ import XCTest
 /// - [ ] SwiftSyntaxBuilder integration for code construction
 /// - [ ] Syntax tree correctness and format validation
 ///
-/// ### Single Execution Specific Behavior
-/// - [ ] generateSingleExecutionMembers function behavior
-/// - [ ] actionName property generation specific to single execution
-/// - [ ] Deliberate omission of createLockmanInfo method generation
-/// - [ ] User requirement to implement createLockmanInfo manually
-/// - [ ] Execution mode specification responsibility (.none, .boundary, .action)
+/// ### Priority-Based Specific Behavior
+/// - [ ] generatePriorityBasedMembers function behavior (if applicable)
+/// - [ ] actionName property generation specific to priority-based actions
+/// - [ ] createLockmanInfo method generation requirements
+/// - [ ] Priority specification in generated code
+/// - [ ] User requirement to implement priority and concurrency behavior
 ///
 /// ### Enum Declaration Processing
-/// - [ ] extractEnumDecl function validation with "LockmanSingleExecution" name
+/// - [ ] extractEnumDecl function validation with "LockmanPriorityBased" name
 /// - [ ] Enum case detection and processing
 /// - [ ] Enum declaration syntax validation
 /// - [ ] Error handling for malformed enum declarations
@@ -78,12 +87,19 @@ import XCTest
 /// - [ ] Code style consistency with hand-written code
 /// - [ ] Swift language convention adherence
 ///
-/// ### Integration with Lockman Action System
-/// - [ ] Generated conformance compatibility with LockmanSingleExecutionAction
+/// ### Integration with Lockman Priority System
+/// - [ ] Generated conformance compatibility with LockmanPriorityBasedAction
 /// - [ ] Protocol requirement satisfaction through generation
 /// - [ ] Runtime behavior of generated code
-/// - [ ] Integration with strategy system
+/// - [ ] Integration with priority-based strategy
 /// - [ ] Type safety preservation through generation
+///
+/// ### Priority and Concurrency Behavior
+/// - [ ] High priority action generation patterns
+/// - [ ] Low priority action generation patterns
+/// - [ ] None priority action generation patterns
+/// - [ ] Exclusive concurrency behavior support
+/// - [ ] Replaceable concurrency behavior support
 ///
 /// ### Edge Cases and Error Conditions
 /// - [ ] Empty enum declaration handling
@@ -106,29 +122,24 @@ import XCTest
 /// - [ ] Compilation verification testing
 /// - [ ] Runtime behavior validation
 ///
-/// ### Documentation and Usage Examples
-/// - [ ] Generated extension documentation accuracy
-/// - [ ] Usage example validation from source comments
-/// - [ ] API documentation consistency
-/// - [ ] Developer guidance accuracy
-/// - [ ] Best practice demonstration
-///
-final class LockmanSingleExecutionMacroTests: XCTestCase {
-    
-    override func setUp() {
-        super.setUp()
-        // Setup test environment
-    }
-    
-    override func tearDown() {
-        super.tearDown()
-        // Cleanup after each test
-    }
-    
-    // MARK: - Tests
-    
-    func testPlaceholder() {
-        // TODO: Implement unit tests for LockmanSingleExecutionMacro
-        XCTAssertTrue(true, "Placeholder test")
-    }
+final class LockmanPriorityBasedMacroTests: XCTestCase {
+
+  override func setUp() {
+    super.setUp()
+    // Setup test environment
+  }
+
+  override func tearDown() {
+    super.tearDown()
+    // Cleanup after each test
+  }
+
+  // MARK: - Tests
+
+  func testPlaceholder() {
+    // TODO: Implement unit tests for LockmanPriorityBasedMacro
+    XCTAssertTrue(true, "Placeholder test")
+  }
 }
+
+#endif

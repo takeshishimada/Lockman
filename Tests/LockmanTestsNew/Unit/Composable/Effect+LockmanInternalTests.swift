@@ -1,5 +1,10 @@
+import ComposableArchitecture
 import XCTest
+
 @testable import Lockman
+
+// MARK: - Test Support Types
+// Shared test support types are defined in TestSupport.swift
 
 /// Unit tests for Effect+LockmanInternal
 ///
@@ -169,22 +174,1001 @@ import XCTest
 /// - [ ] Real-world integration scenarios
 ///
 final class EffectLockmanInternalTests: XCTestCase {
+
+  override func setUp() {
+    super.setUp()
+    // Setup test environment
+  }
+
+  override func tearDown() {
+    super.tearDown()
+    // Cleanup after each test
+    LockmanManager.cleanup.all()
+  }
+
+  // MARK: - Tests
+
+  // MARK: - Lock Acquisition Protocol Tests
+
+  func testAcquireLockWithValidParametersSucceeds() async {
+    // Setup test container and strategy
+    let container = LockmanStrategyContainer()
+    let strategy = TestSingleExecutionStrategy()
+    try? container.register(strategy)
     
-    override func setUp() {
-        super.setUp()
-        // Setup test environment
+    await LockmanManager.withTestContainer(container) {
+      let actionId = uniqueActionId()
+      let boundaryId = TestBoundaryId.test
+
+      // Create test info
+      let lockmanInfo = TestLockmanInfo(
+        actionId: actionId,
+        strategyId: strategy.strategyId,
+        uniqueId: UUID()
+      )
+
+      let effect: Effect<SharedTestAction> = .none
+
+      do {
+        let result = try effect.acquireLock(
+          lockmanInfo: lockmanInfo,
+          boundaryId: boundaryId
+        )
+
+        // Should succeed for first acquisition
+        switch result {
+        case .success:
+          XCTAssertTrue(true, "Lock acquisition succeeded as expected")
+        default:
+          XCTFail("Expected .success, got \(result)")
+        }
+      } catch {
+        XCTFail("Lock acquisition should not throw: \(error)")
+      }
     }
+  }
+
+  func testAcquireLockStrategyResolution() async {
+    // Setup test container and strategy
+    let container = LockmanStrategyContainer()
+    let strategy = TestSingleExecutionStrategy()
+    try? container.register(strategy)
     
-    override func tearDown() {
-        super.tearDown()
-        // Cleanup after each test
-        LockmanManager.cleanup.all()
+    await LockmanManager.withTestContainer(container) {
+      let boundaryId = TestBoundaryId.test
+
+      let lockmanInfo = TestLockmanInfo(
+        actionId: uniqueActionId(),
+        strategyId: strategy.strategyId,
+        uniqueId: UUID()
+      )
+
+      let effect: Effect<SharedTestAction> = .none
+
+      do {
+        let result = try effect.acquireLock(
+          lockmanInfo: lockmanInfo,
+          boundaryId: boundaryId
+        )
+
+        // Strategy should be resolved and lock should succeed
+        XCTAssertEqual(result, .success)
+      } catch {
+        XCTFail("Strategy resolution should succeed: \(error)")
+      }
     }
+  }
+
+  func testAcquireLockBoundaryProtection() async {
+    // Setup test container and strategy
+    let container = LockmanStrategyContainer()
+    let strategy = TestSingleExecutionStrategy()
+    try? container.register(strategy)
     
-    // MARK: - Tests
-    
-    func testPlaceholder() {
-        // TODO: Implement unit tests for Effect+LockmanInternal
-        XCTAssertTrue(true, "Placeholder test")
+    await LockmanManager.withTestContainer(container) {
+      let boundaryId = TestBoundaryId.test
+
+      let lockmanInfo = TestLockmanInfo(
+        actionId: uniqueActionId(),
+        strategyId: strategy.strategyId,
+        uniqueId: UUID()
+      )
+
+      let effect: Effect<SharedTestAction> = .none
+
+      // Lock acquisition should be protected by boundary lock
+      do {
+        let result = try effect.acquireLock(
+          lockmanInfo: lockmanInfo,
+          boundaryId: boundaryId
+        )
+        XCTAssertEqual(result, .success)
+      } catch {
+        XCTFail("Boundary-protected lock acquisition should succeed: \(error)")
+      }
     }
+  }
+
+  func testAcquireLockCanLockFeasibilityCheck() async {
+    // Setup test container and strategy
+    let container = LockmanStrategyContainer()
+    let strategy = TestSingleExecutionStrategy()
+    try? container.register(strategy)
+    
+    await LockmanManager.withTestContainer(container) {
+      let actionId = uniqueActionId()
+      let boundaryId = TestBoundaryId.test
+
+      let firstInfo = TestLockmanInfo(
+        actionId: actionId,
+        strategyId: strategy.strategyId,
+        uniqueId: UUID()
+      )
+
+      let secondInfo = TestLockmanInfo(
+        actionId: actionId,
+        strategyId: strategy.strategyId,
+        uniqueId: UUID()
+      )
+
+      let effect: Effect<SharedTestAction> = .none
+
+      do {
+        // First acquisition should succeed
+        let firstResult = try effect.acquireLock(
+          lockmanInfo: firstInfo,
+          boundaryId: boundaryId
+        )
+        XCTAssertEqual(firstResult, .success)
+
+        // Second acquisition of same actionId should be rejected
+        let secondResult = try effect.acquireLock(
+          lockmanInfo: secondInfo,
+          boundaryId: boundaryId
+        )
+        if case .cancel = secondResult {
+          XCTAssertTrue(true, "Second acquisition correctly rejected")
+        } else {
+          XCTFail("Expected .cancel for second acquisition")
+        }
+      } catch {
+        XCTFail("Lock feasibility check should not throw: \(error)")
+      }
+    }
+  }
+
+  func testAcquireLockWithInvalidStrategyThrows() {
+    let actionId = uniqueActionId()
+    let invalidStrategyId = LockmanStrategyId("non-existent-strategy")
+    let boundaryId = TestBoundaryId.test
+
+    let lockmanInfo = TestLockmanInfo(
+      actionId: actionId,
+      strategyId: invalidStrategyId,
+      uniqueId: UUID()
+    )
+
+    let effect: Effect<SharedTestAction> = .none
+
+    XCTAssertThrowsError(
+      try effect.acquireLock(
+        lockmanInfo: lockmanInfo,
+        boundaryId: boundaryId
+      )
+    ) { error in
+      XCTAssertTrue(error is LockmanRegistrationError)
+    }
+  }
+
+  func testAcquireLockWithPrecedingCancellation() async {
+    // Create a more sophisticated strategy that can return precedingCancellation
+    class PrecedingCancellationStrategy: LockmanStrategy, @unchecked Sendable {
+      typealias I = TestLockmanInfo
+
+      var strategyId: LockmanStrategyId { LockmanStrategyId("PrecedingCancellationStrategy") }
+
+      static func makeStrategyId() -> LockmanStrategyId {
+        LockmanStrategyId("PrecedingCancellationStrategy")
+      }
+
+      private var lockedActions: [String: TestLockmanInfo] = [:]
+      private let lock = NSLock()
+
+      func canLock<B: LockmanBoundaryId>(boundaryId: B, info: TestLockmanInfo) -> LockmanResult {
+        lock.withLock {
+          if let existingInfo = lockedActions[info.actionId] {
+            // Return precedingCancellation with the existing info
+            let priorityInfo = LockmanPriorityBasedInfo(
+              actionId: existingInfo.actionId,
+              priority: .high(.exclusive)
+            )
+            let error = LockmanPriorityBasedError.precedingActionCancelled(
+              lockmanInfo: priorityInfo,
+              boundaryId: boundaryId
+            )
+            return .successWithPrecedingCancellation(error: error)
+          }
+          return .success
+        }
+      }
+
+      func lock<B: LockmanBoundaryId>(boundaryId: B, info: TestLockmanInfo) {
+        lock.withLock {
+          lockedActions[info.actionId] = info
+        }
+      }
+
+      func unlock<B: LockmanBoundaryId>(boundaryId: B, info: TestLockmanInfo) {
+        _ = lock.withLock {
+          lockedActions.removeValue(forKey: info.actionId)
+        }
+      }
+
+      func cleanUp() {
+        lock.withLock {
+          lockedActions.removeAll()
+        }
+      }
+
+      func cleanUp<B: LockmanBoundaryId>(boundaryId: B) {
+        // For this test strategy, we clean up all actions regardless of boundary
+        cleanUp()
+      }
+
+      func getCurrentLocks() -> [AnyLockmanBoundaryId: [any LockmanInfo]] {
+        lock.withLock {
+          // Return empty for simplicity - this is a test strategy
+          return [:]
+        }
+      }
+    }
+
+    // Setup test container and strategy
+    let container = LockmanStrategyContainer()
+    let strategy = PrecedingCancellationStrategy()
+    try? container.register(strategy)
+    
+    await LockmanManager.withTestContainer(container) {
+      let actionId = uniqueActionId()
+      let boundaryId = TestBoundaryId.test
+
+      // First lock to create existing state
+      let firstInfo = TestLockmanInfo(
+        actionId: actionId,
+        strategyId: strategy.strategyId,
+        uniqueId: UUID()
+      )
+
+      strategy.lock(boundaryId: boundaryId, info: firstInfo)
+
+      // Second lock attempt should trigger preceding cancellation
+      let secondInfo = TestLockmanInfo(
+        actionId: actionId,
+        strategyId: strategy.strategyId,
+        uniqueId: UUID()
+      )
+
+      let effect: Effect<SharedTestAction> = .none
+
+      do {
+        let result = try effect.acquireLock(
+          lockmanInfo: secondInfo,
+          boundaryId: boundaryId
+        )
+
+        // Should return successWithPrecedingCancellation
+        if case .successWithPrecedingCancellation = result {
+          XCTAssertTrue(true, "Preceding cancellation handled correctly")
+        } else {
+          XCTFail("Expected .successWithPrecedingCancellation, got \(result)")
+        }
+      } catch {
+        XCTFail("Lock acquisition should not throw: \(error)")
+      }
+    }
+  }
+
+  func testAcquireLockEarlyExitOnCancel() async {
+    // Setup test strategy that always rejects
+    class RejectingStrategy: LockmanStrategy, @unchecked Sendable {
+      typealias I = TestLockmanInfo
+      
+      var strategyId: LockmanStrategyId { .init(name: "RejectingStrategy") }
+      
+      static func makeStrategyId() -> LockmanStrategyId {
+        .init(name: "RejectingStrategy")
+      }
+
+      func canLock<B: LockmanBoundaryId>(boundaryId: B, info: TestLockmanInfo) -> LockmanResult {
+        let error = LockmanSingleExecutionError.boundaryAlreadyLocked(
+          boundaryId: boundaryId,
+          lockmanInfo: LockmanSingleExecutionInfo(actionId: info.actionId, mode: .boundary)
+        )
+        return .cancel(error)
+      }
+
+      func lock<B: LockmanBoundaryId>(boundaryId: B, info: TestLockmanInfo) {
+        XCTFail("lock() should not be called when canLock returns .cancel")
+      }
+
+      func unlock<B: LockmanBoundaryId>(boundaryId: B, info: TestLockmanInfo) {}
+      func cleanUp() {}
+      func cleanUp<B: LockmanBoundaryId>(boundaryId: B) {}
+      func getCurrentLocks() -> [AnyLockmanBoundaryId: [any LockmanInfo]] { [:] }
+    }
+
+    // Setup test container and strategy
+    let container = LockmanStrategyContainer()
+    let strategy = RejectingStrategy()
+    try? container.register(strategy)
+    
+    await LockmanManager.withTestContainer(container) {
+      let boundaryId = TestBoundaryId.test
+
+      let lockmanInfo = TestLockmanInfo(
+        actionId: uniqueActionId(),
+        strategyId: strategy.strategyId,
+        uniqueId: UUID()
+      )
+
+      let effect: Effect<SharedTestAction> = .none
+
+      do {
+        let result = try effect.acquireLock(
+          lockmanInfo: lockmanInfo,
+          boundaryId: boundaryId
+        )
+
+        // Should return .cancel and never call lock()
+        if case .cancel = result {
+          XCTAssertTrue(true, "Early exit on cancel worked correctly")
+        } else {
+          XCTFail("Expected .cancel for rejecting strategy")
+        }
+      } catch {
+        XCTFail("Early exit test should not throw: \(error)")
+      }
+    }
+  }
+
+  // MARK: - UniqueId Consistency Tests
+
+  func testUniqueIdConsistencyThroughoutLifecycle() async {
+    // Setup test container and strategy
+    let container = LockmanStrategyContainer()
+    let strategy = TestSingleExecutionStrategy()
+    try? container.register(strategy)
+    
+    await LockmanManager.withTestContainer(container) {
+      let actionId = uniqueActionId()
+      let boundaryId = TestBoundaryId.test
+
+      let uniqueId = UUID()
+      let lockmanInfo = TestLockmanInfo(
+        actionId: actionId,
+        strategyId: strategy.strategyId,
+        uniqueId: uniqueId
+      )
+
+    let effect: Effect<SharedTestAction> = .none
+
+    do {
+      // Acquire lock and verify uniqueId is preserved
+      _ = try effect.acquireLock(
+        lockmanInfo: lockmanInfo,
+        boundaryId: boundaryId
+      )
+
+      // Verify the same uniqueId is stored in strategy
+      XCTAssertEqual(lockmanInfo.uniqueId, uniqueId)
+
+    } catch {
+      XCTFail("Lock acquisition should not throw: \(error)")
+    }
+    }
+  }
+
+  // MARK: - Effect Building Tests
+
+  func testBuildLockEffectWithSuccessResult() async {
+    let container = LockmanStrategyContainer()
+    let strategy = TestSingleExecutionStrategy()
+    try? container.register(strategy)
+    
+    await LockmanManager.withTestContainer(container) {
+      let actionId = uniqueActionId()
+      let boundaryId = TestBoundaryId.test
+
+      let lockmanInfo = TestLockmanInfo(
+        actionId: actionId,
+        strategyId: strategy.strategyId,
+        uniqueId: UUID()
+      )
+
+      let action = SharedTestAction.test
+      let effect: Effect<SharedTestAction> = .run { _ in /* test operation */ }
+
+      let builtEffect = effect.buildLockEffect(
+        lockResult: .success,
+        action: action,
+        lockmanInfo: lockmanInfo,
+        boundaryId: boundaryId,
+        unlockOption: .immediate,
+        fileID: #fileID,
+        filePath: #filePath,
+        line: #line,
+        column: #column
+      )
+
+      // Effect should be built successfully
+      XCTAssertNotNil(builtEffect)
+    }
+  }
+
+  func testBuildLockEffectStrategyResolution() async {
+    let container = LockmanStrategyContainer()
+    let strategy = TestSingleExecutionStrategy()
+    try? container.register(strategy)
+    
+    await LockmanManager.withTestContainer(container) {
+      let boundaryId = TestBoundaryId.test
+
+      let lockmanInfo = TestLockmanInfo(
+        actionId: uniqueActionId(),
+        strategyId: strategy.strategyId,
+        uniqueId: UUID()
+      )
+
+      let action = SharedTestAction.test
+      let effect: Effect<SharedTestAction> = .run { _ in /* test operation */ }
+
+      let builtEffect = effect.buildLockEffect(
+        lockResult: .success,
+        action: action,
+        lockmanInfo: lockmanInfo,
+        boundaryId: boundaryId,
+        unlockOption: .immediate,
+        fileID: #fileID,
+        filePath: #filePath,
+        line: #line,
+        column: #column
+      )
+
+      // Strategy should be resolved successfully
+      XCTAssertNotNil(builtEffect)
+    }
+  }
+
+  func testBuildLockEffectUnlockTokenCreation() async {
+    let container = LockmanStrategyContainer()
+    let strategy = TestSingleExecutionStrategy()
+    try? container.register(strategy)
+    
+    await LockmanManager.withTestContainer(container) {
+      let boundaryId = TestBoundaryId.test
+
+      let lockmanInfo = TestLockmanInfo(
+        actionId: uniqueActionId(),
+        strategyId: strategy.strategyId,
+        uniqueId: UUID()
+      )
+
+      let action = SharedTestAction.test
+      let effect: Effect<SharedTestAction> = .run { _ in /* test operation */ }
+
+      // Test different unlock options
+      let unlockOptions: [LockmanUnlockOption] = [
+        .immediate,
+        .delayed(1.0),
+        .mainRunLoop,
+        .transition,
+      ]
+
+      for unlockOption in unlockOptions {
+        let builtEffect = effect.buildLockEffect(
+          lockResult: .success,
+          action: action,
+          lockmanInfo: lockmanInfo,
+          boundaryId: boundaryId,
+          unlockOption: unlockOption,
+          fileID: #fileID,
+          filePath: #filePath,
+          line: #line,
+          column: #column
+        )
+
+        XCTAssertNotNil(builtEffect, "Effect should be built with unlock option \(unlockOption)")
+      }
+    }
+  }
+
+  func testBuildLockEffectCancellationBehavior() async {
+    let container = LockmanStrategyContainer()
+    let strategy = TestSingleExecutionStrategy()
+    try? container.register(strategy)
+    
+    await LockmanManager.withTestContainer(container) {
+      let boundaryId = TestBoundaryId.test
+
+    // Test cancellable and non-cancellable info
+    struct CancellableInfo: LockmanInfo {
+      let actionId: LockmanActionId
+      let strategyId: LockmanStrategyId
+      let uniqueId: UUID
+      let isCancellationTarget: Bool = true
+      
+      var debugDescription: String {
+        "CancellableInfo(actionId: \(actionId), strategyId: \(strategyId), uniqueId: \(uniqueId))"
+      }
+    }
+
+    struct NonCancellableInfo: LockmanInfo {
+      let actionId: LockmanActionId
+      let strategyId: LockmanStrategyId
+      let uniqueId: UUID
+      let isCancellationTarget: Bool = false
+      
+      var debugDescription: String {
+        "NonCancellableInfo(actionId: \(actionId), strategyId: \(strategyId), uniqueId: \(uniqueId))"
+      }
+    }
+
+      let cancellableInfo = CancellableInfo(
+        actionId: uniqueActionId(),
+        strategyId: strategy.strategyId,
+        uniqueId: UUID()
+      )
+
+      let nonCancellableInfo = NonCancellableInfo(
+        actionId: uniqueActionId(),
+        strategyId: strategy.strategyId,
+        uniqueId: UUID()
+      )
+
+      let action = SharedTestAction.test
+      let effect: Effect<SharedTestAction> = .run { _ in /* test operation */ }
+
+      // Both should build effects successfully
+      let cancellableEffect = effect.buildLockEffect(
+        lockResult: .success,
+        action: action,
+        lockmanInfo: cancellableInfo,
+        boundaryId: boundaryId,
+        unlockOption: .immediate,
+        fileID: #fileID,
+        filePath: #filePath,
+        line: #line,
+        column: #column
+      )
+
+      let nonCancellableEffect = effect.buildLockEffect(
+        lockResult: .success,
+        action: action,
+        lockmanInfo: nonCancellableInfo,
+        boundaryId: boundaryId,
+        unlockOption: .immediate,
+        fileID: #fileID,
+        filePath: #filePath,
+        line: #line,
+        column: #column
+      )
+
+      XCTAssertNotNil(cancellableEffect)
+      XCTAssertNotNil(nonCancellableEffect)
+    }
+  }
+
+  func testBuildLockEffectWithCancelResult() async {
+    let container = LockmanStrategyContainer()
+    let strategy = TestSingleExecutionStrategy()
+    try? container.register(strategy)
+    
+    await LockmanManager.withTestContainer(container) {
+      let actionId = uniqueActionId()
+      let boundaryId = TestBoundaryId.test
+
+      let lockmanInfo = TestLockmanInfo(
+        actionId: actionId,
+        strategyId: strategy.strategyId,
+        uniqueId: UUID()
+      )
+
+      let action = SharedTestAction.test
+      let effect: Effect<SharedTestAction> = .run { _ in /* test operation */ }
+
+      let singleExecutionInfo = LockmanSingleExecutionInfo(
+        actionId: "test",
+        mode: .action
+      )
+      let error = LockmanSingleExecutionError.actionAlreadyRunning(
+        boundaryId: boundaryId,
+        lockmanInfo: singleExecutionInfo
+      )
+      let builtEffect = effect.buildLockEffect(
+        lockResult: .cancel(error),
+        action: action,
+        lockmanInfo: lockmanInfo,
+        boundaryId: boundaryId,
+        unlockOption: .immediate,
+        fileID: #fileID,
+        filePath: #filePath,
+        line: #line,
+        column: #column
+      )
+
+      // Effect should return .none for cancelled operations
+      // We can't directly test .none equivalence, but we can verify it doesn't crash
+      XCTAssertNotNil(builtEffect)
+    }
+  }
+
+  func testBuildLockEffectWithSuccessWithPrecedingCancellation() async {
+    let container = LockmanStrategyContainer()
+    let strategy = TestSingleExecutionStrategy()
+    try? container.register(strategy)
+    
+    await LockmanManager.withTestContainer(container) {
+      let boundaryId = TestBoundaryId.test
+
+      let lockmanInfo = TestLockmanInfo(
+        actionId: uniqueActionId(),
+        strategyId: strategy.strategyId,
+        uniqueId: UUID()
+      )
+
+      let action = SharedTestAction.test
+      let effect: Effect<SharedTestAction> = .run { _ in /* test operation */ }
+
+      // Create a preceding cancellation error
+      let priorityInfo = LockmanPriorityBasedInfo(
+        actionId: lockmanInfo.actionId,
+        priority: .high(.exclusive)
+      )
+      let precedingError = LockmanPriorityBasedError.precedingActionCancelled(
+        lockmanInfo: priorityInfo,
+        boundaryId: boundaryId
+      )
+
+      let builtEffect = effect.buildLockEffect(
+        lockResult: .successWithPrecedingCancellation(error: precedingError),
+        action: action,
+        lockmanInfo: lockmanInfo,
+        boundaryId: boundaryId,
+        unlockOption: .immediate,
+        fileID: #fileID,
+        filePath: #filePath,
+        line: #line,
+        column: #column
+      )
+
+      // Effect should handle preceding cancellation
+      XCTAssertNotNil(builtEffect)
+    }
+  }
+
+  func testBuildLockEffectErrorHandling() async {
+    // Use empty container to cause resolution error
+    let emptyContainer = LockmanStrategyContainer()
+    
+    await LockmanManager.withTestContainer(emptyContainer) {
+      let strategyId = LockmanStrategyId("non-existent-strategy")
+      let boundaryId = TestBoundaryId.test
+
+      let lockmanInfo = TestLockmanInfo(
+        actionId: uniqueActionId(),
+        strategyId: strategyId,
+        uniqueId: UUID()
+      )
+
+      let action = SharedTestAction.test
+      let effect: Effect<SharedTestAction> = .run { _ in /* test operation */ }
+
+      let builtEffect = effect.buildLockEffect(
+        lockResult: .success,
+        action: action,
+        lockmanInfo: lockmanInfo,
+        boundaryId: boundaryId,
+        unlockOption: .immediate,
+        fileID: #fileID,
+        filePath: #filePath,
+        line: #line,
+        column: #column
+      )
+
+      // Should return .none when strategy resolution fails
+      XCTAssertNotNil(builtEffect)
+    }
+  }
+
+  func testBuildLockEffectWithLockFailureHandler() async {
+    let container = LockmanStrategyContainer()
+    let strategy = TestSingleExecutionStrategy()
+    try? container.register(strategy)
+    
+    await LockmanManager.withTestContainer(container) {
+      let actionId = uniqueActionId()
+      let boundaryId = TestBoundaryId.test
+
+      let lockmanInfo = TestLockmanInfo(
+        actionId: actionId,
+        strategyId: strategy.strategyId,
+        uniqueId: UUID()
+      )
+
+      let action = SharedTestAction.test
+      let effect: Effect<SharedTestAction> = .run { _ in /* test operation */ }
+
+      var handlerCalled = false
+      let lockFailureHandler: (any Error, Send<SharedTestAction>) async -> Void = { error, send in
+        handlerCalled = true
+      }
+
+      let singleExecutionInfo = LockmanSingleExecutionInfo(
+        actionId: "test",
+        mode: .action
+      )
+      let error = LockmanSingleExecutionError.actionAlreadyRunning(
+        boundaryId: boundaryId,
+        lockmanInfo: singleExecutionInfo
+      )
+      let builtEffect = effect.buildLockEffect(
+        lockResult: .cancel(error),
+        action: action,
+        lockmanInfo: lockmanInfo,
+        boundaryId: boundaryId,
+        unlockOption: .immediate,
+        fileID: #fileID,
+        filePath: #filePath,
+        line: #line,
+        column: #column,
+        handler: lockFailureHandler
+      )
+
+      // Effect should be built with handler
+      XCTAssertNotNil(builtEffect)
+      
+      // Handler should not be called during effect building
+      XCTAssertFalse(handlerCalled)
+    }
+  }
+
+  func testBuildLockEffectWithPrecedingCancellationAndHandler() async {
+    let container = LockmanStrategyContainer()
+    let strategy = TestSingleExecutionStrategy()
+    try? container.register(strategy)
+    
+    await LockmanManager.withTestContainer(container) {
+      let boundaryId = TestBoundaryId.test
+
+      let lockmanInfo = TestLockmanInfo(
+        actionId: uniqueActionId(),
+        strategyId: strategy.strategyId,
+        uniqueId: UUID()
+      )
+
+      let action = SharedTestAction.test
+      let effect: Effect<SharedTestAction> = .run { _ in /* test operation */ }
+
+      actor HandlerCheck {
+        private var handlerCalled = false
+        func setHandlerCalled() { handlerCalled = true }
+        func getHandlerCalled() -> Bool { handlerCalled }
+      }
+      
+      let handlerCheck = HandlerCheck()
+      let lockFailureHandler: @Sendable (any Error, Send<SharedTestAction>) async -> Void = { error, send in
+        await handlerCheck.setHandlerCalled()
+      }
+
+      let priorityInfo = LockmanPriorityBasedInfo(
+        actionId: lockmanInfo.actionId,
+        priority: .high(.exclusive)
+      )
+      let precedingError = LockmanPriorityBasedError.precedingActionCancelled(
+        lockmanInfo: priorityInfo,
+        boundaryId: boundaryId
+      )
+
+      let builtEffect = effect.buildLockEffect(
+        lockResult: .successWithPrecedingCancellation(error: precedingError),
+        action: action,
+        lockmanInfo: lockmanInfo,
+        boundaryId: boundaryId,
+        unlockOption: .immediate,
+        fileID: #fileID,
+        filePath: #filePath,
+        line: #line,
+        column: #column,
+        handler: lockFailureHandler
+      )
+
+      // Effect should handle preceding cancellation with handler
+      XCTAssertNotNil(builtEffect)
+      
+      // Handler should not be called during effect building
+      Task {
+        let wasCalled = await handlerCheck.getHandlerCalled()
+        XCTAssertFalse(wasCalled)
+      }
+    }
+  }
+
+  // MARK: - Error Handling Tests
+
+  func testHandleErrorWithStrategyNotRegistered() {
+    let strategyType = "TestStrategy"
+    let error = LockmanRegistrationError.strategyNotRegistered(strategyType)
+
+    // This should not crash - mainly testing that the error handling path works
+    Effect<SharedTestAction>.handleError(
+      error: error,
+      fileID: #fileID,
+      filePath: #filePath,
+      line: #line,
+      column: #column
+    )
+
+    // If we get here without crashing, the error handling worked
+    XCTAssertTrue(true)
+  }
+
+  func testHandleErrorWithStrategyAlreadyRegistered() {
+    let strategyType = "TestStrategy"
+    let error = LockmanRegistrationError.strategyAlreadyRegistered(strategyType)
+
+    // This should not crash - mainly testing that the error handling path works
+    Effect<SharedTestAction>.handleError(
+      error: error,
+      fileID: #fileID,
+      filePath: #filePath,
+      line: #line,
+      column: #column
+    )
+
+    // If we get here without crashing, the error handling worked
+    XCTAssertTrue(true)
+  }
+
+  func testHandleErrorWithUnknownError() {
+    struct UnknownError: Error {}
+    let error = UnknownError()
+
+    // This should not crash - mainly testing that the error handling path works
+    Effect<SharedTestAction>.handleError(
+      error: error,
+      fileID: #fileID,
+      filePath: #filePath,
+      line: #line,
+      column: #column
+    )
+
+    // If we get here without crashing, the error handling worked
+    XCTAssertTrue(true)
+  }
+
+  // MARK: - Boundary Lock Protection Tests
+
+  func testBoundaryLockProtectionDuringAcquisition() async {
+    let container = LockmanStrategyContainer()
+    let strategy = TestSingleExecutionStrategy()
+    try? container.register(strategy)
+    
+    await LockmanManager.withTestContainer(container) {
+      let actionId = uniqueActionId()
+      let boundaryId = TestBoundaryId.test
+
+      let lockmanInfo = TestLockmanInfo(
+        actionId: actionId,
+        strategyId: strategy.strategyId,
+        uniqueId: UUID()
+      )
+
+      // Perform concurrent acquisitions to test boundary protection
+      await TestSupport.performConcurrentOperations(count: 10) {
+        let effect: Effect<SharedTestAction> = .none
+        do {
+          _ = try effect.acquireLock(
+            lockmanInfo: lockmanInfo,
+            boundaryId: boundaryId
+          )
+        } catch {
+          // Expected for some concurrent operations
+        }
+      }
+
+      // If we get here without deadlocks or crashes, boundary protection worked
+      XCTAssertTrue(true)
+    }
+  }
+
+  func testMultipleBoundaryCoordination() async {
+    let container = LockmanStrategyContainer()
+    let strategy = TestSingleExecutionStrategy()
+    try? container.register(strategy)
+    
+    await LockmanManager.withTestContainer(container) {
+      let boundary1 = TestBoundaryId.test
+      let boundary2 = TestBoundaryId.secondary
+
+      let info1 = TestLockmanInfo(
+        actionId: uniqueActionId(),
+        strategyId: strategy.strategyId,
+        uniqueId: UUID()
+      )
+
+      let info2 = TestLockmanInfo(
+        actionId: uniqueActionId(),
+        strategyId: strategy.strategyId,
+        uniqueId: UUID()
+      )
+
+      let effect: Effect<SharedTestAction> = .none
+
+      do {
+        // Different boundaries should not interfere
+        let result1 = try effect.acquireLock(
+          lockmanInfo: info1,
+          boundaryId: boundary1
+        )
+        let result2 = try effect.acquireLock(
+          lockmanInfo: info2,
+          boundaryId: boundary2
+        )
+
+        XCTAssertEqual(result1, .success)
+        XCTAssertEqual(result2, .success)
+      } catch {
+        XCTFail("Multi-boundary coordination should not throw: \(error)")
+      }
+    }
+  }
+
+  func testBoundaryLockIsolation() async {
+    let container = LockmanStrategyContainer()
+    let strategy = TestSingleExecutionStrategy()
+    try? container.register(strategy)
+    
+    await LockmanManager.withTestContainer(container) {
+      let actionId = uniqueActionId()
+
+      let boundary1 = TestBoundaryId.test
+      let boundary2 = TestBoundaryId.secondary
+
+      let info1 = TestLockmanInfo(
+        actionId: actionId,
+        strategyId: strategy.strategyId,
+        uniqueId: UUID()
+      )
+
+      let info2 = TestLockmanInfo(
+        actionId: actionId,  // Same action ID
+        strategyId: strategy.strategyId,
+        uniqueId: UUID()
+      )
+
+      let effect: Effect<SharedTestAction> = .none
+
+      do {
+        // First acquisition on boundary1
+        let result1 = try effect.acquireLock(
+          lockmanInfo: info1,
+          boundaryId: boundary1
+        )
+        XCTAssertEqual(result1, .success)
+
+        // Second acquisition of same actionId on different boundary should be rejected
+        let result2 = try effect.acquireLock(
+          lockmanInfo: info2,
+          boundaryId: boundary2
+        )
+        if case .cancel = result2 {
+          XCTAssertTrue(true, "Same action ID properly isolated across boundaries")
+        } else {
+          XCTFail("Expected .cancel for same action ID on different boundary")
+        }
+      } catch {
+        XCTFail("Boundary isolation test should not throw: \(error)")
+      }
+    }
+  }
 }

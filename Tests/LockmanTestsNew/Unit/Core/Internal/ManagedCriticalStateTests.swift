@@ -1,4 +1,5 @@
 import XCTest
+
 @testable import Lockman
 
 /// Unit tests for ManagedCriticalState
@@ -140,22 +141,19 @@ import XCTest
 /// - [ ] Complex state mutation scenarios
 ///
 final class ManagedCriticalStateTests: XCTestCase {
-    
-    override func setUp() {
-        super.setUp()
-        // Setup test environment
-    }
-    
-    override func tearDown() {
-        super.tearDown()
-        // Cleanup after each test
-        LockmanManager.cleanup.all()
-    }
-    
-    // MARK: - Tests
-    
-    func testPlaceholder() {
-        // TODO: Implement unit tests for ManagedCriticalState
-        XCTAssertTrue(true, "Placeholder test")
-    }
+
+  override func setUp() {
+    super.setUp()
+    // Setup test environment
+  }
+
+  override func tearDown() {
+    super.tearDown()
+    // Cleanup after each test
+    LockmanManager.cleanup.all()
+  }
+
+  // MARK: - Tests
+  
+  // Tests will be implemented when ManagedCriticalState functionality is available
 }

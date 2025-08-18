@@ -1,4 +1,5 @@
 import XCTest
+
 @testable import Lockman
 
 /// Unit tests for LockmanDebug
@@ -97,22 +98,19 @@ import XCTest
 /// - [ ] Production vs debug build behavior differences
 ///
 final class LockmanDebugTests: XCTestCase {
-    
-    override func setUp() {
-        super.setUp()
-        // Setup test environment
-    }
-    
-    override func tearDown() {
-        super.tearDown()
-        // Cleanup after each test
-        LockmanManager.cleanup.all()
-    }
-    
-    // MARK: - Tests
-    
-    func testPlaceholder() {
-        // TODO: Implement unit tests for LockmanDebug
-        XCTAssertTrue(true, "Placeholder test")
-    }
+
+  override func setUp() {
+    super.setUp()
+    // Setup test environment
+  }
+
+  override func tearDown() {
+    super.tearDown()
+    // Cleanup after each test
+    LockmanManager.cleanup.all()
+  }
+
+  // MARK: - Tests
+  
+  // Tests will be implemented when LockmanDebug functionality is available
 }

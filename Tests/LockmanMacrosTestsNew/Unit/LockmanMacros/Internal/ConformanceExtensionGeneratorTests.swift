@@ -1,4 +1,6 @@
 import XCTest
+
+#if canImport(LockmanMacros)
 @testable import LockmanMacros
 
 /// Unit tests for ConformanceExtensionGenerator
@@ -153,21 +155,23 @@ import XCTest
 /// - [ ] Module visibility handling
 ///
 final class ConformanceExtensionGeneratorTests: XCTestCase {
-    
-    override func setUp() {
-        super.setUp()
-        // Setup test environment
-    }
-    
-    override func tearDown() {
-        super.tearDown()
-        // Cleanup after each test
-    }
-    
-    // MARK: - Tests
-    
-    func testPlaceholder() {
-        // TODO: Implement unit tests for ConformanceExtensionGenerator
-        XCTAssertTrue(true, "Placeholder test")
-    }
+
+  override func setUp() {
+    super.setUp()
+    // Setup test environment
+  }
+
+  override func tearDown() {
+    super.tearDown()
+    // Cleanup after each test
+  }
+
+  // MARK: - Tests
+
+  func testPlaceholder() {
+    // TODO: Implement unit tests for ConformanceExtensionGenerator
+    XCTAssertTrue(true, "Placeholder test")
+  }
 }
+
+#endif

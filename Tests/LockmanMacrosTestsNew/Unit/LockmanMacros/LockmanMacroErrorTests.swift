@@ -1,4 +1,6 @@
 import XCTest
+
+#if canImport(LockmanMacros)
 @testable import LockmanMacros
 
 /// Unit tests for LockmanMacroError
@@ -131,21 +133,23 @@ import XCTest
 /// - [ ] Copy-pasteable suggestions in error messages
 ///
 final class LockmanMacroErrorTests: XCTestCase {
-    
-    override func setUp() {
-        super.setUp()
-        // Setup test environment
-    }
-    
-    override func tearDown() {
-        super.tearDown()
-        // Cleanup after each test
-    }
-    
-    // MARK: - Tests
-    
-    func testPlaceholder() {
-        // TODO: Implement unit tests for LockmanMacroError
-        XCTAssertTrue(true, "Placeholder test")
-    }
+
+  override func setUp() {
+    super.setUp()
+    // Setup test environment
+  }
+
+  override func tearDown() {
+    super.tearDown()
+    // Cleanup after each test
+  }
+
+  // MARK: - Tests
+
+  func testPlaceholder() {
+    // TODO: Implement unit tests for LockmanMacroError
+    XCTAssertTrue(true, "Placeholder test")
+  }
 }
+
+#endif

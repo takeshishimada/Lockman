@@ -1,15 +1,17 @@
 import XCTest
+
+#if canImport(LockmanMacros)
 @testable import LockmanMacros
 
-/// Unit tests for LockmanPriorityBasedMacro
+/// Unit tests for LockmanGroupCoordinationMacro
 ///
-/// Tests the macro that generates conformance to LockmanPriorityBasedAction protocol
-/// and provides priority-based action management with actionName property generation.
+/// Tests the macro that generates conformance to LockmanGroupCoordinationAction protocol
+/// and provides group coordination action management with actionName property generation.
 ///
 /// ## Test Cases Identified from Source Analysis:
 ///
 /// ### ExtensionMacro Protocol Implementation
-/// - [ ] Extension generation for conformance to LockmanPriorityBasedAction
+/// - [ ] Extension generation for conformance to LockmanGroupCoordinationAction
 /// - [ ] ExtensionDeclSyntax creation with correct type and protocol
 /// - [ ] makeConformanceExtensionDecl helper function usage
 /// - [ ] Extension declaration format validation
@@ -22,12 +24,12 @@ import XCTest
 /// - [ ] Non-enum declaration handling (graceful failure)
 /// - [ ] Empty member array return for invalid declarations
 ///
-/// ### Priority-Based Strategy Integration
-/// - [ ] LockmanPriorityBasedAction protocol conformance generation
-/// - [ ] Integration with priority-based strategy system
-/// - [ ] Priority hierarchy support (high, low, none)
-/// - [ ] Concurrency behavior integration (exclusive, replaceable)
-/// - [ ] Priority conflict resolution support
+/// ### Group Coordination Strategy Integration
+/// - [ ] LockmanGroupCoordinationAction protocol conformance generation
+/// - [ ] Integration with group coordination strategy system
+/// - [ ] Group role management support (leader, follower, coordinator)
+/// - [ ] Group synchronization and coordination support
+/// - [ ] Multi-group coordination handling
 ///
 /// ### Macro Expansion Context and Error Handling
 /// - [ ] MacroExpansionContext integration and usage
@@ -43,15 +45,15 @@ import XCTest
 /// - [ ] SwiftSyntaxBuilder integration for code construction
 /// - [ ] Syntax tree correctness and format validation
 ///
-/// ### Priority-Based Specific Behavior
-/// - [ ] generatePriorityBasedMembers function behavior (if applicable)
-/// - [ ] actionName property generation specific to priority-based actions
+/// ### Group Coordination Specific Behavior
+/// - [ ] generateGroupCoordinationMembers function behavior (if applicable)
+/// - [ ] actionName property generation specific to group coordination
 /// - [ ] createLockmanInfo method generation requirements
-/// - [ ] Priority specification in generated code
-/// - [ ] User requirement to implement priority and concurrency behavior
+/// - [ ] Group role specification in generated code
+/// - [ ] User requirement to implement group roles and coordination
 ///
 /// ### Enum Declaration Processing
-/// - [ ] extractEnumDecl function validation with "LockmanPriorityBased" name
+/// - [ ] extractEnumDecl function validation with "LockmanGroupCoordination" name
 /// - [ ] Enum case detection and processing
 /// - [ ] Enum declaration syntax validation
 /// - [ ] Error handling for malformed enum declarations
@@ -85,19 +87,26 @@ import XCTest
 /// - [ ] Code style consistency with hand-written code
 /// - [ ] Swift language convention adherence
 ///
-/// ### Integration with Lockman Priority System
-/// - [ ] Generated conformance compatibility with LockmanPriorityBasedAction
+/// ### Integration with Lockman Group System
+/// - [ ] Generated conformance compatibility with LockmanGroupCoordinationAction
 /// - [ ] Protocol requirement satisfaction through generation
 /// - [ ] Runtime behavior of generated code
-/// - [ ] Integration with priority-based strategy
+/// - [ ] Integration with group coordination strategy
 /// - [ ] Type safety preservation through generation
 ///
-/// ### Priority and Concurrency Behavior
-/// - [ ] High priority action generation patterns
-/// - [ ] Low priority action generation patterns
-/// - [ ] None priority action generation patterns
-/// - [ ] Exclusive concurrency behavior support
-/// - [ ] Replaceable concurrency behavior support
+/// ### Group Coordination Features
+/// - [ ] Group ID management and specification
+/// - [ ] Role-based coordination patterns
+/// - [ ] Leader election and coordination
+/// - [ ] Follower synchronization support
+/// - [ ] Coordinator mediation functionality
+///
+/// ### Group Role Management
+/// - [ ] .leader role generation patterns
+/// - [ ] .follower role generation patterns
+/// - [ ] .coordinator role generation patterns
+/// - [ ] Role transition support
+/// - [ ] Dynamic role assignment handling
 ///
 /// ### Edge Cases and Error Conditions
 /// - [ ] Empty enum declaration handling
@@ -120,22 +129,31 @@ import XCTest
 /// - [ ] Compilation verification testing
 /// - [ ] Runtime behavior validation
 ///
-final class LockmanPriorityBasedMacroTests: XCTestCase {
-    
-    override func setUp() {
-        super.setUp()
-        // Setup test environment
-    }
-    
-    override func tearDown() {
-        super.tearDown()
-        // Cleanup after each test
-    }
-    
-    // MARK: - Tests
-    
-    func testPlaceholder() {
-        // TODO: Implement unit tests for LockmanPriorityBasedMacro
-        XCTAssertTrue(true, "Placeholder test")
-    }
+/// ### Multi-Group Coordination Scenarios
+/// - [ ] Cross-group coordination patterns
+/// - [ ] Group hierarchy and nesting support
+/// - [ ] Inter-group communication patterns
+/// - [ ] Group synchronization barriers
+/// - [ ] Distributed group coordination
+///
+final class LockmanGroupCoordinationMacroTests: XCTestCase {
+
+  override func setUp() {
+    super.setUp()
+    // Setup test environment
+  }
+
+  override func tearDown() {
+    super.tearDown()
+    // Cleanup after each test
+  }
+
+  // MARK: - Tests
+
+  func testPlaceholder() {
+    // TODO: Implement unit tests for LockmanGroupCoordinationMacro
+    XCTAssertTrue(true, "Placeholder test")
+  }
 }
+
+#endif
