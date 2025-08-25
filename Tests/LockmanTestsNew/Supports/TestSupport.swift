@@ -68,7 +68,7 @@ public struct TestLockmanInfo: LockmanInfo {
 }
 
 /// Common test action used across all Composable tests
-public enum SharedTestAction: LockmanAction, Sendable {
+public enum SharedTestAction: LockmanAction, Sendable, Equatable {
   case test
   case increment
   case decrement

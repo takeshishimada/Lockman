@@ -265,6 +265,100 @@ You can specify the platform using the PLATFORM variable:
 - `make CONFIG=Debug` (default)
 - `make CONFIG=Release`
 
+## TestStore Usage for Effect Testing
+
+### Overview
+TestStore provides powerful capabilities for testing Effects with lock management, including the ability to wait for and verify non-synchronous Effect execution, including unlock processing.
+
+### Key TestStore Methods
+- **`await store.send(action)`**: Sends action and verifies synchronous state changes
+- **`await store.receive(action)`**: Waits for asynchronous Effects to send actions and verifies state changes
+- **`await store.finish()`**: Waits for all asynchronous processing to complete
+
+### Effect Execution Testing
+TestStore actually executes the internal asynchronous processing of Effects, including unlock processing. This enables comprehensive testing of the complete Effect lifecycle.
+
+### Example: Basic Lock Effect Testing
+```swift
+func testLockEffectExecution() async {
+  let container = LockmanStrategyContainer()
+  let strategy = LockmanSingleExecutionStrategy()
+  try? container.register(strategy)
+  
+  await LockmanManager.withTestContainer(container) {
+    let store = await TestStore(initialState: TestFeature.State()) {
+      TestFeature()
+    }
+    
+    // Send action that triggers locked Effect
+    await store.send(.fetch) {
+      $0.isLoading = true
+    }
+    
+    // Wait for Effect completion and verify state
+    await store.receive(\.fetchCompleted) {
+      $0.isLoading = false
+      $0.count = 42
+    }
+    
+    // Ensure all Effects complete (including unlock)
+    await store.finish()
+  }
+}
+```
+
+### Advanced: Testing Unlock Execution
+For testing unlock processing execution (addressing uncovered regions in Effect+LockmanInternal.swift):
+
+```swift
+class MockStrategyWithUnlockTracking: LockmanStrategy {
+  var unlockCallCount = 0
+  
+  func unlock<B: LockmanBoundaryId>(boundaryId: B, info: TestLockmanInfo) {
+    unlockCallCount += 1
+  }
+  // ... other required methods
+}
+
+func testUnlockExecutionVerification() async throws {
+  let mockStrategy = MockStrategyWithUnlockTracking()
+  let container = LockmanStrategyContainer()
+  try container.register(mockStrategy)
+  
+  await LockmanManager.withTestContainer(container) {
+    let store = await TestStore(initialState: TestState()) { TestReducer() }
+    
+    await store.send(.lockAction)
+    await store.receive(.actionCompleted) 
+    await store.finish()
+    
+    // Verify unlock was actually executed
+    XCTAssertEqual(mockStrategy.unlockCallCount, 1)
+  }
+}
+```
+
+### Coverage Analysis
+- **Target**: 100% code coverage for all critical components
+- **Requirement**: All uncovered regions must be tested unless technically impossible
+- **Implementation Approach**: Use TestStore integration with mock strategies for comprehensive testing
+- **No Exceptions Rule**: Special justification required for any uncovered code paths
+
+### 100% Coverage Rule
+**All code must achieve 100% coverage unless there are exceptional technical limitations.** 
+
+**Rationale:**
+- Error handling is critical for production reliability
+- Uncovered code paths represent potential bugs and security vulnerabilities
+- Low-frequency execution does not justify reduced testing standards
+- Complete test coverage ensures maintainability and prevents regressions
+
+**Implementation:**
+- Use TestStore for comprehensive Effect testing
+- Create mock strategies to simulate all error conditions
+- Test all error handlers, fallback paths, and edge cases
+- Cover @unknown default cases and defensive programming constructs
+
 ## Release Process
 
 ### Pre-Release Checklist

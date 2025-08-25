@@ -298,8 +298,9 @@ final class ReducerLockmanTests: XCTestCase {
     let strategyId = LockmanStrategyId("TestSingleExecutionStrategy")
 
     // Register strategy
-    // TODO: Fix to use proper container pattern
-    try! LockmanManager.container.register(id: strategyId, strategy: strategy)
+    // Use isolated test container
+    let testContainer = LockmanStrategyContainer()
+    try! testContainer.register(strategy)
 
     let baseReducer = ReducerTestReducer()
 
@@ -366,8 +367,9 @@ final class ReducerLockmanTests: XCTestCase {
     let strategyId = LockmanStrategyId("TestSingleExecutionStrategy")
 
     // Register strategy
-    // TODO: Fix to use proper container pattern
-    try! LockmanManager.container.register(id: strategyId, strategy: strategy)
+    // Use isolated test container
+    let testContainer = LockmanStrategyContainer()
+    try! testContainer.register(strategy)
 
     let baseReducer = ReducerTestReducer()
 
@@ -433,9 +435,9 @@ final class ReducerLockmanTests: XCTestCase {
     let viewStrategy = ReducerTestSingleExecutionStrategy()
     let delegateStrategy = ReducerTestSingleExecutionStrategy()
 
-    // TODO: Fix to use proper container pattern  
-    try! LockmanManager.container.register(id: LockmanStrategyId("TestSingleExecutionStrategy"), strategy: viewStrategy)
-    try! LockmanManager.container.register(id: LockmanStrategyId("TestSingleExecutionStrategy"), strategy: delegateStrategy)
+    // Use isolated test container with single strategy
+    let testContainer = LockmanStrategyContainer()
+    try! testContainer.register(viewStrategy)  // Only register one strategy to avoid conflicts
 
     let baseReducer = ReducerTestReducer()
 
@@ -510,8 +512,9 @@ final class ReducerLockmanTests: XCTestCase {
     let strategyId = LockmanStrategyId("TestSingleExecutionStrategy")
 
     // Register strategy
-    // TODO: Fix to use proper container pattern
-    try! LockmanManager.container.register(id: strategyId, strategy: strategy)
+    // Use isolated test container
+    let testContainer = LockmanStrategyContainer()
+    try! testContainer.register(strategy)
 
     let baseReducer = ReducerTestReducer()
 
@@ -815,21 +818,23 @@ final class ReducerLockmanTests: XCTestCase {
     let strategy = ReducerTestSingleExecutionStrategy()
     let strategyId = LockmanStrategyId("TestSingleExecutionStrategy")
 
-    // Register strategy
-    // TODO: Fix to use proper container pattern
-    try! LockmanManager.container.register(id: strategyId, strategy: strategy)
+    // Use isolated test container
+    let testContainer = LockmanStrategyContainer()
+    try! testContainer.register(strategy)
 
-    let baseReducer = ReducerTestReducer()
+    await LockmanManager.withTestContainer(testContainer) { @Sendable in
+      let baseReducer = ReducerTestReducer()
 
-    // Test concurrent action processing by creating reducer in each operation
-    await TestSupport.performConcurrentOperations(count: 10) {
-      let lockmanReducer = baseReducer.lock(boundaryId: TestBoundaryId.test)
-      var state = TestReducerState()
-      _ = lockmanReducer.reduce(into: &state, action: .increment)
+      // Test concurrent action processing by creating reducer in each operation
+      await TestSupport.performConcurrentOperations(count: 10) {
+        let lockmanReducer = baseReducer.lock(boundaryId: TestBoundaryId.test)
+        var state = TestReducerState()
+        _ = lockmanReducer.reduce(into: &state, action: .increment)
+      }
+
+      // Should handle concurrent processing safely
+      XCTAssertTrue(true)
     }
-
-    // Should handle concurrent processing safely
-    XCTAssertTrue(true)
   }
 
   func testConcurrentReducerCreationSafety() async {

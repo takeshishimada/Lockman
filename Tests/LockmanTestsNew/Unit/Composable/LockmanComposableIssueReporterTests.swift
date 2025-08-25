@@ -46,33 +46,33 @@ final class LockmanComposableIssueReporterTests: XCTestCase {
 
   func testConfigureComposableReportingMethod() {
     // Store original reporter for cleanup
-    let originalReporter = LockmanIssueReporting.reporter
+    let originalReporter = LockmanManager.config.issueReporter
     defer {
-      LockmanIssueReporting.reporter = originalReporter
+      LockmanManager.config.issueReporter = originalReporter
     }
 
     // Test configuring composable reporting - this calls the actual source code
-    LockmanIssueReporting.configureComposableReporting()
+    LockmanManager.config.configureComposableReporting()
 
     // Verify that the reporter has been set to LockmanComposableIssueReporter
-    XCTAssertNotNil(LockmanIssueReporting.reporter)
-    XCTAssertTrue(LockmanIssueReporting.reporter is LockmanComposableIssueReporter.Type)
+    XCTAssertNotNil(LockmanManager.config.issueReporter)
+    XCTAssertTrue(LockmanManager.config.issueReporter is LockmanComposableIssueReporter.Type)
   }
 
   func testConfigureComposableReportingPersistence() {
     // Store original reporter for cleanup
-    let originalReporter = LockmanIssueReporting.reporter
+    let originalReporter = LockmanManager.config.issueReporter
     defer {
-      LockmanIssueReporting.reporter = originalReporter
+      LockmanManager.config.issueReporter = originalReporter
     }
 
     // Configure composable reporting
-    LockmanIssueReporting.configureComposableReporting()
-    let firstReporter = LockmanIssueReporting.reporter
+    LockmanManager.config.configureComposableReporting()
+    let firstReporter = LockmanManager.config.issueReporter
 
     // Configure again
-    LockmanIssueReporting.configureComposableReporting()
-    let secondReporter = LockmanIssueReporting.reporter
+    LockmanManager.config.configureComposableReporting()
+    let secondReporter = LockmanManager.config.issueReporter
 
     // Reporter should remain consistent
     XCTAssertTrue(type(of: firstReporter) == type(of: secondReporter))
@@ -80,17 +80,17 @@ final class LockmanComposableIssueReporterTests: XCTestCase {
 
   func testConfigureComposableReportingOverridesDefault() {
     // Store original reporter for cleanup
-    let originalReporter = LockmanIssueReporting.reporter
+    let originalReporter = LockmanManager.config.issueReporter
     defer {
-      LockmanIssueReporting.reporter = originalReporter
+      LockmanManager.config.issueReporter = originalReporter
     }
 
     // Get default reporter
-    let defaultReporter = LockmanIssueReporting.reporter
+    let defaultReporter = LockmanManager.config.issueReporter
 
     // Configure composable reporting
-    LockmanIssueReporting.configureComposableReporting()
-    let composableReporter = LockmanIssueReporting.reporter
+    LockmanManager.config.configureComposableReporting()
+    let composableReporter = LockmanManager.config.issueReporter
 
     // Reporters should be different types
     XCTAssertTrue(type(of: defaultReporter) != type(of: composableReporter))

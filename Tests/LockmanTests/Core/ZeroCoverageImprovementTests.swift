@@ -19,7 +19,7 @@ final class ZeroCoverageImprovementTests: XCTestCase {
   
   func testLockmanComposableIssueReporterConfigureReporting() {
     // Test the static configureComposableReporting method
-    LockmanIssueReporting.configureComposableReporting()
+    LockmanManager.config.configureComposableReporting()
     // Method should execute without throwing
   }
   
@@ -48,14 +48,14 @@ final class ZeroCoverageImprovementTests: XCTestCase {
   
   func testLockmanIssueReporterConfiguration() {
     // Test the default reporter
-    let originalReporter = LockmanIssueReporting.reporter
+    let originalReporter = LockmanManager.config.issueReporter
     
     // Test setting a custom reporter
-    LockmanIssueReporting.reporter = LockmanComposableIssueReporter.self
-    XCTAssertTrue(LockmanIssueReporting.reporter is LockmanComposableIssueReporter.Type)
+    LockmanManager.config.issueReporter = LockmanComposableIssueReporter.self
+    XCTAssertTrue(LockmanManager.config.issueReporter is LockmanComposableIssueReporter.Type)
     
     // Restore original reporter
-    LockmanIssueReporting.reporter = originalReporter
+    LockmanManager.config.issueReporter = originalReporter
   }
   
   // MARK: - Error Type Tests
@@ -389,8 +389,8 @@ final class ZeroCoverageImprovementTests: XCTestCase {
   }
   
   func testLockmanIssueReporterCompleteUsage() {
-    // Complete remaining coverage for LockmanIssueReporter
-    let originalReporter = LockmanIssueReporting.reporter
+    // Complete remaining coverage for LockmanIssueReporter using new DI approach
+    let originalReporter = LockmanManager.config.issueReporter
     
     // Test different reporter types
     struct CustomReporter: LockmanIssueReporter {
@@ -400,31 +400,31 @@ final class ZeroCoverageImprovementTests: XCTestCase {
     }
     
     // Test setting custom reporter
-    LockmanIssueReporting.reporter = CustomReporter.self
-    XCTAssertTrue(LockmanIssueReporting.reporter is CustomReporter.Type)
+    LockmanManager.config.issueReporter = CustomReporter.self
+    XCTAssertTrue(LockmanManager.config.issueReporter is CustomReporter.Type)
     
     // Test reporting with custom reporter
-    LockmanIssueReporting.reportIssue("Custom test issue")
+    CustomReporter.reportIssue("Custom test issue", file: #file, line: #line)
     
     // Test setting back to composable reporter
-    LockmanIssueReporting.configureComposableReporting()
-    XCTAssertTrue(LockmanIssueReporting.reporter is LockmanComposableIssueReporter.Type)
+    LockmanManager.config.configureComposableReporting()
+    XCTAssertTrue(LockmanManager.config.issueReporter is LockmanComposableIssueReporter.Type)
     
     // Test LockmanDefaultIssueReporter directly to improve coverage (0% target)
-    LockmanIssueReporting.reporter = LockmanDefaultIssueReporter.self
-    XCTAssertTrue(LockmanIssueReporting.reporter is LockmanDefaultIssueReporter.Type)
+    LockmanManager.config.issueReporter = LockmanDefaultIssueReporter.self
+    XCTAssertTrue(LockmanManager.config.issueReporter is LockmanDefaultIssueReporter.Type)
     
     // Test default reporter functionality
     LockmanDefaultIssueReporter.reportIssue("Default reporter test", file: #file, line: #line)
     
-    // Test through LockmanIssueReporting interface
-    LockmanIssueReporting.reportIssue("Test through interface", file: #file, line: #line)
+    // Test through current configured reporter
+    LockmanManager.config.issueReporter.reportIssue("Test through interface", file: #file, line: #line)
     
     // Test edge case to cover the "Unknown" fallback in LockmanDefaultIssueReporter (0% target)
     LockmanDefaultIssueReporter.reportIssue("Test with empty file", file: "", line: 0)
     
     // Restore original reporter
-    LockmanIssueReporting.reporter = originalReporter
+    LockmanManager.config.issueReporter = originalReporter
   }
   
   // MARK: - Phase 3: Large Files Coverage Improvement
