@@ -452,6 +452,63 @@ final class EffectLockmanInternalTests: XCTestCase {
     }
   }
 
+  /// Test Line 195-196: .cancel case handler execution via send action
+  func testCancelHandlerExecutionViaSend() async {
+    let strategy = TestSingleExecutionStrategy()
+    let container = LockmanStrategyContainer()
+    try! container.register(strategy)
+    
+    await LockmanManager.withTestContainer(container) {
+      let store = await TestStore(initialState: TestHandlerSendFeature.State()) {
+        TestHandlerSendFeature()
+      }
+      
+      // First action to establish lock
+      await store.send(.firstAction) {
+        $0.isRunning = true
+      }
+      
+      // Second action that should trigger handler execution in Effect.run
+      await store.send(.secondActionWithSendHandler)
+      
+      // Critical: Receive the action sent from inside Effect.run handler
+      await store.receive(\.handlerWasExecuted) {
+        $0.handlerExecutionCount = 1
+        $0.lastHandlerError = "Lock acquisition failed"
+      }
+      
+      // Complete first action
+      await store.receive(\.firstCompleted) {
+        $0.isRunning = false
+      }
+      
+      await store.finish()
+    }
+  }
+  
+  /// Test Line 214-215: catch block handler execution via send action
+  func testCatchBlockHandlerExecutionViaSend() async {
+    let container = LockmanStrategyContainer() // Empty - triggers error
+    
+    await LockmanManager.withTestContainer(container) {
+      let store = await TestStore(initialState: TestHandlerSendFeature.State()) {
+        TestHandlerSendFeature()
+      }
+      
+      // This should trigger strategy resolution error and handler in catch block
+      await store.send(.errorActionWithSendHandler)
+      
+      // Critical: Receive the action sent from inside catch block Effect.run handler
+      await store.receive(\.handlerWasExecuted) {
+        $0.handlerExecutionCount = 1
+        $0.lastHandlerError = "Strategy resolution failed"
+      }
+      
+      await store.finish()
+    }
+  }
+  
+
 }
 
 // MARK: - Test Helper Classes
@@ -770,6 +827,30 @@ final class EffectLockmanInternalIntegrationTests: XCTestCase {
 
       // Verify error handling occurred (no handler so .none returned)
       XCTAssertTrue(true)
+    }
+  }
+
+  func testBuildLockEffectCatchBlockWithHandler() async throws {
+    let container = LockmanStrategyContainer()
+    // Don't register any strategy to trigger catch block
+
+    await LockmanManager.withTestContainer(container) {
+      let store = await TestStore(
+        initialState: TestHandlerSendFeature.State()
+      ) {
+        TestHandlerSendFeature()
+      }
+
+      // Operation should fail in buildLockEffect catch block with handler (covers lines 214-215)
+      await store.send(.errorActionWithSendHandler)
+
+      // Should receive handler execution action from catch block
+      await store.receive(.handlerWasExecuted("Strategy resolution failed")) {
+        $0.handlerExecutionCount = 1
+        $0.lastHandlerError = "Strategy resolution failed"
+      }
+
+      await store.finish()
     }
   }
 
@@ -1131,4 +1212,92 @@ private struct TestUnlockFeature {
     }
   }
 }
+
+/// Test feature for verifying handler execution via send actions
+@Reducer
+private struct TestHandlerSendFeature {
+  struct State: Equatable {
+    var isRunning = false
+    var handlerExecutionCount = 0
+    var lastHandlerError: String?
+  }
+  
+  enum Action: Equatable, LockmanAction {
+    case firstAction
+    case secondActionWithSendHandler
+    case errorActionWithSendHandler
+    case firstCompleted
+    case handlerWasExecuted(String)
+    
+    func createLockmanInfo() -> TestLockmanInfo {
+      switch self {
+      case .firstAction, .secondActionWithSendHandler:
+        return TestLockmanInfo(
+          actionId: "sharedAction",
+          strategyId: TestSingleExecutionStrategy.makeStrategyId()
+        )
+      case .errorActionWithSendHandler:
+        return TestLockmanInfo(
+          actionId: "errorAction",
+          strategyId: LockmanStrategyId(name: "NonExistentStrategy")
+        )
+      case .firstCompleted, .handlerWasExecuted:
+        return TestLockmanInfo(
+          actionId: "other",
+          strategyId: TestSingleExecutionStrategy.makeStrategyId()
+        )
+      }
+    }
+  }
+  
+  var body: some ReducerOf<Self> {
+    Reduce { state, action in
+      switch action {
+      case .firstAction:
+        state.isRunning = true
+        return .run { send in
+          try await Task.sleep(nanoseconds: 50_000_000) // 50ms
+          await send(.firstCompleted)
+        }
+        .lock(action: action, boundaryId: TestBoundaryId.test)
+        
+      case .secondActionWithSendHandler:
+        return .run { send in
+          // This will be blocked and handler will be called
+        }
+        .lock(
+          action: action,
+          boundaryId: TestBoundaryId.test,
+          lockFailure: { error, send in
+            // Critical: Send action from inside Effect.run handler (Line 195-196)
+            await send(.handlerWasExecuted("Lock acquisition failed"))
+          }
+        )
+        
+      case .errorActionWithSendHandler:
+        return .run { send in
+          // This will trigger strategy resolution error
+        }
+        .lock(
+          action: action,
+          boundaryId: TestBoundaryId.test,
+          lockFailure: { error, send in
+            // Critical: Send action from inside catch block handler (Line 214-215)
+            await send(.handlerWasExecuted("Strategy resolution failed"))
+          }
+        )
+        
+      case .firstCompleted:
+        state.isRunning = false
+        return .none
+        
+      case .handlerWasExecuted(let errorMessage):
+        state.handlerExecutionCount += 1
+        state.lastHandlerError = errorMessage
+        return .none
+      }
+    }
+  }
+}
+
 
