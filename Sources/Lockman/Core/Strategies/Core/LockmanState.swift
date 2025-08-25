@@ -156,7 +156,7 @@ final class LockmanState<I: LockmanInfo, K: Hashable & Sendable>: Sendable {
     data.withCriticalRegion { data in
       // First, get the info to access key for index cleanup
       guard let boundaryDict = data.storage[boundaryKey],
-        let removedInfo = boundaryDict[info.uniqueId]
+        let removedInfo = boundaryDict[info.uniqueId] as? I
       else {
         return
       }
