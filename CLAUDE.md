@@ -29,6 +29,7 @@ For comprehensive test strategy and design documentation, see:
 - ✅ **[LockmanSingleExecutionInfo StrategyId Design](https://github.com/takeshishimada/Lockman/issues/210)** - Test strategyId inconsistencies fixed
 
 ## Development Guidelines
+- **Always use deep analysis (ultrathink)**: Before proposing any implementation, design decision, or architectural change, you MUST carefully consider all implications, edge cases, type safety concerns, architectural consistency, and potential issues. Avoid superficial analysis that could lead to flawed designs or implementations.
 - Swift versions: 6.0, 5.10, 5.9
 - Type-safe implementation
 - Single unified Lockman module, developed exclusively for TCA

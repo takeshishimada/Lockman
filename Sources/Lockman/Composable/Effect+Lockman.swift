@@ -52,7 +52,6 @@ extension Effect {
   ///   - concatenating: Array of effects to execute sequentially while lock is held
   ///   - priority: Task priority for the operation (optional, used only for internal run effects)
   ///   - unlockOption: Controls when the unlock operation is executed (default: configuration value)
-  ///   - handleCancellationErrors: Whether to pass CancellationError to catch handler (default: global config)
   ///   - lockFailure: Optional handler for lock acquisition failures
   ///   - action: LockmanAction providing lock information and strategy type
   ///   - boundaryId: Unique identifier for effect cancellation and lock boundary
@@ -65,7 +64,6 @@ extension Effect {
     concatenating operations: [Effect<Action>],
     priority: TaskPriority? = nil,
     unlockOption: LockmanUnlockOption? = nil,
-    handleCancellationErrors: Bool? = nil,
     lockFailure: (@Sendable (_ error: any Error, _ send: Send<Action>) async -> Void)? = nil,
     action: A,
     boundaryId: B,
@@ -165,14 +163,12 @@ extension Effect {
   ///   - action: LockmanAction providing lock information and strategy type
   ///   - boundaryId: Unique identifier for effect cancellation and lock boundary
   ///   - unlockOption: Controls when the unlock operation is executed (default: uses action's option)
-  ///   - handleCancellationErrors: Whether to pass CancellationError to catch handler (default: global config)
   ///   - lockFailure: Optional handler for lock acquisition failures
   /// - Returns: Effect with automatic lock management
   public func lock<B: LockmanBoundaryId, A: LockmanAction>(
     action: A,
     boundaryId: B,
     unlockOption: LockmanUnlockOption? = nil,
-    handleCancellationErrors: Bool? = nil,
     lockFailure: (@Sendable (_ error: any Error, _ send: Send<Action>) async -> Void)? = nil
   ) -> Effect<Action> {
     // This method provides a method chain style API by combining acquireLock and buildLockEffect
