@@ -33,6 +33,9 @@ public enum LockmanDefaultIssueReporter: LockmanIssueReporter {
 }
 
 /// Global issue reporter configuration.
+///
+/// - Warning: This type is deprecated. Use `LockmanManager.config.issueReporter` instead.
+@available(*, deprecated, message: "Use LockmanManager.config.issueReporter instead")
 public enum LockmanIssueReporting {
   /// The current issue reporter. Defaults to `LockmanDefaultIssueReporter`.
   private static let _reporter = LockIsolated<any LockmanIssueReporter.Type>(

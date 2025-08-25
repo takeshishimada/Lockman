@@ -12,9 +12,17 @@ public enum LockmanComposableIssueReporter: LockmanIssueReporter {
 }
 
 /// Configures Lockman to use ComposableArchitecture's issue reporting.
-extension LockmanIssueReporting {
+extension LockmanManager.config {
   /// Configures Lockman to use ComposableArchitecture's issue reporting system.
+  ///
+  /// This sets the global issue reporter to use TCA's `IssueReporting.reportIssue`
+  /// for consistent error reporting integration with ComposableArchitecture.
+  ///
+  /// ```swift
+  /// // In App initialization
+  /// LockmanManager.config.configureComposableReporting()
+  /// ```
   public static func configureComposableReporting() {
-    reporter = LockmanComposableIssueReporter.self
+    issueReporter = LockmanComposableIssueReporter.self
   }
 }
