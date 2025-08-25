@@ -245,7 +245,7 @@ final class LockmanCompositeStrategyTests: XCTestCase {
       self.actionId = LockmanActionId(actionId)
       self.uniqueId = UUID()
     }
-    
+
     var debugDescription: String {
       return "MockInfo(action: \(actionId), strategy: \(strategyId.value), unique: \(uniqueId))"
     }

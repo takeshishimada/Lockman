@@ -14,13 +14,13 @@ final class EffectLockmanErrorTests: XCTestCase {
     static var capturedMessages: [String] = []
     static var capturedFiles: [StaticString] = []
     static var capturedLines: [UInt] = []
-    
+
     static func reportIssue(_ message: String, file: StaticString = #file, line: UInt = #line) {
       capturedMessages.append(message)
       capturedFiles.append(file)
       capturedLines.append(line)
     }
-    
+
     static func reset() {
       capturedMessages.removeAll()
       capturedFiles.removeAll()
@@ -105,7 +105,7 @@ final class EffectLockmanErrorTests: XCTestCase {
       let originalReporter = LockmanManager.config.issueReporter
       LockmanManager.config.issueReporter = MockIssueReporter.self
       defer { LockmanManager.config.issueReporter = originalReporter }
-      
+
       let action = MockErrorAction.unregisteredStrategy
       let cancelID = "test-cancel-id"
       let operationExecuted = LockIsolated(false)
@@ -125,7 +125,7 @@ final class EffectLockmanErrorTests: XCTestCase {
       // Verify expectations
       XCTAssertEqual(
         operationExecuted.value, false, "Operation should not execute with unregistered strategy")
-      
+
       // Verify error was reported with expected content
       XCTAssertEqual(MockIssueReporter.capturedMessages.count, 1)
       XCTAssertTrue(
@@ -169,7 +169,7 @@ final class EffectLockmanErrorTests: XCTestCase {
       let originalReporter = LockmanManager.config.issueReporter
       LockmanManager.config.issueReporter = MockIssueReporter.self
       defer { LockmanManager.config.issueReporter = originalReporter }
-      
+
       let action = MockErrorAction.unregisteredStrategy
       let cancelID = "test-cancel-id"
       let operationExecuted = LockIsolated(false)
@@ -189,7 +189,7 @@ final class EffectLockmanErrorTests: XCTestCase {
 
       XCTAssertEqual(operationExecuted.value, false)
       XCTAssertEqual(unlockProvided.value, false)
-      
+
       // Verify error was reported with expected content
       XCTAssertEqual(MockIssueReporter.capturedMessages.count, 1)
       XCTAssertTrue(
@@ -211,7 +211,7 @@ final class EffectLockmanErrorTests: XCTestCase {
       let originalReporter = LockmanManager.config.issueReporter
       LockmanManager.config.issueReporter = MockIssueReporter.self
       defer { LockmanManager.config.issueReporter = originalReporter }
-      
+
       let action = MockErrorAction.unregisteredStrategy
       let cancelID = "test-cancel-id"
 
@@ -229,7 +229,7 @@ final class EffectLockmanErrorTests: XCTestCase {
 
       // Effect should handle the error gracefully
       XCTAssertNotNil(effect)
-      
+
       // Verify error was reported with expected content
       XCTAssertEqual(MockIssueReporter.capturedMessages.count, 1)
       XCTAssertTrue(
@@ -309,7 +309,8 @@ final class EffectLockmanErrorTests: XCTestCase {
     )
 
     // Verify no error was reported for non-Lockman errors
-    XCTAssertEqual(MockIssueReporter.capturedMessages.count, 0, "Should not report non-Lockman errors")
+    XCTAssertEqual(
+      MockIssueReporter.capturedMessages.count, 0, "Should not report non-Lockman errors")
   }
 
   // MARK: - Integration Error Tests
@@ -326,7 +327,7 @@ final class EffectLockmanErrorTests: XCTestCase {
       let originalReporter = LockmanManager.config.issueReporter
       LockmanManager.config.issueReporter = MockIssueReporter.self
       defer { LockmanManager.config.issueReporter = originalReporter }
-      
+
       let action = MockValidAction.testAction  // Requires LockmanSingleExecutionStrategy
       let cancelID = "integration-test"
 
@@ -339,11 +340,12 @@ final class EffectLockmanErrorTests: XCTestCase {
       )
 
       XCTAssertNotNil(effect)
-      
+
       // Verify error was reported with expected content
       XCTAssertEqual(MockIssueReporter.capturedMessages.count, 1)
       XCTAssertTrue(
-        MockIssueReporter.capturedMessages.first?.contains("LockmanSingleExecutionStrategy") == true,
+        MockIssueReporter.capturedMessages.first?.contains("LockmanSingleExecutionStrategy")
+          == true,
         "Should contain strategy name"
       )
       XCTAssertTrue(
@@ -361,7 +363,7 @@ final class EffectLockmanErrorTests: XCTestCase {
       let originalReporter = LockmanManager.config.issueReporter
       LockmanManager.config.issueReporter = MockIssueReporter.self
       defer { LockmanManager.config.issueReporter = originalReporter }
-      
+
       let actions = [
         MockErrorAction.unregisteredStrategy,
         MockErrorAction.validStrategy,
@@ -369,7 +371,7 @@ final class EffectLockmanErrorTests: XCTestCase {
 
       for action in actions {
         MockIssueReporter.reset()  // Reset for each iteration
-        
+
         let effect = Effect<Never>.run { _ in
           XCTFail("No operations should execute")
         }
@@ -379,7 +381,7 @@ final class EffectLockmanErrorTests: XCTestCase {
         )
 
         XCTAssertNotNil(effect)
-        
+
         // Verify error was reported with expected content
         XCTAssertEqual(MockIssueReporter.capturedMessages.count, 1)
         XCTAssertTrue(
@@ -405,7 +407,7 @@ final class EffectLockmanErrorTests: XCTestCase {
       let originalReporter = LockmanManager.config.issueReporter
       LockmanManager.config.issueReporter = MockIssueReporter.self
       defer { LockmanManager.config.issueReporter = originalReporter }
-      
+
       let action = MockValidAction.testAction
       let cancelID = "recovery-test-1"
 
@@ -418,11 +420,12 @@ final class EffectLockmanErrorTests: XCTestCase {
       )
 
       XCTAssertNotNil(effect1)
-      
+
       // Verify error was reported
       XCTAssertEqual(MockIssueReporter.capturedMessages.count, 1)
       XCTAssertTrue(
-        MockIssueReporter.capturedMessages.first?.contains("LockmanSingleExecutionStrategy") == true,
+        MockIssueReporter.capturedMessages.first?.contains("LockmanSingleExecutionStrategy")
+          == true,
         "Should contain strategy name"
       )
       XCTAssertTrue(

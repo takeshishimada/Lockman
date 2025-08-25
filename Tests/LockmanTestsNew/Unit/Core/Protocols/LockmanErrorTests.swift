@@ -117,7 +117,9 @@ final class LockmanErrorTests: XCTestCase {
     var failureReason: String? { "Strategy error occurred" }
   }
 
-  private struct MockPrecedingCancellationError: LockmanPrecedingCancellationError, @unchecked Sendable {
+  private struct MockPrecedingCancellationError: LockmanPrecedingCancellationError, @unchecked
+    Sendable
+  {
     let lockmanInfo: any LockmanInfo
     let boundaryId: any LockmanBoundaryId
     let message: String
@@ -221,7 +223,7 @@ final class LockmanErrorTests: XCTestCase {
     // Type safety validation - test actual functionality instead of inheritance
     XCTAssertNotNil(strategyError.errorDescription)
     XCTAssertNotNil(strategyError.lockmanInfo)
-    
+
     XCTAssertNotNil(precedingError.errorDescription)
     XCTAssertNotNil(precedingError.lockmanInfo)
     XCTAssertEqual(precedingError.lockmanInfo.actionId, "precedingTest")
@@ -824,23 +826,23 @@ final class LockmanErrorTests: XCTestCase {
 
   func testThreadSafeErrorAccess() {
     let error = MockComplexError.validationFailure(field: "concurrent")
-    
+
     actor DescriptionCollector {
       private var descriptions: [String] = []
-      
+
       func add(_ description: String) {
         descriptions.append(description)
       }
-      
+
       func getDescriptions() -> [String] {
         return descriptions
       }
-      
+
       var count: Int {
         descriptions.count
       }
     }
-    
+
     let collector = DescriptionCollector()
     let expectation = XCTestExpectation(description: "Thread safe access")
     expectation.expectedFulfillmentCount = 5

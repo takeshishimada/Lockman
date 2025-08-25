@@ -45,7 +45,7 @@ final class EffectLockmanTests: XCTestCase {
         },
         Effect<SharedTestAction>.run { _ in
           // Third operation
-        }
+        },
       ]
 
       let lockedEffect = Effect.lock(
@@ -129,7 +129,7 @@ final class EffectLockmanTests: XCTestCase {
         .immediate,
         .delayed(1.0),
         .mainRunLoop,
-        .transition
+        .transition,
       ]
 
       for unlockOption in unlockOptions {
@@ -140,7 +140,8 @@ final class EffectLockmanTests: XCTestCase {
           boundaryId: boundaryId
         )
 
-        XCTAssertNotNil(lockedEffect, "Effect should be created with unlock option: \(unlockOption)")
+        XCTAssertNotNil(
+          lockedEffect, "Effect should be created with unlock option: \(unlockOption)")
       }
     }
   }
@@ -166,7 +167,7 @@ final class EffectLockmanTests: XCTestCase {
         .high,
         .medium,
         .low,
-        .background
+        .background,
       ]
 
       for priority in priorities {
@@ -178,7 +179,8 @@ final class EffectLockmanTests: XCTestCase {
           boundaryId: boundaryId
         )
 
-        XCTAssertNotNil(lockedEffect, "Effect should be created with priority: \(String(describing: priority))")
+        XCTAssertNotNil(
+          lockedEffect, "Effect should be created with priority: \(String(describing: priority))")
       }
     }
   }
@@ -273,7 +275,7 @@ final class EffectLockmanTests: XCTestCase {
         },
         Effect<SharedTestAction>.run { _ in
           // Test operation 2
-        }
+        },
       ]
 
       actor HandlerCheck {
@@ -281,9 +283,10 @@ final class EffectLockmanTests: XCTestCase {
         func setHandlerCalled() { handlerCalled = true }
         func getHandlerCalled() -> Bool { handlerCalled }
       }
-      
+
       let handlerCheck = HandlerCheck()
-      let lockFailureHandler: @Sendable (any Error, Send<SharedTestAction>) async -> Void = { _, _ in
+      let lockFailureHandler: @Sendable (any Error, Send<SharedTestAction>) async -> Void = {
+        _, _ in
         await handlerCheck.setHandlerCalled()
       }
 
@@ -298,7 +301,7 @@ final class EffectLockmanTests: XCTestCase {
       )
 
       XCTAssertNotNil(lockedEffect)
-      
+
       // Handler should not be called during effect creation
       Task {
         let wasCalled = await handlerCheck.getHandlerCalled()
@@ -376,7 +379,7 @@ final class EffectLockmanTests: XCTestCase {
     // Create a test action that conforms to LockmanAction
     struct TestLockmanAction: LockmanAction {
       let actionId: LockmanActionId = "test-lockman-action"
-      
+
       func createLockmanInfo() -> TestLockmanInfo {
         return TestLockmanInfo(
           actionId: self.actionId,
@@ -384,11 +387,11 @@ final class EffectLockmanTests: XCTestCase {
           uniqueId: UUID()
         )
       }
-      
+
       var lockmanBoundaryId: TestBoundaryId {
         return TestBoundaryId.test
       }
-      
+
       var unlockOption: LockmanUnlockOption {
         return .immediate
       }

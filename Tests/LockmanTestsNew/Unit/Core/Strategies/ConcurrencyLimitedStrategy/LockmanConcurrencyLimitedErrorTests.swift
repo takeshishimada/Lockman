@@ -26,13 +26,13 @@ final class LockmanConcurrencyLimitedErrorTests: XCTestCase {
     )
     let boundaryId = TestBoundaryId("testBoundary")
     let currentCount = 3
-    
+
     let error = LockmanConcurrencyLimitedError.concurrencyLimitReached(
       lockmanInfo: info,
       boundaryId: boundaryId,
       currentCount: currentCount
     )
-    
+
     XCTAssertEqual(error.lockmanInfo.actionId, "testAction")
     XCTAssertEqual(String(describing: error.boundaryId), String(describing: boundaryId))
   }
@@ -47,13 +47,13 @@ final class LockmanConcurrencyLimitedErrorTests: XCTestCase {
     )
     let boundaryId = TestBoundaryId("testBoundary")
     let currentCount = 5
-    
+
     let error = LockmanConcurrencyLimitedError.concurrencyLimitReached(
       lockmanInfo: info,
       boundaryId: boundaryId,
       currentCount: currentCount
     )
-    
+
     let description = error.errorDescription
     XCTAssertNotNil(description)
     XCTAssertTrue(description!.contains("5/5"))
@@ -68,13 +68,13 @@ final class LockmanConcurrencyLimitedErrorTests: XCTestCase {
     )
     let boundaryId = TestBoundaryId("testBoundary")
     let currentCount = 100
-    
+
     let error = LockmanConcurrencyLimitedError.concurrencyLimitReached(
       lockmanInfo: info,
       boundaryId: boundaryId,
       currentCount: currentCount
     )
-    
+
     let description = error.errorDescription
     XCTAssertNotNil(description)
     XCTAssertTrue(description!.contains("100/unlimited"))
@@ -89,13 +89,13 @@ final class LockmanConcurrencyLimitedErrorTests: XCTestCase {
     )
     let boundaryId = TestBoundaryId("testBoundary")
     let currentCount = 3
-    
+
     let error = LockmanConcurrencyLimitedError.concurrencyLimitReached(
       lockmanInfo: info,
       boundaryId: boundaryId,
       currentCount: currentCount
     )
-    
+
     let failureReason = error.failureReason
     XCTAssertNotNil(failureReason)
     XCTAssertTrue(failureReason!.contains("maximum number"))
@@ -112,13 +112,13 @@ final class LockmanConcurrencyLimitedErrorTests: XCTestCase {
     )
     let boundaryId = TestBoundaryId("testBoundary")
     let currentCount = 2
-    
+
     let error = LockmanConcurrencyLimitedError.concurrencyLimitReached(
       lockmanInfo: info,
       boundaryId: boundaryId,
       currentCount: currentCount
     )
-    
+
     XCTAssertTrue(error is any LockmanStrategyError)
     XCTAssertEqual(error.lockmanInfo.actionId, "testAction")
     XCTAssertEqual(String(describing: error.boundaryId), String(describing: boundaryId))
@@ -132,13 +132,13 @@ final class LockmanConcurrencyLimitedErrorTests: XCTestCase {
     )
     let boundaryId = TestBoundaryId("specificBoundary")
     let currentCount = 10
-    
+
     let error = LockmanConcurrencyLimitedError.concurrencyLimitReached(
       lockmanInfo: info,
       boundaryId: boundaryId,
       currentCount: currentCount
     )
-    
+
     let retrievedInfo = error.lockmanInfo as! LockmanConcurrencyLimitedInfo
     XCTAssertEqual(retrievedInfo.actionId, "specificAction")
     XCTAssertEqual(retrievedInfo.strategyId, .concurrencyLimited)
@@ -152,13 +152,13 @@ final class LockmanConcurrencyLimitedErrorTests: XCTestCase {
     )
     let boundaryId = TestBoundaryId("uniqueBoundary")
     let currentCount = 1
-    
+
     let error = LockmanConcurrencyLimitedError.concurrencyLimitReached(
       lockmanInfo: info,
       boundaryId: boundaryId,
       currentCount: currentCount
     )
-    
+
     let retrievedBoundaryId = error.boundaryId as! TestBoundaryId
     XCTAssertEqual(retrievedBoundaryId.value, "uniqueBoundary")
   }
@@ -173,13 +173,13 @@ final class LockmanConcurrencyLimitedErrorTests: XCTestCase {
     )
     let boundaryId = TestBoundaryId("testBoundary")
     let currentCount = 0
-    
+
     let error = LockmanConcurrencyLimitedError.concurrencyLimitReached(
       lockmanInfo: info,
       boundaryId: boundaryId,
       currentCount: currentCount
     )
-    
+
     let description = error.errorDescription
     XCTAssertNotNil(description)
     XCTAssertTrue(description!.contains("0/0"))
@@ -193,13 +193,13 @@ final class LockmanConcurrencyLimitedErrorTests: XCTestCase {
     )
     let boundaryId = TestBoundaryId("testBoundary")
     let currentCount = 1000
-    
+
     let error = LockmanConcurrencyLimitedError.concurrencyLimitReached(
       lockmanInfo: info,
       boundaryId: boundaryId,
       currentCount: currentCount
     )
-    
+
     let description = error.errorDescription
     XCTAssertNotNil(description)
     XCTAssertTrue(description!.contains("1000/1000"))
@@ -209,11 +209,11 @@ final class LockmanConcurrencyLimitedErrorTests: XCTestCase {
 
   struct TestBoundaryId: LockmanBoundaryId {
     let value: String
-    
+
     init(_ value: String) {
       self.value = value
     }
-    
+
     var description: String {
       "TestBoundaryId(\(value))"
     }

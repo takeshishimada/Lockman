@@ -545,7 +545,7 @@ final class LockmanInfoTests: XCTestCase {
 
     // Default implementation should return empty string
     XCTAssertEqual(basicInfo.debugAdditionalInfo, "")
-    
+
     // Explicitly test the protocol extension's default implementation
     let info: any LockmanInfo = basicInfo
     XCTAssertEqual(info.debugAdditionalInfo, "")
@@ -615,7 +615,7 @@ final class LockmanInfoTests: XCTestCase {
 
     // Default implementation should return true
     XCTAssertTrue(defaultInfo.isCancellationTarget)
-    
+
     // Explicitly test the protocol extension's default implementation
     let info: any LockmanInfo = defaultInfo
     XCTAssertTrue(info.isCancellationTarget)
@@ -807,19 +807,19 @@ final class LockmanInfoTests: XCTestCase {
 
   func testImmutablePropertiesThreadSafety() {
     let info = MockLockmanInfo()
-    
+
     actor ResultCollector {
       private var results: [String] = []
-      
+
       func add(_ result: String) {
         results.append(result)
       }
-      
+
       func getResults() -> [String] {
         return results
       }
     }
-    
+
     let collector = ResultCollector()
     let expectation = XCTestExpectation(description: "Thread safe immutability")
     expectation.expectedFulfillmentCount = 5
@@ -876,16 +876,16 @@ final class LockmanInfoTests: XCTestCase {
 
     actor UUIDCollector {
       private var uniqueIds: Set<UUID> = []
-      
+
       func insert(_ uuid: UUID) {
         uniqueIds.insert(uuid)
       }
-      
+
       func getUniqueIds() -> Set<UUID> {
         return uniqueIds
       }
     }
-    
+
     let collector = UUIDCollector()
 
     for _ in 0..<50 {
@@ -1025,14 +1025,14 @@ final class LockmanInfoTests: XCTestCase {
       // Use infos to prevent optimization
       let count = infos.count
       XCTAssertEqual(count, 1000)
-      
+
       // Verify each info has unique UUID
       let uniqueIds = Set(infos.map { $0.uniqueId })
       XCTAssertEqual(uniqueIds.count, 1000)
     }
 
     // Structs are value types - memory is automatically managed
-    XCTAssertTrue(true) // Test completed without memory issues
+    XCTAssertTrue(true)  // Test completed without memory issues
   }
 
   func testDebugStringGenerationPerformance() {
@@ -1254,14 +1254,14 @@ final class LockmanInfoTests: XCTestCase {
       // Use them briefly
       let count = infos.count
       XCTAssertEqual(count, 10000)
-      
+
       // Test that they're all unique
       let uniqueIds = Set(infos.map { $0.uniqueId })
       XCTAssertEqual(uniqueIds.count, 10000)
     }
 
     // Structs are automatically managed - no manual cleanup needed
-    XCTAssertTrue(true) // Test completed successfully
+    XCTAssertTrue(true)  // Test completed successfully
   }
 
   // MARK: - Documentation Examples Validation Tests

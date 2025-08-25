@@ -43,7 +43,7 @@ final class LockmanConcurrencyLimitedActionTests: XCTestCase {
         .limited(3)
       )
     }
-    
+
     var unlockOption: LockmanUnlockOption { .immediate }
   }
 
@@ -62,7 +62,7 @@ final class LockmanConcurrencyLimitedActionTests: XCTestCase {
         .limited(5)
       )
     }
-    
+
     var unlockOption: LockmanUnlockOption { .immediate }
   }
 
@@ -86,7 +86,7 @@ final class LockmanConcurrencyLimitedActionTests: XCTestCase {
         .limited(10)
       )
     }
-    
+
     var unlockOption: LockmanUnlockOption { .immediate }
   }
 
@@ -431,13 +431,13 @@ final class LockmanConcurrencyLimitedActionTests: XCTestCase {
     let action = TestAction.actionWithParameter("concurrent_test")
     let expectation = XCTestExpectation(description: "Concurrent access")
     expectation.expectedFulfillmentCount = 10
-    
+
     actor ActionNameCollector {
       private var actionNames: [String] = []
       func addName(_ name: String) { actionNames.append(name) }
       func getNames() -> [String] { actionNames }
     }
-    
+
     let collector = ActionNameCollector()
 
     // When - Access actionName concurrently

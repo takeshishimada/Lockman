@@ -173,13 +173,13 @@ public final class TestSingleExecutionStrategy: LockmanStrategy, @unchecked Send
 
   private var lockedActions: Set<String> = []
   private let lock = NSLock()
-  
+
   public var strategyId: LockmanStrategyId {
     LockmanStrategyId(name: "TestSingleExecutionStrategy")
   }
 
   public init() {}
-  
+
   public static func makeStrategyId() -> LockmanStrategyId {
     LockmanStrategyId(name: "TestSingleExecutionStrategy")
   }
@@ -209,18 +209,18 @@ public final class TestSingleExecutionStrategy: LockmanStrategy, @unchecked Send
       lockedActions.remove(info.actionId)
     }
   }
-  
+
   public func cleanUp() {
     lock.withLock {
       lockedActions.removeAll()
     }
   }
-  
+
   public func cleanUp<B: LockmanBoundaryId>(boundaryId: B) {
     // Mock implementation - remove all for simplicity
     cleanUp()
   }
-  
+
   public func getCurrentLocks() -> [AnyLockmanBoundaryId: [any LockmanInfo]] {
     // Mock implementation returns empty state
     return [:]

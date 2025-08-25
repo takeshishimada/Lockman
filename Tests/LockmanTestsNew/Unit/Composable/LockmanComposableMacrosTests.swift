@@ -8,9 +8,9 @@ import XCTest
 // Test strategy types for composite macro testing
 struct TestStrategy1: LockmanStrategy {
   typealias I = TestInfo1
-  
+
   var strategyId: LockmanStrategyId { .init(name: "TestStrategy1") }
-  
+
   static func makeStrategyId() -> LockmanStrategyId {
     .init(name: "TestStrategy1")
   }
@@ -28,9 +28,9 @@ struct TestStrategy1: LockmanStrategy {
 
 struct TestStrategy2: LockmanStrategy {
   typealias I = TestInfo2
-  
+
   var strategyId: LockmanStrategyId { .init(name: "TestStrategy2") }
-  
+
   static func makeStrategyId() -> LockmanStrategyId {
     .init(name: "TestStrategy2")
   }
@@ -51,7 +51,7 @@ struct TestInfo1: LockmanInfo {
   let strategyId: LockmanStrategyId
   let uniqueId: UUID
   let isCancellationTarget: Bool = false
-  
+
   var debugDescription: String {
     "TestInfo1(actionId: \(actionId), strategyId: \(strategyId), uniqueId: \(uniqueId))"
   }
@@ -62,7 +62,7 @@ struct TestInfo2: LockmanInfo {
   let strategyId: LockmanStrategyId
   let uniqueId: UUID
   let isCancellationTarget: Bool = false
-  
+
   var debugDescription: String {
     "TestInfo2(actionId: \(actionId), strategyId: \(strategyId), uniqueId: \(uniqueId))"
   }

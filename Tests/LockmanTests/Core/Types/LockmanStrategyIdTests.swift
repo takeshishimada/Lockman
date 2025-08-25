@@ -124,7 +124,8 @@ final class LockmanStrategyIdTests: XCTestCase {
       name: "Rate_Limit_Strategy",
       configuration: "limit:100/timeout:30"
     )
-    XCTAssertEqual(id, LockmanStrategyId(name: "Rate_Limit_Strategy", configuration: "limit:100/timeout:30"))
+    XCTAssertEqual(
+      id, LockmanStrategyId(name: "Rate_Limit_Strategy", configuration: "limit:100/timeout:30"))
   }
 
   // MARK: - Sendable Conformance Tests

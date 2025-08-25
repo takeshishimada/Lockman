@@ -185,7 +185,7 @@ final class LockmanRegistrationErrorTests: XCTestCase {
     let lockmanError: any LockmanError = alreadyError
     let localizedError: any LocalizedError = notRegisteredError
     let swiftError: any Error = alreadyError
-    
+
     // Verify properties are accessible through protocol interfaces
     XCTAssertNotNil(lockmanError.errorDescription)
     XCTAssertNotNil(localizedError.errorDescription)
@@ -547,9 +547,9 @@ final class LockmanRegistrationErrorTests: XCTestCase {
     // This test simulates what would happen in the real container
     struct MockStrategy: LockmanStrategy {
       typealias I = TestLockmanInfo
-      
+
       let strategyId: LockmanStrategyId = LockmanStrategyId("MockStrategy")
-      
+
       static func makeStrategyId() -> LockmanStrategyId {
         return LockmanStrategyId("MockStrategy")
       }
@@ -565,11 +565,11 @@ final class LockmanRegistrationErrorTests: XCTestCase {
       func unlock<B: LockmanBoundaryId>(boundaryId: B, info: TestLockmanInfo) {
         // Mock implementation
       }
-      
+
       func cleanUp() {
         // Mock implementation
       }
-      
+
       func cleanUp<B: LockmanBoundaryId>(boundaryId: B) {
         // Mock implementation
       }
@@ -709,7 +709,8 @@ final class LockmanRegistrationErrorTests: XCTestCase {
 
   func testErrorTypeIdentificationAndCasting() {
     let alreadyError: any Error = LockmanRegistrationError.strategyAlreadyRegistered("CastingTest")
-    let notRegisteredError: any Error = LockmanRegistrationError.strategyNotRegistered("CastingTest")
+    let notRegisteredError: any Error = LockmanRegistrationError.strategyNotRegistered(
+      "CastingTest")
 
     // Should be able to cast back to specific type
     XCTAssertTrue(alreadyError is LockmanRegistrationError)
@@ -979,7 +980,7 @@ final class LockmanRegistrationErrorTests: XCTestCase {
       // Use errors
       XCTAssertNotNil(alreadyError.errorDescription)
       XCTAssertNotNil(notRegisteredError.errorDescription)
-      
+
       // Test error properties are accessible
       XCTAssertFalse(alreadyError.errorDescription!.isEmpty)
       XCTAssertFalse(notRegisteredError.errorDescription!.isEmpty)

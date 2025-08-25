@@ -362,7 +362,9 @@ final class LockmanPrecedingCancellationErrorTests: XCTestCase {
     )
 
     // Should satisfy multiple protocol requirements
-    func processCompositeError(_ error: any LockmanPrecedingCancellationError & LockmanStrategyError)
+    func processCompositeError(
+      _ error: any LockmanPrecedingCancellationError & LockmanStrategyError
+    )
       -> Bool
     {
       // Note: Type checks removed as they cause Sendable cast errors
@@ -1077,7 +1079,7 @@ final class LockmanPrecedingCancellationErrorTests: XCTestCase {
       // Use error to ensure it's not optimized away
       let _ = error.lockmanInfo
       let _ = error.boundaryId
-      
+
       // Verify error properties are accessible
       XCTAssertNotNil(error.lockmanInfo)
       XCTAssertNotNil(error.boundaryId)
@@ -1179,20 +1181,20 @@ final class LockmanPrecedingCancellationErrorTests: XCTestCase {
     class ThreadSafeResults: @unchecked Sendable {
       private let lock = NSLock()
       private var _results: [(actionId: String, boundaryId: String)] = []
-      
+
       func append(_ item: (actionId: String, boundaryId: String)) {
         lock.lock()
         defer { lock.unlock() }
         _results.append(item)
       }
-      
+
       var results: [(actionId: String, boundaryId: String)] {
         lock.lock()
         defer { lock.unlock() }
         return _results
       }
     }
-    
+
     let threadSafeResults = ThreadSafeResults()
 
     let expectation = XCTestExpectation(description: "Immutable state test")

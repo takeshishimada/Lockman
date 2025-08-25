@@ -561,7 +561,7 @@ final class LockmanSingleExecutionErrorTests: XCTestCase {
     // Test as LockmanError
     let lockmanError: any LockmanError = error
     XCTAssertTrue(lockmanError is LockmanStrategyError)
-    
+
     // Test as LockmanStrategyError
     let strategyError = lockmanError as! LockmanStrategyError
     XCTAssertEqual(strategyError.lockmanInfo.actionId, info.actionId)

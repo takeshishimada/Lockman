@@ -3,7 +3,6 @@ import XCTest
 
 @testable import Lockman
 
-
 final class LockmanComposableIssueReporterTests: XCTestCase {
 
   override func setUp() {
@@ -31,16 +30,7 @@ final class LockmanComposableIssueReporterTests: XCTestCase {
 
   // Tests will be implemented when actual LockmanComposableIssueReporter functionality is available
 
-
-
-
   // MARK: - ComposableArchitecture Integration Tests
-
-
-
-
-
-
 
   // MARK: - LockmanIssueReporting Extension Tests
 
@@ -98,11 +88,8 @@ final class LockmanComposableIssueReporterTests: XCTestCase {
 
   // MARK: - Type Safety and Validation Tests
 
-
-
-
   // Meaningful tests should focus on:
-  // 1. Actual configuration behavior verification  
+  // 1. Actual configuration behavior verification
   // 2. Integration with TCA's IssueReporting system
   // 3. Error message processing and formatting
   // 4. Thread safety and performance characteristics

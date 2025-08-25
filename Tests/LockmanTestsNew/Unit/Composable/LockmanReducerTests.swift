@@ -58,29 +58,29 @@ final class LockmanReducerTests: XCTestCase {
           state.counter += 1
           state.lastActionId = "increment"
           return .none
-          
+
         case .decrement:
           state.counter -= 1
           state.lastActionId = "decrement"
           return .none
-          
+
         case .setProcessing(let isProcessing):
           state.isProcessing = isProcessing
           state.lastActionId = "setProcessing"
           return .none
-          
+
         case .operationCompleted(let operation):
           state.operations.append(operation)
           return .none
-          
+
         case .lockFailed(let error):
           state.errors.append(error)
           return .none
-          
+
         case .reset:
           state = LockmanTestState()
           return .none
-          
+
         default:
           return .none
         }
@@ -96,7 +96,7 @@ final class LockmanReducerTests: XCTestCase {
           // Map LockmanTestAction to SharedTestAction
           switch action {
           case .increment: return SharedTestAction.increment
-          case .decrement: return SharedTestAction.decrement  
+          case .decrement: return SharedTestAction.decrement
           case .setProcessing: return SharedTestAction.setProcessing(true)
           default: return nil  // Non-lockman actions
           }
@@ -119,7 +119,7 @@ final class LockmanReducerTests: XCTestCase {
   func testLockFirstBehaviorWithFailedLock() async {
     // Use empty container to force lock failure
     let emptyContainer = LockmanStrategyContainer()
-    
+
     await LockmanManager.withTestContainer(emptyContainer) { @Sendable in
       let baseReducer = Reduce<LockmanTestState, LockmanTestAction> { state, action in
         switch action {
@@ -156,7 +156,7 @@ final class LockmanReducerTests: XCTestCase {
 
       // Test lock failure scenario
       await store.send(.increment)  // State should not change due to lock failure
-      
+
       await store.receive(.lockFailed("strategy_not_found")) {
         $0.errors.append("strategy_not_found")
       }
@@ -393,18 +393,18 @@ final class LockmanReducerTests: XCTestCase {
           state.lastActionId = operation
           // Simulate async operation
           return .run { send in
-            try await Task.sleep(nanoseconds: 1_000_000) // 1ms
+            try await Task.sleep(nanoseconds: 1_000_000)  // 1ms
             await send(.operationCompleted(operation))
           }
-          
+
         case .operationCompleted(let operation):
           state.operations.append(operation)
           return .none
-          
+
         case .lockFailed(let error):
           state.errors.append(error)
           return .none
-          
+
         default:
           return .none
         }

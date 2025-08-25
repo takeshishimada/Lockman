@@ -111,6 +111,6 @@ final class LockmanDebugTests: XCTestCase {
   }
 
   // MARK: - Tests
-  
+
   // Tests will be implemented when LockmanDebug functionality is available
 }

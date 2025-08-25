@@ -91,7 +91,7 @@ struct InsufficientFundsError: Error {
 
 struct NotAuthenticatedError: LockmanError {
   let message = "Not authenticated"
-  
+
   var debugDescription: String {
     return message
   }
@@ -264,7 +264,7 @@ final class ReducerLockmanTests: XCTestCase {
       func setHandlerCalled() { handlerCalled = true }
       func getHandlerCalled() -> Bool { handlerCalled }
     }
-    
+
     let handlerCheck = HandlerCheck()
     let baseReducer = ReducerTestReducer()
 
@@ -330,7 +330,7 @@ final class ReducerLockmanTests: XCTestCase {
       func setHandlerCalled() { handlerCalled = true }
       func getHandlerCalled() -> Bool { handlerCalled }
     }
-    
+
     let handlerCheck = HandlerCheck()
     let lockFailureHandler: @Sendable (any Error, Send<TestAction>) async -> Void = { error, send in
       await handlerCheck.setHandlerCalled()
@@ -680,13 +680,13 @@ final class ReducerLockmanTests: XCTestCase {
     actor HandlerState {
       private var handlerError: (any Error)?
       private var handlerCalled = false
-      
+
       func setHandlerError(_ error: any Error) { handlerError = error }
       func getHandlerError() -> (any Error)? { handlerError }
       func setHandlerCalled() { handlerCalled = true }
       func getHandlerCalled() -> Bool { handlerCalled }
     }
-    
+
     let handlerState = HandlerState()
     let lockFailureHandler: @Sendable (any Error, Send<TestAction>) async -> Void = { error, send in
       await handlerState.setHandlerError(error)
@@ -710,7 +710,7 @@ final class ReducerLockmanTests: XCTestCase {
       func setSendCalled() { sendCalled = true }
       func getSendCalled() -> Bool { sendCalled }
     }
-    
+
     let sendCheck = SendCheck()
     let lockFailureHandler: @Sendable (any Error, Send<TestAction>) async -> Void = { error, send in
       // Test that send function is provided
@@ -726,7 +726,7 @@ final class ReducerLockmanTests: XCTestCase {
     )
 
     XCTAssertNotNil(lockmanReducer)
-    
+
     // Send function should not be called during reducer creation
     Task {
       let wasCalled = await sendCheck.getSendCalled()
@@ -914,9 +914,10 @@ final class ReducerLockmanTests: XCTestCase {
       func setErrorRecovered() { errorRecovered = true }
       func getErrorRecovered() -> Bool { errorRecovered }
     }
-    
+
     let errorRecoveryState = ErrorRecoveryState()
-    let errorRecoveryHandler: @Sendable (any Error, Send<TestAction>) async -> Void = { error, send in
+    let errorRecoveryHandler: @Sendable (any Error, Send<TestAction>) async -> Void = {
+      error, send in
       await errorRecoveryState.setErrorRecovered()
     }
 
@@ -1127,7 +1128,7 @@ final class ReducerLockmanTests: XCTestCase {
       func setErrorReceived(_ error: any Error) { errorReceived = error }
       func getErrorReceived() -> (any Error)? { errorReceived }
     }
-    
+
     let errorReceiver = ErrorReceiver()
     let featureReducer = baseReducer.lock(
       boundaryId: TestBoundaryId.navigation,

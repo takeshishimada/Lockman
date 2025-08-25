@@ -154,6 +154,6 @@ final class ManagedCriticalStateTests: XCTestCase {
   }
 
   // MARK: - Tests
-  
+
   // Tests will be implemented when ManagedCriticalState functionality is available
 }

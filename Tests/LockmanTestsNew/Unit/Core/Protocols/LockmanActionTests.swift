@@ -483,7 +483,7 @@ final class LockmanActionTests: XCTestCase {
     // Since MockSimpleAction is a struct (value type), we test performance instead
     let actionCount = 1000
     var actions: [MockSimpleAction] = []
-    
+
     // Measure memory usage indirectly through performance
     measure {
       actions.removeAll()
@@ -493,7 +493,7 @@ final class LockmanActionTests: XCTestCase {
         actions.append(action)
       }
     }
-    
+
     XCTAssertEqual(actions.count, actionCount, "Should create all actions efficiently")
   }
 

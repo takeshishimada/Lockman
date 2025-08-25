@@ -7,7 +7,7 @@ import XCTest
 struct CompositeTestConcurrencyGroup: LockmanConcurrencyGroup {
   let id: String
   let limit: LockmanConcurrencyLimit
-  
+
   init(_ id: String, limit: LockmanConcurrencyLimit) {
     self.id = id
     self.limit = limit
@@ -198,7 +198,8 @@ final class LockmanCompositeActionTests: XCTestCase {
         ),
         lockmanInfoForStrategy3: LockmanConcurrencyLimitedInfo(
           actionId: actionName,
-          group: CompositeTestConcurrencyGroup("testGroup", limit: LockmanConcurrencyLimit.limited(3))
+          group: CompositeTestConcurrencyGroup(
+            "testGroup", limit: LockmanConcurrencyLimit.limited(3))
         )
       )
     }
@@ -307,7 +308,8 @@ final class LockmanCompositeActionTests: XCTestCase {
         lockmanInfoForStrategy4: LockmanGroupCoordinatedInfo(
           actionId: actionName,
           groupId: "testGroup4",
-          coordinationRole: LockmanGroupCoordinationRole.leader(LockmanGroupCoordinationRole.LeaderEntryPolicy.emptyGroup)
+          coordinationRole: LockmanGroupCoordinationRole.leader(
+            LockmanGroupCoordinationRole.LeaderEntryPolicy.emptyGroup)
         )
       )
     }
@@ -345,7 +347,10 @@ final class LockmanCompositeActionTests: XCTestCase {
     XCTAssertEqual(lockInfo.lockmanInfoForStrategy1.mode, .boundary)
     XCTAssertEqual(lockInfo.lockmanInfoForStrategy2.priority, .none)
     XCTAssertEqual(lockInfo.lockmanInfoForStrategy3.limit, LockmanConcurrencyLimit.unlimited)
-    XCTAssertEqual(lockInfo.lockmanInfoForStrategy4.coordinationRole, LockmanGroupCoordinationRole.leader(LockmanGroupCoordinationRole.LeaderEntryPolicy.emptyGroup))
+    XCTAssertEqual(
+      lockInfo.lockmanInfoForStrategy4.coordinationRole,
+      LockmanGroupCoordinationRole.leader(LockmanGroupCoordinationRole.LeaderEntryPolicy.emptyGroup)
+    )
 
     // Verify unique IDs are different
     let uniqueIds = [
@@ -470,7 +475,8 @@ final class LockmanCompositeActionTests: XCTestCase {
     XCTAssertEqual(lockInfo.lockmanInfoForStrategy1.mode, .action)
     XCTAssertEqual(lockInfo.lockmanInfoForStrategy2.priority, .high(.replaceable))
     XCTAssertEqual(lockInfo.lockmanInfoForStrategy3.limit, LockmanConcurrencyLimit.limited(1))
-    XCTAssertEqual(lockInfo.lockmanInfoForStrategy4.coordinationRole, LockmanGroupCoordinationRole.member)
+    XCTAssertEqual(
+      lockInfo.lockmanInfoForStrategy4.coordinationRole, LockmanGroupCoordinationRole.member)
     XCTAssertEqual(lockInfo.lockmanInfoForStrategy5.mode, .none)
 
     // Verify unique IDs are different

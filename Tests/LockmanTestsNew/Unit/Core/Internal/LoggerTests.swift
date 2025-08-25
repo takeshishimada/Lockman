@@ -116,6 +116,6 @@ final class LoggerTests: XCTestCase {
   }
 
   // MARK: - Tests
-  
+
   // Tests will be implemented when Logger functionality is available
 }

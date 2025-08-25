@@ -590,7 +590,7 @@ final class LockmanSingleExecutionInfoTests: XCTestCase {
 
     // Different instances with different actionIds should not be equal
     XCTAssertNotEqual(info1, info2, "Different instances should not be equal")
-    
+
     // Same instance should be equal to itself
     XCTAssertEqual(info1, info1, "Same instance should be equal to itself")
   }

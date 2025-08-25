@@ -26,13 +26,13 @@ final class LockmanGroupCoordinationErrorTests: XCTestCase {
     )
     let boundaryId = "testBoundary"
     let groupIds = Set([AnyLockmanGroupId("testGroup")])
-    
+
     let error = LockmanGroupCoordinationError.leaderCannotJoinNonEmptyGroup(
       lockmanInfo: info,
       boundaryId: AnyLockmanBoundaryId(boundaryId),
       groupIds: groupIds
     )
-    
+
     XCTAssertEqual(error.lockmanInfo.actionId, "testAction")
     XCTAssertEqual(String(describing: error.boundaryId), String(describing: boundaryId))
   }
@@ -45,13 +45,13 @@ final class LockmanGroupCoordinationErrorTests: XCTestCase {
     )
     let boundaryId = AnyLockmanBoundaryId("testBoundary")
     let groupIds = Set([AnyLockmanGroupId("testGroup")])
-    
+
     let error = LockmanGroupCoordinationError.memberCannotJoinEmptyGroup(
       lockmanInfo: info,
       boundaryId: AnyLockmanBoundaryId(boundaryId),
       groupIds: groupIds
     )
-    
+
     XCTAssertEqual(error.lockmanInfo.actionId, "testAction")
     XCTAssertEqual(String(describing: error.boundaryId), String(describing: boundaryId))
   }
@@ -64,13 +64,13 @@ final class LockmanGroupCoordinationErrorTests: XCTestCase {
     )
     let boundaryId = AnyLockmanBoundaryId("testBoundary")
     let groupIds = Set([AnyLockmanGroupId("testGroup")])
-    
+
     let error = LockmanGroupCoordinationError.actionAlreadyInGroup(
       lockmanInfo: info,
       boundaryId: AnyLockmanBoundaryId(boundaryId),
       groupIds: groupIds
     )
-    
+
     XCTAssertEqual(error.lockmanInfo.actionId, "testAction")
     XCTAssertEqual(String(describing: error.boundaryId), String(describing: boundaryId))
   }
@@ -84,14 +84,14 @@ final class LockmanGroupCoordinationErrorTests: XCTestCase {
     let boundaryId = AnyLockmanBoundaryId("testBoundary")
     let groupId = AnyLockmanGroupId("testGroup")
     let entryPolicy = LockmanGroupCoordinationRole.LeaderEntryPolicy.emptyGroup
-    
+
     let error = LockmanGroupCoordinationError.blockedByExclusiveLeader(
       lockmanInfo: info,
       boundaryId: AnyLockmanBoundaryId(boundaryId),
       groupId: groupId,
       entryPolicy: entryPolicy
     )
-    
+
     XCTAssertEqual(error.lockmanInfo.actionId, "testAction")
     XCTAssertEqual(String(describing: error.boundaryId), String(describing: boundaryId))
   }
@@ -106,42 +106,42 @@ final class LockmanGroupCoordinationErrorTests: XCTestCase {
     )
     let boundaryId = "testBoundary"
     let groupIds = Set([AnyLockmanGroupId("testGroup")])
-    
+
     let leaderError = LockmanGroupCoordinationError.leaderCannotJoinNonEmptyGroup(
       lockmanInfo: info,
       boundaryId: AnyLockmanBoundaryId(boundaryId),
       groupIds: groupIds
     )
-    
+
     let memberError = LockmanGroupCoordinationError.memberCannotJoinEmptyGroup(
       lockmanInfo: info,
       boundaryId: AnyLockmanBoundaryId(boundaryId),
       groupIds: groupIds
     )
-    
+
     let alreadyInGroupError = LockmanGroupCoordinationError.actionAlreadyInGroup(
       lockmanInfo: info,
       boundaryId: AnyLockmanBoundaryId(boundaryId),
       groupIds: groupIds
     )
-    
+
     let blockedError = LockmanGroupCoordinationError.blockedByExclusiveLeader(
       lockmanInfo: info,
       boundaryId: AnyLockmanBoundaryId(boundaryId),
       groupId: AnyLockmanGroupId("testGroup"),
       entryPolicy: .emptyGroup
     )
-    
+
     // Test all error descriptions exist and contain relevant info
     XCTAssertNotNil(leaderError.errorDescription)
     XCTAssertTrue(leaderError.errorDescription!.contains("testAction"))
-    
+
     XCTAssertNotNil(memberError.errorDescription)
     XCTAssertTrue(memberError.errorDescription!.contains("testAction"))
-    
+
     XCTAssertNotNil(alreadyInGroupError.errorDescription)
     XCTAssertTrue(alreadyInGroupError.errorDescription!.contains("testAction"))
-    
+
     XCTAssertNotNil(blockedError.errorDescription)
     XCTAssertTrue(blockedError.errorDescription!.contains("testAction"))
   }
@@ -154,25 +154,25 @@ final class LockmanGroupCoordinationErrorTests: XCTestCase {
     )
     let boundaryId = "testBoundary"
     let groupIds = Set([AnyLockmanGroupId("testGroup")])
-    
+
     let leaderError = LockmanGroupCoordinationError.leaderCannotJoinNonEmptyGroup(
       lockmanInfo: info,
       boundaryId: AnyLockmanBoundaryId(boundaryId),
       groupIds: groupIds
     )
-    
+
     let memberError = LockmanGroupCoordinationError.memberCannotJoinEmptyGroup(
       lockmanInfo: info,
       boundaryId: AnyLockmanBoundaryId(boundaryId),
       groupIds: groupIds
     )
-    
+
     let alreadyInGroupError = LockmanGroupCoordinationError.actionAlreadyInGroup(
       lockmanInfo: info,
       boundaryId: AnyLockmanBoundaryId(boundaryId),
       groupIds: groupIds
     )
-    
+
     // Test different entry policies
     let emptyGroupError = LockmanGroupCoordinationError.blockedByExclusiveLeader(
       lockmanInfo: info,
@@ -180,21 +180,21 @@ final class LockmanGroupCoordinationErrorTests: XCTestCase {
       groupId: AnyLockmanGroupId("testGroup"),
       entryPolicy: .emptyGroup
     )
-    
+
     let withoutMembersError = LockmanGroupCoordinationError.blockedByExclusiveLeader(
       lockmanInfo: info,
       boundaryId: AnyLockmanBoundaryId(boundaryId),
       groupId: AnyLockmanGroupId("testGroup"),
       entryPolicy: .withoutMembers
     )
-    
+
     let withoutLeaderError = LockmanGroupCoordinationError.blockedByExclusiveLeader(
       lockmanInfo: info,
       boundaryId: AnyLockmanBoundaryId(boundaryId),
       groupId: AnyLockmanGroupId("testGroup"),
       entryPolicy: .withoutLeader
     )
-    
+
     // Test all failure reasons exist
     XCTAssertNotNil(leaderError.failureReason)
     XCTAssertNotNil(memberError.failureReason)
@@ -214,13 +214,13 @@ final class LockmanGroupCoordinationErrorTests: XCTestCase {
     )
     let boundaryId = "testBoundary"
     let groupIds = Set([AnyLockmanGroupId("testGroup")])
-    
+
     let error = LockmanGroupCoordinationError.actionAlreadyInGroup(
       lockmanInfo: info,
       boundaryId: AnyLockmanBoundaryId(boundaryId),
       groupIds: groupIds
     )
-    
+
     XCTAssertNotNil(error.lockmanInfo)
     XCTAssertEqual(error.lockmanInfo.actionId, "testAction")
     XCTAssertEqual(String(describing: error.boundaryId), String(describing: boundaryId))

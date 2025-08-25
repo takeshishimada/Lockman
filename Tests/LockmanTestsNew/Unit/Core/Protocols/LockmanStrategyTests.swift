@@ -298,7 +298,8 @@ final class LockmanStrategyTests: XCTestCase {
 
     let strategyId = configuredStrategy.strategyId
 
-    XCTAssertEqual(strategyId, LockmanStrategyId(name: "MockConfigured", configuration: "test-config"))
+    XCTAssertEqual(
+      strategyId, LockmanStrategyId(name: "MockConfigured", configuration: "test-config"))
   }
 
   func testInstanceSpecificStrategyIdUniqueness() {
@@ -346,7 +347,8 @@ final class LockmanStrategyTests: XCTestCase {
     // Test parameterized generation
     let configuredId = MockConfiguredStrategy.makeStrategyId()
 
-    XCTAssertEqual(configuredId, LockmanStrategyId(name: "ConfiguredStrategy", configuration: "default"))
+    XCTAssertEqual(
+      configuredId, LockmanStrategyId(name: "ConfiguredStrategy", configuration: "default"))
   }
 
   func testTypeBasedStrategyIdentificationConsistency() {
@@ -401,7 +403,8 @@ final class LockmanStrategyTests: XCTestCase {
     }
 
     // Test cancel case
-    let testError = MockStrategyError(message: "Test failure", lockmanInfo: info, boundaryId: MockBoundaryId())
+    let testError = MockStrategyError(
+      message: "Test failure", lockmanInfo: info, boundaryId: MockBoundaryId())
     mockStrategy.setCanLockResult(.cancel(testError))
     let cancelResult = mockStrategy.canLock(boundaryId: MockBoundaryId(), info: info)
 
@@ -452,7 +455,8 @@ final class LockmanStrategyTests: XCTestCase {
     mockStrategy.lock(boundaryId: boundary, info: info1)
 
     // Second lock with same action should be evaluated for conflict
-    mockStrategy.setCanLockResult(.cancel(MockStrategyError(message: "Conflict", lockmanInfo: info2, boundaryId: boundary)))
+    mockStrategy.setCanLockResult(
+      .cancel(MockStrategyError(message: "Conflict", lockmanInfo: info2, boundaryId: boundary)))
     let result2 = mockStrategy.canLock(boundaryId: boundary, info: info2)
 
     switch result1 {
@@ -528,7 +532,8 @@ final class LockmanStrategyTests: XCTestCase {
     let mockStrategy = MockLockmanStrategy()
     let info = MockLockmanInfo(actionId: "error-test")
     let boundary = MockBoundaryId()
-    let lockmanError = MockLockmanStrategyError(description: "LockmanError test", lockmanInfo: info, boundaryId: boundary)
+    let lockmanError = MockLockmanStrategyError(
+      description: "LockmanError test", lockmanInfo: info, boundaryId: boundary)
     mockStrategy.setCanLockResult(.cancel(lockmanError))
 
     let result = mockStrategy.canLock(

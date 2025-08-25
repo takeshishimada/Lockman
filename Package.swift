@@ -52,7 +52,7 @@ let package = Package(
     .testTarget(
       name: "LockmanTestsNew",
       dependencies: [
-        "Lockman",
+        "Lockman"
       ]
     ),
     .testTarget(
