@@ -17,11 +17,22 @@ For comprehensive test strategy and design documentation, see:
 - **[claude_wip.md](claude_wip.md)** - Detailed test strategy design, decision rationale, and implementation planning
 - **[Tests/README.md](Tests/README.md)** - Practical test execution guide and developer reference
 
+## Current Issues and Improvements
+
+### Active Issues (tracked in GitHub Issues)
+- 🐛 **[Action-Level Lock Method Crash](https://github.com/takeshishimada/Lockman/issues/211)** - `LockmanDynamicConditionReducer` crash due to circular reference
+- 🔧 **[Type Safety Enhancement](https://github.com/takeshishimada/Lockman/issues/212)** - Improve Strategy-Info relationship type safety
+- 🧹 **[Remove Unused makeCompositeStrategy](https://github.com/takeshishimada/Lockman/issues/213)** - Clean up unused API methods
+
+### Resolved Issues
+- ✅ **[LockmanIssueReporter Protocol Integration](https://github.com/takeshishimada/Lockman/issues/209)** - DI architecture implemented
+- ✅ **[LockmanSingleExecutionInfo StrategyId Design](https://github.com/takeshishimada/Lockman/issues/210)** - Test strategyId inconsistencies fixed
+
 ## Development Guidelines
 - Swift versions: 6.0, 5.10, 5.9
 - Type-safe implementation
 - Single unified Lockman module, developed exclusively for TCA
-- Based on Composable Architecture 1.20.2
+- Based on Composable Architecture 1.21.0
 - When modifying Package.swift, you MUST also update Package@swift-6.0 to keep them in sync
 
 ## Communication Guidelines
@@ -236,17 +247,19 @@ The project includes a Makefile with the following commands:
 - `make xcodebuild` - Run tests with formatted output (default: iOS)
 - `make xcodebuild-raw` - Run tests with raw xcodebuild output
 - `make format` - Format all Swift files using swift-format
-- `make build-for-library-evolution` - Build release with library evolution support
+- `make build-for-library-evolution` - Build release with library evolution support (available locally, removed from CI)
 - `make warm-simulator` - Boot and open iOS simulator
 
 ### Platform Options
 You can specify the platform using the PLATFORM variable:
 - `make PLATFORM=IOS` (default)
 - `make PLATFORM=MACOS`
-- `make PLATFORM=MAC_CATALYST`
-- `make PLATFORM=TVOS`
-- `make PLATFORM=VISIONOS`
-- `make PLATFORM=WATCHOS`
+- `make PLATFORM=MAC_CATALYST` (available locally, not in CI)
+- `make PLATFORM=TVOS` (available locally, not in CI)
+- `make PLATFORM=VISIONOS` (available locally, not in CI)
+- `make PLATFORM=WATCHOS` (available locally, not in CI)
+
+**Note**: CI testing has been streamlined to focus on iOS and macOS only. Other platforms can still be tested locally using the Makefile.
 
 ### Configuration Options
 - `make CONFIG=Debug` (default)
@@ -262,29 +275,29 @@ You can specify the platform using the PLATFORM variable:
 ### Release Steps
 1. **Create Release PR**
    ```bash
-   git checkout -b release/0.x.x
+   git checkout -b release/1.x.x
    # Update the following in README.md:
-   # - Installation section: Update from: "0.x.x" to new version
+   # - Installation section: Update from: "1.x.x" to new version
    # - Version Compatibility table: Add new version, move old patch versions to Other versions
    # - Documentation section: No update needed for patch version changes only
    git add -A
-   git commit -m "chore: prepare for 0.x.x release"
-   gh pr create --title "chore: prepare for 0.x.x release" --body "Prepare for version 0.x.x release"
+   git commit -m "chore: prepare for 1.x.x release"
+   gh pr create --title "chore: prepare for 1.x.x release" --body "Prepare for version 1.x.x release"
    ```
 
 2. **After PR is merged, create and push tag**
    ```bash
    git checkout main
    git pull origin main
-   git tag -a 0.x.x -m "Release version 0.x.x"
-   git push origin 0.x.x
+   git tag -a 1.x.x -m "Release version 1.x.x"
+   git push origin 1.x.x
    ```
 
 3. **Create GitHub Release**
    - Go to GitHub Releases page
    - Click "Create a new release"
    - Select the tag you just created
-   - Title: "0.x.x"
+   - Title: "1.x.x"
    - Generate release notes from previous tag
    - Review and edit the auto-generated notes
    - Publish release
@@ -297,5 +310,5 @@ You can specify the platform using the PLATFORM variable:
 - Improvement: Description of improvements
 
 ## Full Changelog
-https://github.com/takeshishimada/Lockman/compare/0.x.x...0.x.x
+https://github.com/takeshishimada/Lockman/compare/1.x.x...1.x.x
 ```

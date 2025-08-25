@@ -1,8 +1,8 @@
 <img src="Lockman.png" alt="Lockman Logo" width="400">
 
 [![CI](https://github.com/takeshishimada/Lockman/workflows/CI/badge.svg)](https://github.com/takeshishimada/Lockman/actions?query=workflow%3ACI)
-[![Swift](https://img.shields.io/badge/Swift-5.9%20%7C%205.10%20%7C%206.0-ED523F.svg?style=flat)](https://swift.org/download/)
-[![Platforms](https://img.shields.io/badge/Platforms-iOS%20%7C%20macOS%20%7C%20tvOS%20%7C%20watchOS%20%7C%20Mac%20Catalyst-333333.svg?style=flat)](https://developer.apple.com/)
+[![](https://img.shields.io/endpoint?url=https%3A%2F%2Fswiftpackageindex.com%2Fapi%2Fpackages%2Ftakeshishimada%2FLockman%2Fbadge%3Ftype%3Dswift-versions)](https://swiftpackageindex.com/takeshishimada/Lockman)
+[![](https://img.shields.io/endpoint?url=https%3A%2F%2Fswiftpackageindex.com%2Fapi%2Fpackages%2Ftakeshishimada%2FLockman%2Fbadge%3Ftype%3Dplatforms)](https://swiftpackageindex.com/takeshishimada/Lockman)
 
 Lockman is a Swift library that solves exclusive action control issues in The Composable Architecture (TCA) applications, with responsiveness, transparency, and declarative design in mind.
 
@@ -165,6 +165,8 @@ The `Reducer.lock` modifier automatically applies lock management to actions tha
 The documentation for releases and `main` are available here:
 
 * [`main`](https://takeshishimada.github.io/Lockman/main/documentation/lockman/)
+* [1.5.0](https://takeshishimada.github.io/Lockman/1.5.0/documentation/lockman/) ([migration guide](https://takeshishimada.github.io/Lockman/1.5.0/documentation/lockman/migratingto1.5))
+* [1.4.0](https://takeshishimada.github.io/Lockman/1.4.0/documentation/lockman/) ([migration guide](https://takeshishimada.github.io/Lockman/1.4.0/documentation/lockman/migratingto1.4))
 * [1.3.0](https://takeshishimada.github.io/Lockman/1.3.0/documentation/lockman/) ([migration guide](https://takeshishimada.github.io/Lockman/1.3.0/documentation/lockman/migratingto1.3))
 * [1.2.0](https://takeshishimada.github.io/Lockman/1.2.0/documentation/lockman/) ([migration guide](https://takeshishimada.github.io/Lockman/1.2.0/documentation/lockman/migratingto1.2))
 * [1.1.0](https://takeshishimada.github.io/Lockman/1.1.0/documentation/lockman/) ([migration guide](https://takeshishimada.github.io/Lockman/1.1.0/documentation/lockman/migratingto1.1))
@@ -225,7 +227,7 @@ Add the dependency to your Package.swift file:
 
 ```swift
 dependencies: [
-  .package(url: "https://github.com/takeshishimada/Lockman", from: "1.4.0")
+  .package(url: "https://github.com/takeshishimada/Lockman", from: "1.6.1")
 ]
 ```
 
@@ -242,24 +244,30 @@ Add the dependency to your target:
 
 ### Requirements
 
-| Platform | Minimum Version |
-|----------|----------------|
-| iOS      | 13.0           |
-| macOS    | 10.15          |
-| tvOS     | 13.0           |
-| watchOS  | 6.0            |
+| Platform | Minimum Version | CI Testing |
+|----------|----------------|------------|
+| iOS      | 13.0           | ✅         |
+| macOS    | 10.15          | ✅         |
+| tvOS     | 13.0           | Local only |
+| watchOS  | 6.0            | Local only |
+| Mac Catalyst | 13.0       | Local only |
+
+**Note**: While Lockman supports all Apple platforms, CI testing is focused on iOS and macOS for faster feedback. Other platforms can be tested locally using the provided Makefile.
 
 ### Version Compatibility
 
 | Lockman | The Composable Architecture |
 |---------|----------------------------|
-| 1.4.0   | 1.20.2                     |
+| 1.6.1   | 1.21.1                     |
+| 1.6.0   | 1.21.0                     |
+| 1.5.0   | 1.20.2                     |
 
 <details>
 <summary>Other versions</summary>
 
 | Lockman | The Composable Architecture |
 |---------|----------------------------|
+| 1.4.0   | 1.20.2                     |
 | 1.3.2   | 1.20.2                     |
 | 1.3.1   | 1.20.2                     |
 | 1.3.0   | 1.20.2                     |
@@ -287,20 +295,6 @@ Add the dependency to your target:
 
 </details>
 
-### Translations
-
-The following translations of this README have been contributed by members of the community:
-
-- [English](README.md)
-- [Japanese](READMEs/README_ja.md)
-- [Simplified Chinese](READMEs/README_zh-CN.md)
-- [Traditional Chinese](READMEs/README_zh-TW.md)
-- [Spanish](READMEs/README_es.md)
-- [French](READMEs/README_fr.md)
-- [German](READMEs/README_de.md)
-- [Korean](READMEs/README_ko.md)
-- [Portuguese](READMEs/README_pt-BR.md)
-- [Italian](READMEs/README_it.md)
 
 ## Community
 
