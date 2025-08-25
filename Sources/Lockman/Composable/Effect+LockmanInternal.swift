@@ -163,8 +163,8 @@ extension Effect {
       )
       if let handler = handler {
         return .concatenate([
-          .cancel(id: boundaryId),
           .run { send in await handler(cancellationError, send) },
+          .cancel(id: boundaryId),
           completeEffect,
         ])
       }
