@@ -65,7 +65,7 @@ import Foundation
 ///   }
 /// }
 /// ```
-public struct LockmanReducer<Base: Reducer>: Reducer {
+public struct LockmanReducer<Base: Reducer, LA: LockmanAction>: Reducer {
   public typealias State = Base.State
   public typealias Action = Base.Action
 
@@ -73,7 +73,7 @@ public struct LockmanReducer<Base: Reducer>: Reducer {
   let boundaryId: any LockmanBoundaryId
   let unlockOption: LockmanUnlockOption
   let lockFailure: (@Sendable (_ error: any Error, _ send: Send<Action>) async -> Void)?
-  let extractLockmanAction: (Action) -> (any LockmanAction)?
+  let extractLockmanAction: (Action) -> LA?
 
   public var body: some ReducerOf<Self> {
     Reduce { state, action in
@@ -83,14 +83,18 @@ public struct LockmanReducer<Base: Reducer>: Reducer {
         return self.base.reduce(into: &state, action: action)
       }
 
-      // ✨ LOCK-FIRST IMPLEMENTATION: Check lock feasibility BEFORE base.reduce()
-      let effectForLock: Effect<LockmanReducer<Base>.Action> = .none
+      let effectForLock: Effect<Action> = .none
 
       do {
-        // ✨ CRITICAL: Create lockmanInfo once to ensure consistent uniqueId throughout lock lifecycle
-        // This prevents lock/unlock mismatches that occur when methods are called multiple times
         let lockmanInfo = lockmanAction.createLockmanInfo()
+
+        let strategy = try LockmanManager.container.resolve(
+          id: lockmanInfo.strategyId,
+          expecting: type(of: lockmanInfo)
+        )
+
         let lockResult = try effectForLock.acquireLock(
+          strategy: strategy,
           lockmanInfo: lockmanInfo,
           boundaryId: boundaryId
         )
@@ -104,6 +108,7 @@ public struct LockmanReducer<Base: Reducer>: Reducer {
           // Build effect with the existing lock result using same lockmanInfo (guaranteed unlock)
           return baseEffect.buildLockEffect(
             lockResult: lockResult,
+            strategy: strategy,
             action: lockmanAction,
             lockmanInfo: lockmanInfo,
             boundaryId: boundaryId,

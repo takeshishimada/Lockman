@@ -82,8 +82,14 @@ extension Effect {
       // This prevents lock/unlock mismatches that occur when methods are called multiple times
       let lockmanInfo = action.createLockmanInfo()
 
+      let strategy = try LockmanManager.container.resolve(
+        id: lockmanInfo.strategyId,
+        expecting: type(of: lockmanInfo)
+      )
+
       // Acquire lock using the captured lockmanInfo (consistent uniqueId)
       let lockResult = try concatenatedEffect.acquireLock(
+        strategy: strategy,
         lockmanInfo: lockmanInfo,
         boundaryId: boundaryId
       )
@@ -91,6 +97,7 @@ extension Effect {
       // Build lock effect using the same lockmanInfo instance (guaranteed unlock)
       return concatenatedEffect.buildLockEffect(
         lockResult: lockResult,
+        strategy: strategy,
         action: action,
         lockmanInfo: lockmanInfo,
         boundaryId: boundaryId,
@@ -175,15 +182,19 @@ extension Effect {
     handleCancellationErrors: Bool? = nil,
     lockFailure: (@Sendable (_ error: any Error, _ send: Send<Action>) async -> Void)? = nil
   ) -> Effect<Action> {
-    // This method provides a method chain style API by combining acquireLock and buildLockEffect
-
     do {
       // ✨ CRITICAL: Create lockmanInfo once to ensure consistent uniqueId throughout lock lifecycle
       // This prevents lock/unlock mismatches that occur when methods are called multiple times
       let lockmanInfo = action.createLockmanInfo()
 
+      let strategy = try LockmanManager.container.resolve(
+        id: lockmanInfo.strategyId,
+        expecting: type(of: lockmanInfo)
+      )
+
       // Acquire lock using captured lockmanInfo (consistent uniqueId)
       let lockResult = try acquireLock(
+        strategy: strategy,
         lockmanInfo: lockmanInfo,
         boundaryId: boundaryId
       )
@@ -191,6 +202,7 @@ extension Effect {
       // Build lock effect using the same lockmanInfo instance (guaranteed unlock)
       return buildLockEffect(
         lockResult: lockResult,
+        strategy: strategy,
         action: action,
         lockmanInfo: lockmanInfo,
         boundaryId: boundaryId,

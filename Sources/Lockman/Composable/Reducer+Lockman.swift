@@ -100,11 +100,11 @@ extension Reducer {
   ///   - lockFailure: Optional callback invoked when lock acquisition fails.
   ///     Receives the error and a send function to dispatch actions.
   /// - Returns: A `LockmanReducer` that wraps this reducer with locking behavior.
-  public func lock(
+  public func lock<LA: LockmanAction>(
     boundaryId: any LockmanBoundaryId,
     unlockOption: LockmanUnlockOption = .immediate,
     lockFailure: (@Sendable (_ error: any Error, _ send: Send<Action>) async -> Void)? = nil
-  ) -> LockmanReducer<Self> {
+  ) -> LockmanReducer<Self, LA> {
     LockmanReducer(
       base: self,
       boundaryId: boundaryId,
@@ -112,7 +112,7 @@ extension Reducer {
       lockFailure: lockFailure,
       extractLockmanAction: { action in
         // Only check root action
-        action as? any LockmanAction
+        action as? LA
       }
     )
   }
@@ -141,12 +141,12 @@ extension Reducer {
   ///   - lockFailure: Optional callback invoked when lock acquisition fails.
   ///   - path1: A case path to extract a nested action that may conform to `LockmanAction`.
   /// - Returns: A `LockmanReducer` that wraps this reducer with locking behavior.
-  public func lock<Value1>(
+  public func lock<Value1, LA: LockmanAction>(
     boundaryId: any LockmanBoundaryId,
     unlockOption: LockmanUnlockOption = .immediate,
     lockFailure: (@Sendable (_ error: any Error, _ send: Send<Action>) async -> Void)? = nil,
     for path1: CaseKeyPath<Action, Value1>
-  ) -> LockmanReducer<Self> where Action: CasePathable {
+  ) -> LockmanReducer<Self, LA> where Action: CasePathable {
     LockmanReducer(
       base: self,
       boundaryId: boundaryId,
@@ -155,12 +155,12 @@ extension Reducer {
       extractLockmanAction: { action in
         // First check the provided path (more specific)
         if let value = action[case: path1] {
-          if let lockmanAction = value as? any LockmanAction {
+          if let lockmanAction = value as? LA {
             return lockmanAction
           }
         }
         // Fallback to root action (less specific)
-        if let lockmanAction = action as? any LockmanAction {
+        if let lockmanAction = action as? LA {
           return lockmanAction
         }
         return nil
@@ -193,13 +193,13 @@ extension Reducer {
   ///   - path1: First case path to extract a nested action.
   ///   - path2: Second case path to extract a nested action.
   /// - Returns: A `LockmanReducer` that wraps this reducer with locking behavior.
-  public func lock<Value1, Value2>(
+  public func lock<Value1, Value2, LA: LockmanAction>(
     boundaryId: any LockmanBoundaryId,
     unlockOption: LockmanUnlockOption = .immediate,
     lockFailure: (@Sendable (_ error: any Error, _ send: Send<Action>) async -> Void)? = nil,
     for path1: CaseKeyPath<Action, Value1>,
     _ path2: CaseKeyPath<Action, Value2>
-  ) -> LockmanReducer<Self> where Action: CasePathable {
+  ) -> LockmanReducer<Self, LA> where Action: CasePathable {
     LockmanReducer(
       base: self,
       boundaryId: boundaryId,
@@ -213,13 +213,13 @@ extension Reducer {
         ]
         for path in paths {
           if let value = path(action) {
-            if let lockmanAction = value as? any LockmanAction {
+            if let lockmanAction = value as? LA {
               return lockmanAction
             }
           }
         }
         // Fallback to root action (less specific)
-        if let lockmanAction = action as? any LockmanAction {
+        if let lockmanAction = action as? LA {
           return lockmanAction
         }
         return nil
@@ -240,14 +240,14 @@ extension Reducer {
   ///   - path2: Second case path to extract a nested action.
   ///   - path3: Third case path to extract a nested action.
   /// - Returns: A `LockmanReducer` that wraps this reducer with locking behavior.
-  public func lock<Value1, Value2, Value3>(
+  public func lock<Value1, Value2, Value3, LA: LockmanAction>(
     boundaryId: any LockmanBoundaryId,
     unlockOption: LockmanUnlockOption = .immediate,
     lockFailure: (@Sendable (_ error: any Error, _ send: Send<Action>) async -> Void)? = nil,
     for path1: CaseKeyPath<Action, Value1>,
     _ path2: CaseKeyPath<Action, Value2>,
     _ path3: CaseKeyPath<Action, Value3>
-  ) -> LockmanReducer<Self> where Action: CasePathable {
+  ) -> LockmanReducer<Self, LA> where Action: CasePathable {
     LockmanReducer(
       base: self,
       boundaryId: boundaryId,
@@ -262,13 +262,13 @@ extension Reducer {
         ]
         for path in paths {
           if let value = path(action) {
-            if let lockmanAction = value as? any LockmanAction {
+            if let lockmanAction = value as? LA {
               return lockmanAction
             }
           }
         }
         // Fallback to root action (less specific)
-        if let lockmanAction = action as? any LockmanAction {
+        if let lockmanAction = action as? LA {
           return lockmanAction
         }
         return nil
@@ -290,7 +290,7 @@ extension Reducer {
   ///   - path3: Third case path to extract a nested action.
   ///   - path4: Fourth case path to extract a nested action.
   /// - Returns: A `LockmanReducer` that wraps this reducer with locking behavior.
-  public func lock<Value1, Value2, Value3, Value4>(
+  public func lock<Value1, Value2, Value3, Value4, LA: LockmanAction>(
     boundaryId: any LockmanBoundaryId,
     unlockOption: LockmanUnlockOption = .immediate,
     lockFailure: (@Sendable (_ error: any Error, _ send: Send<Action>) async -> Void)? = nil,
@@ -298,7 +298,7 @@ extension Reducer {
     _ path2: CaseKeyPath<Action, Value2>,
     _ path3: CaseKeyPath<Action, Value3>,
     _ path4: CaseKeyPath<Action, Value4>
-  ) -> LockmanReducer<Self> where Action: CasePathable {
+  ) -> LockmanReducer<Self, LA> where Action: CasePathable {
     LockmanReducer(
       base: self,
       boundaryId: boundaryId,
@@ -314,13 +314,13 @@ extension Reducer {
         ]
         for path in paths {
           if let value = path(action) {
-            if let lockmanAction = value as? any LockmanAction {
+            if let lockmanAction = value as? LA {
               return lockmanAction
             }
           }
         }
         // Fallback to root action (less specific)
-        if let lockmanAction = action as? any LockmanAction {
+        if let lockmanAction = action as? LA {
           return lockmanAction
         }
         return nil
@@ -343,7 +343,7 @@ extension Reducer {
   ///   - path4: Fourth case path to extract a nested action.
   ///   - path5: Fifth case path to extract a nested action.
   /// - Returns: A `LockmanReducer` that wraps this reducer with locking behavior.
-  public func lock<Value1, Value2, Value3, Value4, Value5>(
+  public func lock<Value1, Value2, Value3, Value4, Value5, LA: LockmanAction>(
     boundaryId: any LockmanBoundaryId,
     unlockOption: LockmanUnlockOption = .immediate,
     lockFailure: (@Sendable (_ error: any Error, _ send: Send<Action>) async -> Void)? = nil,
@@ -352,7 +352,7 @@ extension Reducer {
     _ path3: CaseKeyPath<Action, Value3>,
     _ path4: CaseKeyPath<Action, Value4>,
     _ path5: CaseKeyPath<Action, Value5>
-  ) -> LockmanReducer<Self> where Action: CasePathable {
+  ) -> LockmanReducer<Self, LA> where Action: CasePathable {
     LockmanReducer(
       base: self,
       boundaryId: boundaryId,
@@ -369,13 +369,13 @@ extension Reducer {
         ]
         for path in paths {
           if let value = path(action) {
-            if let lockmanAction = value as? any LockmanAction {
+            if let lockmanAction = value as? LA {
               return lockmanAction
             }
           }
         }
         // Fallback to root action (less specific)
-        if let lockmanAction = action as? any LockmanAction {
+        if let lockmanAction = action as? LA {
           return lockmanAction
         }
         return nil

@@ -1,3 +1,4 @@
+import CasePaths
 import ComposableArchitecture
 import XCTest
 
@@ -26,8 +27,13 @@ final class EffectLockmanInternalTests: XCTestCase {
     try await LockmanManager.withTestContainer(container) {
       let effect = Effect<SharedTestAction>.none
       let lockmanInfo = SharedTestAction.increment.createLockmanInfo()
+      let strategyWrapper = try LockmanManager.container.resolve(
+        id: lockmanInfo.strategyId,
+        expecting: type(of: lockmanInfo)
+      )
 
       let result = try effect.acquireLock(
+        strategy: strategyWrapper,
         lockmanInfo: lockmanInfo,
         boundaryId: TestBoundaryId.test
       )
@@ -44,15 +50,21 @@ final class EffectLockmanInternalTests: XCTestCase {
     try await LockmanManager.withTestContainer(container) {
       let effect = Effect<SharedTestAction>.none
       let lockmanInfo = SharedTestAction.increment.createLockmanInfo()
+      let strategyWrapper = try LockmanManager.container.resolve(
+        id: lockmanInfo.strategyId,
+        expecting: type(of: lockmanInfo)
+      )
 
       // First lock should succeed
       _ = try effect.acquireLock(
+        strategy: strategyWrapper,
         lockmanInfo: lockmanInfo,
         boundaryId: TestBoundaryId.test
       )
 
       // Second lock should fail
       let result = try effect.acquireLock(
+        strategy: strategyWrapper,
         lockmanInfo: lockmanInfo,
         boundaryId: TestBoundaryId.test
       )
@@ -76,8 +88,13 @@ final class EffectLockmanInternalTests: XCTestCase {
         actionId: "increment",
         strategyId: strategy.strategyId
       )
+      let strategyWrapper = try LockmanManager.container.resolve(
+        id: lockmanInfo.strategyId,
+        expecting: type(of: lockmanInfo)
+      )
 
       let result = try effect.acquireLock(
+        strategy: strategyWrapper,
         lockmanInfo: lockmanInfo,
         boundaryId: TestBoundaryId.test
       )
@@ -98,10 +115,17 @@ final class EffectLockmanInternalTests: XCTestCase {
       let lockmanInfo = SharedTestAction.increment.createLockmanInfo()
 
       XCTAssertThrowsError(
-        try effect.acquireLock(
-          lockmanInfo: lockmanInfo,
-          boundaryId: TestBoundaryId.test
-        )
+        try {
+          let strategyWrapper = try LockmanManager.container.resolve(
+            id: lockmanInfo.strategyId,
+            expecting: type(of: lockmanInfo)
+          )
+          return try effect.acquireLock(
+            strategy: strategyWrapper,
+            lockmanInfo: lockmanInfo,
+            boundaryId: TestBoundaryId.test
+          )
+        }()
       ) { error in
         XCTAssertTrue(error is LockmanRegistrationError)
       }
@@ -118,9 +142,14 @@ final class EffectLockmanInternalTests: XCTestCase {
     await LockmanManager.withTestContainer(container) {
       let baseEffect = Effect<SharedTestAction>.send(.increment)
       let lockmanInfo = SharedTestAction.increment.createLockmanInfo()
+      let strategyWrapper = try! LockmanManager.container.resolve(
+        id: lockmanInfo.strategyId,
+        expecting: type(of: lockmanInfo)
+      )
 
       let effect = baseEffect.buildLockEffect(
         lockResult: .success,
+        strategy: strategyWrapper,
         action: SharedTestAction.increment,
         lockmanInfo: lockmanInfo,
         boundaryId: TestBoundaryId.test,
@@ -149,8 +178,14 @@ final class EffectLockmanInternalTests: XCTestCase {
         reason: LockmanRegistrationError.strategyNotRegistered("test")
       )
 
+      let strategyWrapper = try! LockmanManager.container.resolve(
+        id: lockmanInfo.strategyId,
+        expecting: type(of: lockmanInfo)
+      )
+
       let effect = baseEffect.buildLockEffect(
         lockResult: .successWithPrecedingCancellation(error: testError),
+        strategy: strategyWrapper,
         action: SharedTestAction.increment,
         lockmanInfo: lockmanInfo,
         boundaryId: TestBoundaryId.test,
@@ -179,8 +214,14 @@ final class EffectLockmanInternalTests: XCTestCase {
         reason: LockmanRegistrationError.strategyNotRegistered("test")
       )
 
+      let strategyWrapper = try! LockmanManager.container.resolve(
+        id: lockmanInfo.strategyId,
+        expecting: type(of: lockmanInfo)
+      )
+
       let effect = baseEffect.buildLockEffect(
         lockResult: .successWithPrecedingCancellation(error: testError),
+        strategy: strategyWrapper,
         action: SharedTestAction.increment,
         lockmanInfo: lockmanInfo,
         boundaryId: TestBoundaryId.test,
@@ -206,8 +247,14 @@ final class EffectLockmanInternalTests: XCTestCase {
       let lockmanInfo = SharedTestAction.increment.createLockmanInfo()
       let error = LockmanRegistrationError.strategyNotRegistered("test")
 
+      let strategyWrapper = try! LockmanManager.container.resolve(
+        id: lockmanInfo.strategyId,
+        expecting: type(of: lockmanInfo)
+      )
+
       let effect = baseEffect.buildLockEffect(
         lockResult: .cancel(error),
+        strategy: strategyWrapper,
         action: SharedTestAction.increment,
         lockmanInfo: lockmanInfo,
         boundaryId: TestBoundaryId.test,
@@ -232,8 +279,14 @@ final class EffectLockmanInternalTests: XCTestCase {
       let lockmanInfo = SharedTestAction.increment.createLockmanInfo()
       let error = LockmanRegistrationError.strategyNotRegistered("test")
 
+      let strategyWrapper = try! LockmanManager.container.resolve(
+        id: lockmanInfo.strategyId,
+        expecting: type(of: lockmanInfo)
+      )
+
       let effect = baseEffect.buildLockEffect(
         lockResult: .cancel(error),
+        strategy: strategyWrapper,
         action: SharedTestAction.increment,
         lockmanInfo: lockmanInfo,
         boundaryId: TestBoundaryId.test,
@@ -250,14 +303,21 @@ final class EffectLockmanInternalTests: XCTestCase {
   }
 
   func testBuildLockEffectStrategyResolutionError() async {
-    let container = LockmanStrategyContainer()  // Empty container
+    let strategy = TestSingleExecutionStrategy()
+    let container = LockmanStrategyContainer()
+    try! container.register(strategy)  // Register so we can resolve it
 
     await LockmanManager.withTestContainer(container) {
       let baseEffect = Effect<SharedTestAction>.send(.increment)
       let lockmanInfo = SharedTestAction.increment.createLockmanInfo()
+      let strategyWrapper = try! LockmanManager.container.resolve(
+        id: lockmanInfo.strategyId,
+        expecting: type(of: lockmanInfo)
+      )
 
       let effect = baseEffect.buildLockEffect(
         lockResult: .success,
+        strategy: strategyWrapper,
         action: SharedTestAction.increment,
         lockmanInfo: lockmanInfo,
         boundaryId: TestBoundaryId.test,
@@ -273,14 +333,21 @@ final class EffectLockmanInternalTests: XCTestCase {
   }
 
   func testBuildLockEffectStrategyResolutionErrorWithHandler() async {
-    let container = LockmanStrategyContainer()  // Empty container
+    let strategy = TestSingleExecutionStrategy()
+    let container = LockmanStrategyContainer()
+    try! container.register(strategy)  // Register so we can resolve it
 
     await LockmanManager.withTestContainer(container) {
       let baseEffect = Effect<SharedTestAction>.send(.increment)
       let lockmanInfo = SharedTestAction.increment.createLockmanInfo()
+      let strategyWrapper = try! LockmanManager.container.resolve(
+        id: lockmanInfo.strategyId,
+        expecting: type(of: lockmanInfo)
+      )
 
       let effect = baseEffect.buildLockEffect(
         lockResult: .success,
+        strategy: strategyWrapper,
         action: SharedTestAction.increment,
         lockmanInfo: lockmanInfo,
         boundaryId: TestBoundaryId.test,
@@ -311,8 +378,14 @@ final class EffectLockmanInternalTests: XCTestCase {
         isCancellationTarget: true
       )
 
+      let strategyWrapper1 = try! LockmanManager.container.resolve(
+        id: cancellableInfo.strategyId,
+        expecting: type(of: cancellableInfo)
+      )
+
       let effect1 = baseEffect.buildLockEffect(
         lockResult: .success,
+        strategy: strategyWrapper1,
         action: SharedTestAction.increment,
         lockmanInfo: cancellableInfo,
         boundaryId: TestBoundaryId.test,
@@ -330,8 +403,14 @@ final class EffectLockmanInternalTests: XCTestCase {
         isCancellationTarget: false
       )
 
+      let strategyWrapper2 = try! LockmanManager.container.resolve(
+        id: nonCancellableInfo.strategyId,
+        expecting: type(of: nonCancellableInfo)
+      )
+
       let effect2 = baseEffect.buildLockEffect(
         lockResult: .success,
+        strategy: strategyWrapper2,
         action: SharedTestAction.increment,
         lockmanInfo: nonCancellableInfo,
         boundaryId: TestBoundaryId.test,
@@ -457,57 +536,56 @@ final class EffectLockmanInternalTests: XCTestCase {
     let strategy = TestSingleExecutionStrategy()
     let container = LockmanStrategyContainer()
     try! container.register(strategy)
-    
+
     await LockmanManager.withTestContainer(container) {
       let store = await TestStore(initialState: TestHandlerSendFeature.State()) {
         TestHandlerSendFeature()
       }
-      
+
       // First action to establish lock
       await store.send(.firstAction) {
         $0.isRunning = true
       }
-      
+
       // Second action that should trigger handler execution in Effect.run
       await store.send(.secondActionWithSendHandler)
-      
+
       // Critical: Receive the action sent from inside Effect.run handler
       await store.receive(\.handlerWasExecuted) {
         $0.handlerExecutionCount = 1
         $0.lastHandlerError = "Lock acquisition failed"
       }
-      
+
       // Complete first action
       await store.receive(\.firstCompleted) {
         $0.isRunning = false
       }
-      
+
       await store.finish()
     }
   }
-  
+
   /// Test Line 214-215: catch block handler execution via send action
   func testCatchBlockHandlerExecutionViaSend() async {
-    let container = LockmanStrategyContainer() // Empty - triggers error
-    
+    let container = LockmanStrategyContainer()  // Empty - triggers error
+
     await LockmanManager.withTestContainer(container) {
       let store = await TestStore(initialState: TestHandlerSendFeature.State()) {
         TestHandlerSendFeature()
       }
-      
+
       // This should trigger strategy resolution error and handler in catch block
       await store.send(.errorActionWithSendHandler)
-      
+
       // Critical: Receive the action sent from inside catch block Effect.run handler
       await store.receive(\.handlerWasExecuted) {
         $0.handlerExecutionCount = 1
         $0.lastHandlerError = "Strategy resolution failed"
       }
-      
+
       await store.finish()
     }
   }
-  
 
 }
 
@@ -1221,14 +1299,14 @@ private struct TestHandlerSendFeature {
     var handlerExecutionCount = 0
     var lastHandlerError: String?
   }
-  
+
   enum Action: Equatable, LockmanAction {
     case firstAction
     case secondActionWithSendHandler
     case errorActionWithSendHandler
     case firstCompleted
     case handlerWasExecuted(String)
-    
+
     func createLockmanInfo() -> TestLockmanInfo {
       switch self {
       case .firstAction, .secondActionWithSendHandler:
@@ -1249,18 +1327,18 @@ private struct TestHandlerSendFeature {
       }
     }
   }
-  
+
   var body: some ReducerOf<Self> {
     Reduce { state, action in
       switch action {
       case .firstAction:
         state.isRunning = true
         return .run { send in
-          try await Task.sleep(nanoseconds: 50_000_000) // 50ms
+          try await Task.sleep(nanoseconds: 50_000_000)  // 50ms
           await send(.firstCompleted)
         }
         .lock(action: action, boundaryId: TestBoundaryId.test)
-        
+
       case .secondActionWithSendHandler:
         return .run { send in
           // This will be blocked and handler will be called
@@ -1273,7 +1351,7 @@ private struct TestHandlerSendFeature {
             await send(.handlerWasExecuted("Lock acquisition failed"))
           }
         )
-        
+
       case .errorActionWithSendHandler:
         return .run { send in
           // This will trigger strategy resolution error
@@ -1286,11 +1364,11 @@ private struct TestHandlerSendFeature {
             await send(.handlerWasExecuted("Strategy resolution failed"))
           }
         )
-        
+
       case .firstCompleted:
         state.isRunning = false
         return .none
-        
+
       case .handlerWasExecuted(let errorMessage):
         state.handlerExecutionCount += 1
         state.lastHandlerError = errorMessage
@@ -1299,5 +1377,3 @@ private struct TestHandlerSendFeature {
     }
   }
 }
-
-
