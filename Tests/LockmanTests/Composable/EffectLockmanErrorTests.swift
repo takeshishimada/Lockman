@@ -9,6 +9,25 @@ import XCTest
 final class EffectLockmanErrorTests: XCTestCase {
   // MARK: - Mock Types for Testing
 
+  /// Mock issue reporter for testing
+  private final class MockIssueReporter: LockmanIssueReporter {
+    static var capturedMessages: [String] = []
+    static var capturedFiles: [StaticString] = []
+    static var capturedLines: [UInt] = []
+    
+    static func reportIssue(_ message: String, file: StaticString = #file, line: UInt = #line) {
+      capturedMessages.append(message)
+      capturedFiles.append(file)
+      capturedLines.append(line)
+    }
+    
+    static func reset() {
+      capturedMessages.removeAll()
+      capturedFiles.removeAll()
+      capturedLines.removeAll()
+    }
+  }
+
   /// Mock action for testing error scenarios
   private enum MockErrorAction: LockmanAction {
     case unregisteredStrategy
@@ -26,7 +45,7 @@ final class EffectLockmanErrorTests: XCTestCase {
     }
 
     func createLockmanInfo() -> LockmanSingleExecutionInfo {
-      LockmanSingleExecutionInfo(actionId: actionName, mode: .boundary)
+      LockmanSingleExecutionInfo(strategyId: strategyId, actionId: actionName, mode: .boundary)
     }
   }
 
@@ -37,7 +56,7 @@ final class EffectLockmanErrorTests: XCTestCase {
     var actionName: String { "testAction" }
     var strategyId: LockmanStrategyId { .singleExecution }
     func createLockmanInfo() -> LockmanSingleExecutionInfo {
-      LockmanSingleExecutionInfo(actionId: actionName, mode: .boundary)
+      LockmanSingleExecutionInfo(strategyId: strategyId, actionId: actionName, mode: .boundary)
     }
   }
 
@@ -64,39 +83,59 @@ final class EffectLockmanErrorTests: XCTestCase {
     func getCurrentLocks() -> [AnyLockmanBoundaryId: [any LockmanInfo]] { [:] }
   }
 
+  // MARK: - Test Setup
+
+  override func setUp() {
+    super.setUp()
+    MockIssueReporter.reset()
+  }
+
+  override func tearDown() {
+    super.tearDown()
+    MockIssueReporter.reset()
+  }
+
   // MARK: - Strategy Resolution Error Tests
 
   func testWithLockHandlesUnregisteredStrategyGracefully() async {
     let testContainer = LockmanStrategyContainer()
 
     await LockmanManager.withTestContainer(testContainer) {
+      // Configure DI to use MockIssueReporter
+      let originalReporter = LockmanManager.config.issueReporter
+      LockmanManager.config.issueReporter = MockIssueReporter.self
+      defer { LockmanManager.config.issueReporter = originalReporter }
+      
       let action = MockErrorAction.unregisteredStrategy
       let cancelID = "test-cancel-id"
       let operationExecuted = LockIsolated(false)
-      let errorReported = LockIsolated(false)
 
-      // XCTExpectFailure to handle the reportIssue call
-      XCTExpectFailure(
-        "Effect.lock strategy 'MockUnregisteredStrategy' not registered. Register before use."
-      ) {
-        // This should return a valid effect but the operation should not execute
-        let effect = Effect<Never>.run { _ in
-          operationExecuted.setValue(true)
-        }
-        .lock(
-          action: action,
-          boundaryId: cancelID
-        )
-
-        // Effect should be created (error handling is internal)
-        XCTAssertNotNil(effect)
-        errorReported.setValue(true)
+      // This should return a valid effect but the operation should not execute
+      let effect = Effect<Never>.run { _ in
+        operationExecuted.setValue(true)
       }
+      .lock(
+        action: action,
+        boundaryId: cancelID
+      )
+
+      // Effect should be created (error handling is internal)
+      XCTAssertNotNil(effect)
 
       // Verify expectations
       XCTAssertEqual(
         operationExecuted.value, false, "Operation should not execute with unregistered strategy")
-      XCTAssertEqual(errorReported.value, true, "Error should have been reported")
+      
+      // Verify error was reported with expected content
+      XCTAssertEqual(MockIssueReporter.capturedMessages.count, 1)
+      XCTAssertTrue(
+        MockIssueReporter.capturedMessages.first?.contains("MockUnregisteredStrategy") == true,
+        "Should contain strategy name"
+      )
+      XCTAssertTrue(
+        MockIssueReporter.capturedMessages.first?.contains("not registered") == true,
+        "Should contain 'not registered'"
+      )
     }
   }
 
@@ -126,27 +165,41 @@ final class EffectLockmanErrorTests: XCTestCase {
     let testContainer = LockmanStrategyContainer()
 
     await LockmanManager.withTestContainer(testContainer) {
+      // Configure DI to use MockIssueReporter
+      let originalReporter = LockmanManager.config.issueReporter
+      LockmanManager.config.issueReporter = MockIssueReporter.self
+      defer { LockmanManager.config.issueReporter = originalReporter }
+      
       let action = MockErrorAction.unregisteredStrategy
       let cancelID = "test-cancel-id"
       let operationExecuted = LockIsolated(false)
       let unlockProvided = LockIsolated(false)
 
-      XCTExpectFailure("Effect.lock strategy 'MockUnregisteredStrategy' not registered") {
-        let effect = Effect<Never>.run { _ in
-          operationExecuted.setValue(true)
-          unlockProvided.setValue(true)
-          XCTFail("Operation should not execute with unregistered strategy")
-        }
-        .lock(
-          action: action,
-          boundaryId: cancelID
-        )
-
-        XCTAssertNotNil(effect)
+      let effect = Effect<Never>.run { _ in
+        operationExecuted.setValue(true)
+        unlockProvided.setValue(true)
+        XCTFail("Operation should not execute with unregistered strategy")
       }
+      .lock(
+        action: action,
+        boundaryId: cancelID
+      )
+
+      XCTAssertNotNil(effect)
 
       XCTAssertEqual(operationExecuted.value, false)
       XCTAssertEqual(unlockProvided.value, false)
+      
+      // Verify error was reported with expected content
+      XCTAssertEqual(MockIssueReporter.capturedMessages.count, 1)
+      XCTAssertTrue(
+        MockIssueReporter.capturedMessages.first?.contains("MockUnregisteredStrategy") == true,
+        "Should contain strategy name"
+      )
+      XCTAssertTrue(
+        MockIssueReporter.capturedMessages.first?.contains("not registered") == true,
+        "Should contain 'not registered'"
+      )
     }
   }
 
@@ -154,6 +207,11 @@ final class EffectLockmanErrorTests: XCTestCase {
     let testContainer = LockmanStrategyContainer()
 
     await LockmanManager.withTestContainer(testContainer) {
+      // Configure DI to use MockIssueReporter
+      let originalReporter = LockmanManager.config.issueReporter
+      LockmanManager.config.issueReporter = MockIssueReporter.self
+      defer { LockmanManager.config.issueReporter = originalReporter }
+      
       let action = MockErrorAction.unregisteredStrategy
       let cancelID = "test-cancel-id"
 
@@ -163,16 +221,25 @@ final class EffectLockmanErrorTests: XCTestCase {
         }
       ]
 
-      XCTExpectFailure("Effect.lock strategy 'MockUnregisteredStrategy' not registered") {
-        let effect = Effect<Never>.lock(
-          concatenating: operations,
-          action: action,
-          boundaryId: cancelID
-        )
+      let effect = Effect<Never>.lock(
+        concatenating: operations,
+        action: action,
+        boundaryId: cancelID
+      )
 
-        // Effect should handle the error gracefully
-        XCTAssertNotNil(effect)
-      }
+      // Effect should handle the error gracefully
+      XCTAssertNotNil(effect)
+      
+      // Verify error was reported with expected content
+      XCTAssertEqual(MockIssueReporter.capturedMessages.count, 1)
+      XCTAssertTrue(
+        MockIssueReporter.capturedMessages.first?.contains("MockUnregisteredStrategy") == true,
+        "Should contain strategy name"
+      )
+      XCTAssertTrue(
+        MockIssueReporter.capturedMessages.first?.contains("not registered") == true,
+        "Should contain 'not registered'"
+      )
     }
   }
 
@@ -181,37 +248,51 @@ final class EffectLockmanErrorTests: XCTestCase {
   func testHandleErrorProcessesStrategyNotRegisteredCorrectly() {
     let error = LockmanRegistrationError.strategyNotRegistered("MockUnregisteredStrategy")
 
-    // This would typically call reportIssue in a real environment
-    // For testing, we verify that the error handling path is reachable
-    XCTExpectFailure("Effect.lock strategy 'MockUnregisteredStrategy' not registered") {
-      Effect<Never>.handleError(
-        error: error,
-        fileID: #fileID,
-        filePath: #filePath,
-        line: #line,
-        column: #column
-      )
-    }
+    // Act - Use DI to inject mock reporter
+    Effect<Never>.handleError(
+      error: error,
+      fileID: #fileID,
+      filePath: #filePath,
+      line: #line,
+      column: #column,
+      reporter: MockIssueReporter.self
+    )
 
-    // If no crash occurs, the error was handled correctly
-    XCTAssertTrue(true)
+    // Assert
+    XCTAssertEqual(MockIssueReporter.capturedMessages.count, 1)
+    XCTAssertTrue(
+      MockIssueReporter.capturedMessages.first?.contains("MockUnregisteredStrategy") == true,
+      "Should contain strategy name"
+    )
+    XCTAssertTrue(
+      MockIssueReporter.capturedMessages.first?.contains("not registered") == true,
+      "Should contain 'not registered'"
+    )
   }
 
   func testHandleErrorProcessesStrategyAlreadyRegisteredCorrectly() {
     let error = LockmanRegistrationError.strategyAlreadyRegistered("LockmanSingleExecutionStrategy")
 
-    XCTExpectFailure("Effect.lock strategy 'LockmanSingleExecutionStrategy' already registered") {
-      Effect<Never>.handleError(
-        error: error,
-        fileID: #fileID,
-        filePath: #filePath,
-        line: #line,
-        column: #column
-      )
-    }
+    // Act - Use DI to inject mock reporter
+    Effect<Never>.handleError(
+      error: error,
+      fileID: #fileID,
+      filePath: #filePath,
+      line: #line,
+      column: #column,
+      reporter: MockIssueReporter.self
+    )
 
-    // If no crash occurs, the error was handled correctly
-    XCTAssertTrue(Bool(true))
+    // Assert
+    XCTAssertEqual(MockIssueReporter.capturedMessages.count, 1)
+    XCTAssertTrue(
+      MockIssueReporter.capturedMessages.first?.contains("LockmanSingleExecutionStrategy") == true,
+      "Should contain strategy name"
+    )
+    XCTAssertTrue(
+      MockIssueReporter.capturedMessages.first?.contains("already registered") == true,
+      "Should contain 'already registered'"
+    )
   }
 
   func testHandleErrorIgnoresNonLockmanErrorTypes() {
@@ -223,10 +304,12 @@ final class EffectLockmanErrorTests: XCTestCase {
       fileID: #fileID,
       filePath: #filePath,
       line: #line,
-      column: #column
+      column: #column,
+      reporter: MockIssueReporter.self
     )
 
-    XCTAssertTrue(Bool(true))
+    // Verify no error was reported for non-Lockman errors
+    XCTAssertEqual(MockIssueReporter.capturedMessages.count, 0, "Should not report non-Lockman errors")
   }
 
   // MARK: - Integration Error Tests
@@ -239,20 +322,34 @@ final class EffectLockmanErrorTests: XCTestCase {
     try? testContainer.register(LockmanPriorityBasedStrategy.shared)
 
     await LockmanManager.withTestContainer(testContainer) {
+      // Configure DI to use MockIssueReporter
+      let originalReporter = LockmanManager.config.issueReporter
+      LockmanManager.config.issueReporter = MockIssueReporter.self
+      defer { LockmanManager.config.issueReporter = originalReporter }
+      
       let action = MockValidAction.testAction  // Requires LockmanSingleExecutionStrategy
       let cancelID = "integration-test"
 
-      XCTExpectFailure("Effect.lock strategy 'LockmanSingleExecutionStrategy' not registered") {
-        let effect = Effect<Never>.run { _ in
-          XCTFail("Should not execute due to missing strategy")
-        }
-        .lock(
-          action: action,
-          boundaryId: cancelID
-        )
-
-        XCTAssertNotNil(effect)
+      let effect = Effect<Never>.run { _ in
+        XCTFail("Should not execute due to missing strategy")
       }
+      .lock(
+        action: action,
+        boundaryId: cancelID
+      )
+
+      XCTAssertNotNil(effect)
+      
+      // Verify error was reported with expected content
+      XCTAssertEqual(MockIssueReporter.capturedMessages.count, 1)
+      XCTAssertTrue(
+        MockIssueReporter.capturedMessages.first?.contains("LockmanSingleExecutionStrategy") == true,
+        "Should contain strategy name"
+      )
+      XCTAssertTrue(
+        MockIssueReporter.capturedMessages.first?.contains("not registered") == true,
+        "Should contain 'not registered'"
+      )
     }
   }
 
@@ -260,23 +357,39 @@ final class EffectLockmanErrorTests: XCTestCase {
     let testContainer = LockmanStrategyContainer()
 
     await LockmanManager.withTestContainer(testContainer) {
+      // Configure DI to use MockIssueReporter
+      let originalReporter = LockmanManager.config.issueReporter
+      LockmanManager.config.issueReporter = MockIssueReporter.self
+      defer { LockmanManager.config.issueReporter = originalReporter }
+      
       let actions = [
         MockErrorAction.unregisteredStrategy,
         MockErrorAction.validStrategy,
       ]
 
       for action in actions {
-        XCTExpectFailure("Effect.lock strategy 'MockUnregisteredStrategy' not registered") {
-          let effect = Effect<Never>.run { _ in
-            XCTFail("No operations should execute")
-          }
-          .lock(
-            action: action,
-            boundaryId: "multi-error-test"
-          )
-
-          XCTAssertNotNil(effect)
+        MockIssueReporter.reset()  // Reset for each iteration
+        
+        let effect = Effect<Never>.run { _ in
+          XCTFail("No operations should execute")
         }
+        .lock(
+          action: action,
+          boundaryId: "multi-error-test"
+        )
+
+        XCTAssertNotNil(effect)
+        
+        // Verify error was reported with expected content
+        XCTAssertEqual(MockIssueReporter.capturedMessages.count, 1)
+        XCTAssertTrue(
+          MockIssueReporter.capturedMessages.first?.contains("MockUnregisteredStrategy") == true,
+          "Should contain strategy name"
+        )
+        XCTAssertTrue(
+          MockIssueReporter.capturedMessages.first?.contains("not registered") == true,
+          "Should contain 'not registered'"
+        )
       }
     }
   }
@@ -288,20 +401,34 @@ final class EffectLockmanErrorTests: XCTestCase {
 
     // First attempt without registration
     await LockmanManager.withTestContainer(testContainer) {
+      // Configure DI to use MockIssueReporter
+      let originalReporter = LockmanManager.config.issueReporter
+      LockmanManager.config.issueReporter = MockIssueReporter.self
+      defer { LockmanManager.config.issueReporter = originalReporter }
+      
       let action = MockValidAction.testAction
       let cancelID = "recovery-test-1"
 
-      XCTExpectFailure("Effect.lock strategy 'LockmanSingleExecutionStrategy' not registered") {
-        let effect1 = Effect<Never>.run { _ in
-          XCTFail("Should fail without registration")
-        }
-        .lock(
-          action: action,
-          boundaryId: cancelID
-        )
-
-        XCTAssertNotNil(effect1)
+      let effect1 = Effect<Never>.run { _ in
+        XCTFail("Should fail without registration")
       }
+      .lock(
+        action: action,
+        boundaryId: cancelID
+      )
+
+      XCTAssertNotNil(effect1)
+      
+      // Verify error was reported
+      XCTAssertEqual(MockIssueReporter.capturedMessages.count, 1)
+      XCTAssertTrue(
+        MockIssueReporter.capturedMessages.first?.contains("LockmanSingleExecutionStrategy") == true,
+        "Should contain strategy name"
+      )
+      XCTAssertTrue(
+        MockIssueReporter.capturedMessages.first?.contains("not registered") == true,
+        "Should contain 'not registered'"
+      )
     }
 
     // Register the required strategy
@@ -330,15 +457,25 @@ final class EffectLockmanErrorTests: XCTestCase {
     let originalError = LockmanRegistrationError.strategyNotRegistered("DetailedStrategyName")
 
     // Verify error information is preserved through handleError
-    XCTExpectFailure("Effect.lock strategy 'DetailedStrategyName' not registered") {
-      Effect<Never>.handleError(
-        error: originalError,
-        fileID: #fileID,
-        filePath: #filePath,
-        line: #line,
-        column: #column
-      )
-    }
+    Effect<Never>.handleError(
+      error: originalError,
+      fileID: #fileID,
+      filePath: #filePath,
+      line: #line,
+      column: #column,
+      reporter: MockIssueReporter.self
+    )
+
+    // Verify error was reported with expected content
+    XCTAssertEqual(MockIssueReporter.capturedMessages.count, 1)
+    XCTAssertTrue(
+      MockIssueReporter.capturedMessages.first?.contains("DetailedStrategyName") == true,
+      "Should contain strategy name"
+    )
+    XCTAssertTrue(
+      MockIssueReporter.capturedMessages.first?.contains("not registered") == true,
+      "Should contain 'not registered'"
+    )
 
     // Test that error details are accessible
     switch originalError {
@@ -358,17 +495,25 @@ final class EffectLockmanErrorTests: XCTestCase {
     let testColumn: UInt = 10
 
     // Verify that source location parameters are accepted
-    XCTExpectFailure("Effect.lock strategy 'TestStrategy' already registered") {
-      Effect<Never>.handleError(
-        error: error,
-        fileID: testFileID,
-        filePath: testFilePath,
-        line: testLine,
-        column: testColumn
-      )
-    }
+    Effect<Never>.handleError(
+      error: error,
+      fileID: testFileID,
+      filePath: testFilePath,
+      line: testLine,
+      column: testColumn,
+      reporter: MockIssueReporter.self
+    )
 
-    XCTAssertTrue(Bool(true))  // Success if no crash
+    // Verify error was reported with expected content
+    XCTAssertEqual(MockIssueReporter.capturedMessages.count, 1)
+    XCTAssertTrue(
+      MockIssueReporter.capturedMessages.first?.contains("TestStrategy") == true,
+      "Should contain strategy name"
+    )
+    XCTAssertTrue(
+      MockIssueReporter.capturedMessages.first?.contains("already registered") == true,
+      "Should contain 'already registered'"
+    )
   }
 
   // MARK: - Edge Cases
@@ -386,17 +531,21 @@ final class EffectLockmanErrorTests: XCTestCase {
 
     let error = LockmanRegistrationError.strategyNotRegistered("")
 
-    XCTExpectFailure("Effect.lock strategy '' not registered") {
-      Effect<Never>.handleError(
-        error: error,
-        fileID: #fileID,
-        filePath: #filePath,
-        line: #line,
-        column: #column
-      )
-    }
+    Effect<Never>.handleError(
+      error: error,
+      fileID: #fileID,
+      filePath: #filePath,
+      line: #line,
+      column: #column,
+      reporter: MockIssueReporter.self
+    )
 
-    XCTAssertTrue(Bool(true))
+    // Verify error was reported with expected empty string
+    XCTAssertEqual(MockIssueReporter.capturedMessages.count, 1)
+    XCTAssertTrue(
+      MockIssueReporter.capturedMessages.first?.contains("strategy '' not registered") == true,
+      "Should contain empty strategy name"
+    )
   }
 
   func testErrorHandlingWithUnicodeActionNames() {
@@ -411,16 +560,24 @@ final class EffectLockmanErrorTests: XCTestCase {
 
     let error = LockmanRegistrationError.strategyNotRegistered("UnicodeStrategy🌟")
 
-    XCTExpectFailure("Effect.lock strategy 'UnicodeStrategy🌟' not registered") {
-      Effect<Never>.handleError(
-        error: error,
-        fileID: #fileID,
-        filePath: #filePath,
-        line: #line,
-        column: #column
-      )
-    }
+    Effect<Never>.handleError(
+      error: error,
+      fileID: #fileID,
+      filePath: #filePath,
+      line: #line,
+      column: #column,
+      reporter: MockIssueReporter.self
+    )
 
-    XCTAssertTrue(Bool(true))
+    // Verify error was reported with Unicode content
+    XCTAssertEqual(MockIssueReporter.capturedMessages.count, 1)
+    XCTAssertTrue(
+      MockIssueReporter.capturedMessages.first?.contains("UnicodeStrategy🌟") == true,
+      "Should contain Unicode strategy name"
+    )
+    XCTAssertTrue(
+      MockIssueReporter.capturedMessages.first?.contains("not registered") == true,
+      "Should contain 'not registered'"
+    )
   }
 }

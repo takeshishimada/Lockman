@@ -250,32 +250,30 @@ extension Effect {
   ///   - filePath: Full file path where error originated (auto-populated)
   ///   - line: Line number where error originated (auto-populated)
   ///   - column: Column number where error originated (auto-populated)
+  ///   - reporter: Issue reporter to use (defaults to LockmanManager.config.issueReporter)
   static func handleError(
     error: any Error,
     fileID: StaticString,
     filePath: StaticString,
     line: UInt,
-    column: UInt
+    column: UInt,
+    reporter: any LockmanIssueReporter.Type = LockmanManager.config.issueReporter
   ) {
     // Check if the error is a known LockmanRegistrationError type
     if let error = error as? LockmanRegistrationError {
       switch error {
       case .strategyNotRegistered(let strategyType):
-        reportIssue(
+        reporter.reportIssue(
           "Effect.lock strategy '\(strategyType)' not registered. Register before use.",
-          fileID: fileID,
-          filePath: filePath,
-          line: line,
-          column: column
+          file: fileID,
+          line: line
         )
 
       case .strategyAlreadyRegistered(let strategyType):
-        reportIssue(
+        reporter.reportIssue(
           "Effect.lock strategy '\(strategyType)' already registered.",
-          fileID: fileID,
-          filePath: filePath,
-          line: line,
-          column: column
+          file: fileID,
+          line: line
         )
       @unknown default:
         break

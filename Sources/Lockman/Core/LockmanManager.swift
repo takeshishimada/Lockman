@@ -27,6 +27,14 @@ public enum LockmanManager {
     /// Default value is `false` to silently ignore cancellation errors.
     var handleCancellationErrors: Bool = false
 
+    /// The issue reporter to use for reporting diagnostic messages.
+    ///
+    /// This reporter is used throughout the framework for error reporting and diagnostics.
+    /// Can be customized for different environments or testing scenarios.
+    ///
+    /// Default value is `LockmanDefaultIssueReporter` for console output in debug builds.
+    var issueReporter: any LockmanIssueReporter.Type = LockmanDefaultIssueReporter.self
+
     /// Creates a new configuration with default values.
     init() {}
   }
@@ -70,6 +78,22 @@ public enum LockmanManager {
       get { _configuration.withCriticalRegion { $0.handleCancellationErrors } }
       set {
         _configuration.withCriticalRegion { $0.handleCancellationErrors = newValue }
+      }
+    }
+
+    /// The issue reporter to use for reporting diagnostic messages.
+    ///
+    /// This reporter is used throughout the framework for error reporting and diagnostics.
+    /// Can be customized for different environments or testing scenarios.
+    ///
+    /// ```swift
+    /// // Set custom issue reporter
+    /// LockmanManager.config.issueReporter = LockmanComposableIssueReporter.self
+    /// ```
+    public static var issueReporter: any LockmanIssueReporter.Type {
+      get { _configuration.withCriticalRegion { $0.issueReporter } }
+      set {
+        _configuration.withCriticalRegion { $0.issueReporter = newValue }
       }
     }
 

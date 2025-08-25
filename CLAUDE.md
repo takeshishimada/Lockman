@@ -12,6 +12,21 @@ Develop a library to implement exclusive control of user actions in application 
 ## Current Work Items
 All v1.0 roadmap features have been completed
 
+## Known Issues
+
+### Action-Level Lock Method Crash (2025-08-19)
+**Problem**: `LockmanDynamicConditionReducer`の`lock`メソッド（action-level）でクラッシュが発生
+**Root Cause**: 循環参照 - reducerの初期化中にそのreducer自身のメソッドを呼び出している
+**Stack Trace**: `outlined init with copy of LockmanDynamicConditionReducer` でクラッシュ
+**Impact**: Action-Level lockメソッド（188-226行）が0%カバレッジで未テスト状態
+**Status**: 修正予定
+
+### LockmanIssueReporter Protocol Integration Issue (2025-08-18) 
+**Problem**: `LockmanIssueReporter`プロトコルが定義されているが、実際の実装では直接`reportIssue`を呼び出している設計上の不一致
+**Location**: Effect+LockmanInternal.swift handleError method
+**Impact**: プロトコルベースの抽象化が活用されていない
+**Status**: 修正予定
+
 ## Development Guidelines
 - Swift versions: 6.0, 5.10, 5.9
 - Type-safe implementation
