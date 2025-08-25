@@ -416,6 +416,97 @@ final class EffectLockmanInternalTests: XCTestCase {
     // Should complete without error (using default reporter)
     XCTAssertTrue(true)
   }
+
+  // MARK: - Ultra Think Tests: Previously Uncovered Regions
+
+  /// Test Line 153-154: unlock effect actually executes unlockToken()
+  func testUnlockEffectActualExecution() async {
+    let strategy = TestUnlockTrackingStrategy()
+    let container = LockmanStrategyContainer()
+    try! container.register(strategy)
+
+    await LockmanManager.withTestContainer(container) {
+      let store = await TestStore(initialState: TestUnlockFeature.State()) {
+        TestUnlockFeature()
+      }
+
+      // Verify initial state
+      XCTAssertEqual(strategy.unlockCallCount, 0)
+
+      // Send action that triggers lock effect
+      await store.send(.performAction) {
+        $0.isRunning = true
+      }
+
+      // Wait for action completion
+      await store.receive(\.actionCompleted) {
+        $0.isRunning = false
+        $0.completedCount = 1
+      }
+
+      // Critical: Wait for all effects to complete (including unlock effect)
+      await store.finish()
+
+      // Verify unlock was actually called
+      XCTAssertEqual(strategy.unlockCallCount, 1)
+    }
+  }
+
+  /// Test Line 195-196: .cancel case with handler execution
+  func testCancelResultWithHandlerExecution() async {
+    let strategy = TestSingleExecutionStrategy()
+    let container = LockmanStrategyContainer()
+    try! container.register(strategy)
+
+    await LockmanManager.withTestContainer(container) {
+      let store = await TestStore(initialState: TestHandlerFeature.State()) {
+        TestHandlerFeature()
+      }
+
+      // First lock acquisition
+      await store.send(.firstAction) {
+        $0.firstRunning = true
+      }
+
+      // Second lock should be blocked and handler should be called
+      await store.send(.secondActionWithHandler)
+
+      // Handler should be called with error message
+      await store.receive(\.handlerCalled) {
+        $0.handlerCalled = true
+        $0.lastError = "Lock acquisition failed"
+      }
+
+      // First action completes
+      await store.receive(\.firstCompleted) {
+        $0.firstRunning = false
+      }
+
+      await store.finish()
+    }
+  }
+
+  /// Test Line 214-215: catch block with handler execution
+  func testCatchBlockWithHandlerExecution() async {
+    let container = LockmanStrategyContainer()  // Empty container
+
+    await LockmanManager.withTestContainer(container) {
+      let store = await TestStore(initialState: TestHandlerFeature.State()) {
+        TestHandlerFeature()
+      }
+
+      // This should trigger strategy resolution error and call handler
+      await store.send(.actionWithHandler)
+
+      // Handler should be called with error message
+      await store.receive(\.handlerCalled) {
+        $0.handlerCalled = true
+        $0.lastError = "Strategy resolution failed"
+      }
+
+      await store.finish()
+    }
+  }
 }
 
 // MARK: - Test Helper Classes
@@ -1018,4 +1109,165 @@ private final class MockStrategyWithPrecedingCancellation: LockmanStrategy, @unc
   func cleanUp() {}
   func cleanUp<B: LockmanBoundaryId>(boundaryId: B) {}
   func getCurrentLocks() -> [AnyLockmanBoundaryId: [any LockmanInfo]] { [:] }
+}
+
+// MARK: - Ultra Think Test Support Classes
+
+/// Mock strategy that tracks unlock calls to verify Line 153-154 execution
+private final class TestUnlockTrackingStrategy: LockmanStrategy, @unchecked Sendable {
+  typealias I = TestLockmanInfo
+
+  var strategyId: LockmanStrategyId { LockmanStrategyId(name: "TestUnlockTrackingStrategy") }
+  static func makeStrategyId() -> LockmanStrategyId {
+    LockmanStrategyId(name: "TestUnlockTrackingStrategy")
+  }
+
+  private let lock = NSLock()
+  private var _unlockCallCount = 0
+
+  var unlockCallCount: Int {
+    lock.withLock { _unlockCallCount }
+  }
+
+  func canLock<B: LockmanBoundaryId>(boundaryId: B, info: TestLockmanInfo) -> LockmanResult {
+    .success
+  }
+  func lock<B: LockmanBoundaryId>(boundaryId: B, info: TestLockmanInfo) {}
+
+  func unlock<B: LockmanBoundaryId>(boundaryId: B, info: TestLockmanInfo) {
+    lock.withLock { _unlockCallCount += 1 }
+  }
+
+  func cleanUp() { lock.withLock { _unlockCallCount = 0 } }
+  func cleanUp<B: LockmanBoundaryId>(boundaryId: B) {}
+  func getCurrentLocks() -> [AnyLockmanBoundaryId: [any LockmanInfo]] { [:] }
+}
+
+/// Test feature for verifying unlock effect execution
+@Reducer
+private struct TestUnlockFeature {
+  struct State: Equatable {
+    var isRunning = false
+    var completedCount = 0
+  }
+
+  enum Action: Equatable, LockmanAction {
+    case performAction
+    case actionCompleted
+
+    func createLockmanInfo() -> TestLockmanInfo {
+      TestLockmanInfo(
+        actionId: "performAction",
+        strategyId: TestUnlockTrackingStrategy.makeStrategyId()
+      )
+    }
+  }
+
+  var body: some ReducerOf<Self> {
+    Reduce { state, action in
+      switch action {
+      case .performAction:
+        state.isRunning = true
+        return .run { send in
+          try await Task.sleep(nanoseconds: 10_000_000)  // 10ms
+          await send(.actionCompleted)
+        }
+        .lock(
+          action: action,
+          boundaryId: TestBoundaryId.test,
+          unlockOption: .immediate
+        )
+
+      case .actionCompleted:
+        state.isRunning = false
+        state.completedCount += 1
+        return .none
+      }
+    }
+  }
+}
+
+/// Test feature for verifying handler execution in error cases
+@Reducer
+private struct TestHandlerFeature {
+  struct State: Equatable {
+    var firstRunning = false
+    var handlerCalled = false
+    var lastError: String?
+  }
+
+  enum Action: Equatable, LockmanAction {
+    case firstAction
+    case secondActionWithHandler
+    case actionWithHandler
+    case firstCompleted
+    case handlerCalled(String)
+
+    func createLockmanInfo() -> TestLockmanInfo {
+      switch self {
+      case .firstAction, .secondActionWithHandler:
+        return TestLockmanInfo(
+          actionId: "sharedAction",
+          strategyId: TestSingleExecutionStrategy.makeStrategyId()
+        )
+      case .actionWithHandler:
+        return TestLockmanInfo(
+          actionId: "action",
+          strategyId: LockmanStrategyId(name: "NonExistentStrategy")
+        )
+      case .firstCompleted, .handlerCalled:
+        return TestLockmanInfo(
+          actionId: "other",
+          strategyId: TestSingleExecutionStrategy.makeStrategyId()
+        )
+      }
+    }
+  }
+
+  var body: some ReducerOf<Self> {
+    Reduce { state, action in
+      switch action {
+      case .firstAction:
+        state.firstRunning = true
+        return .run { send in
+          try await Task.sleep(nanoseconds: 50_000_000)  // 50ms
+          await send(.firstCompleted)
+        }
+        .lock(action: action, boundaryId: TestBoundaryId.test)
+
+      case .secondActionWithHandler:
+        return .run { send in
+          // This will be blocked and handler will be called
+        }
+        .lock(
+          action: action,
+          boundaryId: TestBoundaryId.test,
+          lockFailure: { error, send in
+            await send(.handlerCalled("Lock acquisition failed"))
+          }
+        )
+
+      case .actionWithHandler:
+        return .run { send in
+          // This will trigger strategy resolution error
+        }
+        .lock(
+          action: action,
+          boundaryId: TestBoundaryId.test,
+          lockFailure: { error, send in
+            await send(.handlerCalled("Strategy resolution failed"))
+          }
+        )
+
+      case .firstCompleted:
+        state.firstRunning = false
+        return .none
+
+      case .handlerCalled(let errorMessage):
+        state.handlerCalled = true
+        state.lastError = errorMessage
+        return .none
+      }
+    }
+  }
 }
