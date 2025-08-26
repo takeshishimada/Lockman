@@ -553,23 +553,23 @@ private struct TestSingleExecutionFeature {
     Reduce<State, Action> { state, action in
       switch action {
       case .tapIncrement:
-        return .run { send in
-          await send(.increment)
-        }
-        .lock(
+        return Effect.lock(
+          operation: .run { send in
+            await send(.increment)
+          },
+          unlockOption: .immediate,
           action: action,
-          boundaryId: CancelID.userAction,
-          unlockOption: .immediate
+          boundaryId: CancelID.userAction
         )
 
       case .tapDecrement:
-        return .run { send in
-          await send(.decrement)
-        }
-        .lock(
+        return Effect.lock(
+          operation: .run { send in
+            await send(.decrement)
+          },
+          unlockOption: .immediate,
           action: action,
-          boundaryId: CancelID.userAction,
-          unlockOption: .immediate
+          boundaryId: CancelID.userAction
         )
 
       case .increment:
@@ -623,23 +623,23 @@ private struct TestMultiIdFeature {
     Reduce<State, Action> { state, action in
       switch action {
       case .actionWithId1:
-        return .run { send in
-          await send(.increment)
-        }
-        .lock(
+        return Effect.lock(
+          operation: .run { send in
+            await send(.increment)
+          },
+          unlockOption: .immediate,
           action: action,
-          boundaryId: CancelID.id1,
-          unlockOption: .immediate
+          boundaryId: CancelID.id1
         )
 
       case .actionWithId2:
-        return .run { send in
-          await send(.increment)
-        }
-        .lock(
+        return Effect.lock(
+          operation: .run { send in
+            await send(.increment)
+          },
+          unlockOption: .immediate,
           action: action,
-          boundaryId: CancelID.id2,
-          unlockOption: .immediate
+          boundaryId: CancelID.id2
         )
 
       case .increment:

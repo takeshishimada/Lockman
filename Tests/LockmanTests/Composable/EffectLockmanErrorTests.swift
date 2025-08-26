@@ -111,10 +111,10 @@ final class EffectLockmanErrorTests: XCTestCase {
       let operationExecuted = LockIsolated(false)
 
       // This should return a valid effect but the operation should not execute
-      let effect = Effect<Never>.run { _ in
-        operationExecuted.setValue(true)
-      }
-      .lock(
+      let effect = Effect.lock(
+        operation: Effect<Never>.run { _ in
+          operationExecuted.setValue(true)
+        },
         action: action,
         boundaryId: cancelID
       )
@@ -148,10 +148,10 @@ final class EffectLockmanErrorTests: XCTestCase {
       let cancelID = "test-cancel-id"
 
       // This should create a valid effect since strategy is registered
-      let effect = Effect<Never>.run { _ in
-        // This operation would execute in a real environment
-      }
-      .lock(
+      let effect = Effect.lock(
+        operation: Effect<Never>.run { _ in
+          // This operation would execute in a real environment
+        },
         action: action,
         boundaryId: cancelID
       )
@@ -175,12 +175,12 @@ final class EffectLockmanErrorTests: XCTestCase {
       let operationExecuted = LockIsolated(false)
       let unlockProvided = LockIsolated(false)
 
-      let effect = Effect<Never>.run { _ in
-        operationExecuted.setValue(true)
-        unlockProvided.setValue(true)
-        XCTFail("Operation should not execute with unregistered strategy")
-      }
-      .lock(
+      let effect = Effect.lock(
+        operation: Effect<Never>.run { _ in
+          operationExecuted.setValue(true)
+          unlockProvided.setValue(true)
+          XCTFail("Operation should not execute with unregistered strategy")
+        },
         action: action,
         boundaryId: cancelID
       )
@@ -331,10 +331,10 @@ final class EffectLockmanErrorTests: XCTestCase {
       let action = MockValidAction.testAction  // Requires LockmanSingleExecutionStrategy
       let cancelID = "integration-test"
 
-      let effect = Effect<Never>.run { _ in
-        XCTFail("Should not execute due to missing strategy")
-      }
-      .lock(
+      let effect = Effect.lock(
+        operation: Effect<Never>.run { _ in
+          XCTFail("Should not execute due to missing strategy")
+        },
         action: action,
         boundaryId: cancelID
       )
@@ -372,10 +372,10 @@ final class EffectLockmanErrorTests: XCTestCase {
       for action in actions {
         MockIssueReporter.reset()  // Reset for each iteration
 
-        let effect = Effect<Never>.run { _ in
-          XCTFail("No operations should execute")
-        }
-        .lock(
+        let effect = Effect.lock(
+          operation: Effect<Never>.run { _ in
+            XCTFail("No operations should execute")
+          },
           action: action,
           boundaryId: "multi-error-test"
         )
@@ -411,10 +411,10 @@ final class EffectLockmanErrorTests: XCTestCase {
       let action = MockValidAction.testAction
       let cancelID = "recovery-test-1"
 
-      let effect1 = Effect<Never>.run { _ in
-        XCTFail("Should fail without registration")
-      }
-      .lock(
+      let effect1 = Effect.lock(
+        operation: Effect<Never>.run { _ in
+          XCTFail("Should fail without registration")
+        },
         action: action,
         boundaryId: cancelID
       )
@@ -442,10 +442,10 @@ final class EffectLockmanErrorTests: XCTestCase {
       let action = MockValidAction.testAction
       let cancelID = "recovery-test-2"
 
-      let effect2 = Effect<Never>.run { _ in
-        // This would execute successfully in real environment
-      }
-      .lock(
+      let effect2 = Effect.lock(
+        operation: Effect<Never>.run { _ in
+          // This would execute successfully in real environment
+        },
         action: action,
         boundaryId: cancelID
       )

@@ -141,13 +141,11 @@ final class EffectWithLockPrecedingCancellationTests: XCTestCase {
         switch action {
         case .startLowPriority:
           state.lowPriorityRunning = true
-          return .run { send in
-            try? await Task.sleep(nanoseconds: 100_000_000)  // 0.1 second
-            await send(.taskCompleted(.low))
-          }
-          .lock(
-            action: PriorityBasedAction.lowPriority,
-            boundaryId: CancelID.task,
+          return Effect.lock(
+            operation: .run { send in
+              try? await Task.sleep(nanoseconds: 100_000_000)  // 0.1 second
+              await send(.taskCompleted(.low))
+            },
             lockFailure: { error, send in
               if let cancellationError = error as? LockmanCancellationError,
                 let priorityError = cancellationError.reason as? LockmanPriorityBasedError,
@@ -155,18 +153,18 @@ final class EffectWithLockPrecedingCancellationTests: XCTestCase {
               {
                 await send(.lockFailureOccurred(cancelledInfo.actionId))
               }
-            }
+            },
+            action: PriorityBasedAction.lowPriority,
+            boundaryId: CancelID.task
           )
 
         case .startHighPriority:
           state.highPriorityRunning = true
-          return .run { send in
-            try? await Task.sleep(nanoseconds: 50_000_000)  // 0.05 second
-            await send(.taskCompleted(.high))
-          }
-          .lock(
-            action: PriorityBasedAction.highExclusive,
-            boundaryId: CancelID.task,
+          return Effect.lock(
+            operation: .run { send in
+              try? await Task.sleep(nanoseconds: 50_000_000)  // 0.05 second
+              await send(.taskCompleted(.high))
+            },
             lockFailure: { error, send in
               if let cancellationError = error as? LockmanCancellationError,
                 let priorityError = cancellationError.reason as? LockmanPriorityBasedError,
@@ -174,7 +172,9 @@ final class EffectWithLockPrecedingCancellationTests: XCTestCase {
               {
                 await send(.lockFailureOccurred(cancelledInfo.actionId))
               }
-            }
+            },
+            action: PriorityBasedAction.highExclusive,
+            boundaryId: CancelID.task
           )
 
         case .taskCompleted(let priority):

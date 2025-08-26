@@ -457,57 +457,56 @@ final class EffectLockmanInternalTests: XCTestCase {
     let strategy = TestSingleExecutionStrategy()
     let container = LockmanStrategyContainer()
     try! container.register(strategy)
-    
+
     await LockmanManager.withTestContainer(container) {
       let store = await TestStore(initialState: TestHandlerSendFeature.State()) {
         TestHandlerSendFeature()
       }
-      
+
       // First action to establish lock
       await store.send(.firstAction) {
         $0.isRunning = true
       }
-      
+
       // Second action that should trigger handler execution in Effect.run
       await store.send(.secondActionWithSendHandler)
-      
+
       // Critical: Receive the action sent from inside Effect.run handler
       await store.receive(\.handlerWasExecuted) {
         $0.handlerExecutionCount = 1
         $0.lastHandlerError = "Lock acquisition failed"
       }
-      
+
       // Complete first action
       await store.receive(\.firstCompleted) {
         $0.isRunning = false
       }
-      
+
       await store.finish()
     }
   }
-  
+
   /// Test Line 214-215: catch block handler execution via send action
   func testCatchBlockHandlerExecutionViaSend() async {
-    let container = LockmanStrategyContainer() // Empty - triggers error
-    
+    let container = LockmanStrategyContainer()  // Empty - triggers error
+
     await LockmanManager.withTestContainer(container) {
       let store = await TestStore(initialState: TestHandlerSendFeature.State()) {
         TestHandlerSendFeature()
       }
-      
+
       // This should trigger strategy resolution error and handler in catch block
       await store.send(.errorActionWithSendHandler)
-      
+
       // Critical: Receive the action sent from inside catch block Effect.run handler
       await store.receive(\.handlerWasExecuted) {
         $0.handlerExecutionCount = 1
         $0.lastHandlerError = "Strategy resolution failed"
       }
-      
+
       await store.finish()
     }
   }
-  
 
 }
 
@@ -937,27 +936,27 @@ private struct TestLockFeature {
       switch action {
       case .startOperation:
         state.isRunning = true
-        return .run { send in
-          try await Task.sleep(nanoseconds: 50_000_000)  // 0.05 seconds
-          await send(.operationCompleted)
-        }
-        .lock(
+        return Effect.lock(
+          operation: .run { send in
+            try await Task.sleep(nanoseconds: 50_000_000)  // 0.05 seconds
+            await send(.operationCompleted)
+          },
           action: action,
           boundaryId: TestLockBoundaryId.operation
         )
 
       case .startOperationWithHandler:
         state.isRunning = true
-        return .run { send in
-          try await Task.sleep(nanoseconds: 50_000_000)  // 0.05 seconds
-          await send(.operationCompleted)
-        }
-        .lock(
-          action: action,
-          boundaryId: TestLockBoundaryId.operation,
+        return Effect.lock(
+          operation: .run { send in
+            try await Task.sleep(nanoseconds: 50_000_000)  // 0.05 seconds
+            await send(.operationCompleted)
+          },
           lockFailure: { _, send in
             await send(.handlerCalled)
-          }
+          },
+          action: action,
+          boundaryId: TestLockBoundaryId.operation
         )
 
       case .operationCompleted:
@@ -988,11 +987,11 @@ private struct TestLockFeatureNoHandler {
       switch action {
       case .startOperation:
         state.isRunning = true
-        return .run { send in
-          try await Task.sleep(nanoseconds: 50_000_000)  // 0.05 seconds
-          await send(.operationCompleted)
-        }
-        .lock(
+        return Effect.lock(
+          operation: .run { send in
+            try await Task.sleep(nanoseconds: 50_000_000)  // 0.05 seconds
+            await send(.operationCompleted)
+          },
           action: action,
           boundaryId: TestLockBoundaryId.operation
             // No lockFailure handler - this tests the no-handler code paths
@@ -1001,11 +1000,11 @@ private struct TestLockFeatureNoHandler {
       case .startOperationWithHandler:
         // Same as startOperation for this reducer (no handler)
         state.isRunning = true
-        return .run { send in
-          try await Task.sleep(nanoseconds: 50_000_000)  // 0.05 seconds
-          await send(.operationCompleted)
-        }
-        .lock(
+        return Effect.lock(
+          operation: .run { send in
+            try await Task.sleep(nanoseconds: 50_000_000)  // 0.05 seconds
+            await send(.operationCompleted)
+          },
           action: action,
           boundaryId: TestLockBoundaryId.operation
         )
@@ -1194,14 +1193,14 @@ private struct TestUnlockFeature {
       switch action {
       case .performAction:
         state.isRunning = true
-        return .run { send in
-          try await Task.sleep(nanoseconds: 10_000_000)  // 10ms
-          await send(.actionCompleted)
-        }
-        .lock(
+        return Effect.lock(
+          operation: .run { send in
+            try await Task.sleep(nanoseconds: 10_000_000)  // 10ms
+            await send(.actionCompleted)
+          },
+          unlockOption: .immediate,
           action: action,
-          boundaryId: TestBoundaryId.test,
-          unlockOption: .immediate
+          boundaryId: TestBoundaryId.test
         )
 
       case .actionCompleted:
@@ -1221,14 +1220,14 @@ private struct TestHandlerSendFeature {
     var handlerExecutionCount = 0
     var lastHandlerError: String?
   }
-  
+
   enum Action: Equatable, LockmanAction {
     case firstAction
     case secondActionWithSendHandler
     case errorActionWithSendHandler
     case firstCompleted
     case handlerWasExecuted(String)
-    
+
     func createLockmanInfo() -> TestLockmanInfo {
       switch self {
       case .firstAction, .secondActionWithSendHandler:
@@ -1249,48 +1248,51 @@ private struct TestHandlerSendFeature {
       }
     }
   }
-  
+
   var body: some ReducerOf<Self> {
     Reduce { state, action in
       switch action {
       case .firstAction:
         state.isRunning = true
-        return .run { send in
-          try await Task.sleep(nanoseconds: 50_000_000) // 50ms
-          await send(.firstCompleted)
-        }
-        .lock(action: action, boundaryId: TestBoundaryId.test)
-        
-      case .secondActionWithSendHandler:
-        return .run { send in
-          // This will be blocked and handler will be called
-        }
-        .lock(
+        return Effect.lock(
+          operation: .run { send in
+            try await Task.sleep(nanoseconds: 50_000_000)  // 50ms
+            await send(.firstCompleted)
+          },
           action: action,
-          boundaryId: TestBoundaryId.test,
+          boundaryId: TestBoundaryId.test
+        )
+
+      case .secondActionWithSendHandler:
+        return Effect.lock(
+          operation: .run { send in
+            // This will be blocked and handler will be called
+          },
           lockFailure: { error, send in
             // Critical: Send action from inside Effect.run handler (Line 195-196)
             await send(.handlerWasExecuted("Lock acquisition failed"))
-          }
-        )
-        
-      case .errorActionWithSendHandler:
-        return .run { send in
-          // This will trigger strategy resolution error
-        }
-        .lock(
+          },
           action: action,
-          boundaryId: TestBoundaryId.test,
+          boundaryId: TestBoundaryId.test
+        )
+
+      case .errorActionWithSendHandler:
+        return Effect.lock(
+          operation: .run { send in
+            // This will trigger strategy resolution error
+          },
           lockFailure: { error, send in
             // Critical: Send action from inside catch block handler (Line 214-215)
             await send(.handlerWasExecuted("Strategy resolution failed"))
-          }
+          },
+          action: action,
+          boundaryId: TestBoundaryId.test
         )
-        
+
       case .firstCompleted:
         state.isRunning = false
         return .none
-        
+
       case .handlerWasExecuted(let errorMessage):
         state.handlerExecutionCount += 1
         state.lastHandlerError = errorMessage
@@ -1299,5 +1301,3 @@ private struct TestHandlerSendFeature {
     }
   }
 }
-
-

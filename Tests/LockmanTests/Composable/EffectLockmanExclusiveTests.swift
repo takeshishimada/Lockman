@@ -410,13 +410,13 @@ private struct TestFeature {
     Reduce { _, action in
       switch action {
       case .testAction:
-        return .run(priority: nil) { send in
-          await send(.completed)
-        }
-        .lock(
+        return Effect.lock(
+          operation: .run(priority: nil) { send in
+            await send(.completed)
+          },
+          unlockOption: .mainRunLoop,
           action: action,
-          boundaryId: CancelID.test,
-          unlockOption: .mainRunLoop
+          boundaryId: CancelID.test
         )
       case .completed:
         return .none

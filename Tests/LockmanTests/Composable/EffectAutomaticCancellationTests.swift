@@ -50,11 +50,11 @@ private struct AutoCancellationTestFeature {
       case .startOperation:
         state.isRunning = true
         // Test: No manual cancellation ID needed - automatic application
-        return .run { send in
-          try await Task.sleep(nanoseconds: 200_000_000)  // 0.2 seconds
-          await send(.operationCompleted)
-        }
-        .lock(
+        return Effect.lock(
+          operation: .run { send in
+            try await Task.sleep(nanoseconds: 200_000_000)  // 0.2 seconds
+            await send(.operationCompleted)
+          },
           action: action,
           boundaryId: AutoCancellationTestCancelID.operation
         )

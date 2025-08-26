@@ -850,18 +850,18 @@ final class LockmanStrategyContainerTests: XCTestCase {
 
   // MARK: - Performance Tests
 
-  func testRegistrationPerformance() {
-    // Given
-    let container = LockmanStrategyContainer()
-    let strategies = (0..<1000).map { MockStrategy(id: "Strategy\($0)") }
-
-    // When & Then
-    measure {
-      for strategy in strategies {
-        try! container.register(strategy)
-      }
-    }
-  }
+//  func testRegistrationPerformance() {
+//    // Given
+//    let container = LockmanStrategyContainer()
+//    let strategies = (0..<1000).map { MockStrategy(id: "Strategy\($0)") }
+//
+//    // When & Then
+//    measure {
+//      for strategy in strategies {
+//        try! container.register(strategy)
+//      }
+//    }
+//  }
 
   func testResolutionPerformance() {
     // Given

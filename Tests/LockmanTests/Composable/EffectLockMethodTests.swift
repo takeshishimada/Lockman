@@ -45,11 +45,11 @@ private struct TestFeature {
       switch action {
       case .fetch:
         state.isLoading = true
-        return .run { send in
-          try await Task.sleep(nanoseconds: 100_000_000)  // 0.1 seconds
-          await send(.fetchCompleted(42))
-        }
-        .lock(
+        return Effect.lock(
+          operation: .run { send in
+            try await Task.sleep(nanoseconds: 100_000_000)  // 0.1 seconds
+            await send(.fetchCompleted(42))
+          },
           action: action,
           boundaryId: TestFeatureCancelID.fetch
         )
@@ -108,16 +108,16 @@ final class EffectLockMethodTests: XCTestCase {
           switch action {
           case .fetch:
             state.isLoading = true
-            return .run { send in
-              try await Task.sleep(nanoseconds: 200_000_000)  // 0.2 seconds
-              await send(.fetchCompleted(42))
-            }
-            .lock(
-              action: action,
-              boundaryId: TestFeatureCancelID.fetch,
+            return Effect.lock(
+              operation: .run { send in
+                try await Task.sleep(nanoseconds: 200_000_000)  // 0.2 seconds
+                await send(.fetchCompleted(42))
+              },
               lockFailure: { _, send in
                 await send(.lockFailed)
-              }
+              },
+              action: action,
+              boundaryId: TestFeatureCancelID.fetch
             )
 
           case .fetchCompleted(let value):

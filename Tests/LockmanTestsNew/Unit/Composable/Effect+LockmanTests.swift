@@ -236,20 +236,18 @@ final class EffectLockmanTests: XCTestCase {
         }
       ]
 
-      // Test with handleCancellationErrors = true
+      // Test concatenating lock
       let effectHandlingErrors = Effect.lock(
         concatenating: effects,
         unlockOption: .immediate,
-        handleCancellationErrors: true,
         action: action,
         boundaryId: boundaryId
       )
 
-      // Test with handleCancellationErrors = false
+      // Test another concatenating lock
       let effectIgnoringErrors = Effect.lock(
         concatenating: effects,
         unlockOption: .immediate,
-        handleCancellationErrors: false,
         action: action,
         boundaryId: boundaryId
       )
@@ -294,7 +292,6 @@ final class EffectLockmanTests: XCTestCase {
         concatenating: effects,
         priority: .high,
         unlockOption: .delayed(2.0),
-        handleCancellationErrors: true,
         lockFailure: lockFailureHandler,
         action: action,
         boundaryId: boundaryId
