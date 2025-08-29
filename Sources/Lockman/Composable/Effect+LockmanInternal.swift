@@ -174,7 +174,7 @@ extension Effect {
         )
         if let handler = handler {
           return .concatenate([
-            .run { send in await handler(cancellationError, send) },
+            Effect.createHandlerEffect(handler: handler, error: cancellationError),
             .cancel(id: boundaryId),
             completeEffect,
           ])
@@ -190,12 +190,7 @@ extension Effect {
           boundaryId: boundaryId,
           reason: error
         )
-        if let handler = handler {
-          return .run { send in
-            await handler(cancellationError, send)
-          }
-        }
-        return .none
+        return Effect.createHandlerEffect(handler: handler, error: cancellationError)
       @unknown default:
         return .none
       }
@@ -209,12 +204,7 @@ extension Effect {
         line: line,
         column: column
       )
-      if let handler = handler {
-        return .run { send in
-          await handler(error, send)
-        }
-      }
-      return .none
+      return Effect.createHandlerEffect(handler: handler, error: error)
     }
   }
 
@@ -374,12 +364,7 @@ extension Effect {
         line: line,
         column: column
       )
-      if let lockFailure = lockFailure {
-        return .run { send in
-          await lockFailure(error, send)
-        }
-      }
-      return .none
+      return createHandlerEffect(handler: lockFailure, error: error)
     }
   }
 
@@ -477,14 +462,7 @@ extension Effect {
       case .cancel(let error):
         // ❌ Lock cannot be acquired - do NOT execute reducer
         // State mutations are prevented, achieving true lock-first behavior
-        if let lockFailure = lockFailure {
-          return .run { send in
-            await lockFailure(error, send)
-          }
-        } else {
-          // No lock failure handler - return .none (effect is cancelled)
-          return .none
-        }
+        return Effect.createHandlerEffect(handler: lockFailure, error: error)
       }
     } catch {
       // Handle and report strategy resolution errors
@@ -495,12 +473,23 @@ extension Effect {
         line: line,
         column: column
       )
-      if let lockFailure = lockFailure {
-        return .run { send in
-          await lockFailure(error, send)
-        }
-      }
+      return createHandlerEffect(handler: lockFailure, error: error)
+    }
+  }
+
+  // MARK: - Private Helper Methods
+
+  /// Creates an effect that calls the provided handler with the given error.
+  /// Returns .none if handler is nil.
+  private static func createHandlerEffect<T>(
+    handler: (@Sendable (_ error: any Error, _ send: Send<Action>) async -> Void)?,
+    error: T
+  ) -> Effect<Action> where T: Error {
+    guard let handler = handler else {
       return .none
+    }
+    return .run { send in
+      await handler(error, send)
     }
   }
 
