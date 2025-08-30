@@ -227,7 +227,7 @@ public final class TestSingleExecutionStrategy: LockmanStrategy, @unchecked Send
   }
 }
 
-/// Common test support utilities for LockmanTestsNew
+/// Common test support utilities for LockmanTests
 public final class TestSupport {
 
   // MARK: - Test Data Generation

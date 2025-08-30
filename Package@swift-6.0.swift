@@ -50,12 +50,6 @@ let package = Package(
       ]
     ),
     .testTarget(
-      name: "LockmanTestsNew",
-      dependencies: [
-        "Lockman"
-      ]
-    ),
-    .testTarget(
       name: "LockmanMacrosTests",
       dependencies: [
         "LockmanMacros",
