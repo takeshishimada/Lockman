@@ -2,144 +2,165 @@ import XCTest
 
 @testable import Lockman
 
-/// Unit tests for LockmanConcurrencyLimitedInfo
-///
-/// Tests the information structure for concurrency-limited locking behavior.
-///
-/// ## Test Cases Identified from Source Analysis:
-///
-/// ### Protocol Conformance
-/// - [ ] LockmanInfo protocol implementation
-/// - [ ] Sendable protocol compliance validation
-/// - [ ] Equatable protocol implementation
-/// - [ ] CustomDebugStringConvertible protocol implementation
-/// - [ ] Protocol requirement fulfillment verification
-///
-/// ### Initialization with Concurrency Group
-/// - [ ] init(strategyId:actionId:group:) functionality
-/// - [ ] LockmanConcurrencyGroup parameter handling
-/// - [ ] Group.id extraction to concurrencyId
-/// - [ ] Group.limit extraction to limit property
-/// - [ ] Default strategyId from makeStrategyId()
-/// - [ ] uniqueId automatic generation
-///
-/// ### Initialization with Direct Limit
-/// - [ ] init(strategyId:actionId:_:) functionality
-/// - [ ] Direct LockmanConcurrencyLimit parameter
-/// - [ ] ActionId serving as concurrencyId behavior
-/// - [ ] Limit parameter validation
-/// - [ ] Default strategyId handling
-/// - [ ] UniqueId generation consistency
-///
-/// ### Property Validation
-/// - [ ] strategyId property immutability
-/// - [ ] actionId property immutability
-/// - [ ] uniqueId property uniqueness across instances
-/// - [ ] concurrencyId property behavior
-/// - [ ] limit property validation
-/// - [ ] Property access thread safety
-///
-/// ### Concurrency Group Integration
-/// - [ ] LockmanConcurrencyGroup protocol compatibility
-/// - [ ] Group.id string extraction
-/// - [ ] Group.limit LockmanConcurrencyLimit extraction
-/// - [ ] Type erasure with any LockmanConcurrencyGroup
-/// - [ ] Group validation and constraints
-///
-/// ### Concurrency Limit Handling
-/// - [ ] LockmanConcurrencyLimit value types
-/// - [ ] Limit validation and constraints
-/// - [ ] Numeric limit value handling
-/// - [ ] Special limit values (unlimited, zero)
-/// - [ ] Limit comparison and ordering
-///
-/// ### Debug Support
-/// - [ ] debugDescription format and content
-/// - [ ] All properties included in debug output
-/// - [ ] debugAdditionalInfo concurrency and limit format
-/// - [ ] Debug string readability and completeness
-/// - [ ] Debug output parsing validation
-///
-/// ### Cancellation Target Behavior
-/// - [ ] isCancellationTarget always returns true
-/// - [ ] Cancellation target consistency
-/// - [ ] Integration with cancellation system
-/// - [ ] Behavior validation across instances
-///
-/// ### Equality Implementation
-/// - [ ] Equality based on properties comparison
-/// - [ ] uniqueId impact on equality
-/// - [ ] Different instances with same actionId equality
-/// - [ ] Hash consistency for Set/Dictionary usage
-/// - [ ] Equality properties validation
-///
-/// ### Thread Safety & Sendable
-/// - [ ] Sendable compliance across concurrent contexts
-/// - [ ] Immutable properties thread safety
-/// - [ ] Safe concurrent access to all properties
-/// - [ ] UUID thread-safe generation
-/// - [ ] No shared mutable state verification
-///
-/// ### Integration with Strategy System
-/// - [ ] LockmanInfo protocol integration
-/// - [ ] Strategy container compatibility
-/// - [ ] ConcurrencyId-based conflict detection
-/// - [ ] Limit enforcement integration
-/// - [ ] Strategy resolution compatibility
-///
-/// ### ConcurrencyId Behavior
-/// - [ ] ConcurrencyId from group.id mapping
-/// - [ ] ConcurrencyId from actionId mapping (direct init)
-/// - [ ] String identifier validation
-/// - [ ] ConcurrencyId uniqueness requirements
-/// - [ ] Special characters in concurrencyId
-///
-/// ### Performance & Memory
-/// - [ ] Initialization performance benchmarks
-/// - [ ] Memory footprint validation
-/// - [ ] UUID generation performance impact
-/// - [ ] String property memory usage
-/// - [ ] Debug string generation performance
-///
-/// ### Real-world Concurrency Scenarios
-/// - [ ] API rate limiting use cases
-/// - [ ] Database connection pooling scenarios
-/// - [ ] File I/O concurrency limiting
-/// - [ ] Network request throttling
-/// - [ ] Resource pool management
-///
-/// ### Edge Cases & Error Conditions
-/// - [ ] Empty actionId handling
-/// - [ ] Empty concurrencyId handling
-/// - [ ] Very long identifier strings
-/// - [ ] Special characters in identifiers
-/// - [ ] Zero or negative limits
-/// - [ ] Memory pressure scenarios
-///
-/// ### Strategy Integration Validation
-/// - [ ] makeStrategyId() default behavior
-/// - [ ] Custom strategyId override behavior
-/// - [ ] Strategy container registration compatibility
-/// - [ ] Strategy resolution through info
-/// - [ ] Error propagation integration
-///
-final class LockmanConcurrencyLimitedInfoTests: XCTestCase {
+// ✅ IMPLEMENTED: Comprehensive strategy component tests following 3-phase methodology
+// Target: 100% code coverage with systematic 3-phase approach
+// 1. Phase 1: Happy path coverage
+// 2. Phase 2: Error cases and edge conditions  
+// 3. Phase 3: Integration testing where applicable
 
+final class LockmanConcurrencyLimitedInfoTests: XCTestCase {
+  
   override func setUp() {
     super.setUp()
-    // Setup test environment
-  }
-
-  override func tearDown() {
-    super.tearDown()
-    // Cleanup after each test
     LockmanManager.cleanup.all()
   }
-
-  // MARK: - Tests
-
-  func testPlaceholder() {
-    // TODO: Implement unit tests for LockmanConcurrencyLimitedInfo
-    XCTAssertTrue(true, "Placeholder test")
+  
+  override func tearDown() {
+    super.tearDown()
+    LockmanManager.cleanup.all()
   }
+  
+  // MARK: - Phase 1: Happy Path Coverage
+  
+  func testInitWithConcurrencyGroup() {
+    let testGroup = TestConcurrencyGroup(id: "testGroup", limit: .limited(5))
+    
+    let info = LockmanConcurrencyLimitedInfo(
+      actionId: "testAction",
+      group: testGroup
+    )
+    
+    XCTAssertEqual(info.strategyId, LockmanConcurrencyLimitedStrategy.makeStrategyId())
+    XCTAssertEqual(info.actionId, "testAction")
+    XCTAssertEqual(info.concurrencyId, "testGroup")
+    XCTAssertEqual(info.limit, .limited(5))
+    XCTAssertNotNil(info.uniqueId)
+  }
+  
+  func testInitWithConcurrencyGroupAndCustomStrategyId() {
+    let customStrategyId = LockmanStrategyId(name: "customStrategy")
+    let testGroup = TestConcurrencyGroup(id: "groupId", limit: .unlimited)
+    
+    let info = LockmanConcurrencyLimitedInfo(
+      strategyId: customStrategyId,
+      actionId: "testAction2",
+      group: testGroup
+    )
+    
+    XCTAssertEqual(info.strategyId, customStrategyId)
+    XCTAssertEqual(info.actionId, "testAction2")
+    XCTAssertEqual(info.concurrencyId, "groupId")
+    XCTAssertEqual(info.limit, .unlimited)
+    XCTAssertNotNil(info.uniqueId)
+  }
+  
+  func testInitWithDirectLimit() {
+    let info = LockmanConcurrencyLimitedInfo(
+      actionId: "directAction",
+      .limited(3)
+    )
+    
+    XCTAssertEqual(info.strategyId, LockmanConcurrencyLimitedStrategy.makeStrategyId())
+    XCTAssertEqual(info.actionId, "directAction")
+    XCTAssertEqual(info.concurrencyId, "directAction") // Uses actionId as concurrencyId
+    XCTAssertEqual(info.limit, .limited(3))
+    XCTAssertNotNil(info.uniqueId)
+  }
+  
+  func testInitWithDirectLimitAndCustomStrategyId() {
+    let customStrategyId = LockmanStrategyId(name: "customStrategy2")
+    
+    let info = LockmanConcurrencyLimitedInfo(
+      strategyId: customStrategyId,
+      actionId: "unlimitedAction",
+      .unlimited
+    )
+    
+    XCTAssertEqual(info.strategyId, customStrategyId)
+    XCTAssertEqual(info.actionId, "unlimitedAction")
+    XCTAssertEqual(info.concurrencyId, "unlimitedAction")
+    XCTAssertEqual(info.limit, .unlimited)
+    XCTAssertNotNil(info.uniqueId)
+  }
+  
+  func testDebugDescription() {
+    let info = LockmanConcurrencyLimitedInfo(
+      actionId: "testAction",
+      .limited(2)
+    )
+    
+    let debugDesc = info.debugDescription
+    
+    XCTAssertTrue(debugDesc.contains("ConcurrencyLimitedInfo"))
+    XCTAssertTrue(debugDesc.contains("testAction"))
+    XCTAssertTrue(debugDesc.contains("limited(2)"))
+    XCTAssertTrue(debugDesc.contains(info.uniqueId.uuidString))
+  }
+  
+  func testDebugAdditionalInfo() {
+    let info1 = LockmanConcurrencyLimitedInfo(
+      actionId: "action1",
+      .limited(7)
+    )
+    
+    let debugAdditional1 = info1.debugAdditionalInfo
+    
+    XCTAssertTrue(debugAdditional1.contains("concurrency:"))
+    XCTAssertTrue(debugAdditional1.contains("action1"))
+    XCTAssertTrue(debugAdditional1.contains("limit:"))
+    XCTAssertTrue(debugAdditional1.contains("limited(7)"))
+    
+    // Test with unlimited
+    let info2 = LockmanConcurrencyLimitedInfo(
+      actionId: "action2",
+      .unlimited
+    )
+    
+    let debugAdditional2 = info2.debugAdditionalInfo
+    
+    XCTAssertTrue(debugAdditional2.contains("concurrency: action2"))
+    XCTAssertTrue(debugAdditional2.contains("limit: unlimited"))
+  }
+  
+  func testIsCancellationTarget() {
+    let info1 = LockmanConcurrencyLimitedInfo(
+      actionId: "action1",
+      .limited(1)
+    )
+    
+    let info2 = LockmanConcurrencyLimitedInfo(
+      actionId: "action2",
+      .unlimited
+    )
+    
+    // ConcurrencyLimitedInfo should always be a cancellation target
+    XCTAssertTrue(info1.isCancellationTarget)
+    XCTAssertTrue(info2.isCancellationTarget)
+  }
+  
+  func testEquality() {
+    let info1 = LockmanConcurrencyLimitedInfo(
+      actionId: "same",
+      .limited(1)
+    )
+    
+    let info2 = LockmanConcurrencyLimitedInfo(
+      actionId: "same",
+      .limited(1)
+    )
+    
+    // Different instances should be unequal (based on uniqueId)
+    XCTAssertNotEqual(info1, info2)
+    XCTAssertNotEqual(info1.uniqueId, info2.uniqueId)
+    
+    // Same instance should be equal to itself
+    XCTAssertEqual(info1, info1)
+  }
+}
+
+// MARK: - Test Helper Types
+
+private struct TestConcurrencyGroup: LockmanConcurrencyGroup {
+  let id: String
+  let limit: LockmanConcurrencyLimit
 }

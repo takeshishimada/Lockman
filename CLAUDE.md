@@ -62,7 +62,7 @@ For comprehensive test strategy and design documentation, see:
 1. Make your code changes
 2. Run `make format` to format all Swift files
 3. Review the formatting changes and stage all modified files
-4. Run tests using `xcodebuild test -configuration Debug -scheme "Lockman" -destination "platform=macOS,name=My Mac" -workspace .github/package.xcworkspace -skipMacroValidation` for macOS or `make xcodebuild` for iOS
+4. Run tests using `xcodebuild test` or `make xcodebuild` for CI/CD compatibility (use `swift test` for faster local iteration)
 5. Fix any test failures before proceeding
 6. Create your commit with a semantic commit message
 7. Push to your feature branch
@@ -79,7 +79,7 @@ For comprehensive test strategy and design documentation, see:
   - Consistent development practices across all contributors
 
 ### Pre-PR Checklist
-1. **Run Tests**: Execute tests ONLY if Swift code has been modified. For documentation-only changes, skip testing
+1. **Run Tests**: Execute `xcodebuild test` or `make xcodebuild` ONLY if Swift code has been modified. For documentation-only changes, skip testing. Use `xcodebuild` to ensure CI/CD compatibility across all Swift versions.
 2. **Fix All Test Failures**: All tests must pass before creating a PR (when tests are run)
 3. **No Test Coverage Requirements**: Test coverage is not enforced
 4. **Verify Build**: Ensure the project builds without errors (only for code changes)
@@ -205,25 +205,39 @@ Every PR must have at least one label from each applicable category:
 
 ### Testing Commands
 
-**For macOS (Recommended - no simulator needed):**
+**ALWAYS Use xcodebuild for Testing (Required):**
 ```bash
+# For macOS (no simulator needed) - MANDATORY for accurate coverage
 xcodebuild test -configuration Debug -scheme "Lockman" -destination "platform=macOS,name=My Mac" -workspace .github/package.xcworkspace -skipMacroValidation
-```
 
-**For iOS using Makefile:**
-```bash
-# Run tests for iOS (automatically finds simulator)
+# For iOS using Makefile - supports all Swift versions
 make xcodebuild
 
 # Run tests with raw output (without xcbeautify)
 make xcodebuild-raw
+
+# For specific test class (with coverage)
+xcodebuild test -configuration Debug -scheme "Lockman" -destination "platform=macOS,name=My Mac" -workspace .github/package.xcworkspace -skipMacroValidation -only-testing:LockmanTestsNew/TestClassName
+
+# With coverage enabled for analysis
+xcodebuild test -configuration Debug -scheme "Lockman" -destination "platform=macOS,name=My Mac" -workspace .github/package.xcworkspace -skipMacroValidation -enableCodeCoverage YES -derivedDataPath ./DerivedData
 ```
 
-Note: The Makefile has a known issue with macOS destination specification. Use the direct xcodebuild command for macOS testing.
+**swift test (Optional - for quick iteration only):**
+```bash
+# ONLY for quick development iteration - NOT for coverage analysis
+swift test --filter TestClassName
+```
+
+**CRITICAL Requirements:**
+- **ALWAYS use xcodebuild test for coverage analysis** - swift test does not provide accurate coverage data
+- **ALWAYS use xcodebuild test for CI/CD compatibility** - ensures compatibility with Swift 5.9, 5.10, 6.0
+- **ALWAYS use xcodebuild test for Pull Request preparation** - matches CI/CD environment exactly
+- **swift test is ONLY for quick development iteration** - never rely on it for coverage or production validation
 
 ### Alternative Testing Methods
 
-**iOS tests with specific simulator:**
+**iOS tests with specific simulator (using xcodebuild):**
 ```bash
 # First, list available simulators:
 xcrun simctl list devices available | grep iPhone

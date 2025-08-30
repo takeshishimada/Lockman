@@ -2,228 +2,178 @@ import XCTest
 
 @testable import Lockman
 
-/// Unit tests for LockmanGroupCoordinationError
-final class LockmanGroupCoordinationErrorTests: XCTestCase {
+// ✅ IMPLEMENTED: Comprehensive strategy component tests following 3-phase methodology
+// Target: 100% code coverage with systematic 3-phase approach
+// 1. Phase 1: Happy path coverage
+// 2. Phase 2: Error cases and edge conditions  
+// 3. Phase 3: Integration testing where applicable
 
+final class LockmanGroupCoordinationErrorTests: XCTestCase {
+  
   override func setUp() {
     super.setUp()
-    // Setup test environment
-  }
-
-  override func tearDown() {
-    super.tearDown()
-    // Cleanup after each test
     LockmanManager.cleanup.all()
   }
-
-  // MARK: - Error Creation Tests
-
+  
+  override func tearDown() {
+    super.tearDown()
+    LockmanManager.cleanup.all()
+  }
+  
+  // MARK: - Phase 1: Error Case Coverage
+  
   func testLeaderCannotJoinNonEmptyGroupError() {
     let info = LockmanGroupCoordinatedInfo(
-      actionId: LockmanActionId("testAction"),
-      groupId: "testGroup",
+      actionId: "leaderAction",
+      groupId: "group1",
       coordinationRole: .leader(.emptyGroup)
     )
-    let boundaryId = "testBoundary"
-    let groupIds = Set([AnyLockmanGroupId("testGroup")])
-
+    let boundaryId = TestBoundaryId.test
+    let groupIds: Set<AnyLockmanGroupId> = [AnyLockmanGroupId("group1")]
+    
     let error = LockmanGroupCoordinationError.leaderCannotJoinNonEmptyGroup(
       lockmanInfo: info,
-      boundaryId: AnyLockmanBoundaryId(boundaryId),
+      boundaryId: boundaryId,
       groupIds: groupIds
     )
-
-    XCTAssertEqual(error.lockmanInfo.actionId, "testAction")
-    XCTAssertEqual(String(describing: error.boundaryId), String(describing: boundaryId))
+    
+    // Test LocalizedError conformance
+    XCTAssertNotNil(error.errorDescription)
+    XCTAssertTrue(error.errorDescription!.contains("leader 'leaderAction' cannot join non-empty groups"))
+    XCTAssertNotNil(error.failureReason)
+    XCTAssertEqual(error.failureReason, "Leaders must be the first to join a coordination group.")
+    
+    // Test LockmanStrategyError conformance
+    XCTAssertTrue(error.lockmanInfo.actionId == "leaderAction")
+    XCTAssertEqual(error.boundaryId as? TestBoundaryId, TestBoundaryId.test)
   }
-
+  
   func testMemberCannotJoinEmptyGroupError() {
     let info = LockmanGroupCoordinatedInfo(
-      actionId: LockmanActionId("testAction"),
-      groupId: "testGroup",
+      actionId: "memberAction",
+      groupId: "group2",
       coordinationRole: .member
     )
-    let boundaryId = AnyLockmanBoundaryId("testBoundary")
-    let groupIds = Set([AnyLockmanGroupId("testGroup")])
-
+    let boundaryId = TestBoundaryId.feature
+    let groupIds: Set<AnyLockmanGroupId> = [AnyLockmanGroupId("group2")]
+    
     let error = LockmanGroupCoordinationError.memberCannotJoinEmptyGroup(
       lockmanInfo: info,
-      boundaryId: AnyLockmanBoundaryId(boundaryId),
+      boundaryId: boundaryId,
       groupIds: groupIds
     )
-
-    XCTAssertEqual(error.lockmanInfo.actionId, "testAction")
-    XCTAssertEqual(String(describing: error.boundaryId), String(describing: boundaryId))
+    
+    // Test LocalizedError conformance
+    XCTAssertNotNil(error.errorDescription)
+    XCTAssertTrue(error.errorDescription!.contains("member 'memberAction' cannot join empty groups"))
+    XCTAssertNotNil(error.failureReason)
+    XCTAssertEqual(error.failureReason, "Members require existing participants in the group for coordination.")
+    
+    // Test LockmanStrategyError conformance  
+    XCTAssertTrue(error.lockmanInfo.actionId == "memberAction")
+    XCTAssertEqual(error.boundaryId as? TestBoundaryId, TestBoundaryId.feature)
   }
-
+  
   func testActionAlreadyInGroupError() {
     let info = LockmanGroupCoordinatedInfo(
-      actionId: LockmanActionId("testAction"),
-      groupId: "testGroup",
-      coordinationRole: .member
+      actionId: "duplicateAction",
+      groupId: "group3",
+      coordinationRole: .none
     )
-    let boundaryId = AnyLockmanBoundaryId("testBoundary")
-    let groupIds = Set([AnyLockmanGroupId("testGroup")])
-
+    let boundaryId = TestBoundaryId.navigation
+    let groupIds: Set<AnyLockmanGroupId> = [AnyLockmanGroupId("group3")]
+    
     let error = LockmanGroupCoordinationError.actionAlreadyInGroup(
       lockmanInfo: info,
-      boundaryId: AnyLockmanBoundaryId(boundaryId),
+      boundaryId: boundaryId,
       groupIds: groupIds
     )
-
-    XCTAssertEqual(error.lockmanInfo.actionId, "testAction")
-    XCTAssertEqual(String(describing: error.boundaryId), String(describing: boundaryId))
+    
+    // Test LocalizedError conformance
+    XCTAssertNotNil(error.errorDescription)
+    XCTAssertTrue(error.errorDescription!.contains("action 'duplicateAction' is already in groups"))
+    XCTAssertNotNil(error.failureReason)
+    XCTAssertEqual(error.failureReason, "Each action must have a unique ID within its coordination groups.")
+    
+    // Test LockmanStrategyError conformance
+    XCTAssertTrue(error.lockmanInfo.actionId == "duplicateAction")
+    XCTAssertEqual(error.boundaryId as? TestBoundaryId, TestBoundaryId.navigation)
   }
-
-  func testBlockedByExclusiveLeaderError() {
+  
+  func testBlockedByExclusiveLeaderErrorWithAllPolicies() {
     let info = LockmanGroupCoordinatedInfo(
-      actionId: LockmanActionId("testAction"),
-      groupId: "testGroup",
-      coordinationRole: .member
-    )
-    let boundaryId = AnyLockmanBoundaryId("testBoundary")
-    let groupId = AnyLockmanGroupId("testGroup")
-    let entryPolicy = LockmanGroupCoordinationRole.LeaderEntryPolicy.emptyGroup
-
-    let error = LockmanGroupCoordinationError.blockedByExclusiveLeader(
-      lockmanInfo: info,
-      boundaryId: AnyLockmanBoundaryId(boundaryId),
-      groupId: groupId,
-      entryPolicy: entryPolicy
-    )
-
-    XCTAssertEqual(error.lockmanInfo.actionId, "testAction")
-    XCTAssertEqual(String(describing: error.boundaryId), String(describing: boundaryId))
-  }
-
-  // MARK: - LocalizedError Conformance Tests
-
-  func testErrorDescriptionMessages() {
-    let info = LockmanGroupCoordinatedInfo(
-      actionId: LockmanActionId("testAction"),
-      groupIds: Set(["testGroup"]),
+      actionId: "blockedAction",
+      groupId: "group4",
       coordinationRole: .leader(.emptyGroup)
     )
-    let boundaryId = "testBoundary"
-    let groupIds = Set([AnyLockmanGroupId("testGroup")])
-
-    let leaderError = LockmanGroupCoordinationError.leaderCannotJoinNonEmptyGroup(
-      lockmanInfo: info,
-      boundaryId: AnyLockmanBoundaryId(boundaryId),
-      groupIds: groupIds
-    )
-
-    let memberError = LockmanGroupCoordinationError.memberCannotJoinEmptyGroup(
-      lockmanInfo: info,
-      boundaryId: AnyLockmanBoundaryId(boundaryId),
-      groupIds: groupIds
-    )
-
-    let alreadyInGroupError = LockmanGroupCoordinationError.actionAlreadyInGroup(
-      lockmanInfo: info,
-      boundaryId: AnyLockmanBoundaryId(boundaryId),
-      groupIds: groupIds
-    )
-
-    let blockedError = LockmanGroupCoordinationError.blockedByExclusiveLeader(
-      lockmanInfo: info,
-      boundaryId: AnyLockmanBoundaryId(boundaryId),
-      groupId: AnyLockmanGroupId("testGroup"),
-      entryPolicy: .emptyGroup
-    )
-
-    // Test all error descriptions exist and contain relevant info
-    XCTAssertNotNil(leaderError.errorDescription)
-    XCTAssertTrue(leaderError.errorDescription!.contains("testAction"))
-
-    XCTAssertNotNil(memberError.errorDescription)
-    XCTAssertTrue(memberError.errorDescription!.contains("testAction"))
-
-    XCTAssertNotNil(alreadyInGroupError.errorDescription)
-    XCTAssertTrue(alreadyInGroupError.errorDescription!.contains("testAction"))
-
-    XCTAssertNotNil(blockedError.errorDescription)
-    XCTAssertTrue(blockedError.errorDescription!.contains("testAction"))
-  }
-
-  func testFailureReasonMessages() {
-    let info = LockmanGroupCoordinatedInfo(
-      actionId: "testAction",
-      groupIds: Set(["testGroup"]),
-      coordinationRole: .leader(.emptyGroup)
-    )
-    let boundaryId = "testBoundary"
-    let groupIds = Set([AnyLockmanGroupId("testGroup")])
-
-    let leaderError = LockmanGroupCoordinationError.leaderCannotJoinNonEmptyGroup(
-      lockmanInfo: info,
-      boundaryId: AnyLockmanBoundaryId(boundaryId),
-      groupIds: groupIds
-    )
-
-    let memberError = LockmanGroupCoordinationError.memberCannotJoinEmptyGroup(
-      lockmanInfo: info,
-      boundaryId: AnyLockmanBoundaryId(boundaryId),
-      groupIds: groupIds
-    )
-
-    let alreadyInGroupError = LockmanGroupCoordinationError.actionAlreadyInGroup(
-      lockmanInfo: info,
-      boundaryId: AnyLockmanBoundaryId(boundaryId),
-      groupIds: groupIds
-    )
-
-    // Test different entry policies
+    let boundaryId = TestBoundaryId.secondary
+    let groupId = AnyLockmanGroupId("group4")
+    
+    // Test emptyGroup policy
     let emptyGroupError = LockmanGroupCoordinationError.blockedByExclusiveLeader(
       lockmanInfo: info,
-      boundaryId: AnyLockmanBoundaryId(boundaryId),
-      groupId: AnyLockmanGroupId("testGroup"),
+      boundaryId: boundaryId,
+      groupId: groupId,
       entryPolicy: .emptyGroup
     )
-
+    
+    XCTAssertNotNil(emptyGroupError.errorDescription)
+    XCTAssertTrue(emptyGroupError.errorDescription!.contains("blocked by exclusive leader"))
+    XCTAssertTrue(emptyGroupError.errorDescription!.contains("policy: emptyGroup"))
+    XCTAssertEqual(emptyGroupError.failureReason, "Leader with 'emptyGroup' policy requires the group to be completely empty.")
+    
+    // Test withoutMembers policy  
     let withoutMembersError = LockmanGroupCoordinationError.blockedByExclusiveLeader(
       lockmanInfo: info,
-      boundaryId: AnyLockmanBoundaryId(boundaryId),
-      groupId: AnyLockmanGroupId("testGroup"),
+      boundaryId: boundaryId,
+      groupId: groupId,
       entryPolicy: .withoutMembers
     )
-
+    
+    XCTAssertTrue(withoutMembersError.errorDescription!.contains("policy: withoutMembers"))
+    XCTAssertEqual(withoutMembersError.failureReason, "Leader with 'withoutMembers' policy requires no members in the group.")
+    
+    // Test withoutLeader policy
     let withoutLeaderError = LockmanGroupCoordinationError.blockedByExclusiveLeader(
       lockmanInfo: info,
-      boundaryId: AnyLockmanBoundaryId(boundaryId),
-      groupId: AnyLockmanGroupId("testGroup"),
+      boundaryId: boundaryId,
+      groupId: groupId,
       entryPolicy: .withoutLeader
     )
-
-    // Test all failure reasons exist
-    XCTAssertNotNil(leaderError.failureReason)
-    XCTAssertNotNil(memberError.failureReason)
-    XCTAssertNotNil(alreadyInGroupError.failureReason)
-    XCTAssertNotNil(emptyGroupError.failureReason)
-    XCTAssertNotNil(withoutMembersError.failureReason)
-    XCTAssertNotNil(withoutLeaderError.failureReason)
+    
+    XCTAssertTrue(withoutLeaderError.errorDescription!.contains("policy: withoutLeader"))
+    XCTAssertEqual(withoutLeaderError.failureReason, "Leader with 'withoutLeader' policy requires no other leaders in the group.")
   }
-
-  // MARK: - LockmanStrategyError Conformance Tests
-
+  
+  // MARK: - Phase 2: Protocol Conformance Coverage
+  
   func testLockmanStrategyErrorConformance() {
     let info = LockmanGroupCoordinatedInfo(
       actionId: "testAction",
-      groupIds: Set(["testGroup"]),
+      groupId: "testGroup",
       coordinationRole: .member
     )
-    let boundaryId = "testBoundary"
-    let groupIds = Set([AnyLockmanGroupId("testGroup")])
-
-    let error = LockmanGroupCoordinationError.actionAlreadyInGroup(
-      lockmanInfo: info,
-      boundaryId: AnyLockmanBoundaryId(boundaryId),
-      groupIds: groupIds
-    )
-
-    XCTAssertNotNil(error.lockmanInfo)
-    XCTAssertEqual(error.lockmanInfo.actionId, "testAction")
-    XCTAssertEqual(String(describing: error.boundaryId), String(describing: boundaryId))
+    let boundaryId = TestBoundaryId.test
+    let groupIds: Set<AnyLockmanGroupId> = [AnyLockmanGroupId("testGroup")]
+    
+    let errors: [LockmanGroupCoordinationError] = [
+      .leaderCannotJoinNonEmptyGroup(lockmanInfo: info, boundaryId: boundaryId, groupIds: groupIds),
+      .memberCannotJoinEmptyGroup(lockmanInfo: info, boundaryId: boundaryId, groupIds: groupIds),
+      .actionAlreadyInGroup(lockmanInfo: info, boundaryId: boundaryId, groupIds: groupIds),
+      .blockedByExclusiveLeader(lockmanInfo: info, boundaryId: boundaryId, groupId: AnyLockmanGroupId("testGroup"), entryPolicy: .emptyGroup)
+    ]
+    
+    for error in errors {
+      // Test LockmanStrategyError protocol requirements
+      XCTAssertTrue(error.lockmanInfo.actionId == "testAction")
+      XCTAssertEqual(error.boundaryId as? TestBoundaryId, TestBoundaryId.test)
+      
+      // Test LocalizedError protocol requirements  
+      XCTAssertNotNil(error.errorDescription)
+      XCTAssertFalse(error.errorDescription!.isEmpty)
+      XCTAssertNotNil(error.failureReason)
+      XCTAssertFalse(error.failureReason!.isEmpty)
+    }
   }
-
+  
 }

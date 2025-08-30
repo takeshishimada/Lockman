@@ -354,7 +354,6 @@ public final class LockmanStrategyContainer: @unchecked Sendable {
   ///
   /// ## Complexity
   /// O(n) where n is the number of registered strategies
-  @_spi(Debugging)
   public func getAllStrategies() -> [(LockmanStrategyId, any LockmanStrategy)] {
     storage.withCriticalRegion { storage in
       storage.compactMap { id, entry in

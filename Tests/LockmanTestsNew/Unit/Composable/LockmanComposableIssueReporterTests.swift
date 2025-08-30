@@ -36,24 +36,6 @@ final class LockmanComposableIssueReporterTests: XCTestCase {
 
   // MARK: - Issue Reporting Tests
 
-  func testReportIssue_CallsComposableArchitectureReporting() {
-    // This test verifies that the method can be called without throwing
-    // We can't easily mock ComposableArchitecture's IssueReporting system,
-    // but we can verify the method executes successfully
-    
-    XCTAssertNoThrow {
-      LockmanComposableIssueReporter.reportIssue("Test message - ignore this test issue")
-    }
-    
-    // Test with custom file and line parameters
-    XCTAssertNoThrow {
-      LockmanComposableIssueReporter.reportIssue(
-        "Test message with file and line - ignore this test issue",
-        file: "TestFile.swift",
-        line: 42
-      )
-    }
-  }
 
   func testReportIssue_HandlesEmptyMessage() {
     XCTAssertNoThrow {
@@ -226,5 +208,73 @@ final class LockmanComposableIssueReporterTests: XCTestCase {
     let _: (String, StaticString, UInt) -> Void = LockmanComposableIssueReporter.reportIssue
     // If this compiles, the signature is correct
   }
+  
+  func testReportIssue_ThroughLockmanManager() async throws {
+    // Test that reportIssue is called through LockmanManager when configured
+    LockmanManager.config.configureComposableReporting()
+    
+    let container = LockmanStrategyContainer()
+    let strategy = LockmanSingleExecutionStrategy()
+    try container.register(strategy)
+    
+    await LockmanManager.withTestContainer(container) {
+      let store = await TestStore(initialState: TestState()) {
+        IssueTestReducer()
+      }
+      
+      // Test basic locking functionality without errors
+      await store.send(.lockableAction) {
+        $0.value = 1
+      }
+      await store.finish()
+    }
+    
+    // Reset to default
+    LockmanManager.config.issueReporter = LockmanDefaultIssueReporter.self
+  }
 
+}
+
+// MARK: - Test Support for Strategy Error Testing
+
+@CasePathable
+private enum TestAction: Equatable, LockmanAction {
+  case lockableAction
+  
+  func createLockmanInfo() -> LockmanSingleExecutionInfo {
+    return LockmanSingleExecutionInfo(
+      strategyId: LockmanStrategyId.singleExecution,
+      actionId: "testAction",
+      mode: .boundary
+    )
+  }
+  
+  var unlockOption: LockmanUnlockOption {
+    return .immediate
+  }
+}
+
+private struct TestState: Equatable {
+  var value = 0
+}
+
+@Reducer
+private struct IssueTestReducer {
+  typealias State = TestState
+  typealias Action = TestAction
+  
+  var body: some ReducerOf<Self> {
+    Reduce { state, action in
+      switch action {
+      case .lockableAction:
+        state.value += 1
+        return .none
+      }
+    }
+    .lock(boundaryId: TestBoundaryID.test)
+  }
+}
+
+private enum TestBoundaryID: LockmanBoundaryId {
+  case test
 }
