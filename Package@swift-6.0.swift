@@ -56,13 +56,6 @@ let package = Package(
         .product(name: "MacroTesting", package: "swift-macro-testing"),
       ]
     ),
-    .testTarget(
-      name: "LockmanMacrosTestsNew",
-      dependencies: [
-        "LockmanMacros",
-        .product(name: "MacroTesting", package: "swift-macro-testing"),
-      ]
-    ),
   ],
   swiftLanguageModes: [.v6]
 )

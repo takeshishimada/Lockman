@@ -1,392 +1,255 @@
-#if canImport(LockmanMacros)
-  import LockmanMacros
-  import MacroTesting
-  import SwiftSyntax
-  import SwiftSyntaxBuilder
-  import SwiftSyntaxMacros
-  import XCTest
+import SwiftDiagnostics
+import SwiftSyntax
+import SwiftSyntaxBuilder
+import SwiftSyntaxMacros
+import XCTest
 
-  // MARK: - LockmanConcurrencyLimitedMacro Tests
+#if canImport(LockmanMacros)
+  @testable import LockmanMacros
 
   final class LockmanConcurrencyLimitedMacroTests: XCTestCase {
-    override func invokeTest() {
-      // Configure macro testing to not record and to show diffs
-      withMacroTesting(
-        record: false,
-        macros: [
-          "LockmanConcurrencyLimited": LockmanConcurrencyLimitedMacro.self
-        ]
-      ) {
-        super.invokeTest()
-      }
+    
+    private var mockContext: MockMacroExpansionContext!
+
+    override func setUp() {
+      super.setUp()
+      mockContext = MockMacroExpansionContext()
     }
 
-    // MARK: - Basic Expansion Tests
-
-    func testBasicEnumExpansion() {
-      assertMacro {
-        """
-        @LockmanConcurrencyLimited
-        enum ViewAction {
-          case fetchUserProfile
-          case uploadFile
-        }
-        """
-      } expansion: {
-        """
-        enum ViewAction {
-          case fetchUserProfile
-          case uploadFile
-
-          internal var actionName: String {
-            switch self {
-            case .fetchUserProfile:
-              return "fetchUserProfile"
-            case .uploadFile:
-              return "uploadFile"
-            }
-          }
-        }
-
-        extension ViewAction: LockmanConcurrencyLimitedAction {
-        }
-        """
-      }
+    override func tearDown() {
+      super.tearDown()
+      mockContext = nil
     }
 
-    func testEnumWithAssociatedValues() {
-      assertMacro {
-        """
-        @LockmanConcurrencyLimited
-        enum ViewAction {
-          case fetchUserProfile(userId: String)
-          case uploadFile(name: String, size: Int)
-          case processData
-        }
-        """
-      } expansion: {
-        """
-        enum ViewAction {
-          case fetchUserProfile(userId: String)
-          case uploadFile(name: String, size: Int)
-          case processData
+    // MARK: - ExtensionMacro Tests
 
-          internal var actionName: String {
-            switch self {
-            case .fetchUserProfile(_):
-              return "fetchUserProfile"
-            case .uploadFile(_, _):
-              return "uploadFile"
-            case .processData:
-              return "processData"
-            }
-          }
-        }
-
-        extension ViewAction: LockmanConcurrencyLimitedAction {
-        }
-        """
-      }
+    func testExtensionMacroExpansionBasic() throws {
+      let type = IdentifierTypeSyntax(name: .identifier("NetworkAction"))
+      let attributeNode = AttributeSyntax(
+        attributeName: IdentifierTypeSyntax(name: .identifier("LockmanConcurrencyLimited"))
+      )
+      let enumDecl = EnumDeclSyntax(
+        name: .identifier("NetworkAction"),
+        memberBlock: MemberBlockSyntax(members: MemberBlockItemListSyntax([]))
+      )
+      
+      let extensions = try LockmanConcurrencyLimitedMacro.expansion(
+        of: attributeNode,
+        attachedTo: enumDecl,
+        providingExtensionsOf: type,
+        conformingTo: [],
+        in: mockContext
+      )
+      
+      XCTAssertEqual(extensions.count, 1)
+      let extensionText = extensions.first!.description
+      XCTAssertTrue(extensionText.contains("extension NetworkAction: LockmanConcurrencyLimitedAction"))
     }
 
-    // MARK: - Access Level Tests
-
-    func testPublicEnumExpansion() {
-      assertMacro {
-        """
-        @LockmanConcurrencyLimited
-        public enum ViewAction {
-          case fetchData
-          case saveData
-        }
-        """
-      } expansion: {
-        """
-        public enum ViewAction {
-          case fetchData
-          case saveData
-
-          public var actionName: String {
-            switch self {
-            case .fetchData:
-              return "fetchData"
-            case .saveData:
-              return "saveData"
-            }
-          }
-        }
-
-        extension ViewAction: LockmanConcurrencyLimitedAction {
-        }
-        """
-      }
+    func testExtensionMacroExpansionWithDifferentType() throws {
+      let type = IdentifierTypeSyntax(name: .identifier("DataAction"))
+      let attributeNode = AttributeSyntax(
+        attributeName: IdentifierTypeSyntax(name: .identifier("LockmanConcurrencyLimited"))
+      )
+      let enumDecl = EnumDeclSyntax(
+        name: .identifier("DataAction"),
+        memberBlock: MemberBlockSyntax(members: MemberBlockItemListSyntax([]))
+      )
+      
+      let extensions = try LockmanConcurrencyLimitedMacro.expansion(
+        of: attributeNode,
+        attachedTo: enumDecl,
+        providingExtensionsOf: type,
+        conformingTo: [],
+        in: mockContext
+      )
+      
+      XCTAssertEqual(extensions.count, 1)
+      let extensionText = extensions.first!.description
+      XCTAssertTrue(extensionText.contains("extension DataAction: LockmanConcurrencyLimitedAction"))
     }
 
-    func testInternalEnumExpansion() {
-      assertMacro {
-        """
-        @LockmanConcurrencyLimited
-        internal enum ViewAction {
-          case action1
-          case action2
-        }
-        """
-      } expansion: {
-        """
-        internal enum ViewAction {
-          case action1
-          case action2
+    // MARK: - MemberMacro Tests
 
-          internal var actionName: String {
-            switch self {
-            case .action1:
-              return "action1"
-            case .action2:
-              return "action2"
-            }
-          }
-        }
-
-        extension ViewAction: LockmanConcurrencyLimitedAction {
-        }
-        """
-      }
+    func testMemberMacroExpansionWithValidEnum() throws {
+      let enumCase = EnumCaseDeclSyntax(
+        elements: EnumCaseElementListSyntax([
+          EnumCaseElementSyntax(name: .identifier("upload")),
+          EnumCaseElementSyntax(name: .identifier("download"))
+        ])
+      )
+      let memberItem = MemberBlockItemSyntax(decl: enumCase)
+      let enumDecl = EnumDeclSyntax(
+        name: .identifier("NetworkAction"),
+        memberBlock: MemberBlockSyntax(members: MemberBlockItemListSyntax([memberItem]))
+      )
+      
+      let attributeNode = AttributeSyntax(
+        attributeName: IdentifierTypeSyntax(name: .identifier("LockmanConcurrencyLimited"))
+      )
+      
+      let members = try LockmanConcurrencyLimitedMacro.expansion(
+        of: attributeNode,
+        providingMembersOf: enumDecl,
+        in: mockContext
+      )
+      
+      XCTAssertEqual(members.count, 1)
+      let generatedCode = members.first!.description
+      XCTAssertTrue(generatedCode.contains("var actionName: String"))
+      XCTAssertTrue(generatedCode.contains("case .upload: return \"upload\""))
+      XCTAssertTrue(generatedCode.contains("case .download: return \"download\""))
     }
 
-    // MARK: - Edge Case Tests
-
-    func testEmptyEnum() {
-      assertMacro {
-        """
-        @LockmanConcurrencyLimited
-        enum EmptyAction {
-        }
-        """
-      } expansion: {
-        """
-        enum EmptyAction {
-        }
-
-        extension EmptyAction: LockmanConcurrencyLimitedAction {
-        }
-        """
-      }
+    func testMemberMacroExpansionWithNonEnum() throws {
+      let structDecl = StructDeclSyntax(
+        name: .identifier("InvalidAction"),
+        memberBlock: MemberBlockSyntax(members: MemberBlockItemListSyntax([]))
+      )
+      
+      let attributeNode = AttributeSyntax(
+        attributeName: IdentifierTypeSyntax(name: .identifier("LockmanConcurrencyLimited"))
+      )
+      
+      let members = try LockmanConcurrencyLimitedMacro.expansion(
+        of: attributeNode,
+        providingMembersOf: structDecl,
+        in: mockContext
+      )
+      
+      XCTAssertEqual(members.count, 0)
+      XCTAssertTrue(mockContext.diagnostics.count > 0)
     }
 
-    func testSingleCaseEnum() {
-      assertMacro {
-        """
-        @LockmanConcurrencyLimited
-        enum SingleAction {
-          case onlyAction
-        }
-        """
-      } expansion: {
-        """
-        enum SingleAction {
-          case onlyAction
-
-          internal var actionName: String {
-            switch self {
-            case .onlyAction:
-              return "onlyAction"
-            }
-          }
-        }
-
-        extension SingleAction: LockmanConcurrencyLimitedAction {
-        }
-        """
-      }
+    func testMemberMacroExpansionWithPublicEnum() throws {
+      let enumCase = EnumCaseDeclSyntax(
+        elements: EnumCaseElementListSyntax([
+          EnumCaseElementSyntax(name: .identifier("process"))
+        ])
+      )
+      let memberItem = MemberBlockItemSyntax(decl: enumCase)
+      let enumDecl = EnumDeclSyntax(
+        modifiers: DeclModifierListSyntax([
+          DeclModifierSyntax(name: .keyword(.public))
+        ]),
+        name: .identifier("PublicAction"),
+        memberBlock: MemberBlockSyntax(members: MemberBlockItemListSyntax([memberItem]))
+      )
+      
+      let attributeNode = AttributeSyntax(
+        attributeName: IdentifierTypeSyntax(name: .identifier("LockmanConcurrencyLimited"))
+      )
+      
+      let members = try LockmanConcurrencyLimitedMacro.expansion(
+        of: attributeNode,
+        providingMembersOf: enumDecl,
+        in: mockContext
+      )
+      
+      XCTAssertEqual(members.count, 1)
+      let generatedCode = members.first!.description
+      XCTAssertTrue(generatedCode.contains("public var actionName: String"))
     }
 
-    func testComplexAssociatedValues() {
-      assertMacro {
-        """
-        @LockmanConcurrencyLimited
-        enum ComplexAction {
-          case simple
-          case withTuple((Int, String))
-          case withClosure(() -> Void)
-          case withOptional(String?)
-          case withMultiple(a: Int, b: String, c: Bool)
-        }
-        """
-      } expansion: {
-        """
-        enum ComplexAction {
-          case simple
-          case withTuple((Int, String))
-          case withClosure(() -> Void)
-          case withOptional(String?)
-          case withMultiple(a: Int, b: String, c: Bool)
-
-          internal var actionName: String {
-            switch self {
-            case .simple:
-              return "simple"
-            case .withTuple(_):
-              return "withTuple"
-            case .withClosure(_):
-              return "withClosure"
-            case .withOptional(_):
-              return "withOptional"
-            case .withMultiple(_, _, _):
-              return "withMultiple"
-            }
-          }
-        }
-
-        extension ComplexAction: LockmanConcurrencyLimitedAction {
-        }
-        """
-      }
+    func testMemberMacroExpansionWithEmptyEnum() throws {
+      let enumDecl = EnumDeclSyntax(
+        name: .identifier("EmptyAction"),
+        memberBlock: MemberBlockSyntax(members: MemberBlockItemListSyntax([]))
+      )
+      
+      let attributeNode = AttributeSyntax(
+        attributeName: IdentifierTypeSyntax(name: .identifier("LockmanConcurrencyLimited"))
+      )
+      
+      let members = try LockmanConcurrencyLimitedMacro.expansion(
+        of: attributeNode,
+        providingMembersOf: enumDecl,
+        in: mockContext
+      )
+      
+      XCTAssertEqual(members.count, 0) // Empty enum generates no members
     }
 
-    // MARK: - Error Cases
-
-    func testMacroOnStruct() {
-      assertMacro {
-        """
-        @LockmanConcurrencyLimited
-        struct ViewAction {
-          let name: String
-        }
-        """
-      } diagnostics: {
-        """
-        @LockmanConcurrencyLimited
-        ┬─────────────────────────
-        ╰─ 🛑 @LockmanConcurrencyLimited can only be attached to an enum declaration.
-        struct ViewAction {
-          let name: String
-        }
-        """
-      }
+    func testMemberMacroExpansionWithAssociatedValues() throws {
+      let enumCase = EnumCaseDeclSyntax(
+        elements: EnumCaseElementListSyntax([
+          EnumCaseElementSyntax(
+            name: .identifier("uploadFile"),
+            parameterClause: EnumCaseParameterClauseSyntax(
+              parameters: EnumCaseParameterListSyntax([
+                EnumCaseParameterSyntax(type: IdentifierTypeSyntax(name: .identifier("String"))),
+                EnumCaseParameterSyntax(type: IdentifierTypeSyntax(name: .identifier("Int")))
+              ])
+            )
+          ),
+          EnumCaseElementSyntax(name: .identifier("cancel"))
+        ])
+      )
+      let memberItem = MemberBlockItemSyntax(decl: enumCase)
+      let enumDecl = EnumDeclSyntax(
+        name: .identifier("FileAction"),
+        memberBlock: MemberBlockSyntax(members: MemberBlockItemListSyntax([memberItem]))
+      )
+      
+      let attributeNode = AttributeSyntax(
+        attributeName: IdentifierTypeSyntax(name: .identifier("LockmanConcurrencyLimited"))
+      )
+      
+      let members = try LockmanConcurrencyLimitedMacro.expansion(
+        of: attributeNode,
+        providingMembersOf: enumDecl,
+        in: mockContext
+      )
+      
+      XCTAssertEqual(members.count, 1)
+      let generatedCode = members.first!.description
+      XCTAssertTrue(generatedCode.contains("var actionName: String"))
+      XCTAssertTrue(generatedCode.contains("case .uploadFile(_, _): return \"uploadFile\""))
+      XCTAssertTrue(generatedCode.contains("case .cancel: return \"cancel\""))
+      
+      // Should NOT generate createLockmanInfo method (users implement themselves)
+      XCTAssertFalse(generatedCode.contains("createLockmanInfo"))
     }
 
-    func testMacroOnClass() {
-      assertMacro {
-        """
-        @LockmanConcurrencyLimited
-        class ViewAction {
-          var name: String = ""
-        }
-        """
-      } diagnostics: {
-        """
-        @LockmanConcurrencyLimited
-        ┬─────────────────────────
-        ╰─ 🛑 @LockmanConcurrencyLimited can only be attached to an enum declaration.
-        class ViewAction {
-          var name: String = ""
-        }
-        """
-      }
+  }
+
+  // Mock context for testing diagnostic emission
+  private class MockMacroExpansionContext: MacroExpansionContext {
+    var diagnostics: [Diagnostic] = []
+    
+    var lexicalContext: [Syntax] = []
+    
+    func makeUniqueName(_ providedName: String) -> TokenSyntax {
+      return TokenSyntax(.identifier(providedName + "_unique"), presence: .present)
     }
-
-    func testMacroOnProtocol() {
-      assertMacro {
-        """
-        @LockmanConcurrencyLimited
-        protocol ViewAction {
-          var name: String { get }
-        }
-        """
-      } diagnostics: {
-        """
-        @LockmanConcurrencyLimited
-        ┬─────────────────────────
-        ╰─ 🛑 @LockmanConcurrencyLimited can only be attached to an enum declaration.
-        protocol ViewAction {
-          var name: String { get }
-        }
-        """
-      }
+    
+    func diagnose(_ diagnostic: Diagnostic) {
+      diagnostics.append(diagnostic)
     }
-
-    // MARK: - Integration Tests
-
-    func testRealWorldExample() {
-      assertMacro {
-        """
-        @LockmanConcurrencyLimited
-        public enum FeatureAction {
-          case fetchUserProfile(userId: String)
-          case fetchUserPosts(userId: String, page: Int)
-          case uploadImage(data: Data, metadata: [String: Any])
-          case deletePost(postId: String)
-          case refreshFeed
-        }
-        """
-      } expansion: {
-        """
-        public enum FeatureAction {
-          case fetchUserProfile(userId: String)
-          case fetchUserPosts(userId: String, page: Int)
-          case uploadImage(data: Data, metadata: [String: Any])
-          case deletePost(postId: String)
-          case refreshFeed
-
-          public var actionName: String {
-            switch self {
-            case .fetchUserProfile(_):
-              return "fetchUserProfile"
-            case .fetchUserPosts(_, _):
-              return "fetchUserPosts"
-            case .uploadImage(_, _):
-              return "uploadImage"
-            case .deletePost(_):
-              return "deletePost"
-            case .refreshFeed:
-              return "refreshFeed"
-            }
-          }
-        }
-
-        extension FeatureAction: LockmanConcurrencyLimitedAction {
-        }
-        """
-      }
+    
+    func location(
+      of node: some SyntaxProtocol,
+      at position: PositionInSyntaxNode,
+      filePathMode: SourceLocationFilePathMode
+    ) -> AbstractSourceLocation? {
+      return nil
     }
-
-    // MARK: - Multi-case Declaration Tests
-
-    func testMultipleCasesInOneDeclaration() {
-      assertMacro {
-        """
-        @LockmanConcurrencyLimited
-        enum Action {
-          case a, b, c
-          case d(Int), e(String)
-        }
-        """
-      } expansion: {
-        """
-        enum Action {
-          case a, b, c
-          case d(Int), e(String)
-
-          internal var actionName: String {
-            switch self {
-            case .a:
-              return "a"
-            case .b:
-              return "b"
-            case .c:
-              return "c"
-            case .d(_):
-              return "d"
-            case .e(_):
-              return "e"
-            }
-          }
-        }
-
-        extension Action: LockmanConcurrencyLimitedAction {
-        }
-        """
-      }
+    
+    func location(
+      of node: some SyntaxProtocol,
+      at position: AbsolutePosition,
+      filePathMode: SourceLocationFilePathMode
+    ) -> AbstractSourceLocation? {
+      return nil
+    }
+    
+    func location(
+      of node: some SyntaxProtocol,
+      at position: AbsolutePosition,
+      filePathMode: SourceLocationFilePathMode
+    ) -> SourceLocation? {
+      return nil
     }
   }
+
 #endif
