@@ -65,39 +65,44 @@ final class SingleExecutionStrategy_ActionMode_IntegrationTests: XCTestCase {
     }
   }
   
-  /// Phase 2: ExecutionMode.action 同一アクション排他テスト
-  /// 同一アクションの2回目実行時にlockFailureが発生することを検証
+  /// Phase 2: ExecutionMode.action 実際のエフェクト競合テスト
+  /// 人工的事前ロックではなく実際のエフェクト実行中の競合検証
   @MainActor
-  func testPhase2_ActionMode_SameActionLockFailure() async throws {
+  func testPhase2_ActionMode_RealEffectContention() async throws {
     let strategy = LockmanSingleExecutionStrategy()
     let container = LockmanStrategyContainer()
     try container.register(strategy)
-    
-    // 事前に同一アクションでロックを獲得（統合テスト用の単一境界）
-    let boundaryId = TestActionModeFeature.BoundaryID.testBoundary
-    let preLockedInfo = LockmanSingleExecutionInfo(actionId: "processA", mode: .action)
-    strategy.lock(boundaryId: boundaryId, info: preLockedInfo)
     
     try await LockmanManager.withTestContainer(container) {
       let store = TestStore(initialState: TestActionModeFeature.State()) {
         TestActionModeFeature()
       }
       
-      // 同一アクション送信 → lockFailure発生
-      await store.send(.view(.processA))
+      // 長時間実行を開始
+      await store.send(.view(.longRunningProcessA))
+      await store.receive(\.internal.processStarted) {
+        $0.runningProcesses.insert("longRunningProcessA")
+      }
       
+      // 実行中に同一アクションを送信（実際の競合）
+      await store.send(.view(.longRunningProcessA))
       await store.receive(\.internal.handleLockFailure) {
-        $0.error = "lock_failed"
+        $0.error = "lock_failed" // 実際のロック競合
+      }
+      
+      // 最初の実行は正常完了
+      await store.receive(\.internal.processCompleted) {
+        $0.runningProcesses.remove("longRunningProcessA")
+        $0.completedProcesses.insert("longRunningProcessA")
       }
       
       await store.finish()
       
+      // 競合によりエラー発生、元の実行は完了
       XCTAssertEqual(store.state.error, "lock_failed")
-      XCTAssertTrue(store.state.runningProcesses.isEmpty)
+      XCTAssertEqual(store.state.completedProcesses.count, 1)
+      XCTAssertTrue(store.state.completedProcesses.contains("longRunningProcessA"))
     }
-    
-    // クリーンアップ
-    strategy.unlock(boundaryId: boundaryId, info: preLockedInfo)
   }
   
   /// Phase 3: ExecutionMode.action 長時間実行 vs 短時間実行テスト
@@ -199,6 +204,7 @@ final class SingleExecutionStrategy_ActionMode_IntegrationTests: XCTestCase {
     strategy.unlock(boundaryId: boundaryId, info: preLockedInfo)
   }
   
+  
   // MARK: - Test Support Types
   
   /// ExecutionMode.action テスト用Reducer
@@ -239,7 +245,7 @@ final class SingleExecutionStrategy_ActionMode_IntegrationTests: XCTestCase {
     }
     
     // 統合テスト用の単一境界ID
-    enum BoundaryID {
+    enum BoundaryID: LockmanBoundaryId {
       case testBoundary
     }
     
@@ -280,7 +286,7 @@ final class SingleExecutionStrategy_ActionMode_IntegrationTests: XCTestCase {
       case .processA:
         return .run { send in
           await send(.internal(.processStarted("processA")))
-          try await Task.sleep(nanoseconds: 100_000_000) // 100ms
+          try await Task.sleep(nanoseconds: 50_000_000) // 50ms (高速化)
           await send(.internal(.processCompleted("processA")))
         } catch: { error, send in
           await send(.internal(.handleError(error)))
@@ -290,7 +296,7 @@ final class SingleExecutionStrategy_ActionMode_IntegrationTests: XCTestCase {
       case .processB:
         return .run { send in
           await send(.internal(.processStarted("processB")))
-          try await Task.sleep(nanoseconds: 100_000_000) // 100ms
+          try await Task.sleep(nanoseconds: 50_000_000) // 50ms (高速化)
           await send(.internal(.processCompleted("processB")))
         } catch: { error, send in
           await send(.internal(.handleError(error)))
@@ -300,7 +306,7 @@ final class SingleExecutionStrategy_ActionMode_IntegrationTests: XCTestCase {
       case .processC:
         return .run { send in
           await send(.internal(.processStarted("processC")))
-          try await Task.sleep(nanoseconds: 100_000_000) // 100ms
+          try await Task.sleep(nanoseconds: 50_000_000) // 50ms (高速化)
           await send(.internal(.processCompleted("processC")))
         } catch: { error, send in
           await send(.internal(.handleError(error)))
@@ -310,7 +316,7 @@ final class SingleExecutionStrategy_ActionMode_IntegrationTests: XCTestCase {
       case .longRunningProcessA:
         return .run { send in
           await send(.internal(.processStarted("longRunningProcessA")))
-          try await Task.sleep(nanoseconds: 500_000_000) // 500ms
+          try await Task.sleep(nanoseconds: 200_000_000) // 200ms (高速化)
           await send(.internal(.processCompleted("longRunningProcessA")))
         } catch: { error, send in
           await send(.internal(.handleError(error)))
@@ -321,7 +327,7 @@ final class SingleExecutionStrategy_ActionMode_IntegrationTests: XCTestCase {
         return .run { send in
           let processName = "processWithParam_\(param)"
           await send(.internal(.processStarted(processName)))
-          try await Task.sleep(nanoseconds: 100_000_000) // 100ms
+          try await Task.sleep(nanoseconds: 50_000_000) // 50ms (高速化)
           await send(.internal(.processCompleted(processName)))
         } catch: { error, send in
           await send(.internal(.handleError(error)))

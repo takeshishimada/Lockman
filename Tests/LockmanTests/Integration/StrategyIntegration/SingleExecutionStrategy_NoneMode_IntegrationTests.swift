@@ -71,10 +71,10 @@ final class SingleExecutionStrategy_NoneMode_IntegrationTests: XCTestCase {
     }
   }
   
-  /// Phase 2: ExecutionMode.none基本同時実行テスト
-  /// noneモードで複数のアクションが順次実行されることを検証
+  /// Phase 2: ExecutionMode.none 最適化された連続実行テスト
+  /// noneモードでの排他制御無効化を効率的に検証
   @MainActor  
-  func testPhase2_NoneMode_SequentialExecution() async throws {
+  func testPhase2_NoneMode_OptimizedSequentialExecution() async throws {
     let strategy = LockmanSingleExecutionStrategy()
     let container = LockmanStrategyContainer()
     try container.register(strategy)
@@ -84,7 +84,7 @@ final class SingleExecutionStrategy_NoneMode_IntegrationTests: XCTestCase {
         TestNoneModeFeature()
       }
       
-      // 3個のアクションを順次実行 - ExecutionMode.noneでは全て実行されるべき
+      // TCA内部制約を考慮した効率的な順次実行（実行時間短縮）
       await store.send(.view(.processA))
       await store.receive(\.internal.processStarted) {
         $0.runningProcesses.insert("processA")
@@ -120,6 +120,9 @@ final class SingleExecutionStrategy_NoneMode_IntegrationTests: XCTestCase {
       // ExecutionMode.noneでは全て実行完了しているべき
       XCTAssertTrue(store.state.runningProcesses.isEmpty)
       XCTAssertEqual(store.state.completedProcesses.count, 3)
+      XCTAssertTrue(store.state.completedProcesses.contains("processA"))
+      XCTAssertTrue(store.state.completedProcesses.contains("processB"))
+      XCTAssertTrue(store.state.completedProcesses.contains("processC"))
       XCTAssertNil(store.state.error)
     }
   }
@@ -245,7 +248,7 @@ final class SingleExecutionStrategy_NoneMode_IntegrationTests: XCTestCase {
       case .processA:
         return .run { send in
           await send(.internal(.processStarted("processA")))
-          try await Task.sleep(nanoseconds: 50_000_000) // 50ms
+          try await Task.sleep(nanoseconds: 10_000_000) // 10ms (高速化)
           await send(.internal(.processCompleted("processA")))
         } catch: { error, send in
           await send(.internal(.handleError(error)))
@@ -255,7 +258,7 @@ final class SingleExecutionStrategy_NoneMode_IntegrationTests: XCTestCase {
       case .processB:
         return .run { send in
           await send(.internal(.processStarted("processB")))
-          try await Task.sleep(nanoseconds: 50_000_000) // 50ms
+          try await Task.sleep(nanoseconds: 10_000_000) // 10ms (高速化)
           await send(.internal(.processCompleted("processB")))
         } catch: { error, send in
           await send(.internal(.handleError(error)))
@@ -265,7 +268,7 @@ final class SingleExecutionStrategy_NoneMode_IntegrationTests: XCTestCase {
       case .processC:
         return .run { send in
           await send(.internal(.processStarted("processC")))
-          try await Task.sleep(nanoseconds: 50_000_000) // 50ms
+          try await Task.sleep(nanoseconds: 10_000_000) // 10ms (高速化)
           await send(.internal(.processCompleted("processC")))
         } catch: { error, send in
           await send(.internal(.handleError(error)))
