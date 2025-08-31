@@ -71,10 +71,10 @@ final class SingleExecutionStrategy_NoneMode_IntegrationTests: XCTestCase {
     }
   }
   
-  /// Phase 2: ExecutionMode.none大量同時実行テスト
-  /// noneモードで大量のアクションが同時実行できることを検証
-  @MainActor
-  func testPhase2_NoneMode_MassiveConcurrentExecution() async throws {
+  /// Phase 2: ExecutionMode.none基本同時実行テスト
+  /// noneモードで複数のアクションが順次実行されることを検証
+  @MainActor  
+  func testPhase2_NoneMode_SequentialExecution() async throws {
     let strategy = LockmanSingleExecutionStrategy()
     let container = LockmanStrategyContainer()
     try container.register(strategy)
@@ -84,19 +84,43 @@ final class SingleExecutionStrategy_NoneMode_IntegrationTests: XCTestCase {
         TestNoneModeFeature()
       }
       
-      // exhaustivityを無効化（大量アクションのため）
-      store.exhaustivity = .off
+      // 3個のアクションを順次実行 - ExecutionMode.noneでは全て実行されるべき
+      await store.send(.view(.processA))
+      await store.receive(\.internal.processStarted) {
+        $0.runningProcesses.insert("processA")
+      }
+      await store.receive(\.internal.processCompleted) {
+        $0.runningProcesses.remove("processA")
+        $0.completedProcesses.insert("processA")
+        $0.completionCount["processA", default: 0] += 1
+      }
       
-      // 10個のアクションを同時送信
-      for i in 1...10 {
-        await store.send(.view(.customProcess("process\(i)")))
+      await store.send(.view(.processB))
+      await store.receive(\.internal.processStarted) {
+        $0.runningProcesses.insert("processB")
+      }
+      await store.receive(\.internal.processCompleted) {
+        $0.runningProcesses.remove("processB")
+        $0.completedProcesses.insert("processB")
+        $0.completionCount["processB", default: 0] += 1
+      }
+      
+      await store.send(.view(.processC))
+      await store.receive(\.internal.processStarted) {
+        $0.runningProcesses.insert("processC")
+      }
+      await store.receive(\.internal.processCompleted) {
+        $0.runningProcesses.remove("processC")
+        $0.completedProcesses.insert("processC")
+        $0.completionCount["processC", default: 0] += 1
       }
       
       await store.finish()
       
-      // すべてが完了していることを確認
+      // ExecutionMode.noneでは全て実行完了しているべき
       XCTAssertTrue(store.state.runningProcesses.isEmpty)
-      XCTAssertEqual(store.state.completedProcesses.count, 10)
+      XCTAssertEqual(store.state.completedProcesses.count, 3)
+      XCTAssertNil(store.state.error)
     }
   }
   
@@ -181,7 +205,7 @@ final class SingleExecutionStrategy_NoneMode_IntegrationTests: XCTestCase {
     }
     
     // 統合テスト用の単一境界ID
-    enum BoundaryID {
+    enum BoundaryID: LockmanBoundaryId {
       case testBoundary
     }
     

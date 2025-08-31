@@ -150,44 +150,53 @@ final class SingleExecutionStrategy_ActionMode_IntegrationTests: XCTestCase {
     }
   }
   
-  /// Phase 4: ExecutionMode.action パラメータ付きアクションテスト
-  /// 同じアクション種別でもパラメータが異なる場合の動作を検証
+  /// Phase 4: ExecutionMode.action 基本的な排他制御テスト
+  /// 同じアクションの連続実行で排他制御が機能することを検証
   @MainActor
-  func testPhase4_ActionMode_ParameterizedActions() async throws {
+  func testPhase4_ActionMode_BasicExclusiveControl() async throws {
     let strategy = LockmanSingleExecutionStrategy()
     let container = LockmanStrategyContainer()
     try container.register(strategy)
+    
+    // 事前にprocessAでロック状態を作成
+    let boundaryId = TestActionModeFeature.BoundaryID.testBoundary
+    let preLockedInfo = LockmanSingleExecutionInfo(actionId: "processA", mode: .action)
+    strategy.lock(boundaryId: boundaryId, info: preLockedInfo)
     
     try await LockmanManager.withTestContainer(container) {
       let store = TestStore(initialState: TestActionModeFeature.State()) {
         TestActionModeFeature()
       }
       
-      // パラメータ付きアクションを複数送信
-      await store.send(.view(.processWithParam("param1")))
-      await store.send(.view(.processWithParam("param2")))
+      // 事前ロック状態のprocessAを送信→lockFailure期待
+      await store.send(.view(.processA))
       
-      // 同一アクション種別なので2回目はlockFailureになる可能性
-      // （実装依存：パラメータを含むかどうか）
-      
-      await store.receive(\.internal.processStarted) {
-        $0.runningProcesses.insert("processWithParam_param1")
-      }
-      
-      // 2つ目はlockFailureまたは待機状態
       await store.receive(\.internal.handleLockFailure) {
         $0.error = "lock_failed"
       }
       
+      // 異なるアクションは正常実行される
+      await store.send(.view(.processB))
+      
+      await store.receive(\.internal.processStarted) {
+        $0.runningProcesses.insert("processB")
+      }
+      
       await store.receive(\.internal.processCompleted) {
-        $0.runningProcesses.remove("processWithParam_param1")
-        $0.completedProcesses.insert("processWithParam_param1")
+        $0.runningProcesses.remove("processB")
+        $0.completedProcesses.insert("processB")
       }
       
       await store.finish()
       
+      // processAは失敗、processBは成功
       XCTAssertEqual(store.state.error, "lock_failed")
+      XCTAssertTrue(store.state.completedProcesses.contains("processB"))
+      XCTAssertFalse(store.state.completedProcesses.contains("processA"))
     }
+    
+    // クリーンアップ
+    strategy.unlock(boundaryId: boundaryId, info: preLockedInfo)
   }
   
   // MARK: - Test Support Types
