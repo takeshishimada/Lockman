@@ -30,6 +30,21 @@ XCODEBUILD_FLAGS = \
 
 XCODEBUILD_COMMAND = xcodebuild $(XCODEBUILD_ARGUMENT) $(XCODEBUILD_FLAGS)
 
+# Examples-specific build command (for schemes not configured for test action)
+XCODEBUILD_BUILD_FLAGS = \
+	-configuration $(CONFIG) \
+	-derivedDataPath $(DERIVED_DATA_PATH) \
+	-destination $(DESTINATION) \
+	-scheme "$(SCHEME)" \
+	-skipMacroValidation
+
+# Support both workspace and project builds
+ifdef PROJECT
+	XCODEBUILD_BUILD_COMMAND = xcodebuild build $(XCODEBUILD_BUILD_FLAGS) -project $(PROJECT)
+else
+	XCODEBUILD_BUILD_COMMAND = xcodebuild build $(XCODEBUILD_BUILD_FLAGS) -workspace $(WORKSPACE)
+endif
+
 # TODO: Prefer 'xcbeautify --quiet' when this is fixed:
 # https://github.com/cpisciotta/xcbeautify/issues/339
 ifneq ($(strip $(shell which xcbeautify)),)
@@ -52,6 +67,12 @@ xcodebuild: warm-simulator
 xcodebuild-raw: warm-simulator
 	$(XCODEBUILD_COMMAND)
 
+xcodebuild-build: warm-simulator
+	$(XCODEBUILD_BUILD_COMMAND)
+
+xcodebuild-build-raw: warm-simulator
+	$(XCODEBUILD_BUILD_COMMAND)
+
 build-for-library-evolution:
 	swift build \
 		-q \
@@ -67,7 +88,7 @@ format:
 		-not -path '*/.*' -print0 \
 		| xargs -0 xcrun swift-format --ignore-unparsable-files --in-place
 
-.PHONY: build-for-library-evolution format warm-simulator xcodebuild xcodebuild-raw
+.PHONY: build-for-library-evolution format warm-simulator xcodebuild xcodebuild-raw xcodebuild-build xcodebuild-build-raw
 
 define udid_for
 $(shell xcrun simctl list --json devices available '$(1)' | jq -r '[.devices|to_entries|sort_by(.key)|reverse|.[].value|select(length > 0)|.[0]][0].udid')

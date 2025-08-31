@@ -71,12 +71,4 @@ jobs:
       - name: Update mtime for incremental builds
         uses: chetan/git-restore-mtime-action@v2
       - name: Strategies
-        run: |
-          cd Examples/Strategies
-          xcodebuild build \
-            -project Strategies.xcodeproj \
-            -scheme "Strategies" \
-            -destination "platform=iOS Simulator,name=iPhone 16 Pro" \
-            -derivedDataPath ~/.derivedData \
-            -skipMacroValidation \
-            -skipPackagePluginValidation
+        run: make DERIVED_DATA_PATH=~/.derivedData SCHEME="Strategies" PROJECT="Examples/Strategies/Strategies.xcodeproj" xcodebuild-build-raw
