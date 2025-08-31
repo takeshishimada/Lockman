@@ -227,7 +227,7 @@ Add the dependency to your Package.swift file:
 
 ```swift
 dependencies: [
-  .package(url: "https://github.com/takeshishimada/Lockman", from: "1.7.0")
+  .package(url: "https://github.com/takeshishimada/Lockman", from: "1.7.1")
 ]
 ```
 
