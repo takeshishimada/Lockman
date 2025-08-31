@@ -83,62 +83,19 @@ public struct LockmanReducer<Base: Reducer>: Reducer {
         return self.base.reduce(into: &state, action: action)
       }
 
-      // ✨ LOCK-FIRST IMPLEMENTATION: Check lock feasibility BEFORE base.reduce()
-      let effectForLock: Effect<LockmanReducer<Base>.Action> = .none
-
-      do {
-        // ✨ CRITICAL: Create lockmanInfo once to ensure consistent uniqueId throughout lock lifecycle
-        // This prevents lock/unlock mismatches that occur when methods are called multiple times
-        let lockmanInfo = lockmanAction.createLockmanInfo()
-        let lockResult = try effectForLock.acquireLock(
-          lockmanInfo: lockmanInfo,
-          boundaryId: boundaryId
-        )
-
-        // Make decision based on lock result BEFORE executing base reducer
-        switch lockResult {
-        case .success, .successWithPrecedingCancellation:
-          // ✅ Lock can be acquired - proceed with base reducer execution
-          let baseEffect = self.base.reduce(into: &state, action: action)
-
-          // Build effect with the existing lock result using same lockmanInfo (guaranteed unlock)
-          return baseEffect.buildLockEffect(
-            lockResult: lockResult,
-            action: lockmanAction,
-            lockmanInfo: lockmanInfo,
-            boundaryId: boundaryId,
-            unlockOption: unlockOption,
-            fileID: #fileID,
-            filePath: #filePath,
-            line: #line,
-            column: #column,
-            handler: lockFailure
-          )
-
-        case .cancel(let error):
-          // ❌ Lock cannot be acquired - do NOT execute base reducer
-          // State mutations are prevented, achieving true lock-first behavior
-          if let lockFailure = self.lockFailure {
-            return .run { send in
-              await lockFailure(error, send)
-            }
-          } else {
-            // No lock failure handler - return .none (effect is cancelled)
-            return .none
-          }
-        }
-
-      } catch {
-        // Strategy resolution failed - handle as lock failure
-        if let lockFailure = self.lockFailure {
-          return .run { send in
-            await lockFailure(error, send)
-          }
-        } else {
-          // No lock failure handler - return .none
-          return .none
-        }
-      }
+      // ✨ LOCK-FIRST IMPLEMENTATION: Use unified Effect.lock implementation
+      // The unified lock implementation handles inout state parameters via non-escaping closures
+      return Effect.lock(
+        reducer: { self.base.reduce(into: &state, action: action) },
+        action: lockmanAction,
+        boundaryId: boundaryId,
+        unlockOption: unlockOption,
+        lockFailure: lockFailure,
+        fileID: #fileID,
+        filePath: #filePath,
+        line: #line,
+        column: #column
+      )
     }
   }
 }

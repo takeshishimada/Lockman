@@ -50,6 +50,26 @@
                ReferencedContainer = "container:..">
             </BuildableReference>
          </TestableReference>
+         <TestableReference
+            skipped = "NO">
+            <BuildableReference
+               BuildableIdentifier = "primary"
+               BlueprintIdentifier = "LockmanTestsNew"
+               BuildableName = "LockmanTestsNew"
+               BlueprintName = "LockmanTestsNew"
+               ReferencedContainer = "container:..">
+            </BuildableReference>
+         </TestableReference>
+         <TestableReference
+            skipped = "YES">
+            <BuildableReference
+               BuildableIdentifier = "primary"
+               BlueprintIdentifier = "LockmanMacrosTestsNew"
+               BuildableName = "LockmanMacrosTestsNew"
+               BlueprintName = "LockmanMacrosTestsNew"
+               ReferencedContainer = "container:..">
+            </BuildableReference>
+         </TestableReference>
       </Testables>
    </TestAction>
    <LaunchAction

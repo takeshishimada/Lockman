@@ -174,7 +174,7 @@ extension Effect {
         )
         if let handler = handler {
           return .concatenate([
-            .run { send in await handler(cancellationError, send) },
+            Effect.createHandlerEffect(handler: handler, error: cancellationError),
             .cancel(id: boundaryId),
             completeEffect,
           ])
@@ -190,12 +190,7 @@ extension Effect {
           boundaryId: boundaryId,
           reason: error
         )
-        if let handler = handler {
-          return .run { send in
-            await handler(cancellationError, send)
-          }
-        }
-        return .none
+        return Effect.createHandlerEffect(handler: handler, error: cancellationError)
       @unknown default:
         return .none
       }
@@ -209,12 +204,7 @@ extension Effect {
         line: line,
         column: column
       )
-      if let handler = handler {
-        return .run { send in
-          await handler(error, send)
-        }
-      }
-      return .none
+      return Effect.createHandlerEffect(handler: handler, error: error)
     }
   }
 
@@ -278,6 +268,228 @@ extension Effect {
       @unknown default:
         break
       }
+    }
+  }
+
+  // MARK: - Shared Lock Implementation
+
+  /// Internal shared implementation for applying lock management to effects.
+  ///
+  /// This method consolidates the common lock management logic used by both
+  /// the static `lock(concatenating:)` method, the static `lock(operation:)` method,
+  /// and LockmanReducer. By using a static method with an effect builder closure,
+  /// we achieve true code reuse while maintaining flexibility for different use cases.
+  ///
+  /// ## Design Rationale
+  /// This internal method serves as the single source of truth for lock management logic:
+  /// - **Centralized Logic**: All lock acquisition, effect building, and error handling in one place
+  /// - **Parameter Consistency**: All lock-related parameters are handled uniformly
+  /// - **Maintenance Efficiency**: Bug fixes and enhancements only need to be made once
+  /// - **Testing Focus**: Core logic can be tested through a single implementation path
+  /// - **Flexibility**: Effect builder allows for conditional effect creation (used by LockmanReducer)
+  ///
+  /// ## Usage Pattern
+  /// This method is called by various lock management components:
+  /// ```swift
+  /// // From Effect static methods
+  /// Effect.lock(
+  ///   effectBuilder: { Effect.concatenate(operations) },
+  ///   action: action, boundaryId: boundaryId, ...
+  /// )
+  ///
+  /// // From LockmanReducer (conditional effect creation)
+  /// Effect.lock(
+  ///   effectBuilder: {
+  ///     lockResult.canProceed ? baseReducer.reduce() : Effect.none
+  ///   },
+  ///   action: action, boundaryId: boundaryId, ...
+  /// )
+  /// ```
+  ///
+  /// - Parameters:
+  ///   - effectBuilder: Closure that creates the effect to be managed (called only if lock is successful)
+  ///   - action: LockmanAction providing lock information and strategy type
+  ///   - boundaryId: Unique identifier for effect cancellation and lock boundary
+  ///   - unlockOption: Controls when the unlock operation is executed
+  ///   - lockFailure: Optional handler for lock acquisition failures
+  ///   - fileID: Source file ID for debugging
+  ///   - filePath: Source file path for debugging
+  ///   - line: Source line number for debugging
+  ///   - column: Source column number for debugging
+  /// - Returns: Effect with automatic lock management
+  internal static func lock<B: LockmanBoundaryId, A: LockmanAction>(
+    effectBuilder: @escaping () -> Effect<Action>,
+    action: A,
+    boundaryId: B,
+    unlockOption: LockmanUnlockOption?,
+    lockFailure: (@Sendable (_ error: any Error, _ send: Send<Action>) async -> Void)?,
+    fileID: StaticString,
+    filePath: StaticString,
+    line: UInt,
+    column: UInt
+  ) -> Effect<Action> {
+    do {
+      // ✨ CRITICAL: Create lockmanInfo once to ensure consistent uniqueId throughout lock lifecycle
+      // This prevents lock/unlock mismatches that occur when methods are called multiple times
+      let lockmanInfo = action.createLockmanInfo()
+
+      // Create the effect that will be used for lock acquisition
+      let effect = effectBuilder()
+
+      // Acquire lock using the captured lockmanInfo (consistent uniqueId)
+      let lockResult = try effect.acquireLock(
+        lockmanInfo: lockmanInfo,
+        boundaryId: boundaryId
+      )
+
+      // Build lock effect using the same lockmanInfo instance (guaranteed unlock)
+      return effect.buildLockEffect(
+        lockResult: lockResult,
+        action: action,
+        lockmanInfo: lockmanInfo,
+        boundaryId: boundaryId,
+        unlockOption: unlockOption ?? action.unlockOption,
+        fileID: fileID,
+        filePath: filePath,
+        line: line,
+        column: column,
+        handler: lockFailure
+      )
+    } catch {
+      // Handle and report strategy resolution errors
+      handleError(
+        error: error,
+        fileID: fileID,
+        filePath: filePath,
+        line: line,
+        column: column
+      )
+      return createHandlerEffect(handler: lockFailure, error: error)
+    }
+  }
+
+  /// Unified internal implementation for all lock management scenarios.
+  ///
+  /// This method handles all lock management cases including:
+  /// - Regular Effect operations (concatenating, single operation)
+  /// - LockmanReducer with inout state parameters
+  /// - Any custom effect creation scenarios
+  ///
+  /// By using a non-escaping closure, this implementation works with both
+  /// pre-built effects and inout state parameters, providing a single
+  /// unified lock management solution.
+  ///
+  /// ## Design Rationale
+  /// - **Universal Compatibility**: Works with all effect creation patterns
+  /// - **Non-escaping Safety**: Compatible with inout parameters and pre-built effects
+  /// - **Lock-First Guarantee**: Effect creation only occurs after successful lock acquisition
+  /// - **Centralized Logic**: Single implementation for all lock management needs
+  ///
+  /// ## Lock-First Behavior
+  /// This implementation maintains true lock-first behavior:
+  /// - Lock feasibility is checked BEFORE effect creation
+  /// - Effects are created ONLY after successful lock acquisition
+  /// - Lock failures prevent any effect creation or state changes
+  ///
+  /// ## Usage Patterns
+  /// ```swift
+  /// // Pre-built effects
+  /// Effect.lock(reducer: { concatenatedEffect }, ...)
+  ///
+  /// // Dynamic effect creation
+  /// Effect.lock(reducer: { .run { ... } }, ...)
+  ///
+  /// // Reducer with inout state
+  /// Effect.lock(reducer: { self.base.reduce(into: &state, action: action) }, ...)
+  /// ```
+  ///
+  /// - Parameters:
+  ///   - reducer: Non-escaping closure that creates the effect (only called on lock success)
+  ///   - action: LockmanAction providing lock information and strategy type
+  ///   - boundaryId: Unique identifier for effect cancellation and lock boundary
+  ///   - unlockOption: Controls when the unlock operation is executed
+  ///   - lockFailure: Optional handler for lock acquisition failures
+  ///   - fileID: Source file ID for debugging
+  ///   - filePath: Source file path for debugging
+  ///   - line: Source line number for debugging
+  ///   - column: Source column number for debugging
+  /// - Returns: Effect with automatic lock management
+  internal static func lock<B: LockmanBoundaryId, A: LockmanAction>(
+    reducer: () -> Effect<Action>,
+    action: A,
+    boundaryId: B,
+    unlockOption: LockmanUnlockOption?,
+    lockFailure: (@Sendable (_ error: any Error, _ send: Send<Action>) async -> Void)?,
+    fileID: StaticString,
+    filePath: StaticString,
+    line: UInt,
+    column: UInt
+  ) -> Effect<Action> {
+    do {
+      // ✨ CRITICAL: Create lockmanInfo once to ensure consistent uniqueId throughout lock lifecycle
+      // This prevents lock/unlock mismatches that occur when methods are called multiple times
+      let lockmanInfo = action.createLockmanInfo()
+
+      // Create a dummy effect for lock acquisition (we don't use it for actual execution)
+      let dummyEffect: Effect<Action> = .none
+
+      // Acquire lock using the captured lockmanInfo (consistent uniqueId)
+      let lockResult = try dummyEffect.acquireLock(
+        lockmanInfo: lockmanInfo,
+        boundaryId: boundaryId
+      )
+
+      // Make decision based on lock result BEFORE executing reducer
+      switch lockResult {
+      case .success, .successWithPrecedingCancellation:
+        // ✅ Lock can be acquired - proceed with reducer execution
+        let baseEffect = reducer()  // Execute reducer with inout state access
+
+        // Build effect with the existing lock result using same lockmanInfo (guaranteed unlock)
+        return baseEffect.buildLockEffect(
+          lockResult: lockResult,
+          action: action,
+          lockmanInfo: lockmanInfo,
+          boundaryId: boundaryId,
+          unlockOption: unlockOption ?? action.unlockOption,
+          fileID: fileID,
+          filePath: filePath,
+          line: line,
+          column: column,
+          handler: lockFailure
+        )
+
+      case .cancel(let error):
+        // ❌ Lock cannot be acquired - do NOT execute reducer
+        // State mutations are prevented, achieving true lock-first behavior
+        return Effect.createHandlerEffect(handler: lockFailure, error: error)
+      }
+    } catch {
+      // Handle and report strategy resolution errors
+      Effect.handleError(
+        error: error,
+        fileID: fileID,
+        filePath: filePath,
+        line: line,
+        column: column
+      )
+      return createHandlerEffect(handler: lockFailure, error: error)
+    }
+  }
+
+  // MARK: - Private Helper Methods
+
+  /// Creates an effect that calls the provided handler with the given error.
+  /// Returns .none if handler is nil.
+  private static func createHandlerEffect<T>(
+    handler: (@Sendable (_ error: any Error, _ send: Send<Action>) async -> Void)?,
+    error: T
+  ) -> Effect<Action> where T: Error {
+    guard let handler = handler else {
+      return .none
+    }
+    return .run { send in
+      await handler(error, send)
     }
   }
 
