@@ -25,17 +25,10 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Select Xcode ${{ matrix.xcode }}
-        run: |
-          # Apply workaround for macOS 15 iOS build issues
-          # Reference: https://github.com/actions/runner-images/issues/12758#issuecomment-3187115656
-          sudo xcode-select -s /Applications/Xcode_${{ matrix.xcode }}.app
-          # Additional workaround: explicitly switch to Xcode app
-          sudo xcode-select --switch /Applications/Xcode_${{ matrix.xcode }}.app
-          # Verify Xcode selection
-          xcode-select -p
+        run: sudo xcode-select -s /Applications/Xcode_${{ matrix.xcode }}.app
       - name: Update xcbeautify
         run: brew update && brew upgrade xcbeautify
-      - name: Install iOS platform and setup
+      - name: Install iOS platform
         run: |
           sudo xcodebuild -runFirstLaunch
           # Install iOS platform to ensure SDK availability
@@ -43,11 +36,6 @@ jobs:
           # Try specific iOS version downloads
           sudo xcodebuild -downloadPlatform iOS -buildVersion 18.2 || true
           sudo xcodebuild -downloadPlatform iOS -buildVersion 18.1 || true
-          # Accept Xcode license
-          sudo xcodebuild -license accept || true
-          # Reset simulator device list
-          sudo xcrun simctl shutdown all
-          sudo xcrun simctl erase all
           # List available platforms for debugging
           xcodebuild -showsdks
           # List available simulators
@@ -84,17 +72,10 @@ jobs:
           restore-keys: |
             deriveddata-examples-
       - name: Select Xcode 16
-        run: |
-          # Apply workaround for macOS 15 iOS build issues
-          # Reference: https://github.com/actions/runner-images/issues/12758#issuecomment-3187115656
-          sudo xcode-select -s /Applications/Xcode_16.2.app
-          # Additional workaround: explicitly switch to Xcode app
-          sudo xcode-select --switch /Applications/Xcode_16.2.app
-          # Verify Xcode selection
-          xcode-select -p
+        run: sudo xcode-select -s /Applications/Xcode_16.2.app
       - name: Update xcbeautify
         run: brew update && brew upgrade xcbeautify
-      - name: Install iOS platform and setup
+      - name: Install iOS platform
         run: |
           sudo xcodebuild -runFirstLaunch
           # Install iOS platform to ensure SDK availability
@@ -102,11 +83,6 @@ jobs:
           # Try specific iOS version downloads
           sudo xcodebuild -downloadPlatform iOS -buildVersion 18.2 || true
           sudo xcodebuild -downloadPlatform iOS -buildVersion 18.1 || true
-          # Accept Xcode license
-          sudo xcodebuild -license accept || true
-          # Reset simulator device list
-          sudo xcrun simctl shutdown all
-          sudo xcrun simctl erase all
           # List available platforms for debugging
           xcodebuild -showsdks
           # List available simulators
