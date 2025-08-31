@@ -20,12 +20,12 @@ import XCTest
     func testMakeConformanceExtensionDeclBasic() throws {
       let type = IdentifierTypeSyntax(name: .identifier("UserAction"))
       let protocolName = "LockmanSingleExecutionAction"
-      
+
       let extensionDecl = try makeConformanceExtensionDecl(
         for: type,
         conformingTo: protocolName
       )
-      
+
       let extensionText = extensionDecl.description
       XCTAssertTrue(extensionText.contains("extension UserAction: LockmanSingleExecutionAction"))
       XCTAssertTrue(extensionText.contains("{"))
@@ -35,12 +35,12 @@ import XCTest
     func testMakeConformanceExtensionDeclWithGenericType() throws {
       let type = IdentifierTypeSyntax(name: .identifier("GenericAction"))
       let protocolName = "LockmanPriorityBasedAction"
-      
+
       let extensionDecl = try makeConformanceExtensionDecl(
         for: type,
         conformingTo: protocolName
       )
-      
+
       let extensionText = extensionDecl.description
       XCTAssertTrue(extensionText.contains("extension GenericAction: LockmanPriorityBasedAction"))
     }
@@ -48,12 +48,12 @@ import XCTest
     func testMakeAdvancedConformanceExtensionDeclWithoutWhereClause() throws {
       let type = IdentifierTypeSyntax(name: .identifier("SimpleAction"))
       let protocolName = "LockmanGroupCoordinatedAction"
-      
+
       let extensionDecl = try makeAdvancedConformanceExtensionDecl(
         for: type,
         conformingTo: protocolName
       )
-      
+
       let extensionText = extensionDecl.description
       XCTAssertTrue(extensionText.contains("extension SimpleAction: LockmanGroupCoordinatedAction"))
     }
@@ -62,15 +62,17 @@ import XCTest
       let type = IdentifierTypeSyntax(name: .identifier("ConditionalAction"))
       let protocolName = "LockmanConcurrencyLimitedAction"
       let whereClause = "T: Sendable"
-      
+
       let extensionDecl = try makeAdvancedConformanceExtensionDecl(
         for: type,
         conformingTo: protocolName,
         whereClause: whereClause
       )
-      
+
       let extensionText = extensionDecl.description
-      XCTAssertTrue(extensionText.contains("extension ConditionalAction: LockmanConcurrencyLimitedAction where T: Sendable"))
+      XCTAssertTrue(
+        extensionText.contains(
+          "extension ConditionalAction: LockmanConcurrencyLimitedAction where T: Sendable"))
     }
 
     func testIsValidSwiftIdentifierValid() {
@@ -130,14 +132,15 @@ import XCTest
     func testGenerateExtensionErrorMessage() {
       let type = IdentifierTypeSyntax(name: .identifier("TestType"))
       let protocolName = "TestProtocol"
-      let error = NSError(domain: "TestError", code: 1, userInfo: [NSLocalizedDescriptionKey: "Test error"])
-      
+      let error = NSError(
+        domain: "TestError", code: 1, userInfo: [NSLocalizedDescriptionKey: "Test error"])
+
       let message = generateExtensionErrorMessage(
         for: type,
         conformingTo: protocolName,
         underlyingError: error
       )
-      
+
       XCTAssertTrue(message.contains("TestType"))
       XCTAssertTrue(message.contains("TestProtocol"))
       XCTAssertTrue(message.contains("Test error"))
@@ -146,77 +149,77 @@ import XCTest
 
   }
 
-#if DEBUG
-  final class ExtensionGeneratorTestUtilsTests: XCTestCase {
-    
-    func testValidateExtensionStructure() throws {
-      let type = IdentifierTypeSyntax(name: .identifier("TestAction"))
-      let extensionDecl = try makeConformanceExtensionDecl(
-        for: type,
-        conformingTo: "TestProtocol"
-      )
-      
-      let isValid = ExtensionGeneratorTestUtils.validateExtensionStructure(
-        extensionDecl,
-        expectedType: "TestAction",
-        expectedProtocol: "TestProtocol"
-      )
-      
-      XCTAssertTrue(isValid)
-    }
+  #if DEBUG
+    final class ExtensionGeneratorTestUtilsTests: XCTestCase {
 
-    func testValidateExtensionStructureInvalid() throws {
-      let type = IdentifierTypeSyntax(name: .identifier("TestAction"))
-      let extensionDecl = try makeConformanceExtensionDecl(
-        for: type,
-        conformingTo: "TestProtocol"
-      )
-      
-      let isValid = ExtensionGeneratorTestUtils.validateExtensionStructure(
-        extensionDecl,
-        expectedType: "WrongType",
-        expectedProtocol: "TestProtocol"
-      )
-      
-      XCTAssertFalse(isValid)
-    }
+      func testValidateExtensionStructure() throws {
+        let type = IdentifierTypeSyntax(name: .identifier("TestAction"))
+        let extensionDecl = try makeConformanceExtensionDecl(
+          for: type,
+          conformingTo: "TestProtocol"
+        )
 
-    func testTestExtensionGenerationSuccess() {
-      let result = ExtensionGeneratorTestUtils.testExtensionGeneration(
-        typeName: "ValidType",
-        protocolName: "ValidProtocol"
-      )
-      
-      XCTAssertTrue(result.success)
-      XCTAssertTrue(result.issues.isEmpty)
-    }
+        let isValid = ExtensionGeneratorTestUtils.validateExtensionStructure(
+          extensionDecl,
+          expectedType: "TestAction",
+          expectedProtocol: "TestProtocol"
+        )
 
-    func testTestExtensionGenerationFailure() {
-      let result = ExtensionGeneratorTestUtils.testExtensionGeneration(
-        typeName: "",
-        protocolName: "ValidProtocol"
-      )
-      
-      XCTAssertFalse(result.success)
-      XCTAssertFalse(result.issues.isEmpty)
-    }
+        XCTAssertTrue(isValid)
+      }
 
-    func testValidateExtensionStructureInvalidProtocol() throws {
-      let type = IdentifierTypeSyntax(name: .identifier("TestAction"))
-      let extensionDecl = try makeConformanceExtensionDecl(
-        for: type,
-        conformingTo: "TestProtocol"
-      )
-      
-      let isValid = ExtensionGeneratorTestUtils.validateExtensionStructure(
-        extensionDecl,
-        expectedType: "TestAction",
-        expectedProtocol: "WrongProtocol"
-      )
-      
-      XCTAssertFalse(isValid)
+      func testValidateExtensionStructureInvalid() throws {
+        let type = IdentifierTypeSyntax(name: .identifier("TestAction"))
+        let extensionDecl = try makeConformanceExtensionDecl(
+          for: type,
+          conformingTo: "TestProtocol"
+        )
+
+        let isValid = ExtensionGeneratorTestUtils.validateExtensionStructure(
+          extensionDecl,
+          expectedType: "WrongType",
+          expectedProtocol: "TestProtocol"
+        )
+
+        XCTAssertFalse(isValid)
+      }
+
+      func testTestExtensionGenerationSuccess() {
+        let result = ExtensionGeneratorTestUtils.testExtensionGeneration(
+          typeName: "ValidType",
+          protocolName: "ValidProtocol"
+        )
+
+        XCTAssertTrue(result.success)
+        XCTAssertTrue(result.issues.isEmpty)
+      }
+
+      func testTestExtensionGenerationFailure() {
+        let result = ExtensionGeneratorTestUtils.testExtensionGeneration(
+          typeName: "",
+          protocolName: "ValidProtocol"
+        )
+
+        XCTAssertFalse(result.success)
+        XCTAssertFalse(result.issues.isEmpty)
+      }
+
+      func testValidateExtensionStructureInvalidProtocol() throws {
+        let type = IdentifierTypeSyntax(name: .identifier("TestAction"))
+        let extensionDecl = try makeConformanceExtensionDecl(
+          for: type,
+          conformingTo: "TestProtocol"
+        )
+
+        let isValid = ExtensionGeneratorTestUtils.validateExtensionStructure(
+          extensionDecl,
+          expectedType: "TestAction",
+          expectedProtocol: "WrongProtocol"
+        )
+
+        XCTAssertFalse(isValid)
+      }
     }
-  }
-#endif
+  #endif
 
 #endif

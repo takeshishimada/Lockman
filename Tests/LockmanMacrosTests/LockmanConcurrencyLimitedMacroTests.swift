@@ -8,7 +8,7 @@ import XCTest
   @testable import LockmanMacros
 
   final class LockmanConcurrencyLimitedMacroTests: XCTestCase {
-    
+
     private var mockContext: MockMacroExpansionContext!
 
     override func setUp() {
@@ -32,7 +32,7 @@ import XCTest
         name: .identifier("NetworkAction"),
         memberBlock: MemberBlockSyntax(members: MemberBlockItemListSyntax([]))
       )
-      
+
       let extensions = try LockmanConcurrencyLimitedMacro.expansion(
         of: attributeNode,
         attachedTo: enumDecl,
@@ -40,10 +40,11 @@ import XCTest
         conformingTo: [],
         in: mockContext
       )
-      
+
       XCTAssertEqual(extensions.count, 1)
       let extensionText = extensions.first!.description
-      XCTAssertTrue(extensionText.contains("extension NetworkAction: LockmanConcurrencyLimitedAction"))
+      XCTAssertTrue(
+        extensionText.contains("extension NetworkAction: LockmanConcurrencyLimitedAction"))
     }
 
     func testExtensionMacroExpansionWithDifferentType() throws {
@@ -55,7 +56,7 @@ import XCTest
         name: .identifier("DataAction"),
         memberBlock: MemberBlockSyntax(members: MemberBlockItemListSyntax([]))
       )
-      
+
       let extensions = try LockmanConcurrencyLimitedMacro.expansion(
         of: attributeNode,
         attachedTo: enumDecl,
@@ -63,7 +64,7 @@ import XCTest
         conformingTo: [],
         in: mockContext
       )
-      
+
       XCTAssertEqual(extensions.count, 1)
       let extensionText = extensions.first!.description
       XCTAssertTrue(extensionText.contains("extension DataAction: LockmanConcurrencyLimitedAction"))
@@ -75,7 +76,7 @@ import XCTest
       let enumCase = EnumCaseDeclSyntax(
         elements: EnumCaseElementListSyntax([
           EnumCaseElementSyntax(name: .identifier("upload")),
-          EnumCaseElementSyntax(name: .identifier("download"))
+          EnumCaseElementSyntax(name: .identifier("download")),
         ])
       )
       let memberItem = MemberBlockItemSyntax(decl: enumCase)
@@ -83,17 +84,17 @@ import XCTest
         name: .identifier("NetworkAction"),
         memberBlock: MemberBlockSyntax(members: MemberBlockItemListSyntax([memberItem]))
       )
-      
+
       let attributeNode = AttributeSyntax(
         attributeName: IdentifierTypeSyntax(name: .identifier("LockmanConcurrencyLimited"))
       )
-      
+
       let members = try LockmanConcurrencyLimitedMacro.expansion(
         of: attributeNode,
         providingMembersOf: enumDecl,
         in: mockContext
       )
-      
+
       XCTAssertEqual(members.count, 1)
       let generatedCode = members.first!.description
       XCTAssertTrue(generatedCode.contains("var actionName: String"))
@@ -106,17 +107,17 @@ import XCTest
         name: .identifier("InvalidAction"),
         memberBlock: MemberBlockSyntax(members: MemberBlockItemListSyntax([]))
       )
-      
+
       let attributeNode = AttributeSyntax(
         attributeName: IdentifierTypeSyntax(name: .identifier("LockmanConcurrencyLimited"))
       )
-      
+
       let members = try LockmanConcurrencyLimitedMacro.expansion(
         of: attributeNode,
         providingMembersOf: structDecl,
         in: mockContext
       )
-      
+
       XCTAssertEqual(members.count, 0)
       XCTAssertTrue(mockContext.diagnostics.count > 0)
     }
@@ -135,17 +136,17 @@ import XCTest
         name: .identifier("PublicAction"),
         memberBlock: MemberBlockSyntax(members: MemberBlockItemListSyntax([memberItem]))
       )
-      
+
       let attributeNode = AttributeSyntax(
         attributeName: IdentifierTypeSyntax(name: .identifier("LockmanConcurrencyLimited"))
       )
-      
+
       let members = try LockmanConcurrencyLimitedMacro.expansion(
         of: attributeNode,
         providingMembersOf: enumDecl,
         in: mockContext
       )
-      
+
       XCTAssertEqual(members.count, 1)
       let generatedCode = members.first!.description
       XCTAssertTrue(generatedCode.contains("public var actionName: String"))
@@ -156,18 +157,18 @@ import XCTest
         name: .identifier("EmptyAction"),
         memberBlock: MemberBlockSyntax(members: MemberBlockItemListSyntax([]))
       )
-      
+
       let attributeNode = AttributeSyntax(
         attributeName: IdentifierTypeSyntax(name: .identifier("LockmanConcurrencyLimited"))
       )
-      
+
       let members = try LockmanConcurrencyLimitedMacro.expansion(
         of: attributeNode,
         providingMembersOf: enumDecl,
         in: mockContext
       )
-      
-      XCTAssertEqual(members.count, 0) // Empty enum generates no members
+
+      XCTAssertEqual(members.count, 0)  // Empty enum generates no members
     }
 
     func testMemberMacroExpansionWithAssociatedValues() throws {
@@ -178,11 +179,11 @@ import XCTest
             parameterClause: EnumCaseParameterClauseSyntax(
               parameters: EnumCaseParameterListSyntax([
                 EnumCaseParameterSyntax(type: IdentifierTypeSyntax(name: .identifier("String"))),
-                EnumCaseParameterSyntax(type: IdentifierTypeSyntax(name: .identifier("Int")))
+                EnumCaseParameterSyntax(type: IdentifierTypeSyntax(name: .identifier("Int"))),
               ])
             )
           ),
-          EnumCaseElementSyntax(name: .identifier("cancel"))
+          EnumCaseElementSyntax(name: .identifier("cancel")),
         ])
       )
       let memberItem = MemberBlockItemSyntax(decl: enumCase)
@@ -190,23 +191,23 @@ import XCTest
         name: .identifier("FileAction"),
         memberBlock: MemberBlockSyntax(members: MemberBlockItemListSyntax([memberItem]))
       )
-      
+
       let attributeNode = AttributeSyntax(
         attributeName: IdentifierTypeSyntax(name: .identifier("LockmanConcurrencyLimited"))
       )
-      
+
       let members = try LockmanConcurrencyLimitedMacro.expansion(
         of: attributeNode,
         providingMembersOf: enumDecl,
         in: mockContext
       )
-      
+
       XCTAssertEqual(members.count, 1)
       let generatedCode = members.first!.description
       XCTAssertTrue(generatedCode.contains("var actionName: String"))
       XCTAssertTrue(generatedCode.contains("case .uploadFile(_, _): return \"uploadFile\""))
       XCTAssertTrue(generatedCode.contains("case .cancel: return \"cancel\""))
-      
+
       // Should NOT generate createLockmanInfo method (users implement themselves)
       XCTAssertFalse(generatedCode.contains("createLockmanInfo"))
     }
@@ -216,17 +217,17 @@ import XCTest
   // Mock context for testing diagnostic emission
   private class MockMacroExpansionContext: MacroExpansionContext {
     var diagnostics: [Diagnostic] = []
-    
+
     var lexicalContext: [Syntax] = []
-    
+
     func makeUniqueName(_ providedName: String) -> TokenSyntax {
       return TokenSyntax(.identifier(providedName + "_unique"), presence: .present)
     }
-    
+
     func diagnose(_ diagnostic: Diagnostic) {
       diagnostics.append(diagnostic)
     }
-    
+
     func location(
       of node: some SyntaxProtocol,
       at position: PositionInSyntaxNode,
@@ -234,7 +235,7 @@ import XCTest
     ) -> AbstractSourceLocation? {
       return nil
     }
-    
+
     func location(
       of node: some SyntaxProtocol,
       at position: AbsolutePosition,
@@ -242,7 +243,7 @@ import XCTest
     ) -> AbstractSourceLocation? {
       return nil
     }
-    
+
     func location(
       of node: some SyntaxProtocol,
       at position: AbsolutePosition,

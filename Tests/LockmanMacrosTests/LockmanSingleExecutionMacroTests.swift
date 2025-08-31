@@ -8,7 +8,7 @@ import XCTest
   @testable import LockmanMacros
 
   final class LockmanSingleExecutionMacroTests: XCTestCase {
-    
+
     private var mockContext: MockMacroExpansionContext!
 
     override func setUp() {
@@ -32,7 +32,7 @@ import XCTest
         name: .identifier("UserAction"),
         memberBlock: MemberBlockSyntax(members: MemberBlockItemListSyntax([]))
       )
-      
+
       let extensions = try LockmanSingleExecutionMacro.expansion(
         of: attributeNode,
         attachedTo: enumDecl,
@@ -40,7 +40,7 @@ import XCTest
         conformingTo: [],
         in: mockContext
       )
-      
+
       XCTAssertEqual(extensions.count, 1)
       let extensionText = extensions.first!.description
       XCTAssertTrue(extensionText.contains("extension UserAction: LockmanSingleExecutionAction"))
@@ -55,7 +55,7 @@ import XCTest
         name: .identifier("GenericAction"),
         memberBlock: MemberBlockSyntax(members: MemberBlockItemListSyntax([]))
       )
-      
+
       let extensions = try LockmanSingleExecutionMacro.expansion(
         of: attributeNode,
         attachedTo: structDecl,
@@ -63,7 +63,7 @@ import XCTest
         conformingTo: [],
         in: mockContext
       )
-      
+
       XCTAssertEqual(extensions.count, 1)
       let extensionText = extensions.first!.description
       XCTAssertTrue(extensionText.contains("extension GenericAction: LockmanSingleExecutionAction"))
@@ -75,7 +75,7 @@ import XCTest
       let enumCase = EnumCaseDeclSyntax(
         elements: EnumCaseElementListSyntax([
           EnumCaseElementSyntax(name: .identifier("login")),
-          EnumCaseElementSyntax(name: .identifier("logout"))
+          EnumCaseElementSyntax(name: .identifier("logout")),
         ])
       )
       let memberItem = MemberBlockItemSyntax(decl: enumCase)
@@ -83,17 +83,17 @@ import XCTest
         name: .identifier("UserAction"),
         memberBlock: MemberBlockSyntax(members: MemberBlockItemListSyntax([memberItem]))
       )
-      
+
       let attributeNode = AttributeSyntax(
         attributeName: IdentifierTypeSyntax(name: .identifier("LockmanSingleExecution"))
       )
-      
+
       let members = try LockmanSingleExecutionMacro.expansion(
         of: attributeNode,
         providingMembersOf: enumDecl,
         in: mockContext
       )
-      
+
       XCTAssertEqual(members.count, 1)
       let generatedCode = members.first!.description
       XCTAssertTrue(generatedCode.contains("var actionName: String"))
@@ -106,17 +106,17 @@ import XCTest
         name: .identifier("InvalidAction"),
         memberBlock: MemberBlockSyntax(members: MemberBlockItemListSyntax([]))
       )
-      
+
       let attributeNode = AttributeSyntax(
         attributeName: IdentifierTypeSyntax(name: .identifier("LockmanSingleExecution"))
       )
-      
+
       let members = try LockmanSingleExecutionMacro.expansion(
         of: attributeNode,
         providingMembersOf: structDecl,
         in: mockContext
       )
-      
+
       XCTAssertEqual(members.count, 0)
       XCTAssertTrue(mockContext.diagnostics.count > 0)
     }
@@ -135,17 +135,17 @@ import XCTest
         name: .identifier("PublicAction"),
         memberBlock: MemberBlockSyntax(members: MemberBlockItemListSyntax([memberItem]))
       )
-      
+
       let attributeNode = AttributeSyntax(
         attributeName: IdentifierTypeSyntax(name: .identifier("LockmanSingleExecution"))
       )
-      
+
       let members = try LockmanSingleExecutionMacro.expansion(
         of: attributeNode,
         providingMembersOf: enumDecl,
         in: mockContext
       )
-      
+
       XCTAssertEqual(members.count, 1)
       let generatedCode = members.first!.description
       XCTAssertTrue(generatedCode.contains("public var actionName: String"))
@@ -156,18 +156,18 @@ import XCTest
         name: .identifier("EmptyAction"),
         memberBlock: MemberBlockSyntax(members: MemberBlockItemListSyntax([]))
       )
-      
+
       let attributeNode = AttributeSyntax(
         attributeName: IdentifierTypeSyntax(name: .identifier("LockmanSingleExecution"))
       )
-      
+
       let members = try LockmanSingleExecutionMacro.expansion(
         of: attributeNode,
         providingMembersOf: enumDecl,
         in: mockContext
       )
-      
-      XCTAssertEqual(members.count, 0) // Empty enum generates no members
+
+      XCTAssertEqual(members.count, 0)  // Empty enum generates no members
     }
 
     func testMemberMacroExpansionWithComplexCases() throws {
@@ -181,7 +181,7 @@ import XCTest
               ])
             )
           ),
-          EnumCaseElementSyntax(name: .identifier("save"))
+          EnumCaseElementSyntax(name: .identifier("save")),
         ])
       )
       let memberItem = MemberBlockItemSyntax(decl: enumCase)
@@ -189,23 +189,23 @@ import XCTest
         name: .identifier("DataAction"),
         memberBlock: MemberBlockSyntax(members: MemberBlockItemListSyntax([memberItem]))
       )
-      
+
       let attributeNode = AttributeSyntax(
         attributeName: IdentifierTypeSyntax(name: .identifier("LockmanSingleExecution"))
       )
-      
+
       let members = try LockmanSingleExecutionMacro.expansion(
         of: attributeNode,
         providingMembersOf: enumDecl,
         in: mockContext
       )
-      
+
       XCTAssertEqual(members.count, 1)
       let generatedCode = members.first!.description
       XCTAssertTrue(generatedCode.contains("var actionName: String"))
       XCTAssertTrue(generatedCode.contains("case .fetch(_): return \"fetch\""))
       XCTAssertTrue(generatedCode.contains("case .save: return \"save\""))
-      
+
       // Should NOT generate createLockmanInfo method (users implement themselves)
       XCTAssertFalse(generatedCode.contains("createLockmanInfo"))
     }
@@ -215,17 +215,17 @@ import XCTest
   // Mock context for testing diagnostic emission
   private class MockMacroExpansionContext: MacroExpansionContext {
     var diagnostics: [Diagnostic] = []
-    
+
     var lexicalContext: [Syntax] = []
-    
+
     func makeUniqueName(_ providedName: String) -> TokenSyntax {
       return TokenSyntax(.identifier(providedName + "_unique"), presence: .present)
     }
-    
+
     func diagnose(_ diagnostic: Diagnostic) {
       diagnostics.append(diagnostic)
     }
-    
+
     func location(
       of node: some SyntaxProtocol,
       at position: PositionInSyntaxNode,
@@ -233,7 +233,7 @@ import XCTest
     ) -> AbstractSourceLocation? {
       return nil
     }
-    
+
     func location(
       of node: some SyntaxProtocol,
       at position: AbsolutePosition,
@@ -241,7 +241,7 @@ import XCTest
     ) -> AbstractSourceLocation? {
       return nil
     }
-    
+
     func location(
       of node: some SyntaxProtocol,
       at position: AbsolutePosition,

@@ -53,7 +53,7 @@ import XCTest
 
     func testCompositeStrategyMacrosAreRegistered() {
       let plugin = LockmanMacroPlugin()
-      
+
       let composite2 = plugin.providingMacros.contains { macroType in
         return String(describing: macroType) == "LockmanCompositeStrategy2Macro"
       }
@@ -66,7 +66,7 @@ import XCTest
       let composite5 = plugin.providingMacros.contains { macroType in
         return String(describing: macroType) == "LockmanCompositeStrategy5Macro"
       }
-      
+
       XCTAssertTrue(composite2)
       XCTAssertTrue(composite3)
       XCTAssertTrue(composite4)

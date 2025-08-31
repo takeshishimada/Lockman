@@ -28,14 +28,13 @@ final class LockmanComposableIssueReporterTests: XCTestCase {
   func testLockmanComposableIssueReporter_ConformsToLockmanIssueReporter() {
     // Test that LockmanComposableIssueReporter conforms to LockmanIssueReporter
     XCTAssertTrue(LockmanComposableIssueReporter.self is any LockmanIssueReporter.Type)
-    
+
     // Test that the type can be used as issue reporter
     let reporter: any LockmanIssueReporter.Type = LockmanComposableIssueReporter.self
     XCTAssertNotNil(reporter)
   }
 
   // MARK: - Issue Reporting Tests
-
 
   func testReportIssue_HandlesEmptyMessage() {
     XCTAssertNoThrow {
@@ -44,14 +43,16 @@ final class LockmanComposableIssueReporterTests: XCTestCase {
   }
 
   func testReportIssue_HandlesLongMessage() {
-    let longMessage = "Long message test - ignore this test issue: " + String(repeating: "A", count: 100)
+    let longMessage =
+      "Long message test - ignore this test issue: " + String(repeating: "A", count: 100)
     XCTAssertNoThrow {
       LockmanComposableIssueReporter.reportIssue(longMessage)
     }
   }
 
   func testReportIssue_HandlesSpecialCharacters() {
-    let specialMessage = "Test message with special chars - ignore this test issue 🚨 !@#$%^&*()_+ åäö"
+    let specialMessage =
+      "Test message with special chars - ignore this test issue 🚨 !@#$%^&*()_+ åäö"
     XCTAssertNoThrow {
       LockmanComposableIssueReporter.reportIssue(specialMessage)
     }
@@ -62,14 +63,17 @@ final class LockmanComposableIssueReporterTests: XCTestCase {
   func testConfigureComposableReporting_SetsCorrectIssueReporter() {
     // Verify initial state (should not be LockmanComposableIssueReporter)
     let initialReporter = LockmanManager.config.issueReporter
-    XCTAssertNotEqual(String(describing: initialReporter), String(describing: LockmanComposableIssueReporter.self))
+    XCTAssertNotEqual(
+      String(describing: initialReporter), String(describing: LockmanComposableIssueReporter.self))
 
     // Configure composable reporting
     LockmanManager.config.configureComposableReporting()
 
     // Verify the issue reporter was set correctly
     let configuredReporter = LockmanManager.config.issueReporter
-    XCTAssertEqual(String(describing: configuredReporter), String(describing: LockmanComposableIssueReporter.self))
+    XCTAssertEqual(
+      String(describing: configuredReporter),
+      String(describing: LockmanComposableIssueReporter.self))
   }
 
   func testConfigureComposableReporting_CanBeCalledMultipleTimes() {
@@ -82,7 +86,8 @@ final class LockmanComposableIssueReporterTests: XCTestCase {
 
     // Verify configuration works (basic functionality test)
     XCTAssertNoThrow {
-      LockmanComposableIssueReporter.reportIssue("Multiple configuration test - ignore this test issue")
+      LockmanComposableIssueReporter.reportIssue(
+        "Multiple configuration test - ignore this test issue")
     }
   }
 
@@ -94,7 +99,7 @@ final class LockmanComposableIssueReporterTests: XCTestCase {
 
     // Create a scenario that would trigger issue reporting
     // (We can't easily verify the actual reporting, but we can ensure no crashes occur)
-    
+
     let container = LockmanStrategyContainer()
     let strategy = LockmanSingleExecutionStrategy()
     try? container.register(strategy)
@@ -115,19 +120,22 @@ final class LockmanComposableIssueReporterTests: XCTestCase {
   func testReportIssue_WithNilFile() {
     // Test that the method handles StaticString properly
     XCTAssertNoThrow {
-      LockmanComposableIssueReporter.reportIssue("Test message with empty file - ignore this test issue", file: "", line: 0)
+      LockmanComposableIssueReporter.reportIssue(
+        "Test message with empty file - ignore this test issue", file: "", line: 0)
     }
   }
 
   func testReportIssue_WithZeroLine() {
     XCTAssertNoThrow {
-      LockmanComposableIssueReporter.reportIssue("Test message with zero line - ignore this test issue", line: 0)
+      LockmanComposableIssueReporter.reportIssue(
+        "Test message with zero line - ignore this test issue", line: 0)
     }
   }
 
   func testReportIssue_WithHighLineNumber() {
     XCTAssertNoThrow {
-      LockmanComposableIssueReporter.reportIssue("Test message with high line number - ignore this test issue", line: UInt.max)
+      LockmanComposableIssueReporter.reportIssue(
+        "Test message with high line number - ignore this test issue", line: UInt.max)
     }
   }
 
@@ -149,7 +157,8 @@ final class LockmanComposableIssueReporterTests: XCTestCase {
 
     // Should still be configured correctly after concurrent calls
     let finalReporter = LockmanManager.config.issueReporter
-    XCTAssertEqual(String(describing: finalReporter), String(describing: LockmanComposableIssueReporter.self))
+    XCTAssertEqual(
+      String(describing: finalReporter), String(describing: LockmanComposableIssueReporter.self))
   }
 
   func testReportIssue_ConcurrentCalls() async {
@@ -184,7 +193,8 @@ final class LockmanComposableIssueReporterTests: XCTestCase {
 
     // Verify configuration works (basic functionality test)
     XCTAssertNoThrow {
-      LockmanComposableIssueReporter.reportIssue("Documentation example test - ignore this test issue")
+      LockmanComposableIssueReporter.reportIssue(
+        "Documentation example test - ignore this test issue")
     }
   }
 
@@ -197,7 +207,7 @@ final class LockmanComposableIssueReporterTests: XCTestCase {
     // Instead, verify it's a valid enum type by checking it can be used as expected
     let reporterType: any LockmanIssueReporter.Type = LockmanComposableIssueReporter.self
     XCTAssertNotNil(reporterType)
-    
+
     // Verify the type name indicates it's an enum
     let typeName = String(describing: LockmanComposableIssueReporter.self)
     XCTAssertEqual(typeName, "LockmanComposableIssueReporter")
@@ -208,27 +218,27 @@ final class LockmanComposableIssueReporterTests: XCTestCase {
     let _: (String, StaticString, UInt) -> Void = LockmanComposableIssueReporter.reportIssue
     // If this compiles, the signature is correct
   }
-  
+
   func testReportIssue_ThroughLockmanManager() async throws {
     // Test that reportIssue is called through LockmanManager when configured
     LockmanManager.config.configureComposableReporting()
-    
+
     let container = LockmanStrategyContainer()
     let strategy = LockmanSingleExecutionStrategy()
     try container.register(strategy)
-    
+
     await LockmanManager.withTestContainer(container) {
       let store = await TestStore(initialState: TestState()) {
         IssueTestReducer()
       }
-      
+
       // Test basic locking functionality without errors
       await store.send(.lockableAction) {
         $0.value = 1
       }
       await store.finish()
     }
-    
+
     // Reset to default
     LockmanManager.config.issueReporter = LockmanDefaultIssueReporter.self
   }
@@ -240,7 +250,7 @@ final class LockmanComposableIssueReporterTests: XCTestCase {
 @CasePathable
 private enum TestAction: Equatable, LockmanAction {
   case lockableAction
-  
+
   func createLockmanInfo() -> LockmanSingleExecutionInfo {
     return LockmanSingleExecutionInfo(
       strategyId: LockmanStrategyId.singleExecution,
@@ -248,7 +258,7 @@ private enum TestAction: Equatable, LockmanAction {
       mode: .boundary
     )
   }
-  
+
   var unlockOption: LockmanUnlockOption {
     return .immediate
   }
@@ -262,7 +272,7 @@ private struct TestState: Equatable {
 private struct IssueTestReducer {
   typealias State = TestState
   typealias Action = TestAction
-  
+
   var body: some ReducerOf<Self> {
     Reduce { state, action in
       switch action {

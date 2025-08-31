@@ -14,7 +14,7 @@ final class ReducerLockmanTests: XCTestCase {
     let container = LockmanStrategyContainer()
     let strategy = LockmanSingleExecutionStrategy()
     try container.register(strategy)
-    
+
     await LockmanManager.withTestContainer(container) {
       let store = await TestStore(
         initialState: TestFeature.State()
@@ -25,16 +25,16 @@ final class ReducerLockmanTests: XCTestCase {
             boundaryId: TestBoundaryID.feature
           )
       }
-      
+
       await store.send(.performOperation) {
         $0.isProcessing = true
       }
-      
+
       await store.receive(\.operationCompleted) {
         $0.isProcessing = false
         $0.result = 42
       }
-      
+
       await store.finish()
     }
   }
@@ -43,7 +43,7 @@ final class ReducerLockmanTests: XCTestCase {
     let container = LockmanStrategyContainer()
     let strategy = LockmanSingleExecutionStrategy()
     try container.register(strategy)
-    
+
     await LockmanManager.withTestContainer(container) {
       let store = await TestStore(
         initialState: TestFeatureWithAction.State()
@@ -51,16 +51,16 @@ final class ReducerLockmanTests: XCTestCase {
         TestFeatureWithAction()
           .lock(boundaryId: TestBoundaryID.feature)
       }
-      
+
       await store.send(.performLockableOperation) {
         $0.isProcessing = true
       }
-      
+
       await store.receive(\.completed) {
         $0.isProcessing = false
         $0.value = 100
       }
-      
+
       await store.finish()
     }
   }
@@ -69,7 +69,7 @@ final class ReducerLockmanTests: XCTestCase {
     let container = LockmanStrategyContainer()
     let strategy = LockmanSingleExecutionStrategy()
     try container.register(strategy)
-    
+
     await LockmanManager.withTestContainer(container) {
       let store = await TestStore(
         initialState: TestCompositeFeature.State()
@@ -80,11 +80,11 @@ final class ReducerLockmanTests: XCTestCase {
             for: \.subAction1
           )
       }
-      
+
       await store.send(.subAction1(.performAction)) {
         $0.result1 = 1
       }
-      
+
       await store.finish()
     }
   }
@@ -93,7 +93,7 @@ final class ReducerLockmanTests: XCTestCase {
     let container = LockmanStrategyContainer()
     let strategy = LockmanSingleExecutionStrategy()
     try container.register(strategy)
-    
+
     await LockmanManager.withTestContainer(container) {
       let store = await TestStore(
         initialState: TestCompositeFeature.State()
@@ -105,11 +105,11 @@ final class ReducerLockmanTests: XCTestCase {
             \.subAction2
           )
       }
-      
+
       await store.send(.subAction2(.performAction)) {
         $0.result2 = 2
       }
-      
+
       await store.finish()
     }
   }
@@ -118,7 +118,7 @@ final class ReducerLockmanTests: XCTestCase {
     let container = LockmanStrategyContainer()
     let strategy = LockmanSingleExecutionStrategy()
     try container.register(strategy)
-    
+
     await LockmanManager.withTestContainer(container) {
       let store = await TestStore(
         initialState: TestCompositeFeature.State()
@@ -131,11 +131,11 @@ final class ReducerLockmanTests: XCTestCase {
             \.subAction3
           )
       }
-      
+
       await store.send(.subAction3(.performAction)) {
         $0.result3 = 3
       }
-      
+
       await store.finish()
     }
   }
@@ -144,7 +144,7 @@ final class ReducerLockmanTests: XCTestCase {
     let container = LockmanStrategyContainer()
     let strategy = LockmanSingleExecutionStrategy()
     try container.register(strategy)
-    
+
     await LockmanManager.withTestContainer(container) {
       let store = await TestStore(
         initialState: TestCompositeFeature.State()
@@ -158,11 +158,11 @@ final class ReducerLockmanTests: XCTestCase {
             \.subAction4
           )
       }
-      
+
       await store.send(.subAction4(.performAction)) {
         $0.result4 = 4
       }
-      
+
       await store.finish()
     }
   }
@@ -171,7 +171,7 @@ final class ReducerLockmanTests: XCTestCase {
     let container = LockmanStrategyContainer()
     let strategy = LockmanSingleExecutionStrategy()
     try container.register(strategy)
-    
+
     await LockmanManager.withTestContainer(container) {
       let store = await TestStore(
         initialState: TestCompositeFeature.State()
@@ -186,11 +186,11 @@ final class ReducerLockmanTests: XCTestCase {
             \.subAction5
           )
       }
-      
+
       await store.send(.subAction5(.performAction)) {
         $0.result5 = 5
       }
-      
+
       await store.finish()
     }
   }
@@ -201,7 +201,7 @@ final class ReducerLockmanTests: XCTestCase {
     let container = LockmanStrategyContainer()
     let strategy = LockmanSingleExecutionStrategy()
     try container.register(strategy)
-    
+
     await LockmanManager.withTestContainer(container) {
       let store = await TestStore(
         initialState: TestFallbackFeature.State()
@@ -212,11 +212,11 @@ final class ReducerLockmanTests: XCTestCase {
             for: \.viewAction  // This path exists but TestViewAction doesn't implement LockmanAction
           )
       }
-      
+
       await store.send(.rootLockmanAction) {  // Root action implements LockmanAction
         $0.executed = true
       }
-      
+
       await store.finish()
     }
   }
@@ -225,7 +225,7 @@ final class ReducerLockmanTests: XCTestCase {
     let container = LockmanStrategyContainer()
     let strategy = LockmanSingleExecutionStrategy()
     try container.register(strategy)
-    
+
     await LockmanManager.withTestContainer(container) {
       let store = await TestStore(
         initialState: TestFallbackFeature.State()
@@ -237,11 +237,11 @@ final class ReducerLockmanTests: XCTestCase {
             \.other
           )
       }
-      
+
       await store.send(.rootLockmanAction) {  // Root action implements LockmanAction
         $0.executed = true
       }
-      
+
       await store.finish()
     }
   }
@@ -250,7 +250,7 @@ final class ReducerLockmanTests: XCTestCase {
     let container = LockmanStrategyContainer()
     let strategy = LockmanSingleExecutionStrategy()
     try container.register(strategy)
-    
+
     await LockmanManager.withTestContainer(container) {
       let store = await TestStore(
         initialState: TestFallbackFeature.State()
@@ -263,11 +263,11 @@ final class ReducerLockmanTests: XCTestCase {
             \.viewAction
           )
       }
-      
+
       await store.send(.rootLockmanAction) {  // Root action implements LockmanAction
         $0.executed = true
       }
-      
+
       await store.finish()
     }
   }
@@ -276,7 +276,7 @@ final class ReducerLockmanTests: XCTestCase {
     let container = LockmanStrategyContainer()
     let strategy = LockmanSingleExecutionStrategy()
     try container.register(strategy)
-    
+
     await LockmanManager.withTestContainer(container) {
       let store = await TestStore(
         initialState: TestFallbackFeature.State()
@@ -290,11 +290,11 @@ final class ReducerLockmanTests: XCTestCase {
             \.other
           )
       }
-      
+
       await store.send(.rootLockmanAction) {  // Root action implements LockmanAction
         $0.executed = true
       }
-      
+
       await store.finish()
     }
   }
@@ -303,7 +303,7 @@ final class ReducerLockmanTests: XCTestCase {
     let container = LockmanStrategyContainer()
     let strategy = LockmanSingleExecutionStrategy()
     try container.register(strategy)
-    
+
     await LockmanManager.withTestContainer(container) {
       let store = await TestStore(
         initialState: TestFallbackFeature.State()
@@ -318,11 +318,11 @@ final class ReducerLockmanTests: XCTestCase {
             \.viewAction
           )
       }
-      
+
       await store.send(.rootLockmanAction) {  // Root action implements LockmanAction
         $0.executed = true
       }
-      
+
       await store.finish()
     }
   }
@@ -333,7 +333,7 @@ final class ReducerLockmanTests: XCTestCase {
     let container = LockmanStrategyContainer()
     let strategy = LockmanSingleExecutionStrategy()
     try container.register(strategy)
-    
+
     await LockmanManager.withTestContainer(container) {
       let store = await TestStore(
         initialState: TestNonLockmanFeature.State()
@@ -344,11 +344,11 @@ final class ReducerLockmanTests: XCTestCase {
             for: \.viewAction  // Path exists but doesn't return LockmanAction
           )
       }
-      
+
       await store.send(.normalAction) {  // Root action doesn't implement LockmanAction either
         $0.normalActionExecuted = true
       }
-      
+
       await store.finish()
     }
   }
@@ -357,7 +357,7 @@ final class ReducerLockmanTests: XCTestCase {
     let container = LockmanStrategyContainer()
     let strategy = LockmanSingleExecutionStrategy()
     try container.register(strategy)
-    
+
     await LockmanManager.withTestContainer(container) {
       let store = await TestStore(
         initialState: TestNonLockmanFeature.State()
@@ -369,11 +369,11 @@ final class ReducerLockmanTests: XCTestCase {
             \.other
           )
       }
-      
+
       await store.send(.normalAction) {  // Root action doesn't implement LockmanAction either
         $0.normalActionExecuted = true
       }
-      
+
       await store.finish()
     }
   }
@@ -382,7 +382,7 @@ final class ReducerLockmanTests: XCTestCase {
     let container = LockmanStrategyContainer()
     let strategy = LockmanSingleExecutionStrategy()
     try container.register(strategy)
-    
+
     await LockmanManager.withTestContainer(container) {
       let store = await TestStore(
         initialState: TestNonLockmanFeature.State()
@@ -395,11 +395,11 @@ final class ReducerLockmanTests: XCTestCase {
             \.viewAction
           )
       }
-      
+
       await store.send(.normalAction) {  // Root action doesn't implement LockmanAction either
         $0.normalActionExecuted = true
       }
-      
+
       await store.finish()
     }
   }
@@ -408,7 +408,7 @@ final class ReducerLockmanTests: XCTestCase {
     let container = LockmanStrategyContainer()
     let strategy = LockmanSingleExecutionStrategy()
     try container.register(strategy)
-    
+
     await LockmanManager.withTestContainer(container) {
       let store = await TestStore(
         initialState: TestNonLockmanFeature.State()
@@ -422,11 +422,11 @@ final class ReducerLockmanTests: XCTestCase {
             \.other
           )
       }
-      
+
       await store.send(.normalAction) {  // Root action doesn't implement LockmanAction either
         $0.normalActionExecuted = true
       }
-      
+
       await store.finish()
     }
   }
@@ -435,7 +435,7 @@ final class ReducerLockmanTests: XCTestCase {
     let container = LockmanStrategyContainer()
     let strategy = LockmanSingleExecutionStrategy()
     try container.register(strategy)
-    
+
     await LockmanManager.withTestContainer(container) {
       let store = await TestStore(
         initialState: TestNonLockmanFeature.State()
@@ -450,11 +450,11 @@ final class ReducerLockmanTests: XCTestCase {
             \.viewAction
           )
       }
-      
+
       await store.send(.normalAction) {  // Root action doesn't implement LockmanAction either
         $0.normalActionExecuted = true
       }
-      
+
       await store.finish()
     }
   }
@@ -480,16 +480,16 @@ private struct TestFeature {
     var isProcessing = false
     var result: Int?
   }
-  
+
   typealias Action = TestAction
-  
+
   var body: some Reducer<State, Action> {
     Reduce { state, action in
       switch action {
       case .performOperation:
         state.isProcessing = true
         return .send(.operationCompleted)
-        
+
       case .operationCompleted:
         state.isProcessing = false
         state.result = 42
@@ -519,7 +519,7 @@ private enum TestLockmanAction: Equatable, LockmanAction {
       )
     }
   }
-  
+
   var unlockOption: LockmanUnlockOption {
     return .immediate
   }
@@ -531,16 +531,16 @@ private struct TestFeatureWithAction {
     var isProcessing = false
     var value: Int?
   }
-  
+
   typealias Action = TestLockmanAction
-  
+
   var body: some Reducer<State, Action> {
     Reduce { state, action in
       switch action {
       case .performLockableOperation:
         state.isProcessing = true
         return .send(.completed)
-        
+
       case .completed:
         state.isProcessing = false
         state.value = 100
@@ -554,14 +554,14 @@ private struct TestFeatureWithAction {
 @CasePathable
 private enum TestSubAction1: Equatable, LockmanAction {
   case performAction
-  
+
   func createLockmanInfo() -> LockmanSingleExecutionInfo {
     return LockmanSingleExecutionInfo(
       actionId: "subAction1",
       mode: .boundary
     )
   }
-  
+
   var unlockOption: LockmanUnlockOption {
     return .immediate
   }
@@ -570,14 +570,14 @@ private enum TestSubAction1: Equatable, LockmanAction {
 @CasePathable
 private enum TestSubAction2: Equatable, LockmanAction {
   case performAction
-  
+
   func createLockmanInfo() -> LockmanSingleExecutionInfo {
     return LockmanSingleExecutionInfo(
-      actionId: "subAction2", 
+      actionId: "subAction2",
       mode: .boundary
     )
   }
-  
+
   var unlockOption: LockmanUnlockOption {
     return .immediate
   }
@@ -586,14 +586,14 @@ private enum TestSubAction2: Equatable, LockmanAction {
 @CasePathable
 private enum TestSubAction3: Equatable, LockmanAction {
   case performAction
-  
+
   func createLockmanInfo() -> LockmanSingleExecutionInfo {
     return LockmanSingleExecutionInfo(
       actionId: "subAction3",
       mode: .boundary
     )
   }
-  
+
   var unlockOption: LockmanUnlockOption {
     return .immediate
   }
@@ -602,14 +602,14 @@ private enum TestSubAction3: Equatable, LockmanAction {
 @CasePathable
 private enum TestSubAction4: Equatable, LockmanAction {
   case performAction
-  
+
   func createLockmanInfo() -> LockmanSingleExecutionInfo {
     return LockmanSingleExecutionInfo(
       actionId: "subAction4",
       mode: .boundary
     )
   }
-  
+
   var unlockOption: LockmanUnlockOption {
     return .immediate
   }
@@ -618,14 +618,14 @@ private enum TestSubAction4: Equatable, LockmanAction {
 @CasePathable
 private enum TestSubAction5: Equatable, LockmanAction {
   case performAction
-  
+
   func createLockmanInfo() -> LockmanSingleExecutionInfo {
     return LockmanSingleExecutionInfo(
       actionId: "subAction5",
       mode: .boundary
     )
   }
-  
+
   var unlockOption: LockmanUnlockOption {
     return .immediate
   }
@@ -650,32 +650,32 @@ private struct TestCompositeFeature {
     var result4: Int?
     var result5: Int?
   }
-  
+
   typealias Action = TestCompositeAction
-  
+
   var body: some Reducer<State, Action> {
     Reduce { state, action in
       switch action {
       case .subAction1(.performAction):
         state.result1 = 1
         return .none
-        
+
       case .subAction2(.performAction):
         state.result2 = 2
         return .none
-        
+
       case .subAction3(.performAction):
         state.result3 = 3
         return .none
-        
+
       case .subAction4(.performAction):
         state.result4 = 4
         return .none
-        
+
       case .subAction5(.performAction):
         state.result5 = 5
         return .none
-        
+
       case .other:
         return .none
       }
@@ -689,21 +689,21 @@ private enum TestFallbackAction: Equatable, LockmanAction {
   case rootLockmanAction
   case viewAction(TestViewAction)  // This exists but we'll use wrong paths
   case other
-  
+
   func createLockmanInfo() -> LockmanSingleExecutionInfo {
     return LockmanSingleExecutionInfo(
       actionId: "rootLockmanAction",
       mode: .boundary
     )
   }
-  
+
   var unlockOption: LockmanUnlockOption {
     return .immediate
   }
 }
 
 // Non-LockmanAction nested type
-@CasePathable  
+@CasePathable
 private enum TestViewAction: Equatable {
   case performViewAction
 }
@@ -713,19 +713,19 @@ private struct TestFallbackFeature {
   struct State: Equatable {
     var executed = false
   }
-  
+
   typealias Action = TestFallbackAction
-  
+
   var body: some Reducer<State, Action> {
     Reduce { state, action in
       switch action {
       case .rootLockmanAction:
         state.executed = true
         return .none
-        
+
       case .viewAction(.performViewAction):
         return .none
-        
+
       case .other:
         return .none
       }
@@ -746,19 +746,19 @@ private struct TestNonLockmanFeature {
   struct State: Equatable {
     var normalActionExecuted = false
   }
-  
+
   typealias Action = TestNonLockmanAction
-  
+
   var body: some Reducer<State, Action> {
     Reduce { state, action in
       switch action {
       case .normalAction:
         state.normalActionExecuted = true
         return .none
-        
+
       case .viewAction(.performViewAction):
         return .none
-        
+
       case .other:
         return .none
       }

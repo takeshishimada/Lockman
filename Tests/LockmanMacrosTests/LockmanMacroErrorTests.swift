@@ -34,17 +34,22 @@ import XCTest
 
     func testUnsupportedStrategyCountError() {
       let error = LockmanMacroError.unsupportedStrategyCount(10)
-      XCTAssertEqual(error.description, "@LockmanCompositeStrategy supports 2-5 strategies, but 10 were provided.")
+      XCTAssertEqual(
+        error.description,
+        "@LockmanCompositeStrategy supports 2-5 strategies, but 10 were provided.")
     }
 
     func testUnsupportedStrategyCountErrorMinimum() {
       let error = LockmanMacroError.unsupportedStrategyCount(1)
-      XCTAssertEqual(error.description, "@LockmanCompositeStrategy supports 2-5 strategies, but 1 were provided.")
+      XCTAssertEqual(
+        error.description, "@LockmanCompositeStrategy supports 2-5 strategies, but 1 were provided."
+      )
     }
 
     func testStrategyResolutionFailedError() {
       let error = LockmanMacroError.strategyResolutionFailed("Test strategy resolution error")
-      XCTAssertEqual(error.description, "Failed to resolve strategy: Test strategy resolution error")
+      XCTAssertEqual(
+        error.description, "Failed to resolve strategy: Test strategy resolution error")
     }
   }
 
