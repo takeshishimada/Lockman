@@ -77,7 +77,7 @@ extension Effect {
 
     // Delegate to the unified internal implementation
     return Effect.lock(
-      reducer: { concatenatedEffect },
+      effectBuilder: { concatenatedEffect },
       action: action,
       boundaryId: boundaryId,
       unlockOption: unlockOption,
@@ -160,7 +160,7 @@ extension Effect {
   ) -> Effect<Action> {
     // Delegate to the unified internal implementation
     return Effect.lock(
-      reducer: { operation },
+      effectBuilder: { operation },
       action: action,
       boundaryId: boundaryId,
       unlockOption: unlockOption,

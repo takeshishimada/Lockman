@@ -86,7 +86,7 @@ public struct LockmanReducer<Base: Reducer>: Reducer {
       // ✨ LOCK-FIRST IMPLEMENTATION: Use unified Effect.lock implementation
       // The unified lock implementation handles inout state parameters via non-escaping closures
       return Effect.lock(
-        reducer: { self.base.reduce(into: &state, action: action) },
+        effectBuilder: { self.base.reduce(into: &state, action: action) },
         action: lockmanAction,
         boundaryId: boundaryId,
         unlockOption: unlockOption,

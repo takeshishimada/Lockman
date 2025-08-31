@@ -665,7 +665,7 @@ final class EffectLockmanInternalTests: XCTestCase {
     await LockmanManager.withTestContainer(container) {
       // Test second internal static lock method (reducer parameter)
       let lockedEffect = Effect<TestAction>.lock(
-        reducer: {
+        effectBuilder: {
           .run { send in
             await send(.response(1400))
           }
@@ -693,7 +693,7 @@ final class EffectLockmanInternalTests: XCTestCase {
     await LockmanManager.withTestContainer(container) {
       // Test error handling in second internal static lock method
       let lockedEffect = Effect<TestActionWithInvalidStrategy>.lock(
-        reducer: {
+        effectBuilder: {
           .run { send in
             await send(.response(1600))
           }
@@ -840,7 +840,7 @@ final class EffectLockmanInternalTests: XCTestCase {
       // Test second internal static lock method (reducer parameter) with .cancel result
       // This should trigger the .cancel case in the reducer static method
       let lockedEffect = Effect<TestAction>.lock(
-        reducer: {
+        effectBuilder: {
           .run { send in
             await send(.response(1700))
           }
@@ -868,7 +868,7 @@ final class EffectLockmanInternalTests: XCTestCase {
     await LockmanManager.withTestContainer(emptyContainer) {
       // This should trigger .cancel case due to strategy not being registered
       let lockedEffect = Effect<TestAction>.lock(
-        reducer: {
+        effectBuilder: {
           .run { send in
             await send(.response(1800))
           }
@@ -898,7 +898,7 @@ final class EffectLockmanInternalTests: XCTestCase {
       // Test second internal static lock method (reducer parameter) with .successWithPrecedingCancellation result
       // This should trigger the .successWithPrecedingCancellation case in the reducer static method
       let lockedEffect = Effect<TestAction>.lock(
-        reducer: {
+        effectBuilder: {
           .run { send in
             await send(.response(1900))
           }

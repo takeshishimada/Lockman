@@ -162,17 +162,17 @@ extension Effect {
   /// ## Usage Patterns
   /// ```swift
   /// // Pre-built effects
-  /// Effect.lock(reducer: { concatenatedEffect }, ...)
+  /// Effect.lock(effectBuilder: { concatenatedEffect }, ...)
   ///
   /// // Dynamic effect creation
-  /// Effect.lock(reducer: { .run { ... } }, ...)
+  /// Effect.lock(effectBuilder: { .run { ... } }, ...)
   ///
   /// // Reducer with inout state
-  /// Effect.lock(reducer: { self.base.reduce(into: &state, action: action) }, ...)
+  /// Effect.lock(effectBuilder: { self.base.reduce(into: &state, action: action) }, ...)
   /// ```
   ///
   /// - Parameters:
-  ///   - reducer: Non-escaping closure that creates the effect (only called on lock success)
+  ///   - effectBuilder: Non-escaping closure that creates the effect (only called on lock success)
   ///   - action: LockmanAction providing lock information and strategy type
   ///   - boundaryId: Unique identifier for effect cancellation and lock boundary
   ///   - unlockOption: Controls when the unlock operation is executed
@@ -183,7 +183,7 @@ extension Effect {
   ///   - column: Source column number for debugging
   /// - Returns: Effect with automatic lock management
   internal static func lock<B: LockmanBoundaryId, A: LockmanAction>(
-    reducer: () -> Effect<Action>,
+    effectBuilder: () -> Effect<Action>,
     action: A,
     boundaryId: B,
     unlockOption: LockmanUnlockOption?,
@@ -206,11 +206,11 @@ extension Effect {
         boundaryId: boundaryId
       )
 
-      // Make decision based on lock result BEFORE executing reducer
+      // Make decision based on lock result BEFORE executing effect builder
       switch lockResult {
       case .success, .successWithPrecedingCancellation:
-        // ✅ Lock can be acquired - proceed with reducer execution
-        let baseEffect = reducer()  // Execute reducer with inout state access
+        // ✅ Lock can be acquired - proceed with effect builder execution
+        let baseEffect = effectBuilder()  // Execute effect builder
 
         // Build effect with the existing lock result using same lockmanInfo (guaranteed unlock)
         return baseEffect.buildLockEffect(
@@ -227,7 +227,7 @@ extension Effect {
         )
 
       case .cancel(let error):
-        // ❌ Lock cannot be acquired - do NOT execute reducer
+        // ❌ Lock cannot be acquired - do NOT execute effect builder
         // State mutations are prevented, achieving true lock-first behavior
         return Effect.createHandlerEffect(handler: lockFailure, error: error)
       }
