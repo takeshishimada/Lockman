@@ -40,11 +40,11 @@ final class LockmanDynamicConditionReducerTests: XCTestCase {
         boundaryId: TestBoundaryID.feature
       )
     }
-    
+
     // Blocked action should not modify state or produce effects
     await store.send(TestAction.blockedAction)
     // State should remain unchanged (counter = 0)
-    
+
     await store.finish()
   }
 
@@ -78,12 +78,12 @@ final class LockmanDynamicConditionReducerTests: XCTestCase {
         boundaryId: TestBoundaryID.feature
       )
     }
-    
+
     // Allowed action should modify state
     await store.send(TestAction.allowedAction) {
       $0.counter = 1
     }
-    
+
     await store.finish()
   }
 
@@ -117,19 +117,19 @@ final class LockmanDynamicConditionReducerTests: XCTestCase {
         boundaryId: TestBoundaryID.feature
       )
     }
-    
+
     // Test the Reduce instance initialization path
     await store.send(TestAction.allowedAction) {
       $0.counter = 2  // Different value to distinguish from function init
     }
-    
+
     await store.finish()
   }
 
   func testLockFailureHandler_CalledOnCancel() async throws {
     var handlerCalled = false
     var capturedError: Error?
-    
+
     let store = await TestStore<TestState, TestAction>(
       initialState: TestState()
     ) {
@@ -163,12 +163,12 @@ final class LockmanDynamicConditionReducerTests: XCTestCase {
         }
       )
     }
-    
+
     // Send blocked action - should trigger lockFailure handler
     await store.send(TestAction.blockedAction)
-    
+
     await store.finish()
-    
+
     // Verify handler was called with correct error
     XCTAssertTrue(handlerCalled)
     XCTAssertTrue(capturedError is DynamicConditionError)
@@ -208,12 +208,12 @@ final class LockmanDynamicConditionReducerTests: XCTestCase {
         boundaryId: TestBoundaryID.feature
       )
     }
-    
+
     // Test successWithPrecedingCancellation case
     await store.send(TestAction.allowedAction) {
       $0.counter = 3
     }
-    
+
     await store.finish()
   }
 
@@ -225,7 +225,7 @@ final class LockmanDynamicConditionReducerTests: XCTestCase {
       condition: { _, _ in .success },
       boundaryId: TestBoundaryID.feature
     )
-    
+
     let store = await TestStore<TestState, TestAction>(
       initialState: TestState()
     ) {
@@ -249,13 +249,13 @@ final class LockmanDynamicConditionReducerTests: XCTestCase {
         }
       }
     }
-    
+
     await store.send(TestAction.allowedAction)
-    
+
     await store.receive(TestAction.completed) {
       $0.counter = 10
     }
-    
+
     await store.finish()
   }
 
@@ -265,9 +265,9 @@ final class LockmanDynamicConditionReducerTests: XCTestCase {
       condition: { _, _ in .success },
       boundaryId: TestBoundaryID.feature
     )
-    
+
     var lockFailureCalled = false
-    
+
     let store = await TestStore<TestState, TestAction>(
       initialState: TestState()
     ) {
@@ -294,11 +294,11 @@ final class LockmanDynamicConditionReducerTests: XCTestCase {
         }
       }
     }
-    
+
     await store.send(TestAction.allowedAction)
-    
+
     await store.finish()
-    
+
     // Verify lock failure was called and operation didn't execute
     XCTAssertTrue(lockFailureCalled)
     XCTAssertEqual(store.state.counter, 0)  // Should remain unchanged
@@ -310,7 +310,7 @@ final class LockmanDynamicConditionReducerTests: XCTestCase {
       condition: { _, _ in .success },
       boundaryId: TestBoundaryID.feature
     )
-    
+
     let store = await TestStore<TestState, TestAction>(
       initialState: TestState()
     ) {
@@ -324,7 +324,7 @@ final class LockmanDynamicConditionReducerTests: XCTestCase {
               await send(TestAction.completed)
             },
             boundaryId: TestBoundaryID.actionLevel
-            // No lockCondition - should always execute
+              // No lockCondition - should always execute
           )
         case .completed:
           state.counter = 30
@@ -334,13 +334,13 @@ final class LockmanDynamicConditionReducerTests: XCTestCase {
         }
       }
     }
-    
+
     await store.send(TestAction.allowedAction)
-    
+
     await store.receive(TestAction.completed) {
       $0.counter = 30
     }
-    
+
     await store.finish()
   }
 
@@ -350,9 +350,9 @@ final class LockmanDynamicConditionReducerTests: XCTestCase {
       condition: { _, _ in .success },
       boundaryId: TestBoundaryID.feature
     )
-    
+
     var errorHandlerCalled = false
-    
+
     let store = await TestStore<TestState, TestAction>(
       initialState: TestState()
     ) {
@@ -380,15 +380,15 @@ final class LockmanDynamicConditionReducerTests: XCTestCase {
         }
       }
     }
-    
+
     await store.send(TestAction.allowedAction)
-    
+
     await store.receive(TestAction.completed) {
       $0.counter = 40
     }
-    
+
     await store.finish()
-    
+
     // Verify error handler was called
     XCTAssertTrue(errorHandlerCalled)
   }
@@ -401,7 +401,7 @@ final class LockmanDynamicConditionReducerTests: XCTestCase {
       condition: { _, _ in .success },
       boundaryId: TestBoundaryID.feature
     )
-    
+
     let store = await TestStore<TestState, TestAction>(
       initialState: TestState()
     ) {
@@ -426,11 +426,11 @@ final class LockmanDynamicConditionReducerTests: XCTestCase {
         }
       }
     }
-    
+
     await store.send(TestAction.allowedAction)
-    
+
     await store.finish()
-    
+
     // Verify operation didn't execute (counter remains 0)
     XCTAssertEqual(store.state.counter, 0)
   }
@@ -441,9 +441,9 @@ final class LockmanDynamicConditionReducerTests: XCTestCase {
       condition: { _, _ in .success },
       boundaryId: TestBoundaryID.feature
     )
-    
+
     var errorHandlerCalled = false
-    
+
     let store = await TestStore<TestState, TestAction>(
       initialState: TestState()
     ) {
@@ -461,7 +461,7 @@ final class LockmanDynamicConditionReducerTests: XCTestCase {
               await send(TestAction.completed)
             },
             boundaryId: TestBoundaryID.actionLevel
-            // No lockCondition - testing the no-condition error handler path
+              // No lockCondition - testing the no-condition error handler path
           )
         case .completed:
           state.counter = 60
@@ -471,15 +471,15 @@ final class LockmanDynamicConditionReducerTests: XCTestCase {
         }
       }
     }
-    
+
     await store.send(TestAction.allowedAction)
-    
+
     await store.receive(TestAction.completed) {
       $0.counter = 60
     }
-    
+
     await store.finish()
-    
+
     // Verify error handler was called in no-condition path
     XCTAssertTrue(errorHandlerCalled)
   }
@@ -496,7 +496,7 @@ private enum TestBoundaryID: LockmanBoundaryId {
 private enum DynamicConditionError: LockmanError {
   case blocked
   case actionBlocked
-  
+
   var errorDescription: String? {
     switch self {
     case .blocked:
@@ -510,12 +510,12 @@ private enum DynamicConditionError: LockmanError {
 private struct TestPrecedingCancellationError: LockmanPrecedingCancellationError {
   let lockmanInfo: any LockmanInfo
   let boundaryId: any LockmanBoundaryId
-  
+
   init(actionId: LockmanActionId, boundaryId: any LockmanBoundaryId) {
     self.lockmanInfo = TestLockmanInfo(actionId: actionId, strategyId: LockmanStrategyId("test"))
     self.boundaryId = boundaryId
   }
-  
+
   var errorDescription: String? {
     return "Preceding action cancelled: \(lockmanInfo.actionId)"
   }

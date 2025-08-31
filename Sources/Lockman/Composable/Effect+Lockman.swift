@@ -74,7 +74,7 @@ extension Effect {
   ) -> Effect<Action> {
     // Create concatenated effect from operations array
     let concatenatedEffect = Effect.concatenate(operations)
-    
+
     // Delegate to the unified internal implementation
     return Effect.lock(
       reducer: { concatenatedEffect },

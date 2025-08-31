@@ -14,23 +14,23 @@ final class LockmanReducerTests: XCTestCase {
     let container = LockmanStrategyContainer()
     let strategy = LockmanSingleExecutionStrategy()
     try container.register(strategy)
-    
+
     await LockmanManager.withTestContainer(container) {
       let store = await TestStore(
         initialState: TestFeature.State()
       ) {
         TestFeature()  // Already has .lock() applied in body
       }
-      
+
       await store.send(.lockableAction(.performAction)) {
         $0.counter = 1
         $0.isProcessing = true
       }
-      
+
       await store.receive(\.completed) {
         $0.isProcessing = false
       }
-      
+
       await store.finish()
     }
   }
@@ -39,18 +39,18 @@ final class LockmanReducerTests: XCTestCase {
     let container = LockmanStrategyContainer()
     let strategy = LockmanSingleExecutionStrategy()
     try container.register(strategy)
-    
+
     await LockmanManager.withTestContainer(container) {
       let store = await TestStore(
         initialState: TestFeature.State()
       ) {
         TestFeature()  // Already has .lock() applied in body
       }
-      
+
       await store.send(.nonLockableAction) {
         $0.counter = 100  // Should execute without lock
       }
-      
+
       await store.finish()
     }
   }
@@ -59,24 +59,24 @@ final class LockmanReducerTests: XCTestCase {
     let container = LockmanStrategyContainer()
     let strategy = LockmanSingleExecutionStrategy()
     try container.register(strategy)
-    
+
     await LockmanManager.withTestContainer(container) {
       let store = await TestStore(
         initialState: TestFeature.State()
       ) {
         TestFeature()  // Already has .lock() applied in body
       }
-      
+
       // Send lockable action - should succeed and change state
       await store.send(.lockableAction(.performAction)) {
         $0.counter = 1  // State change happens because lock was acquired
         $0.isProcessing = true
       }
-      
+
       await store.receive(\.completed) {
         $0.isProcessing = false
       }
-      
+
       await store.finish()
     }
   }
@@ -101,14 +101,14 @@ private enum TestAction: Equatable {
 @CasePathable
 private enum TestLockableAction: Equatable, LockmanAction {
   case performAction
-  
+
   func createLockmanInfo() -> LockmanSingleExecutionInfo {
     return LockmanSingleExecutionInfo(
       actionId: "lockableAction",
       mode: .boundary
     )
   }
-  
+
   var unlockOption: LockmanUnlockOption {
     return .immediate
   }
@@ -120,9 +120,9 @@ private struct TestFeature {
     var counter = 0
     var isProcessing = false
   }
-  
+
   typealias Action = TestAction
-  
+
   var body: some Reducer<State, Action> {
     Reduce { state, action in
       switch action {
@@ -130,11 +130,11 @@ private struct TestFeature {
         state.counter = 1
         state.isProcessing = true
         return .send(.completed)
-        
+
       case .nonLockableAction:
         state.counter = 100  // Different value to distinguish behavior
         return .none
-        
+
       case .completed:
         state.isProcessing = false
         return .none

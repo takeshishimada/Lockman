@@ -37,9 +37,11 @@ enum PriorityBasedTestAction {
   func createLockmanInfo() -> LockmanPriorityBasedInfo {
     switch self {
     case .highPriorityTask:
-      return LockmanPriorityBasedInfo(actionId: LockmanActionId(actionName), priority: .high(.exclusive))
+      return LockmanPriorityBasedInfo(
+        actionId: LockmanActionId(actionName), priority: .high(.exclusive))
     case .lowPriorityTask:
-      return LockmanPriorityBasedInfo(actionId: LockmanActionId(actionName), priority: .low(.replaceable))
+      return LockmanPriorityBasedInfo(
+        actionId: LockmanActionId(actionName), priority: .low(.replaceable))
     case .noPriorityTask:
       return LockmanPriorityBasedInfo(actionId: LockmanActionId(actionName), priority: .none)
     }
@@ -99,19 +101,25 @@ enum CompositeTestAction {
   case criticalOperation
   case importantTask(id: String)
 
-  func createLockmanInfo() -> LockmanCompositeInfo2<LockmanSingleExecutionInfo, LockmanPriorityBasedInfo> {
+  func createLockmanInfo() -> LockmanCompositeInfo2<
+    LockmanSingleExecutionInfo, LockmanPriorityBasedInfo
+  > {
     switch self {
     case .criticalOperation:
       return LockmanCompositeInfo2(
         actionId: LockmanActionId(actionName),
-        lockmanInfoForStrategy1: LockmanSingleExecutionInfo(actionId: LockmanActionId(actionName), mode: .boundary),
-        lockmanInfoForStrategy2: LockmanPriorityBasedInfo(actionId: LockmanActionId(actionName), priority: .high(.exclusive))
+        lockmanInfoForStrategy1: LockmanSingleExecutionInfo(
+          actionId: LockmanActionId(actionName), mode: .boundary),
+        lockmanInfoForStrategy2: LockmanPriorityBasedInfo(
+          actionId: LockmanActionId(actionName), priority: .high(.exclusive))
       )
     case .importantTask:
       return LockmanCompositeInfo2(
         actionId: LockmanActionId(actionName),
-        lockmanInfoForStrategy1: LockmanSingleExecutionInfo(actionId: LockmanActionId(actionName), mode: .action),
-        lockmanInfoForStrategy2: LockmanPriorityBasedInfo(actionId: LockmanActionId(actionName), priority: .low(.replaceable))
+        lockmanInfoForStrategy1: LockmanSingleExecutionInfo(
+          actionId: LockmanActionId(actionName), mode: .action),
+        lockmanInfoForStrategy2: LockmanPriorityBasedInfo(
+          actionId: LockmanActionId(actionName), priority: .low(.replaceable))
       )
     }
   }
@@ -216,16 +224,20 @@ final class LockmanComposableMacrosTests: XCTestCase {
 
   func testLockmanConcurrencyLimitedMacro_GeneratesCorrectConformance() {
     // Test protocol conformance
-    XCTAssertTrue(ConcurrencyLimitedTestAction.fetchUserProfile(userId: "123") is LockmanConcurrencyLimitedAction)
+    XCTAssertTrue(
+      ConcurrencyLimitedTestAction.fetchUserProfile(userId: "123")
+        is LockmanConcurrencyLimitedAction)
     XCTAssertTrue(ConcurrencyLimitedTestAction.uploadFile(fileId: "abc") is LockmanAction)
 
     // Test actionName generation
-    XCTAssertEqual(ConcurrencyLimitedTestAction.fetchUserProfile(userId: "test").actionName, "fetchUserProfile")
+    XCTAssertEqual(
+      ConcurrencyLimitedTestAction.fetchUserProfile(userId: "test").actionName, "fetchUserProfile")
     XCTAssertEqual(ConcurrencyLimitedTestAction.uploadFile(fileId: "test").actionName, "uploadFile")
     XCTAssertEqual(ConcurrencyLimitedTestAction.refreshUI.actionName, "refreshUI")
 
     // Test lockmanInfo access
-    let fetchInfo = ConcurrencyLimitedTestAction.fetchUserProfile(userId: "test").createLockmanInfo()
+    let fetchInfo = ConcurrencyLimitedTestAction.fetchUserProfile(userId: "test")
+      .createLockmanInfo()
     XCTAssertEqual(fetchInfo.actionId, LockmanActionId("fetchUserProfile"))
     XCTAssertEqual(fetchInfo.limit, .limited(3))
 
