@@ -302,4 +302,223 @@ final class LockmanManagerTests: XCTestCase {
     XCTAssertEqual(executionCount, expectedCount)
   }
 
+  // MARK: - Phase 7: Core Lock Operations (TCA-Independent)
+
+  func testLockmanManagerHandleErrorWithStrategyNotRegistered() {
+    // Test custom issue reporter to capture messages
+    class TestIssueReporter: LockmanIssueReporter {
+      static var lastMessage: String?
+      static var lastFileID: StaticString?
+      static var lastLine: UInt?
+
+      static func reportIssue(
+        _ message: String,
+        file: StaticString = #fileID,
+        line: UInt = #line
+      ) {
+        lastMessage = message
+        lastFileID = file
+        lastLine = line
+      }
+    }
+
+    // Set test reporter
+    let originalReporter = LockmanManager.config.issueReporter
+    LockmanManager.config.issueReporter = TestIssueReporter.self
+    defer {
+      LockmanManager.config.issueReporter = originalReporter
+    }
+
+    // Test handleError with strategyNotRegistered error
+    let strategyType = "TestStrategy"
+    let error = LockmanRegistrationError.strategyNotRegistered(strategyType)
+
+    LockmanManager.handleError(
+      error: error,
+      fileID: #fileID,
+      filePath: #filePath,
+      line: #line
+    )
+
+    // Verify error was handled correctly
+    XCTAssertEqual(
+      TestIssueReporter.lastMessage,
+      "Lockman strategy 'TestStrategy' not registered. Register before use.")
+    XCTAssertNotNil(TestIssueReporter.lastFileID)
+    XCTAssertNotNil(TestIssueReporter.lastLine)
+  }
+
+  func testLockmanManagerHandleErrorWithStrategyAlreadyRegistered() {
+    // Test custom issue reporter to capture messages
+    class TestIssueReporter: LockmanIssueReporter {
+      static var lastMessage: String?
+
+      static func reportIssue(
+        _ message: String,
+        file: StaticString = #fileID,
+        line: UInt = #line
+      ) {
+        lastMessage = message
+      }
+    }
+
+    // Set test reporter
+    let originalReporter = LockmanManager.config.issueReporter
+    LockmanManager.config.issueReporter = TestIssueReporter.self
+    defer {
+      LockmanManager.config.issueReporter = originalReporter
+    }
+
+    // Test handleError with strategyAlreadyRegistered error
+    let strategyType = "TestStrategy"
+    let error = LockmanRegistrationError.strategyAlreadyRegistered(strategyType)
+
+    LockmanManager.handleError(error: error)
+
+    // Verify error was handled correctly
+    XCTAssertEqual(
+      TestIssueReporter.lastMessage, "Lockman strategy 'TestStrategy' already registered.")
+  }
+
+  func testLockmanManagerHandleErrorWithNonLockmanError() {
+    // Test custom issue reporter to capture messages
+    class TestIssueReporter: LockmanIssueReporter {
+      static var messageReceived = false
+
+      static func reportIssue(
+        _ message: String,
+        file: StaticString = #fileID,
+        line: UInt = #line
+      ) {
+        messageReceived = true
+      }
+    }
+
+    // Set test reporter
+    let originalReporter = LockmanManager.config.issueReporter
+    LockmanManager.config.issueReporter = TestIssueReporter.self
+    defer {
+      LockmanManager.config.issueReporter = originalReporter
+    }
+
+    // Test handleError with non-LockmanRegistrationError
+    struct CustomError: Error {}
+    let customError = CustomError()
+
+    LockmanManager.handleError(error: customError)
+
+    // Verify no message was sent for non-LockmanRegistrationError
+    XCTAssertFalse(TestIssueReporter.messageReceived)
+  }
+
+  func testLockmanManagerAcquireLockWithSuccess() async throws {
+    // Create a test container with a strategy that returns success
+    let testContainer = LockmanStrategyContainer()
+    let testStrategy = TestSuccessStrategy()
+    try testContainer.register(testStrategy)
+
+    try await LockmanManager.withTestContainer(testContainer) {
+      // Create test lockman info
+      let lockmanInfo = LockmanSingleExecutionInfo(
+        strategyId: TestSuccessStrategy.makeStrategyId(),
+        actionId: "testAction",
+        mode: .boundary
+      )
+      let boundaryId = "testBoundary"
+
+      do {
+        // Test acquireLock method
+        let result = try LockmanManager.acquireLock(
+          lockmanInfo: lockmanInfo,
+          boundaryId: boundaryId
+        )
+
+        // Verify successful result
+        switch result {
+        case .success:
+          XCTAssertTrue(true)  // Success
+        default:
+          XCTFail("Expected success result")
+        }
+      } catch {
+        XCTFail("acquireLock should not throw error: \\(error)")
+      }
+    }
+  }
+
+  func testLockmanManagerAcquireLockWithStrategyNotFound() async throws {
+    // Create empty test container (no strategies registered)
+    let testContainer = LockmanStrategyContainer()
+
+    try await LockmanManager.withTestContainer(testContainer) {
+      // Create test lockman info with non-existent strategy
+      let lockmanInfo = LockmanSingleExecutionInfo(
+        strategyId: LockmanStrategyId("nonExistentStrategy"),
+        actionId: "testAction",
+        mode: .boundary
+      )
+      let boundaryId = "testBoundary"
+
+      // Test acquireLock should throw error for missing strategy
+      XCTAssertThrowsError(
+        try LockmanManager.acquireLock(
+          lockmanInfo: lockmanInfo,
+          boundaryId: boundaryId
+        )
+      ) { error in
+        // Verify it's a LockmanRegistrationError
+        XCTAssertTrue(error is LockmanRegistrationError)
+      }
+    }
+  }
+
+}
+
+// MARK: - Test Support Types
+
+private final class TestSuccessStrategy: LockmanStrategy, @unchecked Sendable {
+  typealias I = LockmanSingleExecutionInfo
+
+  let strategyId: LockmanStrategyId
+
+  init() {
+    self.strategyId = Self.makeStrategyId()
+  }
+
+  static func makeStrategyId() -> LockmanStrategyId {
+    LockmanStrategyId("TestSuccessStrategy")
+  }
+
+  func canLock<B: LockmanBoundaryId>(
+    boundaryId: B,
+    info: LockmanSingleExecutionInfo
+  ) -> LockmanResult where B: Sendable {
+    return .success
+  }
+
+  func lock<B: LockmanBoundaryId>(
+    boundaryId: B,
+    info: LockmanSingleExecutionInfo
+  ) where B: Sendable {
+    // No-op for test
+  }
+
+  func unlock<B: LockmanBoundaryId>(
+    boundaryId: B,
+    info: LockmanSingleExecutionInfo
+  ) where B: Sendable {
+    // No-op for test
+  }
+
+  func cleanUp() {
+    // No-op for test
+  }
+
+  func cleanUp<B: LockmanBoundaryId>(boundaryId: B) where B: Sendable {
+    // No-op for test
+  }
+
+  func getCurrentLocks() -> [AnyLockmanBoundaryId: [any LockmanInfo]] {
+    return [:]  // Return empty for test
+  }
 }

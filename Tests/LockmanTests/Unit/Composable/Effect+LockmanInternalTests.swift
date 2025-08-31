@@ -295,8 +295,8 @@ final class EffectLockmanInternalTests: XCTestCase {
 
       let lockmanInfo = TestAction.lockableAction.createLockmanInfo()
 
-      // Test acquireLock method directly
-      let lockResult = try effect.acquireLock(
+      // Test acquireLock method directly via LockmanManager
+      let lockResult = try LockmanManager.acquireLock(
         lockmanInfo: lockmanInfo,
         boundaryId: TestBoundaryID.feature
       )
@@ -324,8 +324,8 @@ final class EffectLockmanInternalTests: XCTestCase {
       let lockmanInfo = TestAction.lockableAction.createLockmanInfo()
       let boundaryId = TestBoundaryID.feature
 
-      // Test acquireLock method with cancel strategy
-      let lockResult = try effect.acquireLock(
+      // Test acquireLock method with cancel strategy via LockmanManager
+      let lockResult = try LockmanManager.acquireLock(
         lockmanInfo: lockmanInfo,
         boundaryId: boundaryId
       )
@@ -395,8 +395,8 @@ final class EffectLockmanInternalTests: XCTestCase {
       // Create a low priority lock first
       strategy.lock(boundaryId: boundaryId, info: lowPriorityInfo)
 
-      // Test acquireLock with higher priority (should trigger preceding cancellation)
-      let lockResult = try effect.acquireLock(
+      // Test acquireLock with higher priority (should trigger preceding cancellation) via LockmanManager
+      let lockResult = try LockmanManager.acquireLock(
         lockmanInfo: highPriorityInfo,
         boundaryId: boundaryId
       )
@@ -782,8 +782,8 @@ final class EffectLockmanInternalTests: XCTestCase {
       try container.register(strategy)
       XCTFail("Should have thrown strategyAlreadyRegistered error")
     } catch let error as LockmanRegistrationError {
-      // Test handleError method with caught strategyAlreadyRegistered error
-      Effect<TestAction>.handleError(
+      // Test handleError method with caught strategyAlreadyRegistered error via LockmanManager
+      LockmanManager.handleError(
         error: error,
         fileID: #fileID,
         filePath: #filePath,
@@ -817,8 +817,8 @@ final class EffectLockmanInternalTests: XCTestCase {
     // Create a strategyAlreadyRegistered error
     let error = LockmanRegistrationError.strategyAlreadyRegistered("TestStrategy")
 
-    // Test handleError method directly with strategyAlreadyRegistered error
-    Effect<TestAction>.handleError(
+    // Test handleError method directly with strategyAlreadyRegistered error via LockmanManager
+    LockmanManager.handleError(
       error: error,
       fileID: #fileID,
       filePath: #filePath,
@@ -836,8 +836,8 @@ final class EffectLockmanInternalTests: XCTestCase {
     struct CustomError: Error {}
     let customError = CustomError()
 
-    // Test handleError method with non-LockmanRegistrationError
-    Effect<TestAction>.handleError(
+    // Test handleError method with non-LockmanRegistrationError via LockmanManager
+    LockmanManager.handleError(
       error: customError,
       fileID: #fileID,
       filePath: #filePath,
