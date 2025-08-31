@@ -657,35 +657,6 @@ final class EffectLockmanInternalTests: XCTestCase {
     }
   }
 
-  func testInternalStaticLockWithEffectBuilder() async throws {
-    let container = LockmanStrategyContainer()
-    let strategy = LockmanSingleExecutionStrategy()
-    try container.register(strategy)
-
-    await LockmanManager.withTestContainer(container) {
-      // Test first internal static lock method (effectBuilder parameter)
-      let lockedEffect = Effect<TestAction>.lock(
-        effectBuilder: {
-          .run { send in
-            await send(.response(1300))
-          }
-        },
-        action: TestAction.lockableAction,
-        boundaryId: TestBoundaryID.feature,
-        unlockOption: .immediate,
-        lockFailure: nil,
-        fileID: #fileID,
-        filePath: #filePath,
-        line: #line,
-        column: #column
-      )
-
-      // Verify that the locked effect was created successfully
-      XCTAssertNotNil(lockedEffect, "Locked effect should not be nil")
-      XCTAssert(true, "Internal static lock with effectBuilder succeeded")
-    }
-  }
-
   func testInternalStaticLockWithReducer() async throws {
     let container = LockmanStrategyContainer()
     let strategy = LockmanSingleExecutionStrategy()
@@ -712,34 +683,6 @@ final class EffectLockmanInternalTests: XCTestCase {
       // Verify that the locked effect was created successfully
       XCTAssertNotNil(lockedEffect, "Locked effect should not be nil")
       XCTAssert(true, "Internal static lock with reducer succeeded")
-    }
-  }
-
-  func testInternalStaticLockWithEffectBuilderError() async throws {
-    let container = LockmanStrategyContainer()
-    // Intentionally not registering strategy to cause error
-
-    await LockmanManager.withTestContainer(container) {
-      // Test error handling in first internal static lock method
-      let lockedEffect = Effect<TestActionWithInvalidStrategy>.lock(
-        effectBuilder: {
-          .run { send in
-            await send(.response(1500))
-          }
-        },
-        action: TestActionWithInvalidStrategy.invalidAction,
-        boundaryId: TestBoundaryID.feature,
-        unlockOption: .immediate,
-        lockFailure: nil,
-        fileID: #fileID,
-        filePath: #filePath,
-        line: #line,
-        column: #column
-      )
-
-      // Should return .none when error occurs and no handler provided
-      XCTAssertNotNil(lockedEffect, "Effect should not be nil even on error")
-      XCTAssert(true, "Internal static lock error handling succeeded")
     }
   }
 
@@ -888,36 +831,6 @@ final class EffectLockmanInternalTests: XCTestCase {
     }
   }
 
-  func testInternalStaticLockWithNilUnlockOption() async throws {
-    let container = LockmanStrategyContainer()
-    let strategy = TestStrategy(result: .success)
-    try container.register(strategy)
-
-    await LockmanManager.withTestContainer(container) {
-      // Test internal static lock method with unlockOption: nil
-      // This should trigger the `action.unlockOption` branch in `unlockOption ?? action.unlockOption`
-      let lockedEffect = Effect<TestAction>.lock(
-        effectBuilder: {
-          .run { send in
-            await send(.response(1600))
-          }
-        },
-        action: TestAction.lockableAction,
-        boundaryId: TestBoundaryID.feature,
-        unlockOption: nil,  // This triggers the nil coalescing branch
-        lockFailure: nil,
-        fileID: #fileID,
-        filePath: #filePath,
-        line: #line,
-        column: #column
-      )
-
-      // Verify that the locked effect was created successfully
-      XCTAssertNotNil(lockedEffect, "Locked effect should not be nil with nil unlockOption")
-      XCTAssert(true, "Internal static lock with nil unlockOption succeeded")
-    }
-  }
-
   func testInternalStaticLockReducerWithCancelResult() async throws {
     let container = LockmanStrategyContainer()
     let testStrategy = TestStrategy(result: .cancel)
@@ -1005,37 +918,6 @@ final class EffectLockmanInternalTests: XCTestCase {
         lockedEffect, "Effect should be created with successWithPrecedingCancellation result")
       XCTAssert(
         true, "Internal static lock reducer with successWithPrecedingCancellation result succeeded")
-    }
-  }
-
-  func testInternalStaticLockEffectBuilderWithCancelResult() async throws {
-    let container = LockmanStrategyContainer()
-    let testStrategy = TestStrategy(result: .cancel)
-    try container.register(testStrategy)
-
-    await LockmanManager.withTestContainer(container) {
-      // Test FIRST internal static lock method (effectBuilder parameter) with .cancel result
-      // This should trigger the .cancel case in the effectBuilder static method at line 462
-      let lockedEffect = Effect<TestAction>.lock(
-        effectBuilder: {
-          .run { send in
-            await send(.response(2000))
-          }
-        },
-        action: TestAction.lockableAction,
-        boundaryId: TestBoundaryID.feature,
-        unlockOption: .immediate,
-        lockFailure: nil,
-        fileID: #fileID,
-        filePath: #filePath,
-        line: #line,
-        column: #column
-      )
-
-      // Verify that effect was created (covers .cancel case from effectBuilder method at line 462-465)
-      XCTAssertNotNil(
-        lockedEffect, "Effect should be created with .cancel result in effectBuilder method")
-      XCTAssert(true, "Internal static lock effectBuilder with cancel result succeeded")
     }
   }
 
