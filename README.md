@@ -258,6 +258,7 @@ Add the dependency to your target:
 
 | Lockman | The Composable Architecture |
 |---------|----------------------------|
+| 1.7.3   | 1.22.1                     |
 | 1.7.2   | 1.22.1                     |
 | 1.7.1   | 1.22.0                     |
 | 1.7.0   | 1.22.0                     |
