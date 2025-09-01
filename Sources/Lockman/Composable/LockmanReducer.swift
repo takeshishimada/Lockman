@@ -83,18 +83,55 @@ public struct LockmanReducer<Base: Reducer>: Reducer {
         return self.base.reduce(into: &state, action: action)
       }
 
-      // ✨ LOCK-FIRST IMPLEMENTATION: Use unified Effect.lock implementation
-      // The unified lock implementation handles inout state parameters via non-escaping closures
-      return Effect.lock(
-        effectBuilder: { self.base.reduce(into: &state, action: action) },
+      // ✨ LOCK-FIRST IMPLEMENTATION: Use generic LockmanManager.lock implementation
+      // The generic lock implementation handles inout state parameters via non-escaping closures
+      return LockmanManager.lock(
         action: lockmanAction,
         boundaryId: boundaryId,
         unlockOption: unlockOption,
-        lockFailure: lockFailure,
-        fileID: #fileID,
-        filePath: #filePath,
-        line: #line,
-        column: #column
+        onSuccess: { _, unlock in
+          let effect = self.base.reduce(into: &state, action: action)
+          let shouldBeCancellable = lockmanAction.createLockmanInfo().isCancellationTarget
+          let cancellableEffect = shouldBeCancellable ? effect.cancellable(id: boundaryId) : effect
+          return Effect<Action>.concatenate([cancellableEffect, .run { _ in unlock() }])
+        },
+        onSuccessWithPrecedingCancellation: { _, error, unlock in
+          let effect = self.base.reduce(into: &state, action: action)
+          let shouldBeCancellable = lockmanAction.createLockmanInfo().isCancellationTarget
+          let cancellableEffect = shouldBeCancellable ? effect.cancellable(id: boundaryId) : effect
+          let completeEffect = Effect<Action>.concatenate([cancellableEffect, .run { _ in unlock() }])
+          
+          let cancellationError = LockmanCancellationError(action: lockmanAction, boundaryId: boundaryId, reason: error)
+          if let lockFailure = lockFailure {
+            return .concatenate([
+              .run { send in await lockFailure(cancellationError, send) },
+              .cancel(id: boundaryId),
+              completeEffect,
+            ])
+          }
+          return .concatenate([.cancel(id: boundaryId), completeEffect])
+        },
+        onCancel: { _, error in
+          let cancellationError = LockmanCancellationError(action: lockmanAction, boundaryId: boundaryId, reason: error)
+          if let lockFailure = lockFailure {
+            return .run { send in await lockFailure(cancellationError, send) }
+          }
+          return .none
+        },
+        onError: { _, error in
+          // Handle and report strategy resolution errors
+          LockmanManager.handleError(
+            error: error,
+            fileID: #fileID,
+            filePath: #filePath,
+            line: #line,
+            column: #column
+          )
+          if let lockFailure = lockFailure {
+            return .run { send in await lockFailure(error, send) }
+          }
+          return .none
+        }
       )
     }
   }

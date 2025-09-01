@@ -279,6 +279,104 @@ extension LockmanManager {
     }
   }
 
+  /// Universal lock method supporting both TCA and non-TCA environments with callback-based interface.
+  ///
+  /// ## Universal Architecture Support
+  /// This method provides a generic lock interface that works across different architectural patterns:
+  /// - **TCA Integration**: Can be used by Effect.lock methods to create TCA-specific effects
+  /// - **Non-TCA Usage**: Can be used directly in any Swift application for lock management
+  /// - **Callback-based Design**: Allows different return types based on architectural needs
+  ///
+  /// ## Lock Lifecycle & Callback Execution
+  /// 1. **LockmanInfo Capture**: Action's lockmanInfo is captured once to ensure consistent uniqueId
+  /// 2. **Lock Acquisition**: Attempts to acquire lock using captured lockmanInfo
+  /// 3. **Callback Execution**: Calls appropriate callback based on lock result:
+  ///    - `onSuccess`: Lock acquired successfully, provides unlock token
+  ///    - `onSuccessWithPrecedingCancellation`: Lock acquired with preceding cancellation
+  ///    - `onCancel`: Lock acquisition cancelled due to strategy rules
+  ///    - `onError`: Error occurred during lock acquisition process
+  /// 4. **Return Type Flexibility**: Each callback can return different types as needed
+  ///
+  /// ## Unlock Token Management
+  /// The unlock token provided to success callbacks:
+  /// - **Thread-safe**: Can be called from any thread
+  /// - **Idempotent**: Multiple calls are safe and ignore subsequent calls
+  /// - **Guaranteed Cleanup**: Always releases the lock when called
+  /// - **Consistent UniqueId**: Uses same lockmanInfo instance for lock/unlock matching
+  ///
+  /// ## Example Usage
+  /// ```swift
+  /// // TCA Effect integration
+  /// LockmanManager.lock(
+  ///   action: action,
+  ///   boundaryId: boundaryId,
+  ///   unlockOption: .immediate,
+  ///   onSuccess: { _, unlock in Effect.concatenate([effect, .run { _ in unlock() }]) },
+  ///   onSuccessWithPrecedingCancellation: { _, error, unlock in /* handle cancellation */ },
+  ///   onCancel: { _, error in .none },
+  ///   onError: { _, error in .none }
+  /// )
+  ///
+  /// // Non-TCA direct usage
+  /// let result: Bool = LockmanManager.lock(
+  ///   action: action,
+  ///   boundaryId: boundaryId,
+  ///   unlockOption: nil,
+  ///   onSuccess: { _, unlock in 
+  ///     defer { unlock() }
+  ///     performWork()
+  ///     return true
+  ///   },
+  ///   onCancel: { _, _ in false },
+  ///   onError: { _, _ in false }
+  /// )
+  /// ```
+  ///
+  /// - Parameters:
+  ///   - action: LockmanAction providing lock information and strategy type
+  ///   - boundaryId: Boundary identifier for this lock and cancellation scope
+  ///   - unlockOption: Controls when unlock should occur (uses action's default if nil)
+  ///   - onSuccess: Called when lock is acquired successfully, receives unlock token
+  ///   - onSuccessWithPrecedingCancellation: Called when lock acquired with preceding cancellation
+  ///   - onCancel: Called when lock acquisition is cancelled by strategy
+  ///   - onError: Called when error occurs during lock acquisition
+  /// - Returns: Value returned by the appropriate callback
+  internal static func lock<B: LockmanBoundaryId, A: LockmanAction, T>(
+    action: A,
+    boundaryId: B,
+    unlockOption: LockmanUnlockOption?,
+    onSuccess: (A, @escaping @Sendable () -> Void) -> T,
+    onSuccessWithPrecedingCancellation: (A, any LockmanPrecedingCancellationError, @escaping @Sendable () -> Void) -> T,
+    onCancel: (A, any LockmanError) -> T,
+    onError: (A, any Error) -> T
+  ) -> T {
+    do {
+      // Capture lockmanInfo once to ensure consistent uniqueId throughout lock lifecycle
+      let lockmanInfo = action.createLockmanInfo()
+      
+      // Acquire lock with integrated unlock token
+      let result = try acquireLock(
+        lockmanInfo: lockmanInfo,
+        boundaryId: boundaryId,
+        unlockOption: unlockOption ?? action.unlockOption
+      )
+      
+      // Handle lock result with callback execution
+      switch result {
+      case .success(let unlockToken):
+        return onSuccess(action, unlockToken.callAsFunction)
+        
+      case .successWithPrecedingCancellation(let unlockToken, let error):
+        return onSuccessWithPrecedingCancellation(action, error, unlockToken.callAsFunction)
+        
+      case .cancel(let error):
+        return onCancel(action, error)
+      }
+    } catch {
+      return onError(action, error)
+    }
+  }
+
   /// Attempts to acquire a lock using pre-captured lockmanInfo for consistent uniqueId handling.
   ///
   /// ## Lock Acquisition Protocol with UniqueId Consistency
