@@ -1,19 +1,5 @@
 import ComposableArchitecture
 
-// MARK: - Internal Error Types
-
-/// Internal errors that can occur during Effect lock management.
-internal enum LockmanInternalError: Error, CustomStringConvertible {
-  case missingUnlockToken(action: any LockmanAction, boundaryId: any LockmanBoundaryId)
-  
-  var description: String {
-    switch self {
-    case .missingUnlockToken(let action, let boundaryId):
-      return "Missing unlock token for successful lock result. Action: \(action), BoundaryId: \(boundaryId)"
-    }
-  }
-}
-
 // MARK: - Effect Extensions for Lockman Integration
 
 extension Effect {
