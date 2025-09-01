@@ -212,3 +212,162 @@ extension LockmanManager {
     return try operation()
   }
 }
+
+// MARK: - Core Lock Operations (TCA-Independent)
+
+extension LockmanManager {
+  /// Handles errors that occur during lock operations and provides appropriate diagnostic messages.
+  ///
+  /// ## Error Analysis and Reporting
+  /// This method examines the error type and generates context-aware diagnostic messages
+  /// that help developers identify and resolve issues with lock management operations.
+  /// The diagnostics include:
+  /// - **Source Location**: Exact file, line, and column where error occurred
+  /// - **Error Context**: Specific action type and strategy type involved
+  /// - **Resolution Guidance**: Concrete steps to fix the issue
+  /// - **Code Examples**: Sample code showing correct usage
+  ///
+  /// ## Supported Error Types
+  /// Currently handles `LockmanError` types with specific guidance:
+  /// - **Strategy Not Registered**: Provides registration example
+  /// - **Strategy Already Registered**: Explains registration constraints
+  /// - **Future Extensions**: Framework for additional error types
+  ///
+  /// ## Development vs Production
+  /// In development builds, detailed diagnostics are provided to help developers
+  /// identify and fix issues quickly. In production, error handling is minimal
+  /// to avoid exposing internal details.
+  ///
+  /// ## Integration with Xcode
+  /// The `reportIssue` function integrates with Xcode's issue navigator,
+  /// providing clickable error messages that jump directly to the problematic code.
+  ///
+  /// - Parameters:
+  ///   - error: Error that was thrown during lock operation
+  ///   - fileID: File identifier where error originated (auto-populated)
+  ///   - filePath: Full file path where error originated (auto-populated)
+  ///   - line: Line number where error originated (auto-populated)
+  ///   - column: Column number where error originated (auto-populated)
+  ///   - reporter: Issue reporter to use (defaults to LockmanManager.config.issueReporter)
+  public static func handleError(
+    error: any Error,
+    fileID: StaticString = #fileID,
+    filePath: StaticString = #filePath,
+    line: UInt = #line,
+    column: UInt = #column,
+    reporter: any LockmanIssueReporter.Type = LockmanManager.config.issueReporter
+  ) {
+    // Check if the error is a known LockmanRegistrationError type
+    if let error = error as? LockmanRegistrationError {
+      switch error {
+      case .strategyNotRegistered(let strategyType):
+        reporter.reportIssue(
+          "Lockman strategy '\(strategyType)' not registered. Register before use.",
+          file: fileID,
+          line: line
+        )
+
+      case .strategyAlreadyRegistered(let strategyType):
+        reporter.reportIssue(
+          "Lockman strategy '\(strategyType)' already registered.",
+          file: fileID,
+          line: line
+        )
+      @unknown default:
+        break
+      }
+    }
+  }
+
+  /// Attempts to acquire a lock using pre-captured lockmanInfo for consistent uniqueId handling.
+  ///
+  /// ## Lock Acquisition Protocol with UniqueId Consistency
+  /// This method implements the core lock acquisition logic with guaranteed uniqueId consistency:
+  /// 1. **Pre-captured LockmanInfo**: Uses lockmanInfo captured once at entry points
+  /// 2. **Feasibility Check**: Call `canLock` to determine if lock can be acquired
+  /// 3. **Early Exit**: Return appropriate result if lock acquisition is not possible
+  /// 4. **Lock Acquisition**: Call `lock` to actually acquire the lock
+  /// 5. **Consistent UniqueId**: Same lockmanInfo instance ensures unlock will succeed
+  ///
+  /// ## Boundary Lock Protection
+  /// The entire lock acquisition process is protected by a boundary-specific lock
+  /// to ensure atomicity and prevent race conditions between:
+  /// - Multiple lock acquisition attempts
+  /// - Lock acquisition and release operations
+  /// - Cleanup and acquisition operations
+  ///
+  /// ## Cancellation Strategy
+  /// When `canLock` returns `.successWithPrecedingCancellation`:
+  /// 1. A cancellation effect is created for the specified boundaryId
+  /// 2. The cancellation effect is concatenated BEFORE the main effect
+  /// 3. This ensures proper ordering: cancel existing → execute new
+  ///
+  /// ## Performance Notes
+  /// - Lock feasibility check is typically O(1) hash lookup
+  /// - Boundary lock acquisition is brief (microseconds)
+  /// - Effect concatenation has minimal overhead
+  ///
+  /// - Parameters:
+  ///   - lockmanInfo: Pre-captured lock information ensuring consistent uniqueId throughout lifecycle
+  ///   - boundaryId: Boundary identifier for this lock and cancellation
+  /// - Returns: LockmanResult indicating lock acquisition status
+  public static func acquireLock<B: LockmanBoundaryId, I: LockmanInfo>(
+    lockmanInfo: I,
+    boundaryId: B,
+    unlockOption: LockmanUnlockOption? = nil
+  ) throws -> LockmanResult<B, I> {
+    // Resolve the strategy from the container using lockmanInfo.strategyId
+    let strategy: AnyLockmanStrategy<I> = try LockmanManager.container.resolve(
+      id: lockmanInfo.strategyId,
+      expecting: I.self
+    )
+
+    // Acquire lock with boundary protection
+    return LockmanManager.withBoundaryLock(for: boundaryId) {
+      // Check if lock can be acquired (using feasibility check)
+      let feasibilityResult: LockmanStrategyResult = strategy.canLock(
+        boundaryId: boundaryId,
+        info: lockmanInfo
+      )
+
+      // Handle immediate unlock for preceding cancellation
+      if case .successWithPrecedingCancellation(let cancellationError) = feasibilityResult {
+        // Immediately unlock the cancelled action to prevent resource leaks
+        // Only unlock if the cancelled action has compatible lock info type
+        if let cancelledInfo = cancellationError.lockmanInfo as? I {
+          strategy.unlock(boundaryId: cancellationError.boundaryId, info: cancelledInfo)
+        }
+      }
+
+      // Handle cancel case - return directly without unlockToken
+      if case .cancel(let error) = feasibilityResult {
+        return .cancel(error)
+      }
+
+      // Actually acquire the lock for success cases
+      strategy.lock(
+        boundaryId: boundaryId,
+        info: lockmanInfo
+      )
+
+      // Create unlock token for successful lock acquisition
+      let unlockToken = LockmanUnlock(
+        id: boundaryId,
+        info: lockmanInfo,
+        strategy: strategy,
+        unlockOption: unlockOption ?? .immediate
+      )
+
+      // Convert feasibility result to new generic result with unlock token
+      switch feasibilityResult {
+      case .success:
+        return .success(unlockToken: unlockToken)
+      case .successWithPrecedingCancellation(let error):
+        return .successWithPrecedingCancellation(unlockToken: unlockToken, error: error)
+      case .cancel(let error):
+        // This should not be reached due to early return above
+        return .cancel(error)
+      }
+    }
+  }
+}

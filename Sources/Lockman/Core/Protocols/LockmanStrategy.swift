@@ -24,7 +24,7 @@
 /// final class MyStrategy: LockmanStrategy {
 ///   typealias I = MyLockInfo
 ///
-///   func canLock<B: LockmanBoundaryId>(boundaryId: B, info: I) -> LockmanResult {
+///   func canLock<B: LockmanBoundaryId>(boundaryId: B, info: I) -> LockmanStrategyResult {
 ///     // Check if lock can be acquired
 ///     return .success
 ///   }
@@ -128,7 +128,7 @@ public protocol LockmanStrategy<I>: Sendable {
   /// - Returns: A `LockmanResult` indicating whether the lock can be acquired,
   ///   any required actions (such as canceling existing operations), and
   ///   detailed error information if the lock cannot be acquired
-  func canLock<B: LockmanBoundaryId>(boundaryId: B, info: I) -> LockmanResult
+  func canLock<B: LockmanBoundaryId>(boundaryId: B, info: I) -> LockmanStrategyResult
 
   /// Attempts to acquire a lock for the given boundary and information.
   ///

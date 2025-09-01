@@ -36,11 +36,11 @@ public final class LockmanConcurrencyLimitedStrategy: LockmanStrategy, @unchecke
   public func canLock<B: LockmanBoundaryId>(
     boundaryId: B,
     info: LockmanConcurrencyLimitedInfo
-  ) -> LockmanResult {
+  ) -> LockmanStrategyResult {
     // Use the key-based query for efficient lookup
     let currentCount = state.activeLockCount(in: boundaryId, matching: info.concurrencyId)
 
-    let result: LockmanResult
+    let result: LockmanStrategyResult
     var failureReason: String?
 
     if info.limit.isExceeded(currentCount: currentCount) {

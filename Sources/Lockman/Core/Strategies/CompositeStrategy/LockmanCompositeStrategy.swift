@@ -69,11 +69,11 @@ where S1.I == I1, S2.I == I2 {
   public func canLock<B: LockmanBoundaryId>(
     boundaryId: B,
     info: LockmanCompositeInfo2<I1, I2>
-  ) -> LockmanResult {
+  ) -> LockmanStrategyResult {
     // Early return pattern for performance optimization
     let result1 = strategy1.canLock(boundaryId: boundaryId, info: info.lockmanInfoForStrategy1)
     if case .cancel(let error) = result1 {
-      let result = LockmanResult.cancel(error)
+      let result = LockmanStrategyResult.cancel(error)
       LockmanLogger.shared.logCanLock(
         result: result,
         strategy: "Composite",
@@ -86,7 +86,7 @@ where S1.I == I1, S2.I == I2 {
 
     let result2 = strategy2.canLock(boundaryId: boundaryId, info: info.lockmanInfoForStrategy2)
     if case .cancel(let error) = result2 {
-      let result = LockmanResult.cancel(error)
+      let result = LockmanStrategyResult.cancel(error)
       LockmanLogger.shared.logCanLock(
         result: result,
         strategy: "Composite",
@@ -182,9 +182,9 @@ where S1.I == I1, S2.I == I2 {
   /// Coordinates the results from multiple strategies according to composite logic.
   ///
   /// - Parameters:
-  ///   - results: Variable number of `LockmanResult` values from component strategies
+  ///   - results: Variable number of `LockmanStrategyResult` values from component strategies
   /// - Returns: The coordinated result following composite strategy rules
-  private func coordinateResults(_ results: LockmanResult...) -> LockmanResult {
+  private func coordinateResults(_ results: LockmanStrategyResult...) -> LockmanStrategyResult {
     var cancellationError: (any LockmanPrecedingCancellationError)?
 
     // Process all results and handle immediate failures
@@ -203,7 +203,7 @@ where S1.I == I1, S2.I == I2 {
       @unknown default:
         // Handle future enum cases defensively
         LockmanLogger.shared.logLockState(
-          "CompositeStrategy: Unknown LockmanResult case: \(result)")
+          "CompositeStrategy: Unknown LockmanStrategyResult case: \(result)")
         break
       }
     }
@@ -279,11 +279,11 @@ where S1.I == I1, S2.I == I2, S3.I == I3 {
   public func canLock<B: LockmanBoundaryId>(
     boundaryId: B,
     info: LockmanCompositeInfo3<I1, I2, I3>
-  ) -> LockmanResult {
+  ) -> LockmanStrategyResult {
     // Early return pattern for performance optimization
     let result1 = strategy1.canLock(boundaryId: boundaryId, info: info.lockmanInfoForStrategy1)
     if case .cancel(let error) = result1 {
-      let result = LockmanResult.cancel(error)
+      let result = LockmanStrategyResult.cancel(error)
       LockmanLogger.shared.logCanLock(
         result: result,
         strategy: "Composite",
@@ -296,7 +296,7 @@ where S1.I == I1, S2.I == I2, S3.I == I3 {
 
     let result2 = strategy2.canLock(boundaryId: boundaryId, info: info.lockmanInfoForStrategy2)
     if case .cancel(let error) = result2 {
-      let result = LockmanResult.cancel(error)
+      let result = LockmanStrategyResult.cancel(error)
       LockmanLogger.shared.logCanLock(
         result: result,
         strategy: "Composite",
@@ -309,7 +309,7 @@ where S1.I == I1, S2.I == I2, S3.I == I3 {
 
     let result3 = strategy3.canLock(boundaryId: boundaryId, info: info.lockmanInfoForStrategy3)
     if case .cancel(let error) = result3 {
-      let result = LockmanResult.cancel(error)
+      let result = LockmanStrategyResult.cancel(error)
       LockmanLogger.shared.logCanLock(
         result: result,
         strategy: "Composite",
@@ -411,7 +411,7 @@ where S1.I == I1, S2.I == I2, S3.I == I3 {
 
   // MARK: - Private Helpers
 
-  private func coordinateResults(_ results: LockmanResult...) -> LockmanResult {
+  private func coordinateResults(_ results: LockmanStrategyResult...) -> LockmanStrategyResult {
     var cancellationError: (any LockmanPrecedingCancellationError)?
 
     // Process all results and handle immediate failures
@@ -430,7 +430,7 @@ where S1.I == I1, S2.I == I2, S3.I == I3 {
       @unknown default:
         // Handle future enum cases defensively
         LockmanLogger.shared.logLockState(
-          "CompositeStrategy: Unknown LockmanResult case: \(result)")
+          "CompositeStrategy: Unknown LockmanStrategyResult case: \(result)")
         break
       }
     }
@@ -507,11 +507,11 @@ where S1.I == I1, S2.I == I2, S3.I == I3, S4.I == I4 {
   public func canLock<B: LockmanBoundaryId>(
     boundaryId: B,
     info: LockmanCompositeInfo4<I1, I2, I3, I4>
-  ) -> LockmanResult {
+  ) -> LockmanStrategyResult {
     // Early return pattern for performance optimization
     let result1 = strategy1.canLock(boundaryId: boundaryId, info: info.lockmanInfoForStrategy1)
     if case .cancel(let error) = result1 {
-      let result = LockmanResult.cancel(error)
+      let result = LockmanStrategyResult.cancel(error)
       LockmanLogger.shared.logCanLock(
         result: result,
         strategy: "Composite",
@@ -524,7 +524,7 @@ where S1.I == I1, S2.I == I2, S3.I == I3, S4.I == I4 {
 
     let result2 = strategy2.canLock(boundaryId: boundaryId, info: info.lockmanInfoForStrategy2)
     if case .cancel(let error) = result2 {
-      let result = LockmanResult.cancel(error)
+      let result = LockmanStrategyResult.cancel(error)
       LockmanLogger.shared.logCanLock(
         result: result,
         strategy: "Composite",
@@ -537,7 +537,7 @@ where S1.I == I1, S2.I == I2, S3.I == I3, S4.I == I4 {
 
     let result3 = strategy3.canLock(boundaryId: boundaryId, info: info.lockmanInfoForStrategy3)
     if case .cancel(let error) = result3 {
-      let result = LockmanResult.cancel(error)
+      let result = LockmanStrategyResult.cancel(error)
       LockmanLogger.shared.logCanLock(
         result: result,
         strategy: "Composite",
@@ -550,7 +550,7 @@ where S1.I == I1, S2.I == I2, S3.I == I3, S4.I == I4 {
 
     let result4 = strategy4.canLock(boundaryId: boundaryId, info: info.lockmanInfoForStrategy4)
     if case .cancel(let error) = result4 {
-      let result = LockmanResult.cancel(error)
+      let result = LockmanStrategyResult.cancel(error)
       LockmanLogger.shared.logCanLock(
         result: result,
         strategy: "Composite",
@@ -661,7 +661,7 @@ where S1.I == I1, S2.I == I2, S3.I == I3, S4.I == I4 {
 
   // MARK: - Private Helpers
 
-  private func coordinateResults(_ results: LockmanResult...) -> LockmanResult {
+  private func coordinateResults(_ results: LockmanStrategyResult...) -> LockmanStrategyResult {
     var cancellationError: (any LockmanPrecedingCancellationError)?
 
     // Process all results and handle immediate failures
@@ -680,7 +680,7 @@ where S1.I == I1, S2.I == I2, S3.I == I3, S4.I == I4 {
       @unknown default:
         // Handle future enum cases defensively
         LockmanLogger.shared.logLockState(
-          "CompositeStrategy: Unknown LockmanResult case: \(result)")
+          "CompositeStrategy: Unknown LockmanStrategyResult case: \(result)")
         break
       }
     }
@@ -760,11 +760,11 @@ where S1.I == I1, S2.I == I2, S3.I == I3, S4.I == I4, S5.I == I5 {
   public func canLock<B: LockmanBoundaryId>(
     boundaryId: B,
     info: LockmanCompositeInfo5<I1, I2, I3, I4, I5>
-  ) -> LockmanResult {
+  ) -> LockmanStrategyResult {
     // Early return pattern for performance optimization
     let result1 = strategy1.canLock(boundaryId: boundaryId, info: info.lockmanInfoForStrategy1)
     if case .cancel(let error) = result1 {
-      let result = LockmanResult.cancel(error)
+      let result = LockmanStrategyResult.cancel(error)
       LockmanLogger.shared.logCanLock(
         result: result,
         strategy: "Composite",
@@ -777,7 +777,7 @@ where S1.I == I1, S2.I == I2, S3.I == I3, S4.I == I4, S5.I == I5 {
 
     let result2 = strategy2.canLock(boundaryId: boundaryId, info: info.lockmanInfoForStrategy2)
     if case .cancel(let error) = result2 {
-      let result = LockmanResult.cancel(error)
+      let result = LockmanStrategyResult.cancel(error)
       LockmanLogger.shared.logCanLock(
         result: result,
         strategy: "Composite",
@@ -790,7 +790,7 @@ where S1.I == I1, S2.I == I2, S3.I == I3, S4.I == I4, S5.I == I5 {
 
     let result3 = strategy3.canLock(boundaryId: boundaryId, info: info.lockmanInfoForStrategy3)
     if case .cancel(let error) = result3 {
-      let result = LockmanResult.cancel(error)
+      let result = LockmanStrategyResult.cancel(error)
       LockmanLogger.shared.logCanLock(
         result: result,
         strategy: "Composite",
@@ -803,7 +803,7 @@ where S1.I == I1, S2.I == I2, S3.I == I3, S4.I == I4, S5.I == I5 {
 
     let result4 = strategy4.canLock(boundaryId: boundaryId, info: info.lockmanInfoForStrategy4)
     if case .cancel(let error) = result4 {
-      let result = LockmanResult.cancel(error)
+      let result = LockmanStrategyResult.cancel(error)
       LockmanLogger.shared.logCanLock(
         result: result,
         strategy: "Composite",
@@ -816,7 +816,7 @@ where S1.I == I1, S2.I == I2, S3.I == I3, S4.I == I4, S5.I == I5 {
 
     let result5 = strategy5.canLock(boundaryId: boundaryId, info: info.lockmanInfoForStrategy5)
     if case .cancel(let error) = result5 {
-      let result = LockmanResult.cancel(error)
+      let result = LockmanStrategyResult.cancel(error)
       LockmanLogger.shared.logCanLock(
         result: result,
         strategy: "Composite",
@@ -936,7 +936,7 @@ where S1.I == I1, S2.I == I2, S3.I == I3, S4.I == I4, S5.I == I5 {
 
   // MARK: - Private Helpers
 
-  private func coordinateResults(_ results: LockmanResult...) -> LockmanResult {
+  private func coordinateResults(_ results: LockmanStrategyResult...) -> LockmanStrategyResult {
     var cancellationError: (any LockmanPrecedingCancellationError)?
 
     // Process all results and handle immediate failures
@@ -955,7 +955,7 @@ where S1.I == I1, S2.I == I2, S3.I == I3, S4.I == I4, S5.I == I5 {
       @unknown default:
         // Handle future enum cases defensively
         LockmanLogger.shared.logLockState(
-          "CompositeStrategy: Unknown LockmanResult case: \(result)")
+          "CompositeStrategy: Unknown LockmanStrategyResult case: \(result)")
         break
       }
     }

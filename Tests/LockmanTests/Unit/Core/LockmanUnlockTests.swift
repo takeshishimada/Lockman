@@ -59,7 +59,7 @@ final class LockmanUnlockTests: XCTestCase {
       LockmanStrategyId("MockStrategy")
     }
 
-    func canLock<B: LockmanBoundaryId>(boundaryId: B, info: I) -> LockmanResult {
+    func canLock<B: LockmanBoundaryId>(boundaryId: B, info: I) -> LockmanStrategyResult {
       return .success
     }
 

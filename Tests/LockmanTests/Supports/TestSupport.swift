@@ -110,25 +110,8 @@ extension LockmanRegistrationError: Equatable {
   }
 }
 
-extension LockmanResult: Equatable {
-  public static func == (lhs: LockmanResult, rhs: LockmanResult) -> Bool {
-    switch (lhs, rhs) {
-    case (.success, .success):
-      return true
-    case (
-      .successWithPrecedingCancellation(let lhsError),
-      .successWithPrecedingCancellation(let rhsError)
-    ):
-      // Compare errors by their localized description since Error is not Equatable
-      return lhsError.localizedDescription == rhsError.localizedDescription
-    case (.cancel(let lhsError), .cancel(let rhsError)):
-      // Compare errors by their localized description since Error is not Equatable
-      return lhsError.localizedDescription == rhsError.localizedDescription
-    default:
-      return false
-    }
-  }
-}
+// Note: LockmanResult<B, I> Equatable conformance is handled individually in LockmanStrategyResult.swift
+// for strategy-level comparisons. Manager-level LockmanResult comparisons should use pattern matching.
 
 /// Common test reducer used across all Composable tests
 public struct TestReducer: Reducer {
@@ -184,7 +167,7 @@ public final class TestSingleExecutionStrategy: LockmanStrategy, @unchecked Send
     LockmanStrategyId(name: "TestSingleExecutionStrategy")
   }
 
-  public func canLock<B: LockmanBoundaryId>(boundaryId: B, info: TestLockmanInfo) -> LockmanResult {
+  public func canLock<B: LockmanBoundaryId>(boundaryId: B, info: TestLockmanInfo) -> LockmanStrategyResult {
     lock.withLock {
       if lockedActions.contains(info.actionId) {
         let error = LockmanCancellationError(

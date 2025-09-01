@@ -56,7 +56,7 @@ extension Reducer {
   ///   - lockFailure: Optional handler for condition evaluation failures.
   /// - Returns: A `LockmanDynamicConditionReducer` reducer that evaluates conditions for exclusive processing
   public func lock(
-    condition: @escaping @Sendable (_ state: State, _ action: Action) -> LockmanResult,
+    condition: @escaping @Sendable (_ state: State, _ action: Action) -> LockmanStrategyResult,
     boundaryId: any LockmanBoundaryId,
     lockFailure: (@Sendable (_ error: any Error, _ send: Send<Action>) async -> Void)? = nil
   ) -> LockmanDynamicConditionReducer<State, Action> where State: Sendable, Action: Sendable {

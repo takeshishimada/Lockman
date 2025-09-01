@@ -45,7 +45,7 @@ public final class LockmanLogger: @unchecked Sendable {
   ///   - reason: Optional failure reason
   ///   - cancelledInfo: Optional cancelled action information
   public func logCanLock<I: LockmanInfo>(
-    result: LockmanResult,
+    result: LockmanStrategyResult,
     strategy: String,
     boundaryId: String,
     info: I,
