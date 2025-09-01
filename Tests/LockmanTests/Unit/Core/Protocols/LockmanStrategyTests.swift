@@ -59,7 +59,7 @@ final class LockmanStrategyTests: XCTestCase {
     private var lockedBoundaries: Set<AnyHashable> = []
     private var locksInfo: [AnyLockmanBoundaryId: [any LockmanInfo]] = [:]
     private var shouldFailCanLock = false
-    private var canLockResult: LockmanResult = .success
+    private var canLockResult: LockmanStrategyResult = .success
 
     init(strategyId: LockmanStrategyId = "MockStrategy") {
       self._strategyId = strategyId
@@ -71,7 +71,7 @@ final class LockmanStrategyTests: XCTestCase {
       LockmanStrategyId("MockStrategy")
     }
 
-    func canLock<B: LockmanBoundaryId>(boundaryId: B, info: I) -> LockmanResult {
+    func canLock<B: LockmanBoundaryId>(boundaryId: B, info: I) -> LockmanStrategyResult {
       lock.lock()
       defer { lock.unlock() }
       canLockCallCount += 1
@@ -130,7 +130,7 @@ final class LockmanStrategyTests: XCTestCase {
     }
 
     // Test helpers
-    func setCanLockResult(_ result: LockmanResult) {
+    func setCanLockResult(_ result: LockmanStrategyResult) {
       lock.lock()
       defer { lock.unlock() }
       canLockResult = result
@@ -196,7 +196,7 @@ final class LockmanStrategyTests: XCTestCase {
       LockmanStrategyId("StructStrategy")
     }
 
-    func canLock<B: LockmanBoundaryId>(boundaryId: B, info: I) -> LockmanResult {
+    func canLock<B: LockmanBoundaryId>(boundaryId: B, info: I) -> LockmanStrategyResult {
       return .success
     }
 

@@ -67,7 +67,7 @@ public struct LockmanDynamicConditionReducer<State: Sendable, Action: Sendable>:
 
   /// Reducer-level condition for automatic exclusive processing (required)
   @usableFromInline
-  internal let _condition: @Sendable (_ state: State, _ action: Action) -> LockmanResult
+  internal let _condition: @Sendable (_ state: State, _ action: Action) -> LockmanStrategyResult
 
   /// Boundary ID for reducer-level exclusive processing (required)
   @usableFromInline
@@ -90,7 +90,7 @@ public struct LockmanDynamicConditionReducer<State: Sendable, Action: Sendable>:
   ///   - lockFailure: Optional handler for condition evaluation failures.
   public init(
     _ reduce: @escaping (_ state: inout State, _ action: Action) -> Effect<Action>,
-    condition: @escaping @Sendable (_ state: State, _ action: Action) -> LockmanResult,
+    condition: @escaping @Sendable (_ state: State, _ action: Action) -> LockmanStrategyResult,
     boundaryId: any LockmanBoundaryId,
     lockFailure: (@Sendable (_ error: any Error, _ send: Send<Action>) async -> Void)? = nil
   ) {
@@ -112,7 +112,7 @@ public struct LockmanDynamicConditionReducer<State: Sendable, Action: Sendable>:
   ///   - lockFailure: Optional handler for condition evaluation failures.
   public init(
     base: Reduce<State, Action>,
-    condition: @escaping @Sendable (_ state: State, _ action: Action) -> LockmanResult,
+    condition: @escaping @Sendable (_ state: State, _ action: Action) -> LockmanStrategyResult,
     boundaryId: any LockmanBoundaryId,
     lockFailure: (@Sendable (_ error: any Error, _ send: Send<Action>) async -> Void)? = nil
   ) {
@@ -180,7 +180,7 @@ extension LockmanDynamicConditionReducer {
       @Sendable (_ error: any Error, _ send: Send<Action>) async -> Void
     )? = nil,
     boundaryId: B,
-    lockCondition: (@Sendable (_ state: State, _ action: Action) -> LockmanResult)? = nil,
+    lockCondition: (@Sendable (_ state: State, _ action: Action) -> LockmanStrategyResult)? = nil,
     fileID: StaticString = #fileID,
     filePath: StaticString = #filePath,
     line: UInt = #line,

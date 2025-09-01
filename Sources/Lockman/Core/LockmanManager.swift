@@ -313,8 +313,9 @@ extension LockmanManager {
   /// - Returns: LockmanResult indicating lock acquisition status
   public static func acquireLock<B: LockmanBoundaryId, I: LockmanInfo>(
     lockmanInfo: I,
-    boundaryId: B
-  ) throws -> LockmanResult {
+    boundaryId: B,
+    unlockOption: LockmanUnlockOption? = nil
+  ) throws -> LockmanResult<B, I> {
     // Resolve the strategy from the container using lockmanInfo.strategyId
     let strategy: AnyLockmanStrategy<I> = try LockmanManager.container.resolve(
       id: lockmanInfo.strategyId,
@@ -323,14 +324,14 @@ extension LockmanManager {
 
     // Acquire lock with boundary protection
     return LockmanManager.withBoundaryLock(for: boundaryId) {
-      // Check if lock can be acquired
-      let result = strategy.canLock(
+      // Check if lock can be acquired (using feasibility check)
+      let feasibilityResult: LockmanStrategyResult = strategy.canLock(
         boundaryId: boundaryId,
         info: lockmanInfo
       )
 
       // Handle immediate unlock for preceding cancellation
-      if case .successWithPrecedingCancellation(let cancellationError) = result {
+      if case .successWithPrecedingCancellation(let cancellationError) = feasibilityResult {
         // Immediately unlock the cancelled action to prevent resource leaks
         // Only unlock if the cancelled action has compatible lock info type
         if let cancelledInfo = cancellationError.lockmanInfo as? I {
@@ -338,19 +339,35 @@ extension LockmanManager {
         }
       }
 
-      // Early exit if lock cannot be acquired
-      if case .cancel = result {
-        return result
+      // Handle cancel case - return directly without unlockToken
+      if case .cancel(let error) = feasibilityResult {
+        return .cancel(error)
       }
 
-      // Actually acquire the lock
+      // Actually acquire the lock for success cases
       strategy.lock(
         boundaryId: boundaryId,
         info: lockmanInfo
       )
 
-      // Return the result
-      return result
+      // Create unlock token for successful lock acquisition
+      let unlockToken = LockmanUnlock(
+        id: boundaryId,
+        info: lockmanInfo,
+        strategy: strategy,
+        unlockOption: unlockOption ?? .immediate
+      )
+
+      // Convert feasibility result to new generic result with unlock token
+      switch feasibilityResult {
+      case .success:
+        return .success(unlockToken: unlockToken)
+      case .successWithPrecedingCancellation(let error):
+        return .successWithPrecedingCancellation(unlockToken: unlockToken, error: error)
+      case .cancel(let error):
+        // This should not be reached due to early return above
+        return .cancel(error)
+      }
     }
   }
 }

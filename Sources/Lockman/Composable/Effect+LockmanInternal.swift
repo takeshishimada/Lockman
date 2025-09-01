@@ -1,138 +1,23 @@
 import ComposableArchitecture
 
+// MARK: - Internal Error Types
+
+/// Internal errors that can occur during Effect lock management.
+internal enum LockmanInternalError: Error, CustomStringConvertible {
+  case missingUnlockToken(action: any LockmanAction, boundaryId: any LockmanBoundaryId)
+  
+  var description: String {
+    switch self {
+    case .missingUnlockToken(let action, let boundaryId):
+      return "Missing unlock token for successful lock result. Action: \(action), BoundaryId: \(boundaryId)"
+    }
+  }
+}
+
 // MARK: - Internal Implementation for Lockman Effects
 
 extension Effect {
 
-  /// Builds an effect with lock acquisition and automatic unlock using pre-captured lockmanInfo.
-  ///
-  /// ## Purpose & UniqueId Consistency
-  /// This internal method contains the common logic shared by all lock variants:
-  /// 1. Strategy resolution from the container
-  /// 2. Use of pre-captured lockmanInfo to ensure consistent uniqueId
-  /// 3. Lock acquisition and result handling with guaranteed unlock capability
-  /// 4. Direct effect concatenation with unlock effect using same lockmanInfo instance
-  ///
-  /// ## Simplified Architecture
-  /// This method directly creates the unlock effect and concatenates it with the operations,
-  /// eliminating the need for complex closure patterns and intermediate wrappers.
-  ///
-  /// ## Error Handling Strategy
-  /// This method uses a do-catch pattern to handle strategy resolution errors.
-  /// If strategy resolution fails, it calls `handleError` to provide detailed
-  /// diagnostic information and optionally calls the provided handler before
-  /// returning `.none` to prevent effect execution.
-  ///
-  /// ## Type Safety
-  /// The method maintains type safety through generic constraints:
-  /// - `B: LockmanBoundaryId`: Ensures valid boundary identifier
-  /// - `A: LockmanAction`: Ensures valid action with lock information
-  /// - `A.I`: Preserves lock information type relationship
-  ///
-  /// ## Effect Execution Order
-  /// The returned effect executes in this order:
-  /// 1. Operations (cancellable as a group)
-  /// 2. Unlock effect (non-cancellable, always executes)
-  ///
-  /// - Parameters:
-  ///   - lockResult: Result from prior lock acquisition attempt (must be provided)
-  ///   - action: LockmanAction providing lock information and strategy type
-  ///   - lockmanInfo: Pre-captured lock information ensuring consistent uniqueId for unlock operations
-  ///   - boundaryId: Unique identifier for cancellation and lock boundary
-  ///   - unlockOption: Unlock option configuration for when to execute the unlock
-  ///   - fileID: Source file ID for error reporting
-  ///   - filePath: Source file path for error reporting
-  ///   - line: Source line number for error reporting
-  ///   - column: Source column number for error reporting
-  ///   - handler: Optional error handler for lock acquisition failures
-  /// - Returns: Built effect with lock management, or `.none` if setup fails
-  func buildLockEffect<B: LockmanBoundaryId, A: LockmanAction, I: LockmanInfo>(
-    lockResult: LockmanResult,
-    action: A,
-    lockmanInfo: I,
-    boundaryId: B,
-    unlockOption: LockmanUnlockOption,
-    fileID: StaticString,
-    filePath: StaticString,
-    line: UInt,
-    column: UInt,
-    handler: (@Sendable (_ error: any Error, _ send: Send<Action>) async -> Void)? = nil
-  ) -> Effect<Action> {
-    do {
-      // Resolve the strategy from the container using strategyId
-      let strategy: AnyLockmanStrategy<I> = try LockmanManager.container.resolve(
-        id: lockmanInfo.strategyId,
-        expecting: I.self
-      )
-      // Note: lockmanInfo parameter is the pre-captured instance ensuring consistent uniqueId
-
-      // Create unlock token using the same lockmanInfo instance (guaranteed successful unlock)
-      let unlockToken = LockmanUnlock(
-        id: boundaryId,
-        info: lockmanInfo,
-        strategy: strategy,
-        unlockOption: unlockOption
-      )
-
-      // Create unlock effect that executes the unlock operation
-      let unlockEffect = Effect<Action>.run { _ in
-        unlockToken()  // Execute unlock with configured option
-      }
-
-      // Create complete effect with conditional cancellation for operations only
-      let shouldBeCancellable = lockmanInfo.isCancellationTarget
-      let cancellableEffect = shouldBeCancellable ? self.cancellable(id: boundaryId) : self
-      let completeEffect = Effect<Action>.concatenate([cancellableEffect, unlockEffect])
-
-      // Handle lock acquisition result
-      switch lockResult {
-      case .success:
-        // Lock acquired successfully, execute complete effect immediately
-        return completeEffect
-
-      case .successWithPrecedingCancellation(let error):
-        // Lock acquired but need to cancel existing operation first
-        // Wrap the strategy error with action context
-        let cancellationError = LockmanCancellationError(
-          action: action,
-          boundaryId: boundaryId,
-          reason: error
-        )
-        if let handler = handler {
-          return .concatenate([
-            Effect.createHandlerEffect(handler: handler, error: cancellationError),
-            .cancel(id: boundaryId),
-            completeEffect,
-          ])
-        }
-
-        return .concatenate([.cancel(id: boundaryId), completeEffect])
-
-      case .cancel(let error):
-        // Lock acquisition failed
-        // Wrap the strategy error with action context
-        let cancellationError = LockmanCancellationError(
-          action: action,
-          boundaryId: boundaryId,
-          reason: error
-        )
-        return Effect.createHandlerEffect(handler: handler, error: cancellationError)
-      @unknown default:
-        return .none
-      }
-
-    } catch {
-      // Handle and report strategy resolution errors
-      LockmanManager.handleError(
-        error: error,
-        fileID: fileID,
-        filePath: filePath,
-        line: line,
-        column: column
-      )
-      return Effect.createHandlerEffect(handler: handler, error: error)
-    }
-  }
 
   // MARK: - Shared Lock Implementation
 
@@ -200,36 +85,48 @@ extension Effect {
 
       // Note: We don't need a dummy effect for lock acquisition since we call LockmanManager directly
 
-      // Acquire lock using the captured lockmanInfo (consistent uniqueId)
-      let lockResult = try LockmanManager.acquireLock(
+      // Acquire lock with integrated unlock token (type-safe design)
+      let result = try LockmanManager.acquireLock(
         lockmanInfo: lockmanInfo,
-        boundaryId: boundaryId
+        boundaryId: boundaryId,
+        unlockOption: unlockOption ?? action.unlockOption
       )
 
-      // Make decision based on lock result BEFORE executing effect builder
-      switch lockResult {
-      case .success, .successWithPrecedingCancellation:
-        // ✅ Lock can be acquired - proceed with effect builder execution
-        let baseEffect = effectBuilder()  // Execute effect builder
+      // Handle lock result with type-safe pattern matching
+      switch result {
+      case .success(let unlockToken):
+        // Lock acquired successfully - execute effect with unlock
+        // No guard statement needed - unlockToken guaranteed by type system
+        let baseEffect = effectBuilder()
+        let unlockEffect = Effect<Action>.run { _ in unlockToken() }
+        let shouldBeCancellable = lockmanInfo.isCancellationTarget
+        let cancellableEffect = shouldBeCancellable ? baseEffect.cancellable(id: boundaryId) : baseEffect
+        return Effect<Action>.concatenate([cancellableEffect, unlockEffect])
 
-        // Build effect with the existing lock result using same lockmanInfo (guaranteed unlock)
-        return baseEffect.buildLockEffect(
-          lockResult: lockResult,
-          action: action,
-          lockmanInfo: lockmanInfo,
-          boundaryId: boundaryId,
-          unlockOption: unlockOption ?? action.unlockOption,
-          fileID: fileID,
-          filePath: filePath,
-          line: line,
-          column: column,
-          handler: lockFailure
-        )
+      case .successWithPrecedingCancellation(let unlockToken, let error):
+        // Lock acquired with cancellation - execute effect with cancellation handling
+        // Both unlockToken and error guaranteed by type system
+        let baseEffect = effectBuilder()
+        let unlockEffect = Effect<Action>.run { _ in unlockToken() }
+        let shouldBeCancellable = lockmanInfo.isCancellationTarget
+        let cancellableEffect = shouldBeCancellable ? baseEffect.cancellable(id: boundaryId) : baseEffect
+        let completeEffect = Effect<Action>.concatenate([cancellableEffect, unlockEffect])
+        
+        let cancellationError = LockmanCancellationError(action: action, boundaryId: boundaryId, reason: error)
+        if let lockFailure = lockFailure {
+          return .concatenate([
+            Effect.createHandlerEffect(handler: lockFailure, error: cancellationError),
+            .cancel(id: boundaryId),
+            completeEffect,
+          ])
+        }
+        return .concatenate([.cancel(id: boundaryId), completeEffect])
 
       case .cancel(let error):
-        // ❌ Lock cannot be acquired - do NOT execute effect builder
-        // State mutations are prevented, achieving true lock-first behavior
-        return Effect.createHandlerEffect(handler: lockFailure, error: error)
+        // Lock failed - do NOT execute effect builder (lock-first behavior)
+        // No unlockToken exists - guaranteed by type system
+        let cancellationError = LockmanCancellationError(action: action, boundaryId: boundaryId, reason: error)
+        return Effect.createHandlerEffect(handler: lockFailure, error: cancellationError)
       }
     } catch {
       // Handle and report strategy resolution errors
@@ -245,6 +142,7 @@ extension Effect {
   }
 
   // MARK: - Private Helper Methods
+
 
   /// Creates an effect that calls the provided handler with the given error.
   /// Returns .none if handler is nil.

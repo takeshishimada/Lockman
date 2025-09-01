@@ -1,15 +1,25 @@
-/// The result of attempting to acquire a lock.
+
+/// The result of attempting to acquire a lock with integrated unlock capability.
 ///
 /// This enum represents the possible outcomes when a strategy attempts
 /// to acquire a lock for a given boundary and lock information. The result
-/// determines how the calling code should proceed with the requested operation.
-public enum LockmanResult: Sendable {
+/// determines how the calling code should proceed with the requested operation
+/// and provides type-safe access to unlock tokens when locks are successful.
+///
+/// ## Type Safety Design
+/// - Success cases include `LockmanUnlock` instances as associated values
+/// - Failure cases contain only error information
+/// - Compiler guarantees unlock tokens exist only for successful locks
+/// - Eliminates runtime nil-checking and defensive programming
+public enum LockmanResult<B: LockmanBoundaryId, I: LockmanInfo>: Sendable {
   /// Lock acquisition succeeded without conflicts.
   ///
   /// The requested lock was successfully acquired and no existing locks
   /// were affected. The operation can proceed immediately without any
   /// additional cleanup or cancellation steps.
-  case success
+  ///
+  /// - Parameter unlockToken: Token for unlocking the acquired lock when operation completes
+  case success(unlockToken: LockmanUnlock<B, I>)
 
   /// Lock acquisition succeeded but requires canceling a preceding operation.
   ///
@@ -26,10 +36,14 @@ public enum LockmanResult: Sendable {
   /// The error parameter now requires conformance to `LockmanPrecedingCancellationError`
   /// to enable immediate unlock operations and maintain type safety.
   ///
+  /// - Parameter unlockToken: Token for unlocking the acquired lock when operation completes
   /// - Parameter error: A strategy-specific error conforming to `LockmanPrecedingCancellationError`
   ///   that describes the preceding action that will be canceled. This error provides
   ///   access to the cancelled action's information for immediate unlock.
-  case successWithPrecedingCancellation(error: any LockmanPrecedingCancellationError)
+  case successWithPrecedingCancellation(
+    unlockToken: LockmanUnlock<B, I>,
+    error: any LockmanPrecedingCancellationError
+  )
 
   /// Lock acquisition failed and the new action is cancelled.
   ///
@@ -40,6 +54,7 @@ public enum LockmanResult: Sendable {
   /// - Strategy-specific conflict conditions are met
   ///
   /// When this result is returned, the requesting operation should not proceed.
+  /// No unlock token is provided because no lock was acquired.
   ///
   /// - Parameter error: A strategy-specific error conforming to `LockmanError`
   ///   that provides detailed information about why the lock acquisition failed

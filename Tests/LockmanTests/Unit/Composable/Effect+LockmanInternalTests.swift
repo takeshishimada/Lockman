@@ -80,7 +80,7 @@ private final class TestStrategy: LockmanStrategy {
   func canLock<B: LockmanBoundaryId>(
     boundaryId: B,
     info: LockmanSingleExecutionInfo
-  ) -> LockmanResult where B: Sendable {
+  ) -> LockmanStrategyResult where B: Sendable {
     switch desiredResult {
     case .success:
       return .success
@@ -296,17 +296,18 @@ final class EffectLockmanInternalTests: XCTestCase {
       let lockmanInfo = TestAction.lockableAction.createLockmanInfo()
 
       // Test acquireLock method directly via LockmanManager
-      let lockResult = try LockmanManager.acquireLock(
+      let result = try LockmanManager.acquireLock(
         lockmanInfo: lockmanInfo,
         boundaryId: TestBoundaryID.feature
       )
 
       // Verify that lock was acquired successfully
-      if case .success = lockResult {
+      if case .success(let unlockToken) = result {
         // Success case verified
         XCTAssert(true, "Lock acquisition succeeded as expected")
+        XCTAssertNotNil(unlockToken, "Expected unlock token for success case")
       } else {
-        XCTFail("Expected .success result, but got \(lockResult)")
+        XCTFail("Expected .success result, but got \(result)")
       }
     }
   }
@@ -325,57 +326,23 @@ final class EffectLockmanInternalTests: XCTestCase {
       let boundaryId = TestBoundaryID.feature
 
       // Test acquireLock method with cancel strategy via LockmanManager
-      let lockResult = try LockmanManager.acquireLock(
+      let result = try LockmanManager.acquireLock(
         lockmanInfo: lockmanInfo,
         boundaryId: boundaryId
       )
 
       // Verify that lock acquisition was cancelled
-      if case .cancel(let error) = lockResult {
+      if case .cancel(let error) = result {
         // Verify the cancellation error contains expected information
         XCTAssertNotNil(error, "Expected cancellation error information")
         XCTAssert(true, "Lock acquisition cancelled as expected")
+        // No unlock token in cancel case (verified by type system)
       } else {
-        XCTFail("Expected .cancel result, but got \(lockResult)")
+        XCTFail("Expected .cancel result, but got \(result)")
       }
     }
   }
 
-  func testBuildLockEffectSuccess() async throws {
-    let container = LockmanStrategyContainer()
-    let strategy = LockmanSingleExecutionStrategy()
-    try container.register(strategy)
-
-    await LockmanManager.withTestContainer(container) {
-      let effect: Effect<TestAction> = .run { send in
-        await send(.response(400))
-      }
-
-      let lockmanInfo = TestAction.lockableAction.createLockmanInfo()
-      let lockResult = LockmanResult.success
-
-      // Test buildLockEffect method with success result
-      let builtEffect = effect.buildLockEffect(
-        lockResult: lockResult,
-        action: TestAction.lockableAction,
-        lockmanInfo: lockmanInfo,
-        boundaryId: TestBoundaryID.feature,
-        unlockOption: .immediate,
-        fileID: #fileID,
-        filePath: #filePath,
-        line: #line,
-        column: #column,
-        handler: nil
-      )
-
-      // Verify that effect was built successfully
-      XCTAssertNotNil(builtEffect, "Built effect should not be nil")
-
-      // The effect should be executable without throwing
-      _ = { builtEffect }
-      XCTAssert(true, "Effect built successfully")
-    }
-  }
 
   func testAcquireLockWithPrecedingCancellation() async throws {
     // Use a different strategy that supports precedingCancellation
@@ -396,266 +363,26 @@ final class EffectLockmanInternalTests: XCTestCase {
       strategy.lock(boundaryId: boundaryId, info: lowPriorityInfo)
 
       // Test acquireLock with higher priority (should trigger preceding cancellation) via LockmanManager
-      let lockResult = try LockmanManager.acquireLock(
+      let result = try LockmanManager.acquireLock(
         lockmanInfo: highPriorityInfo,
         boundaryId: boundaryId
       )
 
       // Verify that lock was acquired with preceding cancellation
-      if case .successWithPrecedingCancellation(let error) = lockResult {
+      if case .successWithPrecedingCancellation(let unlockToken, let error) = result {
         XCTAssertNotNil(error, "Expected cancellation error information")
         XCTAssert(true, "Lock acquisition succeeded with preceding cancellation")
+        XCTAssertNotNil(unlockToken, "Expected unlock token for success with preceding cancellation case")
       } else {
-        XCTFail("Expected .successWithPrecedingCancellation result, but got \(lockResult)")
+        XCTFail("Expected .successWithPrecedingCancellation result, but got \(result)")
       }
     }
   }
 
-  func testBuildLockEffectCancel() async throws {
-    let container = LockmanStrategyContainer()
-    let strategy = LockmanSingleExecutionStrategy()
-    try container.register(strategy)
 
-    await LockmanManager.withTestContainer(container) {
-      let effect: Effect<TestAction> = .run { send in
-        await send(.response(600))
-      }
 
-      let lockmanInfo = TestAction.lockableAction.createLockmanInfo()
-      let lockResult = LockmanResult.cancel(
-        LockmanSingleExecutionError.boundaryAlreadyLocked(
-          boundaryId: TestBoundaryID.feature,
-          lockmanInfo: lockmanInfo
-        ))
 
-      // Test buildLockEffect method with cancel result
-      let builtEffect = effect.buildLockEffect(
-        lockResult: lockResult,
-        action: TestAction.lockableAction,
-        lockmanInfo: lockmanInfo,
-        boundaryId: TestBoundaryID.feature,
-        unlockOption: .immediate,
-        fileID: #fileID,
-        filePath: #filePath,
-        line: #line,
-        column: #column,
-        handler: nil
-      )
 
-      // Verify that effect was built for cancel case
-      XCTAssertNotNil(builtEffect, "Built effect should not be nil for cancel case")
-      XCTAssert(true, "Cancel effect built successfully")
-    }
-  }
-
-  func testBuildLockEffectSuccessWithPrecedingCancellation() async throws {
-    let container = LockmanStrategyContainer()
-    let strategy = LockmanPriorityBasedStrategy()
-    try container.register(strategy)
-
-    await LockmanManager.withTestContainer(container) {
-      let effect: Effect<TestActionWithPriority> = .run { send in
-        await send(.response(700))
-      }
-
-      let highPriorityInfo = TestActionWithPriority.highPriorityAction.createLockmanInfo()
-      let lowPriorityInfo = TestActionWithPriority.lowPriorityAction.createLockmanInfo()
-      let lockResult = LockmanResult.successWithPrecedingCancellation(
-        error: LockmanPriorityBasedError.precedingActionCancelled(
-          lockmanInfo: lowPriorityInfo,
-          boundaryId: TestBoundaryID.feature
-        )
-      )
-
-      // Test buildLockEffect method with successWithPrecedingCancellation result
-      let builtEffect = effect.buildLockEffect(
-        lockResult: lockResult,
-        action: TestActionWithPriority.highPriorityAction,
-        lockmanInfo: highPriorityInfo,
-        boundaryId: TestBoundaryID.feature,
-        unlockOption: .immediate,
-        fileID: #fileID,
-        filePath: #filePath,
-        line: #line,
-        column: #column,
-        handler: nil
-      )
-
-      // Verify that effect was built for successWithPrecedingCancellation case
-      XCTAssertNotNil(
-        builtEffect, "Built effect should not be nil for successWithPrecedingCancellation case")
-      XCTAssert(true, "SuccessWithPrecedingCancellation effect built successfully")
-    }
-  }
-
-  func testBuildLockEffectSuccessWithPrecedingCancellationWithHandler() async throws {
-    let container = LockmanStrategyContainer()
-    let strategy = LockmanPriorityBasedStrategy()
-    try container.register(strategy)
-
-    await LockmanManager.withTestContainer(container) {
-      let effect: Effect<TestActionWithPriority> = .run { send in
-        await send(.response(800))
-      }
-
-      let highPriorityInfo = TestActionWithPriority.highPriorityAction.createLockmanInfo()
-      let lowPriorityInfo = TestActionWithPriority.lowPriorityAction.createLockmanInfo()
-      let lockResult = LockmanResult.successWithPrecedingCancellation(
-        error: LockmanPriorityBasedError.precedingActionCancelled(
-          lockmanInfo: lowPriorityInfo,
-          boundaryId: TestBoundaryID.feature
-        )
-      )
-
-      // Test handler for successWithPrecedingCancellation case
-      let handlerExpectation = XCTestExpectation(
-        description: "Handler called for successWithPrecedingCancellation")
-      let handler:
-        @Sendable (_ error: any Error, _ send: Send<TestActionWithPriority>) async -> Void = {
-          error, send in
-          handlerExpectation.fulfill()
-        }
-
-      // Test buildLockEffect method with successWithPrecedingCancellation result and handler
-      let builtEffect = effect.buildLockEffect(
-        lockResult: lockResult,
-        action: TestActionWithPriority.highPriorityAction,
-        lockmanInfo: highPriorityInfo,
-        boundaryId: TestBoundaryID.feature,
-        unlockOption: .immediate,
-        fileID: #fileID,
-        filePath: #filePath,
-        line: #line,
-        column: #column,
-        handler: handler
-      )
-
-      // Verify that effect was built for successWithPrecedingCancellation case with handler
-      XCTAssertNotNil(
-        builtEffect,
-        "Built effect should not be nil for successWithPrecedingCancellation case with handler")
-      XCTAssert(true, "SuccessWithPrecedingCancellation effect with handler built successfully")
-    }
-  }
-
-  func testBuildLockEffectCancelWithHandler() async throws {
-    let container = LockmanStrategyContainer()
-    let strategy = LockmanSingleExecutionStrategy()
-    try container.register(strategy)
-
-    await LockmanManager.withTestContainer(container) {
-      let effect: Effect<TestAction> = .run { send in
-        await send(.response(900))
-      }
-
-      let lockmanInfo = TestAction.lockableAction.createLockmanInfo()
-      let lockResult = LockmanResult.cancel(
-        LockmanSingleExecutionError.boundaryAlreadyLocked(
-          boundaryId: TestBoundaryID.feature,
-          lockmanInfo: lockmanInfo
-        ))
-
-      // Test handler for cancel case
-      let handlerExpectation = XCTestExpectation(description: "Handler called for cancel case")
-      let handler: @Sendable (_ error: any Error, _ send: Send<TestAction>) async -> Void = {
-        error, send in
-        handlerExpectation.fulfill()
-      }
-
-      // Test buildLockEffect method with cancel result and handler
-      let builtEffect = effect.buildLockEffect(
-        lockResult: lockResult,
-        action: TestAction.lockableAction,
-        lockmanInfo: lockmanInfo,
-        boundaryId: TestBoundaryID.feature,
-        unlockOption: .immediate,
-        fileID: #fileID,
-        filePath: #filePath,
-        line: #line,
-        column: #column,
-        handler: handler
-      )
-
-      // Verify that effect was built for cancel case with handler
-      XCTAssertNotNil(builtEffect, "Built effect should not be nil for cancel case with handler")
-      XCTAssert(true, "Cancel effect with handler built successfully")
-    }
-  }
-
-  func testBuildLockEffectStrategyResolutionError() async throws {
-    let container = LockmanStrategyContainer()
-    // Intentionally not registering any strategy to cause resolution error
-
-    await LockmanManager.withTestContainer(container) {
-      let effect: Effect<TestActionWithInvalidStrategy> = .run { send in
-        await send(.response(1000))
-      }
-
-      let lockmanInfo = TestActionWithInvalidStrategy.invalidAction.createLockmanInfo()
-      let lockResult = LockmanResult.success
-
-      // Test buildLockEffect method with strategy resolution error (no handler)
-      let builtEffect = effect.buildLockEffect(
-        lockResult: lockResult,
-        action: TestActionWithInvalidStrategy.invalidAction,
-        lockmanInfo: lockmanInfo,
-        boundaryId: TestBoundaryID.feature,
-        unlockOption: .immediate,
-        fileID: #fileID,
-        filePath: #filePath,
-        line: #line,
-        column: #column,
-        handler: nil
-      )
-
-      // Should return .none when strategy resolution fails and no handler is provided
-      XCTAssertNotNil(
-        builtEffect, "Built effect should not be nil even on strategy resolution error")
-      XCTAssert(true, "Strategy resolution error without handler handled successfully")
-    }
-  }
-
-  func testBuildLockEffectStrategyResolutionErrorWithHandler() async throws {
-    let container = LockmanStrategyContainer()
-    // Intentionally not registering any strategy to cause resolution error
-
-    await LockmanManager.withTestContainer(container) {
-      let effect: Effect<TestActionWithInvalidStrategy> = .run { send in
-        await send(.response(1100))
-      }
-
-      let lockmanInfo = TestActionWithInvalidStrategy.invalidAction.createLockmanInfo()
-      let lockResult = LockmanResult.success
-
-      // Test handler for strategy resolution error
-      let handlerExpectation = XCTestExpectation(
-        description: "Handler called for strategy resolution error")
-      let handler:
-        @Sendable (_ error: any Error, _ send: Send<TestActionWithInvalidStrategy>) async -> Void =
-          { error, send in
-            handlerExpectation.fulfill()
-          }
-
-      // Test buildLockEffect method with strategy resolution error and handler
-      let builtEffect = effect.buildLockEffect(
-        lockResult: lockResult,
-        action: TestActionWithInvalidStrategy.invalidAction,
-        lockmanInfo: lockmanInfo,
-        boundaryId: TestBoundaryID.feature,
-        unlockOption: .immediate,
-        fileID: #fileID,
-        filePath: #filePath,
-        line: #line,
-        column: #column,
-        handler: handler
-      )
-
-      // Should return effect that calls handler when strategy resolution fails
-      XCTAssertNotNil(
-        builtEffect, "Built effect should not be nil for strategy resolution error with handler")
-      XCTAssert(true, "Strategy resolution error with handler handled successfully")
-    }
-  }
 
   func testInternalStaticLockWithReducer() async throws {
     let container = LockmanStrategyContainer()
@@ -792,44 +519,6 @@ final class EffectLockmanInternalTests: XCTestCase {
     XCTAssert(true, "handleError with non-LockmanRegistrationError completed successfully")
   }
 
-  func testBuildLockEffectWithNonCancellableAction() async throws {
-    let container = LockmanStrategyContainer()
-    let strategy = LockmanSingleExecutionStrategy()
-    try container.register(strategy)
-
-    await LockmanManager.withTestContainer(container) {
-      let effect: Effect<NonCancellableTestAction> = .run { send in
-        await send(.response(1500))
-      }
-
-      // Use NonCancellableTestAction which has isCancellationTarget = false
-      let lockmanInfo = NonCancellableTestAction.nonCancellableAction.createLockmanInfo()
-
-      // Verify that isCancellationTarget is indeed false
-      XCTAssertFalse(
-        lockmanInfo.isCancellationTarget,
-        "NonCancellableTestAction should have isCancellationTarget = false")
-
-      // Test buildLockEffect with isCancellationTarget = false
-      // This should trigger the `: self` branch in `shouldBeCancellable ? self.cancellable(id: boundaryId) : self`
-      let lockedEffect = effect.buildLockEffect(
-        lockResult: .success,
-        action: NonCancellableTestAction.nonCancellableAction,
-        lockmanInfo: lockmanInfo,
-        boundaryId: TestBoundaryID.feature,
-        unlockOption: .immediate,
-        fileID: #fileID,
-        filePath: #filePath,
-        line: #line,
-        column: #column,
-        handler: nil
-      )
-
-      // Verify that the locked effect was created successfully
-      XCTAssertNotNil(lockedEffect, "Locked effect should not be nil for non-cancellable action")
-      XCTAssert(true, "buildLockEffect with non-cancellable action succeeded")
-    }
-  }
 
   func testInternalStaticLockReducerWithCancelResult() async throws {
     let container = LockmanStrategyContainer()

@@ -433,11 +433,13 @@ final class LockmanManagerTests: XCTestCase {
           boundaryId: boundaryId
         )
 
-        // Verify successful result
+        // Verify successful result and unlock token
         switch result {
-        case .success:
-          XCTAssertTrue(true)  // Success
-        default:
+        case .success(let unlockToken):
+          XCTAssertNotNil(unlockToken, "Unlock token should be created for successful lock")
+        case .successWithPrecedingCancellation(let unlockToken, _):
+          XCTAssertNotNil(unlockToken, "Unlock token should be created for successful lock")
+        case .cancel:
           XCTFail("Expected success result")
         }
       } catch {
@@ -492,7 +494,7 @@ private final class TestSuccessStrategy: LockmanStrategy, @unchecked Sendable {
   func canLock<B: LockmanBoundaryId>(
     boundaryId: B,
     info: LockmanSingleExecutionInfo
-  ) -> LockmanResult where B: Sendable {
+  ) -> LockmanStrategyResult where B: Sendable {
     return .success
   }
 
