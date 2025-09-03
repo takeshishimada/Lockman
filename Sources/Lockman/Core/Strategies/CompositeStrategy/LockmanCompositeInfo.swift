@@ -12,7 +12,7 @@ import Foundation
 /// ```swift
 /// let compositeInfo = LockmanCompositeInfo2(
 ///   actionId: "userLogin",
-///   lockmanInfoForStrategy1: LockmanSingleExecutionInfo(actionId: "userLogin"),
+///   lockmanInfoForStrategy1: LockmanSingleExecutionInfo(actionId: "userLogin", mode: .boundary),
 ///   lockmanInfoForStrategy2: LockmanPriorityBasedInfo(actionId: "userLogin", priority: .high(.exclusive))
 /// )
 /// ```

@@ -4,7 +4,7 @@ import OSLog
 /// Debug logger for Lockman output.
 ///
 /// Provides thread-safe logging functionality for lock operations.
-/// Only active in DEBUG builds to avoid performance impact in production.
+/// Optimized for DEBUG builds with fallback functionality in production builds.
 @_spi(Logging)
 public final class LockmanLogger: @unchecked Sendable {
   // MARK: - Singleton

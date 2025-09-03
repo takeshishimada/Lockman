@@ -187,7 +187,7 @@ public macro LockmanGroupCoordination() =
 ///       LockmanCompositeInfo2(
 ///         actionId: actionName,
 ///         lockmanInfoForStrategy1: LockmanSingleExecutionInfo(actionId: actionName, mode: .boundary),
-///         lockmanInfoForStrategy2: LockmanPriorityBasedInfo(actionId: actionName, priority: 100)
+///         lockmanInfoForStrategy2: LockmanPriorityBasedInfo(actionId: actionName, priority: .high(.exclusive))
 ///       )
 ///     }
 ///   }

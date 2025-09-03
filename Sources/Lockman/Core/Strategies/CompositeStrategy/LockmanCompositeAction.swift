@@ -17,7 +17,7 @@
 ///   func createLockmanInfo() -> LockmanCompositeInfo2<I1, I2> {
 ///     LockmanCompositeInfo2(
 ///       actionId: actionName,
-///       lockmanInfoForStrategy1: LockmanSingleExecutionInfo(actionId: actionName),
+///       lockmanInfoForStrategy1: LockmanSingleExecutionInfo(actionId: actionName, mode: .boundary),
 ///       lockmanInfoForStrategy2: LockmanPriorityBasedInfo(actionId: actionName, priority: .high(.exclusive))
 ///     )
 ///   }
