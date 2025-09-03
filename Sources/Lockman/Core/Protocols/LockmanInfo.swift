@@ -19,10 +19,10 @@ import Foundation
 /// ## Examples
 /// ```swift
 /// // Single execution info
-/// let singleInfo = LockmanSingleExecutionInfo(actionId: "login")
+/// let singleInfo = LockmanSingleExecutionInfo(actionId: "login", mode: .boundary)
 ///
 /// // Priority-based info
-/// let priorityInfo = LockmanPriorityBasedInfo(actionId: "sync", priority: .high(.preferLater))
+/// let priorityInfo = LockmanPriorityBasedInfo(actionId: "sync", priority: .high(.exclusive))
 /// ```
 public protocol LockmanInfo: Sendable, CustomDebugStringConvertible {
   /// The strategy identifier that created this lock info.

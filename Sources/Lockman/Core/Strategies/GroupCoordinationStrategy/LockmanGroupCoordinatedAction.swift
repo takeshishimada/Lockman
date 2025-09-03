@@ -11,7 +11,7 @@ import Foundation
 /// // Navigation leader action
 /// struct NavigateToDetailAction: LockmanGroupCoordinatedAction {
 ///   let groupId = "navigation"
-///   let coordinationRole = LockmanGroupCoordinationRole.leader(.none)
+///   let coordinationRole = LockmanGroupCoordinationRole.leader(.emptyGroup)
 ///
 ///   var actionName: String { "navigateToDetail" }
 /// }
@@ -55,7 +55,7 @@ import Foundation
 ///   var coordinationRole: LockmanGroupCoordinationRole {
 ///     switch self {
 ///     case .startLoading:
-///       return .leader(.none)
+///       return .leader(.emptyGroup)
 ///     case .updateProgress, .showError:
 ///       return .member
 ///     }

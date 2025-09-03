@@ -13,7 +13,7 @@
 ///   let actionName = "login"
 ///
 ///   func createLockmanInfo() -> LockmanPriorityBasedInfo {
-///     priority(.high(.preferLater))
+///     priority(.high(.exclusive))
 ///   }
 /// }
 /// ```
@@ -53,7 +53,7 @@ extension LockmanPriorityBasedAction {
   /// Example usage:
   /// ```swift
   /// func createLockmanInfo() -> LockmanPriorityBasedInfo {
-  ///   priority(.high(.preferLater))
+  ///   priority(.high(.exclusive))
   /// }
   /// ```
   public func priority(_ priority: LockmanPriorityBasedInfo.Priority) -> LockmanPriorityBasedInfo {
@@ -74,7 +74,7 @@ extension LockmanPriorityBasedAction {
   /// Example usage:
   /// ```swift
   /// func createLockmanInfo() -> LockmanPriorityBasedInfo {
-  ///   priority("_user123", .high(.preferLater))
+  ///   priority("_user123", .high(.exclusive))
   /// }
   /// ```
   public func priority(
