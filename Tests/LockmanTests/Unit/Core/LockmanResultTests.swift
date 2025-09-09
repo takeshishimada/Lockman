@@ -2,11 +2,12 @@ import XCTest
 
 @testable import Lockman
 
-// ✅ IMPLEMENTED: Comprehensive LockmanResult enum tests with 3-phase approach
-// ✅ 13 test methods covering all enum cases, protocol conformance, and integration scenarios
-// ✅ Phase 1: Basic enum case testing (success, successWithPrecedingCancellation, cancel)
+// ✅ UPDATED: Comprehensive LockmanResult enum tests updated for new API with unlockToken
+// ✅ 13 test methods covering all enum cases with unlockToken parameter
+// ✅ Phase 1: Basic enum case testing (success, successWithPrecedingCancellation, cancel) with unlockToken
 // ✅ Phase 2: Sendable conformance and concurrent access testing
 // ✅ Phase 3: Error protocol integration, documentation examples, and type system testing
+// ✅ Phase 4: unlockToken functionality and type safety testing
 
 final class LockmanResultTests: XCTestCase {
 
@@ -20,7 +21,7 @@ final class LockmanResultTests: XCTestCase {
     LockmanManager.cleanup.all()
   }
 
-  // MARK: - Test Error Types for Testing
+  // MARK: - Test Error Types and Mock Objects for Testing
 
   // Basic error for testing .cancel case
   private struct TestBasicError: LockmanError {
@@ -42,7 +43,7 @@ final class LockmanResultTests: XCTestCase {
 
     init(
       message: String, cancelledInfo: any LockmanInfo,
-      boundaryId: any LockmanBoundaryId = "testBoundary"
+      boundaryId: any LockmanBoundaryId = TestBoundaryId.test
     ) {
       self.message = message
       self.cancelledInfo = cancelledInfo
@@ -50,47 +51,61 @@ final class LockmanResultTests: XCTestCase {
     }
   }
 
-  // Basic LockmanInfo for testing
-  private struct TestLockmanInfo: LockmanInfo {
-    let strategyId: LockmanStrategyId
-    let actionId: LockmanActionId
-    let uniqueId: UUID
-
-    init(strategyId: LockmanStrategyId = "TestStrategy", actionId: LockmanActionId = "testAction") {
-      self.strategyId = strategyId
-      self.actionId = actionId
-      self.uniqueId = UUID()
-    }
-
-    var debugDescription: String {
-      "TestLockmanInfo(actionId: '\(actionId)')"
-    }
+  // Test boundary ID type alias for easier usage
+  private typealias TestBoundary = TestBoundaryId
+  
+  // Helper method to create unlock token for testing
+  private func createTestUnlockToken(
+    boundaryId: TestBoundary = TestBoundary.test,
+    info: TestLockmanInfo = TestLockmanInfo(
+      actionId: "testAction",
+      strategyId: "TestSingleExecutionStrategy"
+    )
+  ) -> LockmanUnlock<TestBoundary, TestLockmanInfo> {
+    let strategy = TestSingleExecutionStrategy()
+    let anyStrategy = AnyLockmanStrategy(strategy)
+    return LockmanUnlock(
+      id: boundaryId,
+      info: info,
+      strategy: anyStrategy,
+      unlockOption: .immediate
+    )
   }
 
   // MARK: - Phase 1: Basic Enum Cases
 
   func testLockmanResultSuccessCase() {
-    // Test .success case
-    let result = LockmanResult.success
+    // Test .success case with unlockToken
+    let unlockToken = createTestUnlockToken()
+    let result = LockmanResult<TestBoundary, TestLockmanInfo>.success(unlockToken: unlockToken)
 
     // Test pattern matching
     switch result {
-    case .success:
-      XCTAssertTrue(true)  // Success case matched
+    case .success(let token):
+      XCTAssertNotNil(token)
+      // Verify unlock token exists (info properties are internal)
     default:
       XCTFail("Should match .success case")
     }
   }
 
   func testLockmanResultSuccessWithPrecedingCancellationCase() {
-    // Test .successWithPrecedingCancellation case
-    let testInfo = TestLockmanInfo(actionId: "testAction")
+    // Test .successWithPrecedingCancellation case with unlockToken
+    let testInfo = TestLockmanInfo(actionId: "testAction", strategyId: "TestSingleExecutionStrategy")
     let error = TestPrecedingError(message: "Previous operation cancelled", cancelledInfo: testInfo)
-    let result = LockmanResult.successWithPrecedingCancellation(error: error)
+    let unlockToken = createTestUnlockToken(info: testInfo)
+    let result = LockmanResult<TestBoundary, TestLockmanInfo>.successWithPrecedingCancellation(
+      unlockToken: unlockToken,
+      error: error
+    )
 
     // Test pattern matching
     switch result {
-    case .successWithPrecedingCancellation(let precedingError):
+    case .successWithPrecedingCancellation(let token, let precedingError):
+      // Test unlock token
+      XCTAssertNotNil(token)
+      
+      // Test error
       XCTAssertEqual(precedingError.errorDescription, "Previous operation cancelled")
       XCTAssertTrue(precedingError is TestPrecedingError)
       if let testError = precedingError as? TestPrecedingError {
@@ -102,9 +117,9 @@ final class LockmanResultTests: XCTestCase {
   }
 
   func testLockmanResultCancelCase() {
-    // Test .cancel case
+    // Test .cancel case (no unlock token since lock failed)
     let error = TestBasicError(message: "Operation cancelled")
-    let result = LockmanResult.cancel(error)
+    let result = LockmanResult<TestBoundary, TestLockmanInfo>.cancel(error)
 
     // Test pattern matching
     switch result {
@@ -120,10 +135,14 @@ final class LockmanResultTests: XCTestCase {
 
   func testLockmanResultSendableConformance() async {
     // Test Sendable conformance with concurrent access
-    let testInfo = TestLockmanInfo(actionId: "concurrentTest")
+    let testInfo = TestLockmanInfo(actionId: "concurrentTest", strategyId: "TestSingleExecutionStrategy")
     let precedingError = TestPrecedingError(
       message: "Concurrent test error", cancelledInfo: testInfo)
-    let result = LockmanResult.successWithPrecedingCancellation(error: precedingError)
+    let unlockToken = createTestUnlockToken(info: testInfo)
+    let result = LockmanResult<TestBoundary, TestLockmanInfo>.successWithPrecedingCancellation(
+      unlockToken: unlockToken,
+      error: precedingError
+    )
 
     await withTaskGroup(of: String.self) { group in
       group.addTask {
@@ -165,7 +184,7 @@ final class LockmanResultTests: XCTestCase {
   func testLockmanResultWithLockmanErrorProtocol() {
     // Test with different LockmanError implementations
     let basicError = TestBasicError(message: "Basic error test")
-    let cancelResult = LockmanResult.cancel(basicError)
+    let cancelResult = LockmanResult<TestBoundary, TestLockmanInfo>.cancel(basicError)
 
     switch cancelResult {
     case .cancel(let error):
@@ -179,13 +198,20 @@ final class LockmanResultTests: XCTestCase {
 
   func testLockmanResultWithPrecedingCancellationErrorProtocol() {
     // Test with LockmanPrecedingCancellationError protocol
-    let testInfo = TestLockmanInfo(actionId: "protocolTest")
+    let testInfo = TestLockmanInfo(actionId: "protocolTest", strategyId: "TestSingleExecutionStrategy")
     let precedingError = TestPrecedingError(
       message: "Preceding error test", cancelledInfo: testInfo)
-    let result = LockmanResult.successWithPrecedingCancellation(error: precedingError)
+    let unlockToken = createTestUnlockToken(info: testInfo)
+    let result = LockmanResult<TestBoundary, TestLockmanInfo>.successWithPrecedingCancellation(
+      unlockToken: unlockToken,
+      error: precedingError
+    )
 
     switch result {
-    case .successWithPrecedingCancellation(let error):
+    case .successWithPrecedingCancellation(let token, let error):
+      // Test unlock token
+      XCTAssertNotNil(token)
+      
       // Test LockmanPrecedingCancellationError protocol conformance
       XCTAssertTrue(error is any LockmanPrecedingCancellationError)
       XCTAssertTrue(error is any LockmanError)  // Should also conform to base protocol
@@ -200,11 +226,13 @@ final class LockmanResultTests: XCTestCase {
 
   func testLockmanResultExhaustivePatternMatching() {
     // Test all cases in a single comprehensive function
-    let testInfo = TestLockmanInfo(actionId: "comprehensiveTest")
+    let testInfo = TestLockmanInfo(actionId: "comprehensiveTest", strategyId: "TestSingleExecutionStrategy")
+    let unlockToken = createTestUnlockToken(info: testInfo)
 
-    let results: [LockmanResult] = [
-      .success,
+    let results: [LockmanResult<TestBoundary, TestLockmanInfo>] = [
+      .success(unlockToken: createTestUnlockToken()),
       .successWithPrecedingCancellation(
+        unlockToken: unlockToken,
         error: TestPrecedingError(
           message: "Comprehensive preceding error",
           cancelledInfo: testInfo
@@ -214,11 +242,13 @@ final class LockmanResultTests: XCTestCase {
 
     for (index, result) in results.enumerated() {
       switch result {
-      case .success:
+      case .success(let token):
         XCTAssertEqual(index, 0, "Success should be first result")
+        XCTAssertNotNil(token)
 
-      case .successWithPrecedingCancellation(let error):
+      case .successWithPrecedingCancellation(let token, let error):
         XCTAssertEqual(index, 1, "SuccessWithPrecedingCancellation should be second result")
+        XCTAssertNotNil(token)
         XCTAssertNotNil(error.errorDescription)
         XCTAssertEqual(error.lockmanInfo.actionId, "comprehensiveTest")
 
@@ -231,14 +261,14 @@ final class LockmanResultTests: XCTestCase {
 
   func testLockmanResultNestedSwitchHandling() {
     // Test nested pattern matching scenarios
-    let testInfo = TestLockmanInfo(actionId: "nestedTest")
+    let testInfo = TestLockmanInfo(actionId: "nestedTest", strategyId: "TestSingleExecutionStrategy")
 
-    func processResult(_ result: LockmanResult) -> String {
+    func processResult(_ result: LockmanResult<TestBoundary, TestLockmanInfo>) -> String {
       switch result {
       case .success:
         return "proceed_immediately"
 
-      case .successWithPrecedingCancellation(let error):
+      case .successWithPrecedingCancellation(_, let error):
         // Test nested logic for preceding cancellation
         if error.lockmanInfo.actionId.contains("nested") {
           return "cancel_and_proceed_nested"
@@ -258,13 +288,14 @@ final class LockmanResultTests: XCTestCase {
 
     // Test each case
     XCTAssertEqual(
-      processResult(.success),
+      processResult(.success(unlockToken: createTestUnlockToken())),
       "proceed_immediately"
     )
 
     XCTAssertEqual(
       processResult(
         .successWithPrecedingCancellation(
+          unlockToken: createTestUnlockToken(info: testInfo),
           error: TestPrecedingError(
             message: "Nested test",
             cancelledInfo: testInfo
@@ -282,14 +313,15 @@ final class LockmanResultTests: XCTestCase {
 
   func testLockmanResultDocumentationExamples() {
     // Test examples that match the documentation
-    let testInfo = TestLockmanInfo(strategyId: "ExampleStrategy", actionId: "documentationExample")
+    let testInfo = TestLockmanInfo(actionId: "documentationExample", strategyId: "ExampleStrategy")
 
     // Example 1: Success case (most common)
-    let successResult = LockmanResult.success
+    let unlockToken = createTestUnlockToken(info: testInfo)
+    let successResult = LockmanResult<TestBoundary, TestLockmanInfo>.success(unlockToken: unlockToken)
     switch successResult {
-    case .success:
+    case .success(let token):
       // Operation can proceed immediately without any additional cleanup
-      XCTAssertTrue(true)  // This is the expected path
+      XCTAssertNotNil(token)
     default:
       XCTFail("Documentation example should succeed")
     }
@@ -299,13 +331,17 @@ final class LockmanResultTests: XCTestCase {
       message: "Lower priority operation cancelled",
       cancelledInfo: testInfo
     )
-    let precedingResult = LockmanResult.successWithPrecedingCancellation(error: precedingError)
+    let precedingResult = LockmanResult<TestBoundary, TestLockmanInfo>.successWithPrecedingCancellation(
+      unlockToken: createTestUnlockToken(info: testInfo),
+      error: precedingError
+    )
 
     switch precedingResult {
-    case .successWithPrecedingCancellation(let error):
+    case .successWithPrecedingCancellation(let token, let error):
       // 1. Cancel the existing operation (usually via Effect cancellation)
       // 2. Immediately unlock the cancelled action to prevent resource leaks
       // 3. Proceed with the new operation
+      XCTAssertNotNil(token)
       XCTAssertNotNil(error.lockmanInfo)
       XCTAssertEqual(error.lockmanInfo.actionId, "documentationExample")
     default:
@@ -314,7 +350,7 @@ final class LockmanResultTests: XCTestCase {
 
     // Example 3: Cancel case (conflict situations)
     let cancelError = TestBasicError(message: "Higher priority operation is already active")
-    let cancelResult = LockmanResult.cancel(cancelError)
+    let cancelResult = LockmanResult<TestBoundary, TestLockmanInfo>.cancel(cancelError)
 
     switch cancelResult {
     case .cancel(let error):
@@ -352,10 +388,10 @@ final class LockmanResultTests: XCTestCase {
       var boundaryId: any LockmanBoundaryId { boundary }
     }
 
-    let testInfo = TestLockmanInfo(actionId: "realErrorTest")
+    let testInfo = TestLockmanInfo(actionId: "realErrorTest", strategyId: "TestSingleExecutionStrategy")
 
     // Test with conflict error
-    let conflictResult = LockmanResult.cancel(
+    let conflictResult = LockmanResult<TestBoundary, TestLockmanInfo>.cancel(
       ConflictError(
         conflictingActionId: "existingAction",
         boundaryId: "mainBoundary"
@@ -374,17 +410,22 @@ final class LockmanResultTests: XCTestCase {
     }
 
     // Test with priority error
-    let priorityResult = LockmanResult.successWithPrecedingCancellation(
+    let priorityResult = LockmanResult<TestBoundary, TestLockmanInfo>.successWithPrecedingCancellation(
+      unlockToken: createTestUnlockToken(info: testInfo),
       error: PriorityError(
         cancelledInfo: testInfo,
-        boundary: "testBoundary",
+        boundary: TestBoundaryId.test,
         newPriority: 10,
         oldPriority: 5
       )
     )
 
     switch priorityResult {
-    case .successWithPrecedingCancellation(let error):
+    case .successWithPrecedingCancellation(let token, let error):
+      // Test unlock token
+      XCTAssertNotNil(token)
+      
+      // Test priority error
       if let priorityError = error as? PriorityError {
         XCTAssertEqual(priorityError.newPriority, 10)
         XCTAssertEqual(priorityError.oldPriority, 5)
