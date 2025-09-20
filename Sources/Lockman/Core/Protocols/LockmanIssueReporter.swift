@@ -22,7 +22,7 @@ public protocol LockmanIssueReporter {
 public enum LockmanDefaultIssueReporter: LockmanIssueReporter {
   public static func reportIssue(
     _ message: String,
-    file: StaticString = #file,
+    file: StaticString = #filePath,
     line: UInt = #line
   ) {
     #if DEBUG
@@ -49,7 +49,7 @@ public enum LockmanIssueReporting {
   /// Reports an issue using the configured reporter.
   public static func reportIssue(
     _ message: String,
-    file: StaticString = #file,
+    file: StaticString = #filePath,
     line: UInt = #line
   ) {
     reporter.reportIssue(message, file: file, line: line)
