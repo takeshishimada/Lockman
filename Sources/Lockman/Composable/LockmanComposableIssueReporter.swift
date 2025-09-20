@@ -4,7 +4,7 @@ import ComposableArchitecture
 public enum LockmanComposableIssueReporter: LockmanIssueReporter {
   public static func reportIssue(
     _ message: String,
-    file: StaticString = #file,
+    file: StaticString = #fileID,
     line: UInt = #line
   ) {
     IssueReporting.reportIssue(message, fileID: file, line: line)
