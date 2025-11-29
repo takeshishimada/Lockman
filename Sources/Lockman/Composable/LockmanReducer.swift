@@ -99,9 +99,12 @@ public struct LockmanReducer<Base: Reducer>: Reducer {
           let effect = self.base.reduce(into: &state, action: action)
           let shouldBeCancellable = lockmanAction.createLockmanInfo().isCancellationTarget
           let cancellableEffect = shouldBeCancellable ? effect.cancellable(id: boundaryId) : effect
-          let completeEffect = Effect<Action>.concatenate([cancellableEffect, .run { _ in unlock() }])
-          
-          let cancellationError = LockmanCancellationError(action: lockmanAction, boundaryId: boundaryId, reason: error)
+          let completeEffect = Effect<Action>.concatenate([
+            cancellableEffect, .run { _ in unlock() },
+          ])
+
+          let cancellationError = LockmanCancellationError(
+            action: lockmanAction, boundaryId: boundaryId, reason: error)
           if let lockFailure = lockFailure {
             return .concatenate([
               .run { send in await lockFailure(cancellationError, send) },
@@ -112,7 +115,8 @@ public struct LockmanReducer<Base: Reducer>: Reducer {
           return .concatenate([.cancel(id: boundaryId), completeEffect])
         },
         onCancel: { _, error in
-          let cancellationError = LockmanCancellationError(action: lockmanAction, boundaryId: boundaryId, reason: error)
+          let cancellationError = LockmanCancellationError(
+            action: lockmanAction, boundaryId: boundaryId, reason: error)
           if let lockFailure = lockFailure {
             return .run { send in await lockFailure(cancellationError, send) }
           }
