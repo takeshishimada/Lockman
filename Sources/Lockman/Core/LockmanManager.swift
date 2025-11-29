@@ -322,7 +322,7 @@ extension LockmanManager {
   ///   action: action,
   ///   boundaryId: boundaryId,
   ///   unlockOption: nil,
-  ///   onSuccess: { _, unlock in 
+  ///   onSuccess: { _, unlock in
   ///     defer { unlock() }
   ///     performWork()
   ///     return true
@@ -346,29 +346,31 @@ extension LockmanManager {
     boundaryId: B,
     unlockOption: LockmanUnlockOption?,
     onSuccess: (A, @escaping @Sendable () -> Void) -> T,
-    onSuccessWithPrecedingCancellation: (A, any LockmanPrecedingCancellationError, @escaping @Sendable () -> Void) -> T,
+    onSuccessWithPrecedingCancellation: (
+      A, any LockmanPrecedingCancellationError, @escaping @Sendable () -> Void
+    ) -> T,
     onCancel: (A, any LockmanError) -> T,
     onError: (A, any Error) -> T
   ) -> T {
     do {
       // Capture lockmanInfo once to ensure consistent uniqueId throughout lock lifecycle
       let lockmanInfo = action.createLockmanInfo()
-      
+
       // Acquire lock with integrated unlock token
       let result = try acquireLock(
         lockmanInfo: lockmanInfo,
         boundaryId: boundaryId,
         unlockOption: unlockOption ?? action.unlockOption
       )
-      
+
       // Handle lock result with callback execution
       switch result {
       case .success(let unlockToken):
         return onSuccess(action, unlockToken.callAsFunction)
-        
+
       case .successWithPrecedingCancellation(let unlockToken, let error):
         return onSuccessWithPrecedingCancellation(action, error, unlockToken.callAsFunction)
-        
+
       case .cancel(let error):
         return onCancel(action, error)
       }

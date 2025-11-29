@@ -1,4 +1,3 @@
-
 /// The result of attempting to acquire a lock with integrated unlock capability.
 ///
 /// This enum represents the possible outcomes when a strategy attempts

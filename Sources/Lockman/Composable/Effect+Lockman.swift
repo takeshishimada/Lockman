@@ -82,15 +82,18 @@ extension Effect {
       unlockOption: unlockOption,
       onSuccess: { action, unlock in
         let shouldBeCancellable = action.createLockmanInfo().isCancellationTarget
-        let cancellableEffect = shouldBeCancellable ? concatenatedEffect.cancellable(id: boundaryId) : concatenatedEffect
+        let cancellableEffect =
+          shouldBeCancellable ? concatenatedEffect.cancellable(id: boundaryId) : concatenatedEffect
         return Effect<Action>.concatenate([cancellableEffect, .run { _ in unlock() }])
       },
       onSuccessWithPrecedingCancellation: { action, error, unlock in
         let shouldBeCancellable = action.createLockmanInfo().isCancellationTarget
-        let cancellableEffect = shouldBeCancellable ? concatenatedEffect.cancellable(id: boundaryId) : concatenatedEffect
+        let cancellableEffect =
+          shouldBeCancellable ? concatenatedEffect.cancellable(id: boundaryId) : concatenatedEffect
         let completeEffect = Effect<Action>.concatenate([cancellableEffect, .run { _ in unlock() }])
-        
-        let cancellationError = LockmanCancellationError(action: action, boundaryId: boundaryId, reason: error)
+
+        let cancellationError = LockmanCancellationError(
+          action: action, boundaryId: boundaryId, reason: error)
         if let lockFailure = lockFailure {
           return .concatenate([
             .run { send in await lockFailure(cancellationError, send) },
@@ -101,7 +104,8 @@ extension Effect {
         return .concatenate([.cancel(id: boundaryId), completeEffect])
       },
       onCancel: { action, error in
-        let cancellationError = LockmanCancellationError(action: action, boundaryId: boundaryId, reason: error)
+        let cancellationError = LockmanCancellationError(
+          action: action, boundaryId: boundaryId, reason: error)
         if let lockFailure = lockFailure {
           return .run { send in await lockFailure(cancellationError, send) }
         }
@@ -200,15 +204,18 @@ extension Effect {
       unlockOption: unlockOption,
       onSuccess: { action, unlock in
         let shouldBeCancellable = action.createLockmanInfo().isCancellationTarget
-        let cancellableEffect = shouldBeCancellable ? operation.cancellable(id: boundaryId) : operation
+        let cancellableEffect =
+          shouldBeCancellable ? operation.cancellable(id: boundaryId) : operation
         return Effect<Action>.concatenate([cancellableEffect, .run { _ in unlock() }])
       },
       onSuccessWithPrecedingCancellation: { action, error, unlock in
         let shouldBeCancellable = action.createLockmanInfo().isCancellationTarget
-        let cancellableEffect = shouldBeCancellable ? operation.cancellable(id: boundaryId) : operation
+        let cancellableEffect =
+          shouldBeCancellable ? operation.cancellable(id: boundaryId) : operation
         let completeEffect = Effect<Action>.concatenate([cancellableEffect, .run { _ in unlock() }])
-        
-        let cancellationError = LockmanCancellationError(action: action, boundaryId: boundaryId, reason: error)
+
+        let cancellationError = LockmanCancellationError(
+          action: action, boundaryId: boundaryId, reason: error)
         if let lockFailure = lockFailure {
           return .concatenate([
             .run { send in await lockFailure(cancellationError, send) },
@@ -219,7 +226,8 @@ extension Effect {
         return .concatenate([.cancel(id: boundaryId), completeEffect])
       },
       onCancel: { action, error in
-        let cancellationError = LockmanCancellationError(action: action, boundaryId: boundaryId, reason: error)
+        let cancellationError = LockmanCancellationError(
+          action: action, boundaryId: boundaryId, reason: error)
         if let lockFailure = lockFailure {
           return .run { send in await lockFailure(cancellationError, send) }
         }

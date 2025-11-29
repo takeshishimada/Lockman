@@ -74,7 +74,10 @@ extension LockmanStrategyResult {
       return true
     case (.cancel(let lhsError), .cancel(let rhsError)):
       return String(describing: lhsError) == String(describing: rhsError)
-    case (.successWithPrecedingCancellation(let lhsError), .successWithPrecedingCancellation(let rhsError)):
+    case (
+      .successWithPrecedingCancellation(let lhsError),
+      .successWithPrecedingCancellation(let rhsError)
+    ):
       return String(describing: lhsError) == String(describing: rhsError)
     default:
       return false

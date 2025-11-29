@@ -167,7 +167,9 @@ public final class TestSingleExecutionStrategy: LockmanStrategy, @unchecked Send
     LockmanStrategyId(name: "TestSingleExecutionStrategy")
   }
 
-  public func canLock<B: LockmanBoundaryId>(boundaryId: B, info: TestLockmanInfo) -> LockmanStrategyResult {
+  public func canLock<B: LockmanBoundaryId>(boundaryId: B, info: TestLockmanInfo)
+    -> LockmanStrategyResult
+  {
     lock.withLock {
       if lockedActions.contains(info.actionId) {
         let error = LockmanCancellationError(
