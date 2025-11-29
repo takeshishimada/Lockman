@@ -19,7 +19,7 @@ import XCTest
 
     func testPluginConformsToCompilerPlugin() {
       let plugin = LockmanMacroPlugin()
-      XCTAssertTrue(plugin is CompilerPlugin)
+      XCTAssertTrue(plugin is any CompilerPlugin)
     }
 
     func testProvidingMacrosCount() {
